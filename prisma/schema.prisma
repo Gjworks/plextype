@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "darwin-arm64", "linux-arm64-openssl-3.0.x"]
 }
 
@@ -31,8 +31,8 @@ model User {
   profile       Profile?
   userGroups    UserGroupUser[]
 
-  @@index([email_address], name: "idx_user_email")  // 이메일로 조회 많을 경우
-  @@index([isAdmin], name: "idx_user_isAdmin")      // 관리자 필터링
+  @@index([email_address], name: "idx_user_email") // 이메일로 조회 많을 경우
+  @@index([isAdmin], name: "idx_user_isAdmin") // 관리자 필터링
 }
 
 model Profile {
@@ -62,15 +62,15 @@ model UserGroupUser {
   group     UserGroup @relation(fields: [groupId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
 
+  @@unique([userId, groupId], name: "uniq_ugu_user_group") // 중복 방지
   @@index([userId], name: "idx_ugu_user")
   @@index([groupId], name: "idx_ugu_group")
-  @@unique([userId, groupId], name: "uniq_ugu_user_group") // 중복 방지
 }
 
 model Document {
   id             Int       @id @default(autoincrement())
-  resourceType   String    // 예: "post", "store", "shop"
-  resourceId     Int       // 예: Posts.id, Store.id 등
+  resourceType   String // 예: "post", "store", "shop"
+  resourceId     Int // 예: Posts.id, Store.id 등
   categoryId     Int?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -94,56 +94,56 @@ model Document {
 }
 
 model Category {
-  id          Int        @id @default(autoincrement())
-  title       String     @db.VarChar(45)
-  desc        String?
-  color       String?    @db.VarChar(45)
-  parentId    Int?       // 부모 카테고리 ID, 최상위면 null
-  order       Int
+  id       Int     @id @default(autoincrement())
+  title    String  @db.VarChar(45)
+  desc     String?
+  color    String? @db.VarChar(45)
+  parentId Int? // 부모 카테고리 ID, 최상위면 null
+  order    Int     @default(0)
 
   // 리소스 구분: "post", "store", "shop" 등
-  resourceType String
+  resourceType String @default("posts")
   resourceId   Int?
 
   // 자기 참조
-  parent       Category?   @relation("CategoryChildren", fields: [parentId], references: [id])
-  children     Category[]  @relation("CategoryChildren")
-  documents    Document[]  @relation("DocumentCategory")
+  parent    Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryChildren")
+  documents Document[] @relation("DocumentCategory")
 
   @@index([parentId], name: "idx_category_parent")
   @@index([resourceType, resourceId], name: "idx_category_resource")
 }
 
 model Posts {
-  id         Int        @id @default(autoincrement())
-  pid        String     @unique
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  postName   String     @unique
-  postDesc   String?
-  grant      Json?      @db.Json
-  config     Json?      @db.Json
-  status     String?    @db.VarChar(45)
+  id        Int      @id @default(autoincrement())
+  pid       String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  postName  String   @unique
+  postDesc  String?
+  grant     Json?    @db.Json
+  config    Json?    @db.Json
+  status    String?  @db.VarChar(45)
 
   @@index([status], name: "idx_posts_status")
 }
 
 model Permission {
-  id          Int               @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   // 리소스 구분
-  resourceType String  @default("unknown")    // 예: "post", "document", "store", "shop"
-  resourceId   Int     @default(0)            // 예: 1234
+  resourceType String @default("unknown") // 예: "post", "document", "store", "shop"
+  resourceId   Int    @default(0) // 예: 1234
 
   // 권한 액션
-  action       String                         // 예: "read", "write", "delete"
+  action String // 예: "read", "write", "delete"
 
   // 권한 대상 (유저, 그룹, 롤 등)
-  subjectType  PermissionSubject
-  subjectId    Int?
+  subjectType PermissionSubject
+  subjectId   Int?
 
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([resourceType, resourceId], name: "idx_permission_resource")
   @@index([subjectType, subjectId], name: "idx_permission_subject")
