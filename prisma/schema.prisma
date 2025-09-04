@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PermissionSubject {
+  guest
+  member
+  admin
+  group
+}
+
+model User {
+  id            Int             @id @default(autoincrement())
+  uuid          String          @unique @default(cuid())
+  accountId     String          @unique
+  email_address String          @unique
+  nickName      String          @unique
+  password      String
+  refreshToken  String?
+  createdAt     DateTime        @default(now())
+  updateAt      DateTime        @updatedAt
+  isAdmin       Boolean?
+  isManagers    Boolean?
+  documents     Document[]
+  profile       Profile?
+  userGroups    UserGroupUser[]
+
+  @@index([email_address], name: "idx_user_email")  // 이메일로 조회 많을 경우
+  @@index([isAdmin], name: "idx_user_isAdmin")      // 관리자 필터링
+}
+
+model Profile {
+  id           Int     @id @default(autoincrement())
+  phone        String  @unique
+  userId       Int     @unique
+  profileImage String?
+  user         User    @relation(fields: [userId], references: [id])
+}
+
+model UserGroup {
+  id         Int             @id @default(autoincrement())
+  groupName  String          @unique
+  groupTitle String          @db.VarChar(45)
+  groupDesc  String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  users      UserGroupUser[]
+}
+
+model UserGroupUser {
+  id        Int       @id @default(autoincrement())
+  groupId   Int
+  userId    Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  group     UserGroup @relation(fields: [groupId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "idx_ugu_user")
+  @@index([groupId], name: "idx_ugu_group")
+  @@unique([userId, groupId], name: "uniq_ugu_user_group") // 중복 방지
+}
+
+model Document {
+  id             Int       @id @default(autoincrement())
+  resourceType   String    // 예: "post", "store", "shop"
+  resourceId     Int       // 예: Posts.id, Store.id 등
+  categoryId     Int?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  published      Boolean?  @default(false)
+  userId         Int?
+  authorName     String?   @db.VarChar(45)
+  authorPassword String?
+  title          String?   @db.VarChar(255)
+  content        String?
+  isNotice       Boolean?  @default(false)
+  isSecrets      Boolean?  @default(false)
+  readCount      Int?      @default(0)
+  commentCount   Int?      @default(0)
+  voteCount      Int?      @default(0)
+  category       Category? @relation("DocumentCategory", fields: [categoryId], references: [id])
+  user           User?     @relation(fields: [userId], references: [id])
+
+  @@index([resourceType, resourceId], name: "idx_document_resource")
+  @@index([categoryId], name: "idx_document_category")
+  @@index([userId], name: "idx_document_user")
+}
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  title       String     @db.VarChar(45)
+  desc        String?
+  color       String?    @db.VarChar(45)
+  parentId    Int?       // 부모 카테고리 ID, 최상위면 null
+  order       Int
+
+  // 리소스 구분: "post", "store", "shop" 등
+  resourceType String
+  resourceId   Int?
+
+  // 자기 참조
+  parent       Category?   @relation("CategoryChildren", fields: [parentId], references: [id])
+  children     Category[]  @relation("CategoryChildren")
+  documents    Document[]  @relation("DocumentCategory")
+
+  @@index([parentId], name: "idx_category_parent")
+  @@index([resourceType, resourceId], name: "idx_category_resource")
+}
+
+model Posts {
+  id         Int        @id @default(autoincrement())
+  pid        String     @unique
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  postName   String     @unique
+  postDesc   String?
+  grant      Json?      @db.Json
+  config     Json?      @db.Json
+  status     String?    @db.VarChar(45)
+
+  @@index([status], name: "idx_posts_status")
+}
+
+model Permission {
+  id          Int               @id @default(autoincrement())
+
+  // 리소스 구분
+  resourceType String  @default("unknown")    // 예: "post", "document", "store", "shop"
+  resourceId   Int     @default(0)            // 예: 1234
+
+  // 권한 액션
+  action       String                         // 예: "read", "write", "delete"
+
+  // 권한 대상 (유저, 그룹, 롤 등)
+  subjectType  PermissionSubject
+  subjectId    Int?
+
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([resourceType, resourceId], name: "idx_permission_resource")
+  @@index([subjectType, subjectId], name: "idx_permission_subject")
+}

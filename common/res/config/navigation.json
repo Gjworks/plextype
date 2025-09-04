@@ -1,0 +1,77 @@
+{
+  "header": {
+    "features": {
+      "name": "features",
+      "title": "Features",
+      "route": "/features",
+      "icon": "",
+      "subMenu": [
+        {
+            "title": "Components",
+            "name": "components",
+            "icon": "",
+            "parent": "features",
+            "route": "/features/components"
+        },
+        {
+            "title": "Documentation",
+            "name": "documentation",
+            "icon": "",
+            "parent": "features",
+            "route": "/features/documentation"
+        }
+        ]
+    },
+    "store": {
+      "name": "store",
+      "title": "Store",
+      "route": "/store",
+      "icon": "",
+      "subMenu": [
+        {
+            "title": "멤버쉽 관리",
+            "name": "components",
+            "icon": "",
+            "parent": "membership",
+            "route": "/membership/membership"
+        }
+        ]
+    },
+    "update": {
+      "name": "update",
+      "title": "Updates",
+      "route": "/posts/update",
+      "icon": "",
+      "subMenu": [
+        
+        ]
+    },
+    "supports": {
+      "name": "supports",
+      "title": "Supports",
+      "route": "/posts/supports",
+      "icon": "",
+      "subMenu": [
+        {
+            "title": "기술지원",
+            "name": "supports",
+            "icon": "",
+            "parent": "supports",
+            "route": "/posts/supports"
+        },
+        {
+            "title": "공지사항",
+            "name": "notice",
+            "icon": "",
+            "parent": "supports",
+            "route": "/posts/notice"
+        }
+      ]
+    }
+  },
+  "footer": {
+    "terms": {},
+    "privacy": {},
+    "about": {}
+  }
+}
