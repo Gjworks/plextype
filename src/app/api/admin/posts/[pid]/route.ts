@@ -24,13 +24,13 @@ export async function GET(request: NextRequest) {
     } else {
       const post = await prisma.posts.findUnique({
         where: { id: Number(id) },
-        include: {
-          categories: {
-            include: {
-              documents: true, // Category 안의 Document를 가져옴
-            },
-          },
-        },
+        // include: {
+        //   categories: {
+        //     include: {
+        //       documents: true, // Category 안의 Document를 가져옴
+        //     },
+        //   },
+        // },
       });
 
       if (!post) {
