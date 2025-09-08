@@ -1,20 +1,24 @@
-// src/extentions/posts/admin/scripts/data/post.ts
-
 import prisma from "@plextype/utils/db/prisma";
 
-export async function getPosts(pid: string) {
-  // 1. 게시판 찾기
+
+export async function getPosts(pid: string, page: number = 1, pageSize: number = 10) {
   const posts = await prisma.posts.findUnique({
     where: { pid },
     select: { id: true },
   });
 
   if (!posts) {
-    return [];
+    return { items: [], pagination: { totalCount: 0, totalPages: 0, currentPage: 1, pageSize } };
   }
 
-  // 2. 게시판에 속한 Document (= 게시글) 가져오기
-  const document = await prisma.document.findMany({
+  const totalCount = await prisma.document.count({
+    where: {
+      resourceType: "post",
+      resourceId: posts.id,
+    },
+  });
+
+  const documents = await prisma.document.findMany({
     where: {
       resourceType: "post",
       resourceId: posts.id,
@@ -22,6 +26,8 @@ export async function getPosts(pid: string) {
     orderBy: {
       createdAt: "desc",
     },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
     select: {
       id: true,
       title: true,
@@ -42,13 +48,21 @@ export async function getPosts(pid: string) {
     },
   });
 
-  // 3. 직렬화: Date → string
-  return document.map((p) => ({
-    ...p,
-    createdAt: p.createdAt.toISOString(),
-    updatedAt: p.updatedAt.toISOString(),
-  }));
+  return {
+    items: documents.map((p) => ({
+      ...p,
+      createdAt: p.createdAt.toISOString(),
+      updatedAt: p.updatedAt.toISOString(),
+    })),
+    pagination: {
+      totalCount,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: page,
+      pageSize,
+    },
+  };
 }
+
 
 export async function getDocument(id: string) {
   const document = await prisma.document.findUnique({
