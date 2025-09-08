@@ -8,9 +8,14 @@ import { checkPermissions } from "@/extentions/posts/scripts/actions/hasPermissi
 import PostNotFound from "./notFound";
 import PostNotPermission from "./notPermission";
 
+import React from "react";
+
 interface PostsListProps {
   params: {
     pid: string;
+  };
+  searchParams?: {
+    page?: string;
   };
 }
 
@@ -22,8 +27,10 @@ interface CurrentUser {
   loggedIn: boolean; // 로그인 상태
 }
 
-const PostsList = async ({ params }: PostsListProps) => {
+const PostsList = async ({ params, searchParams }: PostsListProps) => {
   const { pid } = params;
+  const page = parseInt(searchParams?.page ?? "1", 10);
+  console.log(page)
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
@@ -69,15 +76,20 @@ const PostsList = async ({ params }: PostsListProps) => {
   }
 
   // ✅ 게시글 목록 가져오기
-  const posts = await getPosts(pid);
+  const { items, pagination } = await getPosts(pid, page, 2);
 
   return (
-    <PostsListClient
-      posts={posts}
-      postInfo={serializedPostInfo}
-      currentUser={currentUser}
-    />
-  );
+      <>
+        <PostsListClient
+            posts={items}
+            postInfo={serializedPostInfo}
+            currentUser={currentUser}
+            pagination={pagination}
+        />
+
+      </>
+  )
+      ;
 };
 
 export default PostsList;

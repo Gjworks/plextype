@@ -2,16 +2,14 @@
 
 import { JSX } from "react";
 import Link from "next/link";
-interface PageNavigationInfo {
-  pathname: string;
-  totalCount: number;
-  totalPages: number;
+interface Props {
   page: number;
-  listCount: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
-const PageNavigation = (props: PageNavigationInfo) => {
-  const { pathname, totalCount, totalPages, page, listCount } = props;
+const PageNavigation = ({ page, totalPages, onPageChange }: Props) => {
+  // const { pathname, totalCount, totalPages, page, listCount } = props;
 
   const pageNavationList = (): JSX.Element[] | null => {
     const result: JSX.Element[] = [];
@@ -20,18 +18,21 @@ const PageNavigation = (props: PageNavigationInfo) => {
     }
     for (let i = 1; i <= totalPages; i++) {
       result.push(
-        <Link
+        <button
           key={i}
-          href={{ pathname: pathname, query: { page: i } }}
+          // href={{ pathname: pathname, query: { page: i } }}
+          // href={`${pathname}?page=${i}`}
+          // prefetch={false}
+          onClick={() => onPageChange(i)}
           className={
-            "flex items-center justify-center rounded-md  text-sm w-[2.25rem] h-[2.25rem]  text-gray-500 hover:text-white " +
+            "flex items-center justify-center rounded-md  text-sm w-[2.25rem] h-[2.25rem]  text-gray-500 hover:text-black " +
             (page == i
               ? "bg-white dark:bg-dark-900 text-gray-950 dark:text-white border border-gray-300 dark:border-dark-700 hover:border-gray-950 "
               : "text-gray-500")
           }
         >
           {i}
-        </Link>,
+        </button>,
       );
     }
     return result;
@@ -42,7 +43,7 @@ const PageNavigation = (props: PageNavigationInfo) => {
       <div className="flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
           <nav className="flex gap-1" aria-label="Pagination">
-            <a
+            <Link
               href="#"
               className="flex items-center justify-center rounded-md text-sm w-[2.25rem] h-[2.25rem] text-gray-500 hover:text-gray-950 hover:bg-gray-200 dark:hover:text-white dark:hover:bg-dark-900"
             >
@@ -60,9 +61,9 @@ const PageNavigation = (props: PageNavigationInfo) => {
                   clipRule="evenodd"
                 />
               </svg>
-            </a>
+            </Link>
             {pageNavationList()}
-            <a
+            <Link
               href="#"
               className="flex items-center justify-center rounded-md  text-sm w-[2.25rem] h-[2.25rem] text-gray-500 hover:text-gray-950 hover:bg-gray-200 dark:hover:text-white dark:hover:bg-dark-900"
             >
@@ -80,7 +81,7 @@ const PageNavigation = (props: PageNavigationInfo) => {
                   clipRule="evenodd"
                 />
               </svg>
-            </a>
+            </Link>
           </nav>
         </div>
       </div>
