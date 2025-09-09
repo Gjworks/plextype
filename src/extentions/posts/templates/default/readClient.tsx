@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import type { OutputData } from "@editorjs/editorjs";
 import EditorJsRenderer from "editorjs-react-renderer";
+import Link from "next/link";
 
 const PostsReadClient = ({ document, postInfo, currentUser }) => {
   const router = useRouter();
@@ -195,6 +196,11 @@ const PostsReadClient = ({ document, postInfo, currentUser }) => {
           }
           return null;
         })}
+      </div>
+      <div className={`flex justify-end gap-4 mx-auto max-w-screen-md py-8`}>
+        <Link href={`/posts/${postInfo.pid}`} className={`text-sm py-1 px-4 rounded-md bg-gray-200 `}>목록</Link>
+        <Link href={`/posts/${postInfo.pid}/edit/${document.id}`} className={`text-sm py-1 px-4 rounded-md bg-gray-200 `}>수정</Link>
+        <Link href={``} className={`text-sm py-1 px-4 rounded-md bg-gray-200 `}>삭제</Link>
       </div>
 
       <div className="dark:bg-dark-900 border-t border-gray-100 dark:border-dark-800"></div>
