@@ -1,5 +1,5 @@
 import Bottom from "@plextype/components/panel/Bottom";
-import PostWrite from "@/extentions/posts/templates/default/writeAction";
+import PostWrite from "@/extentions/posts/templates/default/write";
 
 type Params = Promise<{ pid: string }>;
 
@@ -33,7 +33,7 @@ const Page = async (props: { params: Params }) => {
         </div>
         <div className="max-w-screen-md mx-auto px-3">
           <div className="py-10 rounded-2xl">
-            <PostWrite params={{ pid: params.pid }} />
+            {/*<PostWrite params={{ pid: params.pid }} />*/}
           </div>
         </div>
       </Bottom>

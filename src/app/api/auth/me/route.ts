@@ -40,6 +40,7 @@ export async function GET(request: NextRequest): Promise<Response> {
           id: refreshVerifyToken.id,
           accountId: refreshVerifyToken.accountId,
           isAdmin: refreshVerifyToken.isAdmin,
+          groups: (refreshVerifyToken as any).groups ?? [],
         };
 
         const newAccessToken = await sign(tokenParams);

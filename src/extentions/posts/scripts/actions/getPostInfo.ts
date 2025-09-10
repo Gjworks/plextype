@@ -8,8 +8,8 @@ import {
 
 /**
  * 게시판 정보 조회 서버 액션
- * @param id 게시판 ID
  * @returns PostInfoData | null
+ * @param pid
  */
 const getPostInfo = async (pid: string): Promise<PostInfoData | null> => {
   // 게시판 기본 정보 조회
@@ -17,7 +17,6 @@ const getPostInfo = async (pid: string): Promise<PostInfoData | null> => {
   if (!postInfo) return null;
 
   // 권한 조회
-
   const permissions = await prisma.permission.findMany({
     where: { resourceType: "posts", resourceId: postInfo.id },
   });
@@ -38,9 +37,25 @@ const getPostInfo = async (pid: string): Promise<PostInfoData | null> => {
       .map((p) => ({ subjectType: p.subjectType, subjectId: p.subjectId })),
   };
 
+  // 📌 카테고리 조회
+  const categories = await prisma.category.findMany({
+    where: {
+      resourceType: "posts",
+      resourceId: postInfo.id,
+      parentId: null, // 최상위 카테고리만
+    },
+    include: {
+      children: true, // 하위 카테고리까지
+    },
+    orderBy: {
+      order: "asc",
+    },
+  });
+
   return {
     ...postInfo,
     permissions: mappedPermissions,
+    categories,
   };
 };
 

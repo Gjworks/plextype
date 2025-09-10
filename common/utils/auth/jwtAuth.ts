@@ -49,6 +49,7 @@ const refreshVerify = async (
       id: number;
       accountId: string;
       isAdmin: boolean;
+      groups: number[];
     };
   } catch (error) {
     return null;

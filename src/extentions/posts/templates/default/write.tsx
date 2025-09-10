@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import type { OutputData } from "@editorjs/editorjs";
 import Editorjs from "@plextype/components/editor/Editorjs";
 
-interface PostWriteClientProps {
+interface PostWriteProps {
     savePost: (formData: FormData) => Promise<void>;
     existingPost?: {
         id: number;
@@ -14,7 +14,7 @@ interface PostWriteClientProps {
 }
 
 
-const PostWriteClient: React.FC<PostWriteClientProps> = ({ savePost, existingPost }) => {
+const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
     const [title, setTitle] = useState(existingPost?.title || "");
     const [content, setContent] = useState<OutputData>(
         existingPost?.content ? JSON.parse(existingPost.content) : {}
@@ -72,4 +72,4 @@ const PostWriteClient: React.FC<PostWriteClientProps> = ({ savePost, existingPos
   );
 };
 
-export default PostWriteClient;
+export default PostWrite;

@@ -278,13 +278,6 @@ const DashboardUserList = () => {
         </div>
         <div className="grid grid-cols-2 gap-8 py-5">
           <div className="col-span-2 xl:col-span-1 flex items-center justify-center xl:justify-start">
-            <PageNavigation
-              pathname={pathname}
-              totalCount={pageNavigation.totalCount}
-              totalPages={pageNavigation.totalPages}
-              page={pageNavigation.page}
-              listCount={pageNavigation.listCount}
-            />
           </div>
           <div className="col-span-2 xl:col-span-1 flex items-center justify-end gap-2 ">
             <Link

@@ -100,13 +100,7 @@ const Page = (props: { params: Params; searchParams: SearchParams }) => {
         <div className="max-w-screen-xl mx-auto px-3">
           <div className="flex gap-4 flex-wrap">
             <div className="flex-1 flex py-3">
-              <PageNavigation
-                pathname="/posts/works"
-                totalCount={10}
-                page={1}
-                listCount={10}
-                totalPages={10}
-              />
+
             </div>
             <div className="flex items-center justify-end border-l border-gray-950/5 px-5">
               <Link

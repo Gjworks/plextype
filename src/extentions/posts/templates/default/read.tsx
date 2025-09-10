@@ -4,10 +4,15 @@ import { useRouter } from "next/navigation";
 import type { OutputData } from "@editorjs/editorjs";
 import EditorJsRenderer from "editorjs-react-renderer";
 import Link from "next/link";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import {usePostContext} from "./PostProvider";
 
-const PostsReadClient = ({ document, postInfo, currentUser }) => {
+dayjs.extend(relativeTime); // ← 반드시 플러그인 확장
+
+const PostsRead = ({ document }) => {
   const router = useRouter();
-  console.log(document);
+  const { postInfo } = usePostContext();
 
   const contentData = JSON.parse(document.content);
 
@@ -59,7 +64,7 @@ const PostsReadClient = ({ document, postInfo, currentUser }) => {
                     <span className="w-[3px] h-[3px] rounded-full bg-gray-400"></span>
                   </div>
                   <div className="dark:text-dark-400 text-sm font-light text-gray-500">
-                    2주전에 게시됨
+                    {dayjs(document.createdAt).fromNow()}
                   </div>
                 </div>
               </div>
@@ -442,4 +447,4 @@ const PostsReadClient = ({ document, postInfo, currentUser }) => {
   );
 };
 
-export default PostsReadClient;
+export default PostsRead;
