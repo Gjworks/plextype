@@ -1,8 +1,7 @@
 "use client";
 
 const Avator = ({ username, isLoggedIn }) => {
-  console.log(username);
-  console.log(isLoggedIn);
+
   return (
     <div className="flex gap-2">
       <div className="flex items-center">

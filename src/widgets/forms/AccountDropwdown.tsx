@@ -115,7 +115,7 @@ const AccountDropwdown = () => {
       window.location.href = "/";
     }
   };
-  console.log(user);
+
   const callbackName = (name) => {
     name === "Signout" && handleSignOut();
   };

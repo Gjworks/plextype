@@ -1,7 +1,8 @@
 "use server";
 
 import prisma from "@plextype/utils/db/prisma";
-import type { Prisma } from "@prisma/client";
+// import type { Prisma } from "@prisma/client";
+import { Category } from "@prisma/client";
 
 // 게시판(PostInfo) 기본 데이터 타입
 export type PostInfoData = {
@@ -19,6 +20,7 @@ export type PostInfoData = {
   pageCount: number; // config.pageCount
   documentLike: boolean; // config.documentLike
   consultingState: boolean; // config.consultingState
+  categories?: Category[];
 };
 
 /**

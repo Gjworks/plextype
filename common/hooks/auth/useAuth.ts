@@ -10,7 +10,7 @@ const fetchUser = async () => {
   // 로그인 안 된 상태는 401로 내려온다고 가정
 
   const data = await response.json();
-  console.log(data);
+
   if (!data.isLoggedIn) return null; // 로그인 안 된 상태는 null 반환
 
   return data;

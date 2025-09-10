@@ -48,12 +48,37 @@ export async function getPosts(pid: string, page: number = 1, pageSize: number =
     },
   });
 
+  // ✅ EditorJS content 일부만 추출 (첫 2~3 블록)
+  const items = documents.map((doc) => {
+    let previewContent = "";
+    if (doc.content) { // null 체크
+      try {
+        const parsed = JSON.parse(doc.content);
+        const slicedBlocks = parsed.blocks?.slice(0, 3) || [];
+        // previewContent = JSON.stringify({ ...parsed, blocks: slicedBlocks });
+        const textBlocks = slicedBlocks.map((b: any) => {
+          const rawText = b.data?.text || "";
+          return rawText.replace(/<[^>]+>/g, ""); // 모든 HTML 태그 제거
+        });
+
+        previewContent = textBlocks.join(" "); // 공백으로 연결
+      } catch {
+        // JSON 파싱 실패하면 그냥 원래 문자열 넣기
+        previewContent = doc.content;
+      }
+    }
+
+
+    return {
+      ...doc,
+      content: previewContent,
+      createdAt: doc.createdAt.toISOString(),
+      updatedAt: doc.updatedAt.toISOString(),
+    };
+  });
+
   return {
-    items: documents.map((p) => ({
-      ...p,
-      createdAt: p.createdAt.toISOString(),
-      updatedAt: p.updatedAt.toISOString(),
-    })),
+    items,
     pagination: {
       totalCount,
       totalPages: Math.ceil(totalCount / pageSize),

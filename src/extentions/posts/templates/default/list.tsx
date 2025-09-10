@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PostsHeader from "./header";
 import { getPostsAction } from "src/extentions/posts/scripts/actions/getPostsAction";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import {usePostContext} from "./PostProvider";
+
+dayjs.extend(relativeTime); // ← 반드시 플러그인 확장
 
 import {
   HomeIcon,
@@ -13,14 +18,6 @@ import {
 } from "@heroicons/react/24/outline";
 import PageNavigation from "@plextype/components/nav/PageNavigation";
 
-interface CurrentUser {
-  id: number;
-  accountId: string;
-  isAdmin: boolean;
-  groups: number[];
-  loggedIn: boolean;
-}
-
 interface Pagination {
   currentPage: number;
   totalPages: number;
@@ -28,41 +25,18 @@ interface Pagination {
   totalCount: number;
 }
 
-interface PostsListClientProps {
-  posts: {
-    id: number;
-    title: string | null;
-    content: string | null;
-    createdAt: string; // 직렬화해야 클라이언트에서 사용 가능
-    updatedAt: string;
-    isNotice: boolean | null;
-    isSecrets: boolean | null;
-    readCount: number | null;
-    commentCount: number | null;
-    voteCount: number | null;
-    user?: {
-      id: number;
-      nickName: string;
-    } | null;
-  }[];
-  postInfo: {
-    id: number;
-    pid: string;
-    postName: string;
-    postDesc?: string | null;
-  };
-  currentUser?: CurrentUser | null; // ✅ 추가
-  pagination: Pagination
-}
-
-const PostsListClient: React.FC<PostsListClientProps> = ({
+const PostsListClient = ({
   posts,
-  postInfo,pagination: initialPagination
+  pagination: initialPagination
+}:{
+  posts: any[];
+  pagination: Pagination;
 }) => {
   const router = useRouter();
   const [documentInfo, setDocumentInfo] = useState(posts);
   const [pagination, setPagination] = useState(initialPagination);
   const [page, setPage] = useState(pagination.currentPage);
+  const { postInfo } = usePostContext();
 
   const handlePageChange = async (newPage: number) => {
     setPage(newPage);
@@ -76,50 +50,53 @@ const PostsListClient: React.FC<PostsListClientProps> = ({
 
   return (
       <>
-        <PostsHeader/>
-        <div className="border-t border-gray-200 dark:border-dark-700">
+        <PostsHeader />
+        <div className="">
           {documentInfo.map((doc) => (
               <div
                   key={doc.id}
-                  className="flex flex-wrap gap-4 lg:gap-2 border-b border-gray-200 dark:border-dark-700 py-4 lg:py-8"
+                  className="flex flex-wrap gap-4 lg:gap-2 py-4 lg:py-8"
               >
                 <div className="flex-1">
                   <Link
                       href={`/posts/${postInfo.pid}/view/${doc.id}`}
-                      className="text-sm lg:text-xl font-medium text-gray-950 dark:text-white hover:underline line-clamp-2 mb-2"
+                      className="text-sm lg:text-base font-semibold text-gray-950 dark:text-white hover:underline line-clamp-2 mb-2"
                   >
                     {doc.title}
                   </Link>
+                  <div className={`mb-4 text-sm wrap-break-word break-keep text-gray-500 dark:text-gray-300 line-clamp-1`}>
+                    {doc.content}
+                  </div>
 
                   <div className="flex items-center">
                     <div
-                        className="relative text-primary-500 pr-3 text-xs lg:text-sm before:absolute before:h-[12px] before:w-[1px] before:right-0 before:top-[4px] before:bg-gray-300">
+                        className="relative text-primary-500 pr-3 text-xs before:absolute before:h-[12px] before:w-[1px] before:right-0 before:top-[4px] before:bg-gray-300">
                       질문답변
                     </div>
                     <div
-                        className="relative text-gray-900 dark:text-dark-100 text-xs lg:text-sm px-3 before:absolute before:h-[12px] before:w-[1px] before:right-0 before:top-[4px] before:bg-gray-300">
+                        className="relative text-gray-900 dark:text-dark-100 text-xs px-3 before:absolute before:h-[12px] before:w-[1px] before:right-0 before:top-[4px] before:bg-gray-300">
                       {doc.user?.nickName}
                     </div>
                     <div
-                        className="relative text-gray-500 text-xs lg:text-sm px-3 before:absolute before:h-[12px] before:w-[1px] before:right-0 before:top-[4px] before:bg-gray-300">
-                      3일전
+                        className="relative text-gray-400 text-xs px-3 before:absolute before:h-[12px] before:w-[1px] before:right-0 before:top-[4px] before:bg-gray-300">
+                      {dayjs(doc.createdAt).fromNow()}
                     </div>
                     <div
                         className="relative flex gap-2 px-3 before:absolute before:h-[12px] before:w-[1px] before:right-0 before:top-[4px] before:bg-gray-300">
-                      <div className="text-xs lg:text-sm text-gray-400">댓글</div>
-                      <div className="text-xs lg:text-sm text-gray-700">
+                      <div className="text-xs text-gray-400">댓글</div>
+                      <div className="text-xs text-gray-700">
                         {doc.commentCount}
                       </div>
                     </div>
                     <div className="flex gap-2 px-3">
-                      <div className="text-xs lg:text-sm text-gray-400">조회수</div>
-                      <div className="text-xs lg:text-sm text-gray-700">
+                      <div className="text-xs text-gray-400">조회수</div>
+                      <div className="text-xs text-gray-700">
                         {doc.readCount}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center w-full lg:w-1/5">
+                <div className="hidden items-center w-full lg:w-1/5">
                   <div
                       className="flex-1 bg-gray-100 dark:bg-dark-900 dark:lg:bg-transparent lg:bg-white py-2 rounded-md border lg:border-0 border-gray-200 dark:border-dark-800">
                     <div
