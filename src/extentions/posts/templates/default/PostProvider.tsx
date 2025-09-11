@@ -5,6 +5,12 @@ import React, { createContext, useContext, ReactNode } from "react";
 interface PostContextValue {
   postInfo: any;
   currentUser: any;
+  permissions: {
+    doList: boolean;
+    doRead: boolean;
+    doWrite: boolean;
+    doComment: boolean;
+  };
 }
 
 const PostContext = createContext<PostContextValue | undefined>(undefined);

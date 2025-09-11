@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {usePostContext} from "./PostProvider";
 import { useUser } from "@plextype/hooks/auth/useAuth";
+import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
 dayjs.extend(relativeTime); // ← 반드시 플러그인 확장
 
 const PostsRead = ({ document }) => {
@@ -17,6 +18,11 @@ const PostsRead = ({ document }) => {
   console.log(JSON.stringify(user))
   const contentData = JSON.parse(document.content);
 
+  const { permissions } = usePostContext();
+
+  if (!permissions.doRead) {
+    return <PostNotPermission/>;
+  }
 
   return (
     <>
