@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
 import prisma from "@plextype/utils/db/prisma";
@@ -21,6 +22,9 @@ export const upsertPost = async (
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const id = formData.get("id");
+  const categoryIdRaw = formData.get("categoryId");
+  const categoryId = categoryIdRaw ? Number(categoryIdRaw) : null;
+  console.log(categoryId)
   if (!title || !content) throw new Error("제목과 내용을 입력해주세요.");
 
   // 📌 pid로 게시판(Posts) 정보 조회
@@ -48,21 +52,23 @@ export const upsertPost = async (
     }
 
     // 📌 기존 글 업데이트
-    await prisma.document.update({
+    const newPost = await prisma.document.update({
       where: { id: Number(id) },
       data: {
         title,
         content,
+        categoryId,
         updatedAt: new Date(),
       },
     });
+    redirect(`/posts/${pid}/view/${newPost.id}`);
   } else {
     // 📌 새 글 생성
-    await prisma.document.create({
+    const newPost = await prisma.document.create({
       data: {
         resourceType: "post",
         resourceId: post.id, // ← Posts.id 연결
-        categoryId: null, // 필요 시 formData에 categoryId 추가해서 설정
+        categoryId, // 필요 시 formData에 categoryId 추가해서 설정
         title,
         content,
         userId,
@@ -75,5 +81,7 @@ export const upsertPost = async (
         voteCount: 0,
       },
     });
+    redirect(`/posts/${pid}/view/${newPost.id}`);
   }
+
 };

@@ -4,6 +4,7 @@ import { upsertPost } from "@/extentions/posts/scripts/actions/upsertPost";
 
 type Post = {
   id: number;
+  categoryId:number | null;
   title: string | null;
   content: string | null;
   createdAt: Date;

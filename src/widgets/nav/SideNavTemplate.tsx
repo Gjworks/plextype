@@ -50,7 +50,7 @@ const SideNavTemplate = props => {
                   />
                 </svg>
               </span>
-              <span className="text-sm font-normal">Home</span>
+              <span className="text-[0.752rem] font-normal">Home</span>
             </Link>
           </motion.div>
           <motion.div variants={variants}>
@@ -72,7 +72,7 @@ const SideNavTemplate = props => {
                   />
                 </svg>
               </span>
-              <span className="text-sm font-normal">Notification</span>
+              <span className="text-[0.752rem] font-normal">Notification</span>
             </Link>
           </motion.div>
         </div>
@@ -114,7 +114,7 @@ const SideNavTemplate = props => {
                         />
                       </svg>
                     </span>
-                    <span className="text-sm font-normal">{data[1].title}</span>
+                    <span className="text-[0.752rem] font-normal">{data[1].title}</span>
                   </Link>
                 </motion.div>
               )
@@ -145,7 +145,7 @@ const SideNavTemplate = props => {
                   />
                 </svg>
               </span>
-              <span className="text-sm font-normal">Forum</span>
+              <span className="text-[0.752rem] font-normal">Forum</span>
             </Link>
           </motion.div>
           <motion.div variants={variants}>
@@ -167,7 +167,7 @@ const SideNavTemplate = props => {
                   />
                 </svg>
               </span>
-              <span className="flex-1 text-sm font-normal">Github</span>
+              <span className="flex-1 text-[0.752rem] font-normal">Github</span>
               <span className="text-gray-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

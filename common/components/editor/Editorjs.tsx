@@ -46,7 +46,7 @@ const Editorjs: React.FC<EditorjsProps> = ({
     };
   }, []); // 의존성 최소화
 
-  return <div id={holder} className="min-h-[300px] border rounded-md p-2" />;
+  return <div id={holder} className="min-h-[300px] p-2" />;
 };
 
 export default Editorjs;

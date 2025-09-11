@@ -7,6 +7,7 @@ const Page = async ({ params }: {params: Promise<{ pid: string; id: string }>;})
 
   // ✅ 게시글 정보 가져오기
   const document = await getDocument(id);
+  console.log(document)
 
   return (
     <PostsRead
