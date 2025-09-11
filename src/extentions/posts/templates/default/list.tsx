@@ -17,6 +17,7 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
 } from "@heroicons/react/24/outline";
 import PageNavigation from "@plextype/components/nav/PageNavigation";
+import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
 
 interface Pagination {
   currentPage: number;
@@ -37,6 +38,12 @@ const PostsListClient = ({
   const [pagination, setPagination] = useState(initialPagination);
   const [page, setPage] = useState(pagination.currentPage);
   const {postInfo} = usePostContext();
+
+  const { permissions } = usePostContext();
+
+  if (!permissions.doList) {
+    return <PostNotPermission/>;
+  }
 
   const handlePageChange = async (newPage: number) => {
     setPage(newPage);

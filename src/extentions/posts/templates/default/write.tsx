@@ -4,6 +4,7 @@ import React, {useState, useEffect} from "react";
 import type {OutputData} from "@editorjs/editorjs";
 import Editorjs from "@plextype/components/editor/Editorjs";
 import {usePostContext} from "./PostProvider";
+import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
 
 interface PostWriteProps {
   savePost: (formData: FormData) => Promise<void>;
@@ -22,6 +23,12 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
   const [content, setContent] = useState<OutputData>(
     existingPost?.content ? JSON.parse(existingPost.content) : {}
   );
+
+  const { permissions } = usePostContext();
+
+  if (!permissions.doWrite) {
+    return <PostNotPermission/>;
+  }
 
   useEffect(() => {
     if (existingPost?.content) {

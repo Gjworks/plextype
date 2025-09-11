@@ -4,7 +4,7 @@ import {getPostInfo} from "@/extentions/posts/scripts/actions/getPostInfo";
 import PostProvider from "@/extentions/posts/templates/default/PostProvider";
 import PostNotFound from "@/extentions/posts/templates/default/notFound";
 import {checkPermissions} from "@/extentions/posts/scripts/actions/hasPermission";
-import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
+
 import {cookies} from "next/headers";
 import {decodeJwt} from "jose";
 
@@ -51,22 +51,15 @@ export default async function PageLayout({
     }
   }
 
-
-
   if (!postInfo) {
     return <PostNotFound/>;
   }
 
-
   // list 권한 체크 (예: guest, member, admin 등)
   const permissionResult = checkPermissions(postInfo.permissions, currentUser);
 
-  if (!permissionResult.doList) {
-    return <PostNotPermission/>;
-  }
-
   return (
-    <PostProvider value={{postInfo, currentUser: null}}>
+    <PostProvider value={{postInfo, currentUser: null, permissions: permissionResult}}>
       <DefaultLayout>{children}</DefaultLayout>
     </PostProvider>
   );
