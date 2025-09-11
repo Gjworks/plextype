@@ -39,6 +39,13 @@ export async function getPosts(pid: string, page: number = 1, pageSize: number =
       readCount: true,
       commentCount: true,
       voteCount: true,
+      category: {   // ← 여기 추가
+        select: {
+          id: true,
+          title: true,
+          parentId: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -76,7 +83,7 @@ export async function getPosts(pid: string, page: number = 1, pageSize: number =
       updatedAt: doc.updatedAt.toISOString(),
     };
   });
-
+  console.log(items)
   return {
     items,
     pagination: {
@@ -94,6 +101,8 @@ export async function getDocument(id: string) {
     where: { id: Number(id) },
     select: {
       id: true,
+      categoryId:true,
+      userId:true,
       title: true,
       content: true,
       createdAt: true,
@@ -107,6 +116,15 @@ export async function getDocument(id: string) {
         select: {
           id: true,
           nickName: true,
+        },
+      },
+      category: {      // ← 카테고리 정보 추가
+        select: {
+          id: true,
+          title: true,
+          desc: true,
+          color: true,
+          parentId: true,
         },
       },
     },

@@ -1,35 +1,38 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import type { OutputData } from "@editorjs/editorjs";
+import React, {useState, useEffect} from "react";
+import type {OutputData} from "@editorjs/editorjs";
 import Editorjs from "@plextype/components/editor/Editorjs";
+import {usePostContext} from "./PostProvider";
 
 interface PostWriteProps {
-    savePost: (formData: FormData) => Promise<void>;
-    existingPost?: {
-        id: number;
-        title: string | null;
-        content: string | null; // DB에 JSON string이라면 string | null
-    } | null;
+  savePost: (formData: FormData) => Promise<void>;
+  existingPost?: {
+    id: number;
+    categoryId: number | null;
+    title: string | null;
+    content: string | null; // DB에 JSON string이라면 string | null
+  } | null;
 }
 
 
-const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
-    const [title, setTitle] = useState(existingPost?.title || "");
-    const [content, setContent] = useState<OutputData>(
-        existingPost?.content ? JSON.parse(existingPost.content) : {}
-    );
+const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
+  const {postInfo} = usePostContext();
+  const [title, setTitle] = useState(existingPost?.title || "");
+  const [content, setContent] = useState<OutputData>(
+    existingPost?.content ? JSON.parse(existingPost.content) : {}
+  );
 
-    useEffect(() => {
-        if (existingPost?.content) {
-            try {
-                const parsed:OutputData = JSON.parse(existingPost.content);
-                setContent(parsed);
-            } catch {
-                setContent({ blocks: [] });
-            }
-        }
-    }, [existingPost]);
+  useEffect(() => {
+    if (existingPost?.content) {
+      try {
+        const parsed: OutputData = JSON.parse(existingPost.content);
+        setContent(parsed);
+      } catch {
+        setContent({blocks: []});
+      }
+    }
+  }, [existingPost]);
 
   const handleContentChange = (data: OutputData) => {
     setContent(data);
@@ -42,26 +45,46 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
 
     // JSON 객체를 문자열로 변환
     formData.append("content", JSON.stringify(content));
-    console.log(formData);
-      await savePost(formData);
+    await savePost(formData);
 
     // 이제 여기에서 저장할꺼야
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-        {existingPost && (
-            <input type="hidden" name="id" value={existingPost.id} />
+      {existingPost && (
+        <input type="hidden" name="id" value={existingPost.id}/>
+      )}
+      <div>
+        {postInfo.categories && postInfo.categories.length > 0 && (
+          <select
+            name="categoryId"
+            defaultValue={existingPost?.categoryId ?? ""}
+            className="text-sm p-2 outline-none bg-gray-100 rounded-md"
+          >
+            <option value="">카테고리 선택</option>
+            {postInfo.categories.map((cat: any) => (
+              <React.Fragment key={cat.id}>
+                <option value={cat.id}>{cat.title}</option>
+                {cat.children?.map((child: any) => (
+                  <option key={child.id} value={child.id} className="pl-3">
+                    - {child.title}
+                  </option>
+                ))}
+              </React.Fragment>
+            ))}
+          </select>
         )}
+      </div>
       <input
         type="text"
         name="title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="제목을 입력해주세요."
-        className="w-full border rounded p-2"
+        className="w-full p-2 outline-none"
       />
-      <Editorjs onChange={handleContentChange} data={content} />
+      <Editorjs onChange={handleContentChange} data={content}/>
       <button
         type="submit"
         className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
