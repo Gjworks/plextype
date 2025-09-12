@@ -192,7 +192,7 @@ export default function DashboardLayout({
 
             <div className="sticky top-[52px] lg:top-[60px] w-full bg-white/90 dark:bg-dark-950/90 backdrop-blur-lg z-90 border-b border-gray-100 dark:border-dark-700">
               <div className="overflow-scroll-hide overflow-hidden overflow-x-auto flex gap-8 max-w-screen-2xl mx-auto px-3">
-                <DefaultNav list={dashbaordNav} params={params[2]} />
+                <DefaultNav list={dashbaordNav} />
               </div>
             </div>
             <div className="">

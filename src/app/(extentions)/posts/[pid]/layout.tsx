@@ -1,4 +1,5 @@
 import React from "react";
+
 import DefaultLayout from "src/layouts/fullLayout/Layout";
 import {getPostInfo} from "@/extentions/posts/scripts/actions/getPostInfo";
 import PostProvider from "@/extentions/posts/templates/default/PostProvider";
@@ -18,17 +19,16 @@ interface CurrentUser {
 
 export default async function PageLayout({
                                            children,
-                                           params: rawParams,  // params는 Promise 형태일 수 있음
+                                           params,
                                          }: {
   children: React.ReactNode;
-  params: { pid: string } | Promise<{ pid: string }>;
+  params: any;
 }) {
-  const params = await rawParams; // <-- await로 실제 값으로 변환
+  const { pid } = params as { pid: string };
   const postInfo = await getPostInfo(params.pid);
 
   let currentUser: CurrentUser | null = null;
 
-  const {pid} = params;
 
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
