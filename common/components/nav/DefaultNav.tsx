@@ -9,7 +9,7 @@ interface Inspage {
   route: string;
 }
 
-const DefaultNav = ({ list, params }) => {
+const DefaultNav = ({ list }) => {
   const pathname = usePathname();
   const [activeTabIndex, setActiveTabIndex] = useState(-1);
   const [tabUnderlineWidth, setTabUnderlineWidth] = useState(0);
@@ -46,10 +46,9 @@ const DefaultNav = ({ list, params }) => {
   }, [list]);
 
   useEffect(() => {
-    setPrevModule(params);
     setActiveTabIndex(0);
     setNowPathname(pathname);
-  }, [params]);
+  }, []);
 
   useEffect(() => {
     if (!prevModule) {

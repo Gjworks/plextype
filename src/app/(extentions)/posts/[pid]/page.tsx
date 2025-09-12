@@ -7,7 +7,7 @@ const Page = async ({params, searchParams}: {params: Promise<{ pid: string }>;
   const { pid } = await params;
   const { page: pageParam } = (await searchParams) || {};
   const page = parseInt(pageParam ?? "1", 10);
-  const {items, pagination} = await getPosts(pid, page, 2);
+  const {items, pagination} = await getPosts(pid, page, 5);
 
   return (
       <div className="max-w-screen-md mx-auto px-3">

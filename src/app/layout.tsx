@@ -14,12 +14,12 @@ export default function RootLayout({ children }) {
       <body>
         <ReactQueryProvider>
           <ReduxProviders>{children}</ReduxProviders>
+          <div id="toast"></div>
+          <div id="left"></div>
+          <div id="right"></div>
+          <div id="bottom"></div>
+          <div id="modal"></div>
         </ReactQueryProvider>
-        <div id="toast"></div>
-        <div id="left"></div>
-        <div id="right"></div>
-        <div id="bottom"></div>
-        <div id="modal"></div>
       </body>
     </html>
   );
