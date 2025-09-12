@@ -8,11 +8,11 @@ const PostsHeader = () => {
 
   return (
     <>
-      <div className="pt-20">
+      <div className="">
         <div className="text-3xl text-center font-semibold dark:text-white py-10">
           {postInfo.postName}
         </div>
-        <div className="mb-6">
+        <div className="">
           <PostsCategories />
         </div>
       </div>

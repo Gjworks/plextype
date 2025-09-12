@@ -220,7 +220,7 @@ const PostsRead = ({ document }) => {
       <div className="flex justify-end gap-2 mx-auto max-w-screen-md py-8">
         <Link
           href={`/posts/${postInfo.pid}`}
-          className="text-sm py-1 px-4 rounded-sm bg-gray-100 text-gray-600"
+          className="text-sm py-1 px-4 rounded-sm bg-gray-100 text-gray-600 hover:bg-gray-200"
         >
           목록
         </Link>
@@ -229,17 +229,16 @@ const PostsRead = ({ document }) => {
              <>
                <Link
                  href={`/posts/${postInfo.pid}/edit/${document.id}`}
-                 className="text-sm py-1 px-4 rounded-sm bg-yellow-100 text-amber-600"
+                 className="text-sm py-1 px-4 rounded-sm bg-yellow-100 text-amber-600 hover:bg-yellow-200"
                >
                  수정
                </Link>
-               <button
-                 type="button"
-                 // onClick={() => handleDelete(document.id)}
-                 className="text-sm py-1 px-4 rounded-sm bg-red-100 text-red-600"
+               <Link
+                 href={`/posts/${postInfo.pid}/view/${document.id}/delete`}
+                 className="text-sm py-1 px-4 rounded-sm bg-red-100 text-red-600 hover:bg-red-200"
                >
                  삭제
-               </button>
+               </Link>
 
              </>
           ) : null

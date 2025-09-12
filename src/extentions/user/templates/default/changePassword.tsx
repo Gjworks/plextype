@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Alert from "@plextype/components/message/Alert";
 
 import { PasswordChange } from "@/extentions/user/scripts/userController";
+import HeaderUser from "@/extentions/user/templates/default/header";
 
 const ChangePassword = (props) => {
   const [error, setError] = useState<{ type: string; message: string } | null>(
