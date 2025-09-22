@@ -96,7 +96,7 @@ export async function getPosts(pid: string, page: number = 1, pageSize: number =
 }
 
 
-export async function getDocument(id: string) {
+export async function getDocument(id: number) {
   const document = await prisma.document.findUnique({
     where: { id: Number(id) },
     select: {

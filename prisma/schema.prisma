@@ -30,6 +30,7 @@ model User {
   documents     Document[]
   profile       Profile?
   userGroups    UserGroupUser[]
+  Comment       Comment[]
 
   @@index([email_address], name: "idx_user_email") // 이메일로 조회 많을 경우
   @@index([isAdmin], name: "idx_user_isAdmin") // 관리자 필터링
@@ -87,6 +88,7 @@ model Document {
   voteCount      Int?      @default(0)
   category       Category? @relation("DocumentCategory", fields: [categoryId], references: [id])
   user           User?     @relation(fields: [userId], references: [id])
+  Comment        Comment[]
 
   @@index([resourceType, resourceId], name: "idx_document_resource")
   @@index([categoryId], name: "idx_document_category")
@@ -147,4 +149,40 @@ model Permission {
 
   @@index([resourceType, resourceId], name: "idx_permission_resource")
   @@index([subjectType, subjectId], name: "idx_permission_subject")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(cuid()) // 클라이언트 식별용
+  content   String // 댓글 본문
+  createdAt DateTime @default(now()) // 작성일
+  updatedAt DateTime @updatedAt // 수정일
+
+  // 관계
+  documentId Int // 어떤 Document에 달린 댓글인지
+  document   Document @relation(fields: [documentId], references: [id])
+
+  userId Int? // 작성자 (회원일 경우)
+  user   User? @relation(fields: [userId], references: [id])
+
+  // 익명 댓글 옵션
+  authorName     String? @db.VarChar(45) // 비회원 이름
+  authorPassword String? @db.VarChar(255) // 비회원 비밀번호 (암호화 저장 권장)
+
+  // 트리 구조 (대댓글 지원용)
+  parentId Int?
+  parent   Comment?  @relation("CommentChildren", fields: [parentId], references: [id])
+  children Comment[] @relation("CommentChildren")
+
+  // 상태
+  isDeleted Boolean @default(false) // 삭제 여부 (soft delete)
+  isSecret  Boolean @default(false) // 비밀 댓글 여부
+
+  // 통계
+  voteCount Int @default(0) // 추천/좋아요 카운트
+  depth     Int @default(0) // 추가: 트리 깊이
+
+  @@index([documentId], name: "idx_comment_document")
+  @@index([userId], name: "idx_comment_user")
+  @@index([parentId], name: "idx_comment_parent")
 }
