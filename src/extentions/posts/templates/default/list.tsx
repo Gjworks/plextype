@@ -8,9 +8,9 @@ import {getPostsAction} from "src/extentions/posts/scripts/actions/getPostsActio
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {usePostContext} from "./PostProvider";
-
+import "dayjs/locale/ko";
 dayjs.extend(relativeTime); // ← 반드시 플러그인 확장
-
+dayjs.locale("ko");
 import {
   HomeIcon,
   ChevronRightIcon,

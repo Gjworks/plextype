@@ -157,7 +157,7 @@ const Modal: React.FC<ModalProps> = ({
                 animate={modalState === true ? "openModal" : "closeModal"}
                 variants={modalVariants}
                 exit={exit}
-                className={`bootom-1 z-101 dark:bg-dark-800/95 dark:border-dark-900/75 dark:border-t-dark-800 fixed left-1/2 ${modalPosition.pos} mx-auto mb-2 w-full ${modalSize} overflow-hidden rounded-xl bg-white/95 text-white backdrop-blur-lg lg:mb-10 dark:border`}
+                className={`bootom-1 z-101 dark:bg-dark-800/95 dark:border-dark-900/75 dark:border-t-dark-800 fixed left-1/2 ${modalPosition.pos} mx-auto mb-2 w-full ${modalSize} overflow-hidden rounded-xl bg-white  backdrop-blur-lg lg:mb-10 dark:border`}
               >
                 <div className="" onClick={handleCloseModal}></div>
                 <motion.div

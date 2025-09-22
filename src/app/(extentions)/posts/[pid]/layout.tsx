@@ -22,10 +22,11 @@ export default async function PageLayout({
                                            params,
                                          }: {
   children: React.ReactNode;
-  params: any;
+  params:  Promise<{ pid: string; id: string }>;
 }) {
-  const { pid } = params as { pid: string };
-  const postInfo = await getPostInfo(params.pid);
+  const resolvedParams = await params; // params가 Promise라면 await
+  const { pid, id } = resolvedParams;
+  const postInfo = await getPostInfo(pid);
 
   let currentUser: CurrentUser | null = null;
 
@@ -59,7 +60,7 @@ export default async function PageLayout({
   const permissionResult = checkPermissions(postInfo.permissions, currentUser);
 
   return (
-    <PostProvider value={{postInfo, currentUser: null, permissions: permissionResult}}>
+    <PostProvider value={{postInfo, currentUser, permissions: permissionResult}}>
       <DefaultLayout>{children}</DefaultLayout>
     </PostProvider>
   );

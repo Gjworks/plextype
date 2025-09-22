@@ -89,7 +89,7 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="제목을 입력해주세요."
-        className="w-full p-2 outline-none"
+        className="w-full p-2 outline-none text-3xl leading-10"
       />
       <Editorjs onChange={handleContentChange} data={content}/>
       <button
