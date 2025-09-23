@@ -13,8 +13,13 @@ import {addCommentAndIncrementCount, deleteCommentAndDecrementCount} from "@/ext
 import {getUniqueCommentMember} from "@/extentions/posts/scripts/actions/getUniqueCommentMember";
 
 interface PageProps {
-  params: { pid: string; id: string } | Promise<{ pid: string; id: string }>;
-  searchParams: { [key: string]: string | string[] | undefined } | Promise<{ [key: string]: string | string[] | undefined }>;
+  params: Promise<{
+    pid: string;
+    id: string;
+  }>;
+  searchParams?: Promise<{
+    [key: string]: string | string[] | undefined;
+  }>;
 }
 
 interface CurrentUser {
@@ -26,8 +31,8 @@ interface CurrentUser {
 }
 
 const Page = async ({ params, searchParams }: PageProps) => {
-  const { pid, id } = await params;
-  const sp = await searchParams;
+  const { pid, id } =  await params;
+  const sp = (await searchParams) ?? {};
 
   const documentId = Number(id);
   let page = 1;
