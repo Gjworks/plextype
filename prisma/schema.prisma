@@ -160,7 +160,7 @@ model Comment {
 
   // 관계
   documentId Int // 어떤 Document에 달린 댓글인지
-  document   Document @relation(fields: [documentId], references: [id])
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   userId Int? // 작성자 (회원일 경우)
   user   User? @relation(fields: [userId], references: [id])

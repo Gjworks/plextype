@@ -56,24 +56,24 @@ const PostsRead = ({ document }) => {
                   </button>
                 </div>
                 <div className="flex gap-2">
-                  <div className="dark:text-dark-400 text-sm font-light text-gray-500">
+                  <div className="dark:text-dark-400 text-sm text-gray-500">
                     {document.category?.title ?? ""}
                   </div>
                   <div className="flex gap-1 items-center">
                     <span className="w-[3px] h-[3px] rounded-full bg-gray-400"></span>
                   </div>
                   <div className="flex gap-2">
-                    <div className="dark:text-dark-400 text-sm font-light text-gray-500">
+                    <div className="dark:text-dark-400 text-sm text-gray-500">
                       조회수
                     </div>
-                    <div className="dark:text-dark-400 text-sm font-light text-gray-500">
+                    <div className="dark:text-dark-400 text-sm text-gray-500">
                       {document.readCount}
                     </div>
                   </div>
                   <div className="flex gap-1 items-center">
                     <span className="w-[3px] h-[3px] rounded-full bg-gray-400"></span>
                   </div>
-                  <div className="dark:text-dark-400 text-sm font-light text-gray-500">
+                  <div className="dark:text-dark-400 text-sm text-gray-500">
                     {dayjs(document.createdAt).fromNow()}
                   </div>
                 </div>
@@ -153,7 +153,7 @@ const PostsRead = ({ document }) => {
                     </svg>
                   </span>
                 </div>
-                <div className="dark:text-dark-400 text-sm font-light text-gray-500">
+                <div className="dark:text-dark-400 text-sm text-gray-500">
                   6명의 사람들이 이 토론에 참여하였습니다.
                 </div>
               </div>
@@ -204,7 +204,7 @@ const PostsRead = ({ document }) => {
           </div>
         </div>
       </div>
-      <div className="mx-auto max-w-screen-md px-3 py-6 lg:py-10">
+      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800">
         {contentData.blocks.map((block: any) => {
           if (block.type === "paragraph") {
             return (
