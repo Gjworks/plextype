@@ -11,12 +11,23 @@ import { useUser } from "@plextype/hooks/auth/useAuth";
 import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
 dayjs.extend(relativeTime); // ← 반드시 플러그인 확장
 
-const PostsRead = ({ document }) => {
+interface Participant {
+  id: number;
+  nickName: string;
+  profileImage?: string; // 나중에 DB에서 가져올 컬럼
+}
+
+interface PostsReadProps {
+  document: any;
+  participants?: Participant[]; // User 타입 배열
+}
+
+const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
   const router = useRouter();
   const { postInfo } = usePostContext();
   const { data: user, isError } = useUser();
   console.log(JSON.stringify(user))
-  const contentData = JSON.parse(document.content);
+  const contentData = JSON.parse((document as { content?: string }).content || "{}");
 
   const { permissions } = usePostContext();
 
@@ -105,7 +116,7 @@ const PostsRead = ({ document }) => {
                     />
                   </svg>
                 </div>
-                <div className="text-xs text-gray-500">1232</div>
+                <div className="text-xs text-gray-500">{document.readCount}</div>
               </div>
               <div className="flex gap-1 items-center">
                 <div className=" dark:text-dark-500">
@@ -154,7 +165,7 @@ const PostsRead = ({ document }) => {
                   </span>
                 </div>
                 <div className="dark:text-dark-400 text-sm text-gray-500">
-                  6명의 사람들이 이 토론에 참여하였습니다.
+                  {participants.length}명의 사람들이 이 토론에 참여하였습니다.
                 </div>
               </div>
 

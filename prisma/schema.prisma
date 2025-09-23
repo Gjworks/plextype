@@ -8,13 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum PermissionSubject {
-  guest
-  member
-  admin
-  group
-}
-
 model User {
   id            Int             @id @default(autoincrement())
   uuid          String          @unique @default(cuid())
@@ -27,13 +20,13 @@ model User {
   updateAt      DateTime        @updatedAt
   isAdmin       Boolean?
   isManagers    Boolean?
+  Comment       Comment[]
   documents     Document[]
   profile       Profile?
   userGroups    UserGroupUser[]
-  Comment       Comment[]
 
-  @@index([email_address], name: "idx_user_email") // 이메일로 조회 많을 경우
-  @@index([isAdmin], name: "idx_user_isAdmin") // 관리자 필터링
+  @@index([email_address], map: "idx_user_email")
+  @@index([isAdmin], map: "idx_user_isAdmin")
 }
 
 model Profile {
@@ -63,15 +56,13 @@ model UserGroupUser {
   group     UserGroup @relation(fields: [groupId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
 
-  @@unique([userId, groupId], name: "uniq_ugu_user_group") // 중복 방지
-  @@index([userId], name: "idx_ugu_user")
-  @@index([groupId], name: "idx_ugu_group")
+  @@unique([userId, groupId], name: "uniq_ugu_user_group")
+  @@index([userId], map: "idx_ugu_user")
+  @@index([groupId], map: "idx_ugu_group")
 }
 
 model Document {
   id             Int       @id @default(autoincrement())
-  resourceType   String // 예: "post", "store", "shop"
-  resourceId     Int // 예: Posts.id, Store.id 등
   categoryId     Int?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -86,34 +77,32 @@ model Document {
   readCount      Int?      @default(0)
   commentCount   Int?      @default(0)
   voteCount      Int?      @default(0)
+  resourceId     Int
+  resourceType   String
+  Comment        Comment[]
   category       Category? @relation("DocumentCategory", fields: [categoryId], references: [id])
   user           User?     @relation(fields: [userId], references: [id])
-  Comment        Comment[]
 
-  @@index([resourceType, resourceId], name: "idx_document_resource")
-  @@index([categoryId], name: "idx_document_category")
-  @@index([userId], name: "idx_document_user")
+  @@index([resourceType, resourceId], map: "idx_document_resource")
+  @@index([categoryId], map: "idx_document_category")
+  @@index([userId], map: "idx_document_user")
 }
 
 model Category {
-  id       Int     @id @default(autoincrement())
-  title    String  @db.VarChar(45)
-  desc     String?
-  color    String? @db.VarChar(45)
-  parentId Int? // 부모 카테고리 ID, 최상위면 null
-  order    Int     @default(0)
-
-  // 리소스 구분: "post", "store", "shop" 등
-  resourceType String @default("posts")
+  id           Int        @id @default(autoincrement())
+  title        String     @db.VarChar(45)
+  desc         String?
+  color        String?    @db.VarChar(45)
+  order        Int        @default(0)
+  parentId     Int?
   resourceId   Int?
+  resourceType String     @default("posts")
+  parent       Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children     Category[] @relation("CategoryChildren")
+  documents    Document[] @relation("DocumentCategory")
 
-  // 자기 참조
-  parent    Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
-  children  Category[] @relation("CategoryChildren")
-  documents Document[] @relation("DocumentCategory")
-
-  @@index([parentId], name: "idx_category_parent")
-  @@index([resourceType, resourceId], name: "idx_category_resource")
+  @@index([parentId], map: "idx_category_parent")
+  @@index([resourceType, resourceId], map: "idx_category_resource")
 }
 
 model Posts {
@@ -127,62 +116,62 @@ model Posts {
   config    Json?    @db.Json
   status    String?  @db.VarChar(45)
 
-  @@index([status], name: "idx_posts_status")
+  @@index([status], map: "idx_posts_status")
 }
 
 model Permission {
-  id Int @id @default(autoincrement())
+  id           Int               @id @default(autoincrement())
+  action       String
+  subjectType  PermissionSubject
+  subjectId    Int?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  resourceId   Int               @default(0)
+  resourceType String            @default("unknown")
 
-  // 리소스 구분
-  resourceType String @default("unknown") // 예: "post", "document", "store", "shop"
-  resourceId   Int    @default(0) // 예: 1234
-
-  // 권한 액션
-  action String // 예: "read", "write", "delete"
-
-  // 권한 대상 (유저, 그룹, 롤 등)
-  subjectType PermissionSubject
-  subjectId   Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([resourceType, resourceId], name: "idx_permission_resource")
-  @@index([subjectType, subjectId], name: "idx_permission_subject")
+  @@index([resourceType, resourceId], map: "idx_permission_resource")
+  @@index([subjectType, subjectId], map: "idx_permission_subject")
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(cuid()) // 클라이언트 식별용
-  content   String // 댓글 본문
-  createdAt DateTime @default(now()) // 작성일
-  updatedAt DateTime @updatedAt // 수정일
+  id             Int       @id @default(autoincrement())
+  uuid           String    @unique @default(cuid())
+  content        String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  documentId     Int
+  userId         Int?
+  authorName     String?   @db.VarChar(45)
+  authorPassword String?   @db.VarChar(255)
+  parentId       Int?
+  isDeleted      Boolean   @default(false)
+  isSecret       Boolean   @default(false)
+  voteCount      Int       @default(0)
+  depth          Int       @default(0)
+  document       Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  parent         Comment?  @relation("CommentChildren", fields: [parentId], references: [id])
+  children       Comment[] @relation("CommentChildren")
+  user           User?     @relation(fields: [userId], references: [id])
 
-  // 관계
-  documentId Int // 어떤 Document에 달린 댓글인지
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  @@index([documentId], map: "idx_comment_document")
+  @@index([userId], map: "idx_comment_user")
+  @@index([parentId], map: "idx_comment_parent")
+}
 
-  userId Int? // 작성자 (회원일 경우)
-  user   User? @relation(fields: [userId], references: [id])
+model DocumentViewLog {
+  id         Int      @id @default(autoincrement())
+  documentId Int
+  userId     Int?
+  ipAddress  String?
+  viewedAt   DateTime @default(now())
 
-  // 익명 댓글 옵션
-  authorName     String? @db.VarChar(45) // 비회원 이름
-  authorPassword String? @db.VarChar(255) // 비회원 비밀번호 (암호화 저장 권장)
+  @@index([documentId, userId])
+  @@index([documentId, ipAddress])
+}
 
-  // 트리 구조 (대댓글 지원용)
-  parentId Int?
-  parent   Comment?  @relation("CommentChildren", fields: [parentId], references: [id])
-  children Comment[] @relation("CommentChildren")
-
-  // 상태
-  isDeleted Boolean @default(false) // 삭제 여부 (soft delete)
-  isSecret  Boolean @default(false) // 비밀 댓글 여부
-
-  // 통계
-  voteCount Int @default(0) // 추천/좋아요 카운트
-  depth     Int @default(0) // 추가: 트리 깊이
-
-  @@index([documentId], name: "idx_comment_document")
-  @@index([userId], name: "idx_comment_user")
-  @@index([parentId], name: "idx_comment_parent")
+enum PermissionSubject {
+  guest
+  member
+  admin
+  group
 }
