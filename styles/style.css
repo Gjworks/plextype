@@ -18,7 +18,9 @@ html body {
 html.dark{
     @apply bg-dark-950
 }
-
+.postContent p {
+    margin-bottom:12px
+}
 /*Editor.js*/
 .ce-block__content,
 .ce-toolbar__content {

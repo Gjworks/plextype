@@ -58,7 +58,6 @@ export default async function PageLayout({
 
   // list 권한 체크 (예: guest, member, admin 등)
   const permissionResult = checkPermissions(postInfo.permissions, currentUser);
-
   return (
     <PostProvider value={{postInfo, currentUser, permissions: permissionResult}}>
       <DefaultLayout>{children}</DefaultLayout>

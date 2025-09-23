@@ -10,7 +10,7 @@ const Page = async ({params, searchParams}: {params: Promise<{ pid: string }>;
   const {items, pagination} = await getPosts(pid, page, 5);
 
   return (
-      <div className="max-w-screen-md mx-auto px-3">
+      <div className="max-w-screen-lg mx-auto px-3">
         <Suspense fallback={<div>Loading posts...</div>}>
           {/*<PostsList params={{ pid: params.pid }} />*/}
           <PostsList

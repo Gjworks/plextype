@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Modal from "@plextype/components/modal/Modal";
 import { CommentWithChildren } from "@/extentions/posts/scripts/actions/getComments";
 import { usePostContext } from "@/extentions/posts/templates/default/PostProvider";
+import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -60,7 +61,11 @@ export default function CommentsList({
   const [loading, setLoading] = useState(false);
   const [modalParent, setModalParent] = useState<ParentComment | null>(null);
   const [commentsState, setCommentsState] = useState(commentsData);
+  const { permissions } = usePostContext();
 
+  if (!permissions.doRead) {
+    return "";
+  }
 
   /** ====== 댓글 트리 구조 유지 ====== */
   const mergeComments = (
@@ -104,8 +109,8 @@ export default function CommentsList({
       const el = document.getElementById(`comment-${commentId}`);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("bg-yellow-200");
-        setTimeout(() => el.classList.remove("bg-yellow-200"), 2000);
+        el.classList.add("bg-yellow-100");
+        setTimeout(() => el.classList.remove("bg-yellow-100"), 2000);
       }
     }, 100); // 렌더링 후
   };
@@ -254,7 +259,7 @@ export default function CommentsList({
       <div
         key={c.id + "-" + c.uuid}
         id={`comment-${c.id}`}
-        className={` ${c.depth > 0 ? "ml-6 " : "mb-6"}`}
+        className={` ${c.depth > 0 ? "ml-8 " : "mb-6"}`}
       >
         <div className={` ${c.isDeleted} flex gap-4 hover:bg-gray-50 p-3 rounded-lg ${c.depth > 0 ? "py-2 mb-2" : "mb-4"}`}>
           <div>
@@ -290,13 +295,17 @@ export default function CommentsList({
                 )}
               </div>
             </div>
-            <div className="mt-1 flex py-2">
+            <div className="mt-1 flex items-center py-2 gap-1">
               {c.depth > 1 && (
-                <span className="text-gray-900 text-sm font-medium">@{parentUserName} :</span>
+                <>
+                  <span className="text-gray-700 text-sm font-medium">@{parentUserName}</span>
+                  <div className={`text-xs`}>:</div>
+                </>
               )}
-              <div className={`text-gray-400 text-sm`}>{c.content}</div>
+
+              <div className={`text-gray-500 text-sm`}> {c.content}</div>
             </div>
-            <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-2 mt-2">
               <div className={`flex items-center gap-1`}>
                 <button className={`text-sm text-gray-400 hover:text-gray-900 focus:text-gray-95`}>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
@@ -343,8 +352,9 @@ export default function CommentsList({
   return (
     <div className={`max-w-screen-md mx-auto px-2 py-16`}>
       {/* 댓글 작성 */}
-      <div className="mb-12">
-        <form onSubmit={handleSubmit}>
+      {(permissions.doComment) &&
+        <div className="mb-12">
+          <form onSubmit={handleSubmit}>
           <textarea
             className="w-full p-3 border border-gray-200/75 text-sm focus:border-gray-900 rounded-xl outline-none"
             rows={3}
@@ -352,13 +362,16 @@ export default function CommentsList({
             value={newContent}
             onChange={e => setNewContent(e.target.value)}
           />
-          <div className="flex justify-end gap-8">
-            <button type="submit" className="mt-2 px-4 py-1 text-sm bg-primary-500 text-white rounded" disabled={loading}>
-              {loading ? "등록중..." : "댓글 등록"}
-            </button>
-          </div>
-        </form>
-      </div>
+            <div className="flex justify-end gap-8">
+              <button type="submit" className="mt-2 px-4 py-1 text-sm bg-primary-500 text-white rounded"
+                      disabled={loading}>
+                {loading ? "등록중..." : "댓글 등록"}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
 
       {/* 댓글 목록 */}
       {renderComments(comments.items)}
