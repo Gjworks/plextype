@@ -1,4 +1,6 @@
-
+import {cookies} from "next/headers";
+import {decodeJwt} from "jose";
+import { headers } from "next/headers";
 import { getDocument } from "@/extentions/posts/scripts/actions/getPosts";
 import { getComments, CommentWithChildren, getParentCommentPage } from "@/extentions/posts/scripts/actions/getComments";
 import { addComment } from "@/extentions/posts/scripts/actions/addComment";
@@ -6,10 +8,21 @@ import { updateComment } from "@/extentions/posts/scripts/actions/updateComment"
 import PostsRead from "@/extentions/posts/templates/default/read";
 import CommentsList from "@/extentions/posts/templates/default/comment/list";
 import {deleteComment} from "@/extentions/posts/scripts/actions/deleteComment";
+import {increaseViewCount} from "@/extentions/posts/scripts/actions/increaseViewCount"
+import {addCommentAndIncrementCount, deleteCommentAndDecrementCount} from "@/extentions/posts/scripts/actions/commentCountAction"
+import {getUniqueCommentMember} from "@/extentions/posts/scripts/actions/getUniqueCommentMember";
 
 interface PageProps {
   params: { pid: string; id: string } | Promise<{ pid: string; id: string }>;
   searchParams: { [key: string]: string | string[] | undefined } | Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+interface CurrentUser {
+  id: number;
+  accountId: string;
+  isAdmin: boolean;
+  groups: number[]; // 사용자가 속한 그룹 ID 배열
+  loggedIn: boolean; // 로그인 상태
 }
 
 const Page = async ({ params, searchParams }: PageProps) => {
@@ -21,7 +34,37 @@ const Page = async ({ params, searchParams }: PageProps) => {
   if (typeof sp.page === "string") page = Number(sp.page);
 
   const document = await getDocument(documentId);
+
+  let currentUser: CurrentUser | null = null;
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
+  if (accessToken) {
+    try {
+      // JWT에서 우리가 넣은 custom claims로 단언
+      const decoded = decodeJwt(accessToken) as {
+        id: number;
+        accountId: string;
+        isAdmin: boolean;
+        groups: number[];
+      } | null;
+
+      if (decoded) {
+        currentUser = {...decoded, loggedIn: true};
+      }
+    } catch (err) {
+      console.log("JWT decode 실패", err);
+    }
+  }
+  const requestIp = (await headers()).get("x-forwarded-for") || '';
+  await increaseViewCount(documentId, currentUser?.id, requestIp);
   const commentsData = await getComments(documentId, page, 10);
+
+  const participants = (await getUniqueCommentMember(documentId)).filter(
+    (p): p is { id: number; nickName: string; profile_image?: string } => p !== null
+  );
+  console.log(participants)
 
   async function upsertComment({
     documentId,
@@ -48,6 +91,7 @@ const Page = async ({ params, searchParams }: PageProps) => {
     if (commentId) {
       if (options?.remove) {
         // 실제 삭제
+        await deleteCommentAndDecrementCount(documentId); // <- 여기
         await deleteComment( commentId ); // 혹은 deleteComment API 필요
       } else if (options?.deleted) {
         // 소프트 삭제
@@ -59,6 +103,7 @@ const Page = async ({ params, searchParams }: PageProps) => {
       newCommentId = commentId;
     } else {
       const created = await addComment({ documentId, content, parentId });
+      await addCommentAndIncrementCount( documentId ); // <- 여기
       newCommentId = created.id;
     }
 
@@ -91,7 +136,7 @@ const Page = async ({ params, searchParams }: PageProps) => {
 
   return (
     <>
-      <PostsRead document={document} />
+      <PostsRead document={document} participants={participants}  />
       <CommentsList
         documentId={documentId}
         commentsData={commentsData}
