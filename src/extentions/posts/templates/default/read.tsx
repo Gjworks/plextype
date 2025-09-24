@@ -239,13 +239,13 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
           (user?.id === document.userId) ? (
              <>
                <Link
-                 href={`/posts/${postInfo.pid}/edit/${document.id}`}
+                 href={`/posts/${postInfo.pid}/${document.id}/edit`}
                  className="text-sm py-1 px-4 rounded-sm bg-yellow-100 text-amber-600 hover:bg-yellow-200"
                >
                  수정
                </Link>
                <Link
-                 href={`/posts/${postInfo.pid}/view/${document.id}/delete`}
+                 href={`/posts/${postInfo.pid}/${document.id}/delete`}
                  className="text-sm py-1 px-4 rounded-sm bg-red-100 text-red-600 hover:bg-red-200"
                >
                  삭제

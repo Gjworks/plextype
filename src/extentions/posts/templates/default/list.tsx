@@ -64,7 +64,7 @@ const PostsListClient = ({
             key={doc.id}
             className="flex flex-wrap gap-4 lg:gap-2"
           >
-            <Link href={`/posts/${postInfo.pid}/view/${doc.id}`} className="flex-1 hover:bg-gray-50 px-3 py-4 lg:py-8">
+            <Link href={`/posts/${postInfo.pid}/${doc.id}`} className="flex-1 hover:bg-gray-50 px-3 py-4 lg:py-8">
               <div
 
                 className="text-sm lg:text-base font-semibold text-gray-950 dark:text-white line-clamp-2 mb-2"
