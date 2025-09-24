@@ -11,6 +11,7 @@ import {deleteComment} from "@/extentions/posts/scripts/actions/deleteComment";
 import {increaseViewCount} from "@/extentions/posts/scripts/actions/increaseViewCount"
 import {addCommentAndIncrementCount, deleteCommentAndDecrementCount} from "@/extentions/posts/scripts/actions/commentCountAction"
 import {getUniqueCommentMember} from "@/extentions/posts/scripts/actions/getUniqueCommentMember";
+import {redirect} from "next/navigation";
 
 interface PageProps {
   params: Promise<{
@@ -32,6 +33,9 @@ interface CurrentUser {
 
 const Page = async ({ params, searchParams }: PageProps) => {
   const { pid, id } =  await params;
+  if (id === "create") {
+    redirect(`/posts/${pid}/create`);
+  }
   const sp = (await searchParams) ?? {};
 
   const documentId = Number(id);
