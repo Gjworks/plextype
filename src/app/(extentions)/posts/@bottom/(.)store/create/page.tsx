@@ -1,10 +1,16 @@
 import Bottom from "@plextype/components/panel/Bottom";
 import PostWrite from "@/extentions/posts/templates/default/write";
+import { upsertPost } from "@/extentions/posts/scripts/actions/upsertPost";
 
 type Params = Promise<{ pid: string }>;
 
-const Page = async (props: { params: Params }) => {
-  const params = await props.params;
+const Page = async ({ params }: { params: Promise<{ pid: string }> }) => {
+  const { pid } = await params;
+
+  const savePost = async (formData: FormData) => {
+    "use server";
+    await upsertPost('store', formData);
+  };
   return (
     <>
       <Bottom>
@@ -33,7 +39,13 @@ const Page = async (props: { params: Params }) => {
         </div>
         <div className="max-w-screen-md mx-auto px-3">
           <div className="py-10 rounded-2xl">
-            {/*<PostWrite params={{ pid: params.pid }} />*/}
+            <div className="max-w-screen-lg mx-auto px-3">
+              <div className="py-5 px-8 rounded-2xl">
+                <div className="pt-8 mb-6">
+                  <PostWrite savePost={savePost}/>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Bottom>

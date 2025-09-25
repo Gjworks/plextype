@@ -18,14 +18,13 @@ interface CurrentUser {
 
 export default async function PageLayout({
                                            children,
-                                           params,
+
                                          }: {
   children: React.ReactNode;
-  params: Promise<{ pid: string; id: string }>;
+
 }) {
-  const resolvedParams = await params; // params가 Promise라면 await
-  const {pid, id} = resolvedParams;
-  const postInfo = await getPostInfo(pid);
+
+  const postInfo = await getPostInfo('store');
 
   let currentUser: CurrentUser | null = null;
 
@@ -57,7 +56,7 @@ export default async function PageLayout({
 
   // list 권한 체크 (예: guest, member, admin 등)
   const permissionResult = checkPermissions(postInfo.permissions, currentUser);
-  console.log(resolvedParams)
+
   return (
     <PostProvider value={{postInfo, currentUser, permissions: permissionResult}}>
       {children}
