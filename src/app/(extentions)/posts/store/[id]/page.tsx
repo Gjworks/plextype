@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import Bottom from "@plextype/components/panel/Bottom";
 
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 const Page = () => {
+
   return (
     <>
-      <Bottom>
+
         <div className="relative dark:shadow-dark-950 block bg-[url('/assets/images/bg39.jpg')] bg-cover bg-center block-line-b">
           <div className="absolute inset-0 bg-gradient-to-b from-gray-950/70 via-gray-950/60 to-gray-950/90 dark:from-dark-950 dark:via-dark-950/50 dark:to-dark-950"></div>
           <div className="relative mx-auto max-w-screen-lg px-3 pt-20 pb-10 md:pb-20">
@@ -574,7 +574,7 @@ const Page = () => {
             </div>
           </div>
         </div>
-      </Bottom>
+
     </>
   );
 };

@@ -22,10 +22,10 @@
         }
         ]
     },
-    "store": {
-      "name": "store",
-      "title": "Store",
-      "route": "/store",
+    "Docs": {
+      "name": "docs",
+      "title": "Documentation",
+      "route": "/docs",
       "icon": "",
       "subMenu": [
         {
@@ -37,10 +37,10 @@
         }
         ]
     },
-    "update": {
-      "name": "update",
-      "title": "Updates",
-      "route": "/posts/update",
+    "Store": {
+      "name": "store",
+      "title": "Store",
+      "route": "/posts/store",
       "icon": "",
       "subMenu": [
         

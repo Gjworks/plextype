@@ -7,6 +7,7 @@ const Page = async ({params, searchParams}: {params: Promise<{ pid: string }>;
   const { pid } = await params;
   const { page: pageParam } = (await searchParams) || {};
   const page = parseInt(pageParam ?? "1", 10);
+  console.log(pid)
   const {items, pagination} = await getPosts(pid, page, 5);
 
   return (

@@ -36,7 +36,7 @@ const PostsCategories = () => {
     <>
 
       <div
-        className="flex sticky top-0 lg:top-0 w-full bg-white/90 dark:bg-dark-950/40 backdrop-blur-lg z-90 border-b border-gray-100 dark:border-dark-700">
+        className="flex top-0 lg:top-0 w-full bg-white/90 dark:bg-dark-950/40 backdrop-blur-lg z-90 border-b border-gray-100 dark:border-dark-700">
         <div
           className="relative overflow-scroll-hide overflow-hidden overflow-x-auto flex justify-start md:justify-center gap-8 px-3">
           <Link

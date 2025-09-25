@@ -1,4 +1,3 @@
-"use client";
 
 import Link from "next/link";
 import { HomeIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
@@ -8,23 +7,9 @@ import PageNavigation from "@plextype/components/nav/PageNavigation";
 import { motion } from "framer-motion";
 import React from "react";
 
-type Params = Promise<{ slug: string }>;
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
-
-const Page = (props: { params: Params; searchParams: SearchParams }) => {
-  const params = props.params;
-  const searchParams = props.searchParams;
-  // type Params = { slug: string };
-  // type SearchParams = { [key: string]: string | string[] | undefined };
-
+const Page = async ({params, searchParams}: {params: Promise<{ pid: string }>;
+  searchParams?: Promise<{ page?: string }>;}) => {
   console.log(params);
-  // const canRead = await hasPermission({
-  //   userId: user?.id,
-  //   isAdmin: user?.isAdmin,
-  //   action: "read",
-  //   module: "posts",
-  //   resource: `board:${pid}`,
-  // });
 
   const parentVariants = {
     onscreen: {
@@ -49,26 +34,31 @@ const Page = (props: { params: Params; searchParams: SearchParams }) => {
   };
   return (
     <>
-      <div className="relative">
-        <div className="py-5 block-line">
-          <PostsCategories />
-        </div>
-      </div>
+
       <div className="max-w-screen-xl mx-auto">
+        <div className="relative">
+          <div className="py-5 block-line">
+            <PostsCategories/>
+          </div>
+        </div>
         <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
           <div className="col-span-1 py-4 p-3">
-            <Link href="/posts/update/view/1" className="group">
+            <Link href="/posts/store/22" className="group">
               <div className="relative overflow-hidden rounded-2xl">
-                <div className="h-[320px] bg-[url('/assets/images/bg39.jpg')] bg-cover bg-center transition duration-700 group-hover:scale-[1.08] rounded-2xl">
-                  <div className="absolute inset-0 bg-gradient-to-b from-gray-950/40 via-gray-950/30 to-gray-950/40 dark:from-dark-950/20 dark:via-dark-950/50 dark:to-dark-950/100"></div>
+                <div
+                  className="h-[320px] bg-[url('/assets/images/bg39.jpg')] bg-cover bg-center transition duration-700 group-hover:scale-[1.08] rounded-2xl">
+                  <div
+                    className="absolute inset-0 bg-gradient-to-b from-gray-950/40 via-gray-950/30 to-gray-950/40 dark:from-dark-950/20 dark:via-dark-950/50 dark:to-dark-950/100"></div>
                 </div>
               </div>
               <div className="px-1 py-6">
                 <div className="mb-6 w-full">
-                  <div className="dark:text-dark-100 mb-3 line-clamp-2 text-2xl font-light text-gray-600 group-hover:text-black dark:group-hover:text-white">
+                  <div
+                    className="dark:text-dark-100 mb-3 line-clamp-2 text-2xl font-light text-gray-600 group-hover:text-black dark:group-hover:text-white">
                     Alien: River of Pain Revisions 2.0
                   </div>
-                  <div className="line-clamp-3 text-sm text-gray-400 group-hover:text-gray-600 dark:group-hover:text-white transition-all transform duration-700">
+                  <div
+                    className="line-clamp-3 text-sm text-gray-400 group-hover:text-gray-600 dark:group-hover:text-white transition-all transform duration-700">
                     The birth of Rebecca Jorden, Known to her famliy as Newt, is
                     a cause for celebration. But as the colony grows and
                     expands, so, too, do the Political struggles between a small
@@ -104,7 +94,7 @@ const Page = (props: { params: Params; searchParams: SearchParams }) => {
             </div>
             <div className="flex items-center justify-end border-l border-gray-950/5 px-5">
               <Link
-                href="/posts/update/create"
+                href="/posts/store/create"
                 className="w-full flex text-sm py-3 px-12 rounded bg-gray-950 hover:bg-gray-900 text-white"
               >
                 글쓰기
