@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Dropdown from "@plextype/components/dropdown/Dropdown";
 import Avator from "@plextype/components/avator/Avator";
@@ -18,107 +18,47 @@ interface Item {
   };
 }
 
-const AccountDropwdown = () => {
+const AccountDropdown = () => {
   const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const { data: user, isLoading, isError } = useUser();
+  const { data: user, isLoading } = useUser();
 
-  const closeDropdown = (close) => {
-    setShowDropdown(close);
-  };
+  const closeDropdown = (close: boolean) => setShowDropdown(close);
 
   const guestNav: Array<Item> = [
-    {
-      title: "로그인",
-      name: "Signin",
-      route: "/auth/signin",
-    },
-    {
-      title: "회원가입",
-      name: "Register",
-      route: "/auth/register",
-    },
-    {
-      title: "",
-      name: "divider",
-      route: "",
-    },
-    {
-      title: "설정",
-      name: "settings",
-      route: "#right",
-    },
+    { title: "로그인", name: "Signin", route: "/auth/signin" },
+    { title: "회원가입", name: "Register", route: "/auth/register" },
+    { title: "설정", name: "settings", route: "#right" },
   ];
 
   const userNav: Array<Item> = [
-    {
-      title: "내 정보",
-      name: "user",
-      route: "/user",
-    },
-    {
-      title: "나의 서비스",
-      name: "user",
-      route: "/user",
-    },
-    {
-      title: "알림",
-      name: "notification",
-      route: "#right",
-    },
-    {
-      title: "",
-      name: "divider",
-      route: "",
-    },
-    {
-      title: "설정",
-      name: "settings",
-      route: "#right",
-    },
+    { title: "내 정보", name: "user", route: "/user" },
+    { title: "나의 서비스", name: "user", route: "/user" },
+    { title: "알림", name: "notification", route: "#right" },
+    { title: "설정", name: "settings", route: "#right" },
     {
       title: "관리자",
       name: "dashboard",
       route: "/dashboard",
-      condition: {
-        operation: "equals",
-        name: "isAdmin",
-        variable: true,
-      },
+      condition: { operation: "equals", name: "isAdmin", variable: true },
     },
-    {
-      title: "",
-      name: "divider",
-      route: "",
-    },
-    {
-      title: "로그아웃",
-      name: "Signout",
-      route: "/",
-    },
+    { title: "로그아웃", name: "Signout", route: "/" },
   ];
 
-  if (isLoading) return null; // 혹은 로딩 스피너
+  if (isLoading) return null;
 
   const isLoggedIn = !!user;
 
   const handleSignOut = async () => {
-    // const accessToken = localStorage.getItem('accessToken')
-    const response = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-    const result = await response.json();
-    if (result) {
-      // 로그아웃 성공 시
-      window.location.href = "/";
-    }
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/";
   };
 
-  const callbackName = (name) => {
-    name === "Signout" && handleSignOut();
+  const callbackName = (name: string) => {
+    if (name === "Signout") handleSignOut();
   };
+
   return (
     <>
       <button
@@ -128,12 +68,8 @@ const AccountDropwdown = () => {
         <Avator username={user?.nickName} isLoggedIn={isLoggedIn} />
       </button>
       <Dropdown state={showDropdown} close={closeDropdown}>
-        {isLoading ? null : user ? (
-          <DefaultList
-            list={userNav}
-            loggedInfo={user}
-            callback={callbackName}
-          />
+        {user ? (
+          <DefaultList list={userNav} loggedInfo={user} callback={callbackName} />
         ) : (
           <DefaultList list={guestNav} callback={callbackName} />
         )}
@@ -142,4 +78,4 @@ const AccountDropwdown = () => {
   );
 };
 
-export default AccountDropwdown;
+export default AccountDropdown;
