@@ -15,6 +15,9 @@ const nextConfig = {
   experimental: {
     // nodeMiddleware: true, // 미들웨어 사용 활성화
   },
+  typescript: {
+    tsconfigPath: "./tsconfig.json",
+  },
 };
 
 module.exports = nextConfig;

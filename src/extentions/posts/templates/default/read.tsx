@@ -1,8 +1,7 @@
 "use client";
 
+import React from "react";
 import { useRouter } from "next/navigation";
-import type { OutputData } from "@editorjs/editorjs";
-import EditorJsRenderer from "editorjs-react-renderer";
 import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -217,15 +216,90 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
       </div>
       <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800">
         {contentData.blocks.map((block: any) => {
-          if (block.type === "paragraph") {
-            return (
-              <p
-                key={block.id}
-                dangerouslySetInnerHTML={{__html: block.data.text}}
-              />
-            );
+          switch (block.type) {
+            case "header": {
+              // 저장된 level 값 사용 (h1 ~ h6)
+              const level = block.data.level ?? 2; // 기본값 h2
+              const Tag: any = `h${level}`;
+              return (
+                <Tag
+                  key={block.id}
+                  dangerouslySetInnerHTML={{ __html: block.data.text }}
+                />
+              );
+            }
+            case "paragraph":
+              return (
+                <p
+                  key={block.id}
+                  dangerouslySetInnerHTML={{ __html: block.data.text }}
+                />
+              );
+
+            case "list": {
+              const items = block.data.items || [];
+              return block.data.style === "ordered" ? (
+                <ol key={block.id}>
+                  {items.map((item: string, idx: number) => (
+                    <li key={idx} dangerouslySetInnerHTML={{ __html: item }} />
+                  ))}
+                </ol>
+              ) : (
+                <ul key={block.id}>
+                  {items.map((item: string, idx: number) => (
+                    <li key={idx} dangerouslySetInnerHTML={{ __html: item }} />
+                  ))}
+                </ul>
+              );
+            }
+
+            case "checklist": {
+              const items = block.data.items || [];
+              return (
+                <ul key={block.id}>
+                  {items.map((item: any, idx: number) => (
+                    <li key={idx}>
+                      <input type="checkbox" checked={item.checked} readOnly />{" "}
+                      <span dangerouslySetInnerHTML={{ __html: item.text }} />
+                    </li>
+                  ))}
+                </ul>
+              );
+            }
+
+            case "quote":
+              return (
+                <blockquote key={block.id}>
+                  <p dangerouslySetInnerHTML={{ __html: block.data.text }} />
+                  {block.data.caption && (
+                    <cite dangerouslySetInnerHTML={{ __html: block.data.caption }} />
+                  )}
+                </blockquote>
+              );
+
+            case "table":
+              const rows = block.data.content || [];
+              return (
+                <table key={block.id} className="border-collapse border border-gray-300">
+                  <tbody>
+                  {rows.map((row: any[], rIdx: number) => (
+                    <tr key={rIdx}>
+                      {row.map((cell: string, cIdx: number) => (
+                        <td
+                          key={cIdx}
+                          className="border border-gray-300 p-1"
+                          dangerouslySetInnerHTML={{ __html: cell }}
+                        />
+                      ))}
+                    </tr>
+                  ))}
+                  </tbody>
+                </table>
+              );
+
+            default:
+              return null;
           }
-          return null;
         })}
       </div>
       <div className="flex justify-end gap-2 mx-auto max-w-screen-md py-8">

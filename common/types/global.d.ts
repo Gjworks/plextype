@@ -1,3 +1,9 @@
+declare namespace JSX {
+  interface IntrinsicElements {
+    [elemName: string]: any;
+  }
+}
+
 declare global {
   interface AuthUser {
     id: number;
