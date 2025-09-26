@@ -61,7 +61,7 @@ export const upsertPost = async (
         updatedAt: new Date(),
       },
     });
-    redirect(`/posts/${pid}/view/${newPost.id}`);
+    redirect(`/posts/${pid}/${newPost.id}`);
   } else {
     // 📌 새 글 생성
     const newPost = await prisma.document.create({

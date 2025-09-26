@@ -18,9 +18,43 @@ html body {
 html.dark{
     @apply bg-dark-950
 }
+
+/* Content Read EditorJS */
 .postContent p {
-    margin-bottom:12px
+    @apply mb-3
 }
+
+H1, .h1 {
+    @apply text-6xl;
+    @apply font-semibold;
+    @apply mt-8 mb-6
+}
+H2, .h2 {
+    @apply text-4xl;
+    @apply font-semibold;
+    @apply mt-8 mb-6
+}
+H3, .h3 {
+    @apply text-2xl;
+    @apply font-semibold;
+    @apply mt-8 mb-6
+}
+H4, .h4 {
+    @apply text-lg;
+    @apply font-semibold;
+    @apply mt-8 mb-6
+}
+H5, .h5 {
+    @apply text-base;
+    @apply font-semibold;
+    @apply mt-8 mb-6
+}
+H6, .h6 {
+    @apply text-sm;
+    @apply font-semibold;
+    @apply mt-8 mb-6
+}
+
 /*Editor.js*/
 .ce-block__content,
 .ce-toolbar__content {

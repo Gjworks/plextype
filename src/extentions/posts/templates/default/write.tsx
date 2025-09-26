@@ -21,7 +21,15 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
   const {postInfo} = usePostContext();
   const [title, setTitle] = useState(existingPost?.title || "");
   const [content, setContent] = useState<OutputData>(
-    existingPost?.content ? JSON.parse(existingPost.content) : {}
+    existingPost?.content
+      ? (() => {
+        try {
+          return JSON.parse(existingPost.content);
+        } catch {
+          return { blocks: [] };
+        }
+      })()
+      : { blocks: [] } // ← 기본값을 항상 blocks 배열로
   );
 
   const { permissions } = usePostContext();
@@ -30,16 +38,6 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
     return <PostNotPermission/>;
   }
 
-  useEffect(() => {
-    if (existingPost?.content) {
-      try {
-        const parsed: OutputData = JSON.parse(existingPost.content);
-        setContent(parsed);
-      } catch {
-        setContent({blocks: []});
-      }
-    }
-  }, [existingPost]);
 
   const handleContentChange = (data: OutputData) => {
     setContent(data);
@@ -91,7 +89,10 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
         placeholder="제목을 입력해주세요."
         className="w-full p-2 outline-none text-3xl leading-10"
       />
-      <Editorjs onChange={handleContentChange} data={content}/>
+      <Editorjs
+        onChange={handleContentChange}
+        data={existingPost?.content ? JSON.parse(existingPost.content) : undefined}
+      />
       <button
         type="submit"
         className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
