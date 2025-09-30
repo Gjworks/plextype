@@ -1,3 +1,5 @@
+// common/components/editor/Filepond.tsx (수정된 최종 코드)
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
@@ -26,7 +28,8 @@ const CDN_URLS = [
 interface UploadFilePondProps {
   resourceType: string;
   resourceId: number;
-  onUpdate?: (files: any[]) => void;
+  // 부모에서 useCallback으로 감싸는 것이 좋습니다.
+  onUpdate?: (files: any) => void;
   onTempId?: (id: string | null) => void;
   maxFiles?: number;
   acceptedFileTypes?: string[];
@@ -49,14 +52,14 @@ const checkAllObjectsReady = () => {
  */
 const InnerFilePondComponent: React.FC<
   UploadFilePondProps & { filesToLoad: any[]; processUrlParams: string; setError: (e: string | null) => void }
-> = ({
-       filesToLoad,
-       onUpdate,
-       maxFiles = 5,
-       acceptedFileTypes = ['image/*'],
-       processUrlParams,
-       setError,
-     }) => {
+> = React.memo(({ // ⭐️ Inner 컴포넌트에도 React.memo를 적용하여 안정성 강화
+                  filesToLoad,
+                  onUpdate,
+                  maxFiles = 5,
+                  acceptedFileTypes = ['image/*'],
+                  processUrlParams,
+                  setError,
+                }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pondInstanceRef = useRef<any>(null); // FilePond 인스턴스를 저장할 Ref
 
@@ -130,13 +133,12 @@ const InnerFilePondComponent: React.FC<
             }
           },
 
-          // oninit 핸들러는 초기 파일 주입을 'files' 옵션으로 변경하며 제거합니다.
-
           // 서버 설정
           server: {
             url: '/api/attachments',
             // 파일 업로드 (새 파일)
             process: (fieldName: string, file: any, metadata: any, load: any, error: any, progress: any, abort: any) => {
+              console.log("DEBUG [FilePond Process] Field Name:", fieldName);
               const formData = new FormData();
               formData.append(fieldName, file, file.name);
 
@@ -152,7 +154,9 @@ const InnerFilePondComponent: React.FC<
                     const res = JSON.parse(request.responseText);
                     console.log("DEBUG [FilePond Process] ✅ 업로드 성공 서버 응답 (ID 확인):", res);
 
+                    // ⭐️ onUpdate 호출 시, 업로드 성공 응답 전체를 보냅니다.
                     if (onUpdate) onUpdate(res);
+
                     // FilePond는 process 후 서버가 반환하는 ID를 source로 사용합니다.
                     const fileId = res.id ? String(res.id) : res.uuid ?? (res.path ? String(res.path) : 'ok');
                     load(fileId);
@@ -256,7 +260,18 @@ const InnerFilePondComponent: React.FC<
       />
     </>
   );
-};
+}, (prevProps, nextProps) => {
+  // InnerFilePondComponent의 props 비교 로직 (key 변경 외 리렌더링 방지)
+  return (
+    prevProps.resourceType === nextProps.resourceType &&
+    prevProps.resourceId === nextProps.resourceId &&
+    prevProps.maxFiles === nextProps.maxFiles &&
+    prevProps.processUrlParams === nextProps.processUrlParams &&
+    // 객체 비교는 filesToLoad와 같은 배열은 여기서 확인하지 않고,
+    // 상위 컴포넌트의 key 변경에 의존하도록 합니다.
+    JSON.stringify(prevProps.filesToLoad) === JSON.stringify(nextProps.filesToLoad)
+  );
+});
 
 
 /**
@@ -273,6 +288,7 @@ const UploadFilePond: React.FC<UploadFilePondProps> = (props) => {
   const [attemptCount, setAttemptCount] = useState(0); // CDN 로드 시도 횟수
 
   const isTemporary = resourceId === 0;
+  // tempId를 useMemo에 의존성 배열 없이 넣어 최초 1회만 생성되도록 보장합니다.
   const tempId = useMemo(() => isTemporary ? uuidv4() : null, [isTemporary]);
   const finalResourceId = resourceId === 0 ? 0 : resourceId;
 
@@ -286,6 +302,7 @@ const UploadFilePond: React.FC<UploadFilePondProps> = (props) => {
 
   useEffect(() => {
     if (onTempIdChange) {
+      // onTempIdChange는 부모 컴포넌트에서 useCallback으로 감싸야 합니다.
       onTempIdChange(tempId);
     }
     // 클라이언트 환경 체크
@@ -301,6 +318,7 @@ const UploadFilePond: React.FC<UploadFilePondProps> = (props) => {
     }
 
     const fetchExistingFiles = async () => {
+      // ... (기존 파일 로드 로직 유지) ...
       try {
         // resourceId가 유효한 경우에만 로드 시도
         const origin = window.location.origin;
@@ -395,6 +413,7 @@ const UploadFilePond: React.FC<UploadFilePondProps> = (props) => {
 
   // --- 2. Phase 1: CDN 로드 및 전역 객체 대기 ---
   useEffect(() => {
+    // ... (CDN 로드 로직 유지) ...
     if (!isClient) return;
 
     let timeoutId: NodeJS.Timeout | null = null;
@@ -495,4 +514,4 @@ const UploadFilePond: React.FC<UploadFilePondProps> = (props) => {
   );
 };
 
-export default UploadFilePond;
+export default React.memo(UploadFilePond); // ⭐️ 최종: React.memo 적용
