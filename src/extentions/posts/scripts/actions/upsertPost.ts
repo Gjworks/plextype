@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
 import prisma from "@plextype/utils/db/prisma";
+import {commitAttachments} from "@/extentions/posts/scripts/actions/commitAttachment"
 
 export const upsertPost = async (
   pid: string,
@@ -18,6 +19,7 @@ export const upsertPost = async (
 
   const userId = decoded.id;
   const isAdmin = decoded.isAdmin;
+  const tempId = formData.get("tempId") as string | null; // 💡 tempId 추출
 
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
@@ -81,7 +83,21 @@ export const upsertPost = async (
         voteCount: 0,
       },
     });
-    redirect(`/posts/${pid}/view/${newPost.id}`);
+    console.log(tempId + "tempId")
+    if (tempId) {
+      await commitAttachments(tempId, newPost.id, "posts");
+    }
+    // 📌 첨부파일 업데이트 (임시 resourceId=0 → 실제 document.id)
+    // await prisma.attachment.updateMany({
+    //   where: {
+    //     resourceType: "posts",
+    //     resourceId: 0,
+    //   },
+    //   data: {
+    //     resourceId: post.id,
+    //   },
+    // });
+    redirect(`/posts/${pid}/${newPost.id}`);
   }
 
 };
