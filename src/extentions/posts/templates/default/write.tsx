@@ -3,6 +3,7 @@
 import React, {useState, useEffect} from "react";
 import type {OutputData} from "@editorjs/editorjs";
 import Editorjs from "@plextype/components/editor/Editorjs";
+import UploadFilePond from "@plextype/components/editor/Filepond";
 import {usePostContext} from "./PostProvider";
 import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
 
@@ -20,6 +21,7 @@ interface PostWriteProps {
 const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
   const {postInfo} = usePostContext();
   const [title, setTitle] = useState(existingPost?.title || "");
+  const [tempId, setTempId] = useState<string | null>(null);
   const [content, setContent] = useState<OutputData>(
     existingPost?.content
       ? (() => {
@@ -60,6 +62,7 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
       {existingPost && (
         <input type="hidden" name="id" value={existingPost.id}/>
       )}
+      {tempId && <input type="hidden" name="tempId" value={tempId} />}
       <div>
         {postInfo.categories && postInfo.categories.length > 0 && (
           <select
@@ -92,6 +95,14 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
       <Editorjs
         onChange={handleContentChange}
         data={existingPost?.content ? JSON.parse(existingPost.content) : undefined}
+      />
+      <UploadFilePond
+        resourceType="posts"
+        resourceId={existingPost?.id ?? 0}
+        onUpdate={(files) => {
+          console.log('업로드 완료 파일 목록:', files);
+        }}
+        onTempId={(id) => setTempId(id)} // ← 여기 추가
       />
       <button
         type="submit"

@@ -24,6 +24,7 @@ model User {
   documents     Document[]
   profile       Profile?
   userGroups    UserGroupUser[]
+  Attachment    Attachment[]
 
   @@index([email_address], map: "idx_user_email")
   @@index([isAdmin], map: "idx_user_isAdmin")
@@ -167,6 +168,27 @@ model DocumentViewLog {
 
   @@index([documentId, userId])
   @@index([documentId, ipAddress])
+}
+
+model Attachment {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(cuid())
+  fileName     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String // 실제 저장 경로: /uploads/posts/... 등
+  resourceId   Int // 게시글, 유저, 스토어 등 리소스 ID
+  documentId   Int?
+  resourceType String // posts, users, store, shop 등
+  tempId       String? // ✨ 임시 파일 식별자
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  uploadedById Int? // 업로더 User ID
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+
+  @@index([resourceType, resourceId], map: "idx_attachment_resource")
+  @@index([uploadedById], map: "idx_attachment_user")
 }
 
 enum PermissionSubject {
