@@ -7,57 +7,68 @@ import mime from "mime-types";
 
 export const runtime = "nodejs";
 
+interface FileData {
+  name: string;
+  size: number;
+  type: string;
+  arrayBuffer(): Promise<ArrayBuffer>;
+  // 필요한 다른 속성/메서드가 있다면 여기에 추가
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const resourceType = searchParams.get("resourceType") ?? "etc";
     const resourceId = Number(searchParams.get("resourceId")) || 0;
 
-    // 💡 클라이언트에서 보낸 tempId를 가져옵니다.
     const clientTempId = searchParams.get("tempId");
-
     const isTemporary = resourceId === 0;
 
-    // 💡 신규 작성(isTemporary)일 때 tempId가 반드시 있어야 합니다.
     if (isTemporary && !clientTempId) {
       return NextResponse.json({ error: "임시 파일 관리를 위한 tempId가 누락되었습니다." }, { status: 400 });
     }
 
-    // DB와 경로에 사용할 tempId를 결정합니다.
     const tempId = clientTempId;
 
     const dirIdentifier = isTemporary
-      ? (tempId as string) // ✨ tempId가 string임을 명시적으로 단언 (null 검사 통과 후)
+      ? (tempId as string)
       : String(resourceId);
-    const basePath = isTemporary ? "temp" : resourceType; // 'temp' 폴더 사용
+    const basePath = isTemporary ? "temp" : resourceType;
 
     const uploadDir = path.join(process.cwd(), "public", "uploads", basePath, dirIdentifier);
 
     const formData = await req.formData();
-    const files = formData.getAll("file");
 
-    // 배열을 순회하며 실제 파일 객체를 찾습니다.
-    let file: FormDataEntryValue | null = null;
-    for (const item of files) {
-      if (item && typeof item === 'object' && 'name' in item && 'size' in item && typeof (item as any).arrayBuffer === 'function') {
-        file = item;
-        break;
-      }
-    }
+    // ⭐️ 클라이언트가 보내는 실제 필드 이름인 'filepond-attachments'를 사용합니다.
+    const fileEntry = formData.get("filepond-attachments");
 
-    if (!file) {
+    // ⭐️ 수정된 핵심 로직: File ReferenceError를 피하기 위해 속성 기반 검증을 사용합니다.
+    const isFileValid =
+      fileEntry &&
+      typeof fileEntry === 'object' &&
+      'name' in fileEntry &&
+      'size' in fileEntry &&
+      typeof (fileEntry as any).arrayBuffer === 'function' &&
+      (fileEntry as any).size > 0;
+
+    if (!isFileValid) {
+      console.error("DEBUG [POST] 파일 추출 실패: fileEntry is not a valid file-like object.", fileEntry);
       return NextResponse.json({ error: "파일 없음 또는 잘못된 형식" }, { status: 400 });
     }
 
+    // 이제 file 변수는 유효한 파일 객체로 간주합니다.
+    const file = fileEntry as FileData;
+
     // 파일명을 고유한 UUID로 생성합니다.
     const fileUuid = uuidv4();
-    const ext = path.extname((file as any).name || "");
+    const ext = path.extname(file.name || "");
     const fileName = `${fileUuid}${ext}`;
 
     await mkdir(uploadDir, { recursive: true });
     const fullPath = path.join(uploadDir, fileName);
 
-    const bytes = await (file as any).arrayBuffer();
+    // File 객체의 arrayBuffer() 메서드를 사용하여 데이터를 읽습니다.
+    const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     await writeFile(fullPath, buffer);
 
@@ -67,26 +78,26 @@ export async function POST(req: NextRequest) {
 
     const attachment = await prisma.attachment.create({
       data: {
-        uuid: uuidv4(), // uuid 필드에 값 할당
+        uuid: uuidv4(),
         fileName,
-        originalName: (file as any).name || "unknown",
-        mimeType: (file as any).type || "application/octet-stream",
-        size: (file as any).size,
+        originalName: file.name || "unknown",
+        mimeType: file.type || "application/octet-stream",
+        size: file.size, // 파일 객체의 size 속성 사용
         path: dbPath,
         resourceType: attachmentResourceType,
         resourceId: isTemporary ? 0 : resourceId,
-        tempId: isTemporary ? tempId : null, // 💡 클라이언트에서 받은 tempId를 DB에 저장
+        tempId: isTemporary ? tempId : null,
         uploadedById: null,
       },
     });
 
+    console.log("DEBUG [POST] ✅ 파일 업로드 및 DB 기록 성공:", attachment.path);
     return NextResponse.json(attachment);
   } catch (err) {
     console.error("첨부파일 업로드 실패:", err);
     return NextResponse.json({ error: "업로드 실패" }, { status: 500 });
   }
 }
-
 
 // =========================================================================
 // GET: 파일 목록 조회 및 파일 콘텐츠 전송 (ArrayBuffer 복사 적용)
