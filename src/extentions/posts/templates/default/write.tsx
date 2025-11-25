@@ -1,9 +1,9 @@
 "use client";
 
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import type {OutputData} from "@editorjs/editorjs";
 import Editorjs from "@plextype/components/editor/Editorjs";
-import UploadFilePond from "@plextype/components/editor/Filepond";
+import UploadFileManager from "@plextype/components/editor/UploadFileManager";
 import {usePostContext} from "./PostProvider";
 import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
 
@@ -16,12 +16,23 @@ interface PostWriteProps {
     content: string | null; // DB에 JSON string이라면 string | null
   } | null;
 }
-
+export interface Attachment {
+  id: number;
+  uuid: string;
+  name: string;
+  size: number;
+  path: string;
+  mimeType: string;
+}
 
 const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
   const {postInfo} = usePostContext();
+
+  const formRef = useRef<HTMLFormElement | null>(null); // ✅ formRef 생성
   const [title, setTitle] = useState(existingPost?.title || "");
   const [tempId, setTempId] = useState<string | null>(null);
+  const [editorReady, setEditorReady] = useState(false);
+  const editorRef = useRef<any>(null);
   const [content, setContent] = useState<OutputData>(
     existingPost?.content
       ? (() => {
@@ -45,20 +56,54 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
     setContent(data);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (form?: HTMLFormElement | null) => {
+    if (!form) return;
 
-    const formData = new FormData(e.currentTarget);
-
-    // JSON 객체를 문자열로 변환
+    const formData = new FormData(form);
     formData.append("content", JSON.stringify(content));
     await savePost(formData);
-
-    // 이제 여기에서 저장할꺼야
   };
 
+
+  const handleFileClick = async (file: Attachment) => {
+    let editor = editorRef.current;
+
+    // 1️⃣ 아직 ref가 연결 안됐을 수 있음 → 기다림
+    if (!editor) {
+      console.warn("EditorJS ref not ready yet, waiting...");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      editor = editorRef.current;
+    }
+
+    if (!editor) {
+      console.error("EditorJS instance not found even after delay");
+      return;
+    }
+
+    // 2️⃣ 내부 준비 완료 보장
+    await editor.isReady;
+
+    // 3️⃣ 삽입
+    if (file.mimeType.startsWith("image/")) {
+      await editor.blocks.insert("image", {
+        file: { url: file.path },
+      });
+    } else if (file.mimeType.startsWith("video/")) {
+      await editor.blocks.insert("embed", {
+        service: "video",
+        source: file.path,
+        embed: file.path,
+        width: 640,
+        height: 360,
+      });
+    } else {
+      await editor.blocks.insert("paragraph", {
+        text: `<a href="${file.path}" target="_blank">${file.name}</a>`,
+      });
+    }
+  };
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form ref={formRef}  className="space-y-4">
       {existingPost && (
         <input type="hidden" name="id" value={existingPost.id}/>
       )}
@@ -93,19 +138,31 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
         className="w-full p-2 outline-none text-3xl leading-10"
       />
       <Editorjs
+        ref={editorRef}
+        onReady={(editorInstance) => {
+          console.log("Editor Ready:", editorInstance);
+          editorRef.current = editorInstance; // ✅ 직접 ref 세팅
+          setEditorReady(true);
+        }}
         onChange={handleContentChange}
         data={existingPost?.content ? JSON.parse(existingPost.content) : undefined}
       />
-      <UploadFilePond
+
+      <UploadFileManager
         resourceType="posts"
-        resourceId={existingPost?.id ?? 0}
-        onUpdate={(files) => {
-          console.log('업로드 완료 파일 목록:', files);
+        resourceId={postInfo?.id ?? 0}
+        documentId={existingPost?.id ?? 0}
+        tempId={tempId}
+        onTempId={setTempId}
+        onFileClick={(file) => {
+          if (!editorReady) return; // 아직 준비 안 됐으면 무시
+          handleFileClick(file);
         }}
-        onTempId={(id) => setTempId(id)} // ← 여기 추가
       />
+
       <button
-        type="submit"
+        type="button"
+        onClick={() => handleSubmit(formRef.current)} // 직접 호출
         className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
       >
         저장하기

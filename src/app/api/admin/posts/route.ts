@@ -13,53 +13,53 @@ interface FormDataFields {
   commentState: boolean;
   permissions: object | null;
 }
-
-export async function GET(request: NextRequest): Promise<Response> {
-  try {
-    // URL에서 쿼리 파라미터 가져오기
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const keyword = searchParams.get("keyword") || "";
-
-    const listCount = 10; // 한 페이지당 게시글 수
-    const skip = (page - 1) * listCount;
-    const totalCount = await prisma.posts.count();
-    const totalPages = Math.ceil(totalCount / listCount);
-
-    // 게시글 조회
-    const posts = await prisma.posts.findMany({
-      where: {
-        OR: [
-          { pid: { contains: keyword, mode: "insensitive" } }, // 게시판 ID 검색
-          { postName: { contains: keyword, mode: "insensitive" } }, // 게시판 이름 검색
-        ],
-      },
-      skip,
-      take: listCount,
-      orderBy: { createdAt: "desc" }, // 최신순 정렬
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: posts,
-        pagination: {
-          page,
-          listCount,
-          totalCount,
-          totalPages,
-        },
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error("Post List API Error:", error);
-    return NextResponse.json(
-      { success: false, message: "게시판 목록을 불러오는 중 오류 발생" },
-      { status: 500 },
-    );
-  }
-}
+//
+// export async function GET(request: NextRequest): Promise<Response> {
+//   try {
+//     // URL에서 쿼리 파라미터 가져오기
+//     const { searchParams } = new URL(request.url);
+//     const page = parseInt(searchParams.get("page") || "1", 10);
+//     const keyword = searchParams.get("keyword") || "";
+//
+//     const listCount = 10; // 한 페이지당 게시글 수
+//     const skip = (page - 1) * listCount;
+//     const totalCount = await prisma.posts.count();
+//     const totalPages = Math.ceil(totalCount / listCount);
+//
+//     // 게시글 조회
+//     const posts = await prisma.posts.findMany({
+//       where: {
+//         OR: [
+//           { pid: { contains: keyword, mode: "insensitive" } }, // 게시판 ID 검색
+//           { postName: { contains: keyword, mode: "insensitive" } }, // 게시판 이름 검색
+//         ],
+//       },
+//       skip,
+//       take: listCount,
+//       orderBy: { createdAt: "desc" }, // 최신순 정렬
+//     });
+//
+//     return NextResponse.json(
+//       {
+//         success: true,
+//         data: posts,
+//         pagination: {
+//           page,
+//           listCount,
+//           totalCount,
+//           totalPages,
+//         },
+//       },
+//       { status: 200 },
+//     );
+//   } catch (error) {
+//     console.error("Post List API Error:", error);
+//     return NextResponse.json(
+//       { success: false, message: "게시판 목록을 불러오는 중 오류 발생" },
+//       { status: 500 },
+//     );
+//   }
+// }
 
 export async function POST(request: NextRequest): Promise<Response> {
   try {

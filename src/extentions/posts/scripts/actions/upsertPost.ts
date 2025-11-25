@@ -26,7 +26,7 @@ export const upsertPost = async (
   const id = formData.get("id");
   const categoryIdRaw = formData.get("categoryId");
   const categoryId = categoryIdRaw ? Number(categoryIdRaw) : null;
-  console.log(categoryId)
+
   if (!title || !content) throw new Error("제목과 내용을 입력해주세요.");
 
   // 📌 pid로 게시판(Posts) 정보 조회
