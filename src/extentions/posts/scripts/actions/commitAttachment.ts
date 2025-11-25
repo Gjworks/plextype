@@ -12,26 +12,26 @@ import { rename, mkdir } from "fs/promises";
  */
 export async function commitAttachments(
   tempId: string,
-  newResourceId: number,
+  newDocumentId: number,
   finalResourceType: string,
 ): Promise<void> {
-  console.log(`[Attachment Commit] Starting commitment for tempId: ${tempId} to Resource: ${finalResourceType}/${newResourceId}`);
+  console.log(`[Attachment Commit] Starting commitment for tempId: ${tempId} to Resource: ${finalResourceType}/${newDocumentId}`);
 
   // DB에 임시 파일로 기록될 때 resourceType은 "temp"로 저장되었습니다.
   const tempResourceType = "temp";
-
+  console.log(newDocumentId)
   // 1. DB 업데이트 (Attachment 레코드 연결)
   try {
     // 이 부분은 Prisma Client API를 사용하므로 문제 없이 잘 작동합니다.
     const updateResult = await prisma.attachment.updateMany({
       where: {
         tempId: tempId,
-        resourceType: tempResourceType, // 임시 파일로 저장된 레코드 필터링
-        resourceId: 0,                   // resourceId가 0인 레코드 필터링
+        resourceType: finalResourceType, // 임시 파일로 저장된 레코드 필터링
+        documentId: 0,                   // resourceId가 0인 레코드 필터링
       },
       data: {
         resourceType: finalResourceType, // 'posts' 등으로 변경
-        resourceId: newResourceId,      // 새로 생성된 ID로 변경
+        documentId: newDocumentId,      // 새로 생성된 ID로 변경
         tempId: null,                   // 임시 ID 제거 (커밋 완료)
       },
     });
@@ -45,21 +45,21 @@ export async function commitAttachments(
 
     // 2. 파일 시스템에서 디렉토리 이동
     const oldDirIdentifier = tempId;
-    const newDirIdentifier = String(newResourceId);
+    const newDirIdentifier = String(newDocumentId);
 
-    // 이전 경로: {프로젝트_루트}/public/uploads/temp/{tempId}
+    // 이전 경로: {프로젝트_루트}/files/uploads/temp/{tempId}
     const oldPath = path.join(
       process.cwd(),
-      "public",
+      "files",
       "uploads",
       tempResourceType, // "temp"
       oldDirIdentifier
     );
 
-    // 새 경로: {프로젝트_루트}/public/uploads/{finalResourceType}/{newResourceId}
+    // 새 경로: {프로젝트_루트}/files/uploads/{finalResourceType}/{newResourceId}
     const newPath = path.join(
       process.cwd(),
-      "public",
+      "files",
       "uploads",
       finalResourceType,
       newDirIdentifier
@@ -83,7 +83,7 @@ export async function commitAttachments(
             SET "path" = REPLACE("path", 
                                ${oldDbPathPrefix}::text, 
                                ${newDbPathPrefix}::text)
-            WHERE "resourceId" = ${newResourceId}::int
+            WHERE "documentId" = ${newDocumentId}::int
               AND "resourceType" = ${finalResourceType}::text;
         `;
 
@@ -104,11 +104,34 @@ export async function commitAttachments(
         await prisma.$executeRaw`
             UPDATE "Attachment"
             SET "path" = REPLACE("path", ${oldDbPathPrefix}::text, ${newDbPathPrefix}::text)
-            WHERE "resourceId" = ${newResourceId}::int
+            WHERE "documentId" = ${newDocumentId}::int
     AND "resourceType" = ${finalResourceType}::text;
         `;
         console.log(`[Attachment Commit] DB path fields updated despite no physical directory move (ENOENT).`);
       }
+    }
+
+    const oldPrefix = oldDbPathPrefix; // "/uploads/temp/{tempId}"
+    const newPrefix = newDbPathPrefix; // "/uploads/posts/{documentId}"
+
+    try {
+      const post = await prisma.document.findUnique({
+        where: { id: newDocumentId },
+        select: { content: true },
+      });
+
+      if (post?.content) {
+        const updatedContent = post.content.replaceAll(oldPrefix, newPrefix);
+
+        await prisma.document.update({
+          where: { id: newDocumentId },
+          data: { content: updatedContent },
+        });
+
+        console.log("[Attachment Commit] Post content updated.");
+      }
+    } catch (err) {
+      console.error("[Attachment Commit] Failed to update content:", err);
     }
 
   } catch (dbError) {

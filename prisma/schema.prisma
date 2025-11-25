@@ -64,6 +64,7 @@ model UserGroupUser {
 
 model Document {
   id             Int       @id @default(autoincrement())
+  uuid           String?   @unique @default(cuid())
   categoryId     Int?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -184,11 +185,11 @@ model Attachment {
   tempId       String? // ✨ 임시 파일 식별자
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  uploadedById Int? // 업로더 User ID
-  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+  userId       Int? // 업로더 User ID
+  uploadedBy   User?    @relation(fields: [userId], references: [id])
 
   @@index([resourceType, resourceId], map: "idx_attachment_resource")
-  @@index([uploadedById], map: "idx_attachment_user")
+  @@index([userId], map: "idx_attachment_user")
 }
 
 enum PermissionSubject {

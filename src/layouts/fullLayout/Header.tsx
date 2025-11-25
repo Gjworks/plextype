@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect} from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import {usePathname} from "next/navigation";
 import Image from "next/image";
 
 import Left from "@plextype/components/panel/Left";
@@ -10,11 +10,11 @@ import Left from "@plextype/components/panel/Left";
 import AccountDropwdown from "src/widgets/forms/AccountDropwdown";
 import SideNav from "@plextype/components/nav/SideNav";
 import nav from "@plextype/res/config/navigation.json";
-import { motion } from "framer-motion";
+import {motion} from "framer-motion";
 
 import Right from "@plextype/components/panel/Right";
 import MymenuTemplate from "src/widgets/forms/MymenuTemplate";
-import { BellIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import {BellIcon, ChevronDownIcon} from "@heroicons/react/24/outline";
 
 export type NavType = {
   name: string;
@@ -78,12 +78,12 @@ const Header = () => {
     openSubMenu: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.5, staggerChildren: 0.1 },
+      transition: {duration: 0.5, staggerChildren: 0.1},
     },
     closeSubMenu: {
       x: -25,
       opacity: 0,
-      transition: { duration: 0.5, staggerChildren: 0.1, staggerDirection: -1 },
+      transition: {duration: 0.5, staggerChildren: 0.1, staggerDirection: -1},
     },
   };
 
@@ -104,9 +104,9 @@ const Header = () => {
   return (
     <>
       <motion.header
-        transition={{ duration: 0.3 }}
+        transition={{duration: 0.3}}
         className={
-          "sticky bg-white/75 top-0 w-full  backdrop-blur-lg dark:bg-dark-950/95 z-20 " +
+          "sticky bg-white/90 top-0 w-full  backdrop-blur-lg dark:bg-dark-950/95 z-20 " +
           (showNavigation ? "  " : " ")
         }
       >
@@ -122,8 +122,10 @@ const Header = () => {
                 <div className="relative flex h-5 w-5 cursor-pointer">
                   <div className="z-50">
                     {/* <div className="transition-all absolute left-0 top-[3px] h-[1px] w-2 group-hover:w-3 bg-black dark:bg-white"></div> */}
-                    <div className="absolute left-0 top-[6px] h-[1px] w-4 bg-black dark:bg-white transition-all group-hover:w-2"></div>
-                    <div className="absolute left-0 top-[12px] h-[1px] w-3 bg-black dark:bg-white transition-all group-hover:w-4"></div>
+                    <div
+                      className="absolute left-0 top-[6px] h-[1px] w-4 bg-black dark:bg-white transition-all group-hover:w-2"></div>
+                    <div
+                      className="absolute left-0 top-[12px] h-[1px] w-3 bg-black dark:bg-white transition-all group-hover:w-4"></div>
                   </div>
                 </div>
               </button>
@@ -134,9 +136,12 @@ const Header = () => {
               >
                 <div className="relative flex h-5 w-5 cursor-pointer">
                   <span>
-                    <div className="absolute left-0 top-[3px] h-[1px] w-2 bg-black transition-all group-hover:w-3 dark:bg-white"></div>
-                    <div className="absolute left-0 top-[9px] h-[1px] w-4 bg-black transition-all group-hover:w-2 dark:bg-white"></div>
-                    <div className="absolute left-0 top-[15px] h-[1px] w-3 bg-black transition-all group-hover:w-4 dark:bg-white"></div>
+                    <div
+                      className="absolute left-0 top-[3px] h-[1px] w-2 bg-black transition-all group-hover:w-3 dark:bg-white"></div>
+                    <div
+                      className="absolute left-0 top-[9px] h-[1px] w-4 bg-black transition-all group-hover:w-2 dark:bg-white"></div>
+                    <div
+                      className="absolute left-0 top-[15px] h-[1px] w-3 bg-black transition-all group-hover:w-4 dark:bg-white"></div>
                   </span>
                 </div>
               </button>
@@ -163,7 +168,8 @@ const Header = () => {
                       /> */}
                     </Link>
                     <div className="hidden group-hover:flex absolute top-10 lg:top-10 -left-1 z-10">
-                      <div className="bg-primary-500 text-white py-1 px-3 rounded-md text-xs after:w-3 after:h-3 after:rounded-sm after:absolute after:left-3.5 after:-top-1 after:bg-primary-500 after:inline-block after:rotate-45 after:content-[''] z-10 after:z-[-1]">
+                      <div
+                        className="bg-primary-500 text-white py-1 px-3 rounded-md text-xs after:w-3 after:h-3 after:rounded-sm after:absolute after:left-3.5 after:-top-1 after:bg-primary-500 after:inline-block after:rotate-45 after:content-[''] z-10 after:z-[-1]">
                         2.0
                       </div>
                     </div>
@@ -201,9 +207,10 @@ const Header = () => {
                 </div>
               </div>
             </div>
-            <motion.div className="col-span-3 dark:before:bg-dark-700 group relative hidden items-center justify-center rounded-full py-1 md:flex">
+            <motion.div
+              className="col-span-3 dark:before:bg-dark-700 group relative hidden items-center justify-center rounded-full py-1 md:flex">
               <div
-                className=" relative flex"
+                className=" relative flex gap-8"
                 // onMouseEnter={() => setShowNavigation(true)} // 마우스엔터(호버)시 키값이 저장된다
                 // onMouseLeave={} // 마우스리브 시에는 키값이 지워진다
               >
@@ -212,13 +219,13 @@ const Header = () => {
                     return (
                       <div
                         key={data[1].name}
-                        className="relative flex items-center"
+                        className="relative flex items-center gap-1"
                       >
                         <>
                           <Link
                             href={data[1].route}
                             className={
-                              "relative mx-2 flex items-center gap-2 px-1 py-0 text-xs font-normal lg:px-3 lg:py-2 md:text-[0.762rem] tracking-wider " +
+                              "relative flex items-center gap-2 py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider " +
                               (currentPage?.route === data[1].route
                                 ? "text-gray-500 dark:text-white font-medium"
                                 : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")
@@ -228,7 +235,7 @@ const Header = () => {
                             {data[1].subMenu.length > 0 ? (
                               <>
                                 <div className="">
-                                  <ChevronDownIcon className="size-3 storke-1" />
+                                  <ChevronDownIcon className="size-3 storke-1"/>
                                 </div>
                               </>
                             ) : (
@@ -239,28 +246,30 @@ const Header = () => {
                       </div>
                     );
                   })}
-                <button
-                  onClick={() => {
-                    setShowNavigation(true);
-                  }}
-                  className="hidden items-center rounded-md px-3 hover:bg-gray-100"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                    stroke="currentColor"
-                    className="h-5 w-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25"
-                    />
-                  </svg>
-                </button>
+                <div className="relative flex items-center">
+                  <div
+                    className="relative inline-block before:absolute h-[12px] before:-translate-y-1/2 before:h-12 w-[1px] before:top-0 before:left-0 bg-gray-300 before:block before:content-['']"></div>
+                </div>
+                <div>
+                  <div className="relative flex items-start">
+                    <Link
+                      className={"relative flex items-center py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider " + (currentPage?.route === '/community'
+                        ? "text-gray-500 dark:text-white font-medium"
+                        : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")}
+                      href="/community">
+                      <div>커뮤니티</div>
+                      <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                             stroke="currentColor" className="size-4">
+                          <path strokeLinecap="round" strokeLinejoin="round"
+                                d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+                        </svg>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
               </div>
+
             </motion.div>
             <div className="relative col-span-1 flex items-center justify-end gap-2 md:gap-4">
               <div className="flex items-center">
@@ -269,15 +278,16 @@ const Header = () => {
                   // onClick={() => setShowModal(!showModal)}
                   onClick={() => setShowRight(true)}
                 >
-                  <BellIcon className="size-6 stroke-1" />
+                  <BellIcon className="size-6 stroke-1"/>
                 </button>
                 <div className="">
-                  <AccountDropwdown />
+                  <AccountDropwdown/>
                 </div>
               </div>
               <button
                 className="dark:text-dark-200 dark:bg-dark-900 relative hidden rounded-md bg-white px-2 py-1 text-gray-700 hover:bg-gray-200 hover:text-gray-900 dark:hover:text-white dark:hover:bg-dark-700/75"
-                onClick={() => {}}
+                onClick={() => {
+                }}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -301,12 +311,12 @@ const Header = () => {
       </motion.header>
 
       <motion.div
-        initial={{ opacity: 0, visibility: "hidden" }}
+        initial={{opacity: 0, visibility: "hidden"}}
         animate={{
           opacity: subMenuState ? 1 : 0,
           visibility: subMenuState ? "visible" : "hidden",
         }}
-        transition={{ duration: 0.8 }}
+        transition={{duration: 0.8}}
         exit={{
           opacity: 0,
           visibility: "hidden",
@@ -314,10 +324,10 @@ const Header = () => {
         className="fixed top-0 left-0 right-0 bottom-0 bg-gray-950/30 z-90 backdrop-blur-sm"
       ></motion.div>
       <Left state={showLeft} close={closeLeft} width="320px">
-        <SideNav />
+        <SideNav/>
       </Left>
       <Right state={showRight} close={closeRight}>
-        <MymenuTemplate />
+        <MymenuTemplate/>
       </Right>
     </>
   );

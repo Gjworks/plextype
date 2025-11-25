@@ -22,7 +22,7 @@
         }
         ]
     },
-    "Docs": {
+    "docs": {
       "name": "docs",
       "title": "Documentation",
       "route": "/docs",
@@ -37,7 +37,7 @@
         }
         ]
     },
-    "Store": {
+    "store": {
       "name": "store",
       "title": "Store",
       "route": "/posts/store",

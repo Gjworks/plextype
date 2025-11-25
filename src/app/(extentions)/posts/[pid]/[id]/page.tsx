@@ -12,6 +12,7 @@ import {increaseViewCount} from "@/extentions/posts/scripts/actions/increaseView
 import {addCommentAndIncrementCount, deleteCommentAndDecrementCount} from "@/extentions/posts/scripts/actions/commentCountAction"
 import {getUniqueCommentMember} from "@/extentions/posts/scripts/actions/getUniqueCommentMember";
 import {redirect} from "next/navigation";
+import { getSeoMetadata } from "@plextype/utils/helper/matadata";
 
 interface PageProps {
   params: Promise<{
@@ -31,11 +32,45 @@ interface CurrentUser {
   loggedIn: boolean; // 로그인 상태
 }
 
+export async function generateMetadata({ params }: { params: { pid: string; id: string } }) {
+  const { pid, id } = await params;
+
+  // id가 "create"일 경우 SEO는 기본값
+  if (id === "create") {
+    return getSeoMetadata({
+      title: `${pid} 게시판 글 작성`,
+      description: `${pid} 게시판에 새 글을 작성합니다.`,
+      url: `https://example.com/posts/${pid}/create`,
+    });
+  }
+
+  const documentId = Number(id);
+
+  // 문서 상세 조회 (이미 Page에서 사용하는 getDocument 재사용)
+
+  const document = (await getDocument(documentId)) as {
+    id: number;
+    title: string | null;
+    content: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    user?: { id: number; nickName: string };
+  };
+
+  return getSeoMetadata({
+    title: `${process.env.PROJECT_TITLE} - ${document?.title}`,
+    description: `${process.env.PROJECT_TITLE} - ${document?.title}`,
+    url: `https://example.com/posts/${pid}/${id}`,
+  });
+}
+
 const Page = async ({ params, searchParams }: PageProps) => {
   const { pid, id } =  await params;
-  if (id === "create") {
+
+  if (id === "create" || id === "undefined") {
     redirect(`/posts/${pid}/create`);
   }
+
   const sp = (await searchParams) ?? {};
 
   const documentId = Number(id);
@@ -73,7 +108,6 @@ const Page = async ({ params, searchParams }: PageProps) => {
   const participants = (await getUniqueCommentMember(documentId)).filter(
     (p): p is { id: number; nickName: string; profile_image?: string } => p !== null
   );
-  console.log(participants)
 
   async function upsertComment({
     documentId,

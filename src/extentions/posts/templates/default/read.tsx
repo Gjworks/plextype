@@ -297,6 +297,22 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
                 </table>
               );
 
+            case "image":
+              return (
+                <figure key={block.id} className="my-6">
+                  <img
+                    src={block.data.file?.url || block.data.url}
+                    alt={block.data.caption || ""}
+                    className=""
+                  />
+                  {block.data.caption && (
+                    <figcaption className="text-center text-sm text-gray-500 mt-2">
+                      {block.data.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              );
+
             default:
               return null;
           }
