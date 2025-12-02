@@ -32,7 +32,7 @@ interface CurrentUser {
   loggedIn: boolean; // 로그인 상태
 }
 
-export async function generateMetadata({ params }: { params: { pid: string; id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ pid: string; id: string }> }) {
   const { pid, id } = await params;
 
   // id가 "create"일 경우 SEO는 기본값
