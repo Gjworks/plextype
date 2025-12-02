@@ -3,8 +3,8 @@ import PostsList from "@/extentions/posts/templates/default/list";
 import {getPosts} from "@/extentions/posts/scripts/actions/getPosts";
 import { getSeoMetadata } from "@plextype/utils/helper/matadata";
 
-export async function generateMetadata({ params }: { params: { pid: string } }) {
-  const { pid } = params;
+export async function generateMetadata({ params }: {params: Promise<{ pid: string }> }) {
+  const { pid } = await params;
   const { items } = await getPosts(pid, 1, 1); // 첫 게시글만 가져와서 SEO용
 
   return getSeoMetadata({
