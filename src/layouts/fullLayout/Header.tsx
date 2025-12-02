@@ -25,10 +25,7 @@ export type NavType = {
 };
 
 interface Inspage {
-  name: string;
-  title: string;
-  parent: string;
-  route: string;
+  route?: string;
 }
 
 const Header = () => {
@@ -48,14 +45,11 @@ const Header = () => {
     const params = pathname?.split("/");
 
     if (params?.length) {
-      if (params?.length > 2) {
-        setCurrentPage(nav.header[params?.[2]]);
-      } else {
-        setCurrentPage(nav.header[params?.[1]]);
-      }
-      // setCurrentPage(nav.header[params?.[1]])
+      const page = params?.length > 2 ? '/' + params?.[2] : '/' + params?.[1];
+      console.log(page)
+      setCurrentPage({ route: page });
     }
-  }, [pathname, currentPage]);
+  }, [pathname]);
 
   const closeLeft = (close) => {
     setShowLeft(close);
@@ -225,9 +219,9 @@ const Header = () => {
                           <Link
                             href={data[1].route}
                             className={
-                              "relative flex items-center gap-2 py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider " +
+                              "relative  flex items-center gap-2 py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider " +
                               (currentPage?.route === data[1].route
-                                ? "text-gray-500 dark:text-white font-medium"
+                                ? "text-gray-400 dark:text-white font-medium"
                                 : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")
                             }
                           >
@@ -253,11 +247,11 @@ const Header = () => {
                 <div>
                   <div className="relative flex items-start">
                     <Link
-                      className={"relative flex items-center py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider " + (currentPage?.route === '/community'
-                        ? "text-gray-500 dark:text-white font-medium"
+                      className={`relative flex items-center py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider ` + (currentPage?.route === '/works'
+                        ? "text-gray-400 dark:text-white font-medium"
                         : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")}
-                      href="/community">
-                      <div>커뮤니티</div>
+                      href="/works">
+                      <div>Works</div>
                       <div>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                              stroke="currentColor" className="size-4">
