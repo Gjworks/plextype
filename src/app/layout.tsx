@@ -1,5 +1,5 @@
-import "/styles/globals.css";
-import "/styles/style.css";
+import "./globals.css";
+import "./style.css";
 import ReduxProviders from "@plextype/redux/Providers";
 import ReactQueryProvider from "@plextype/providers/ReactQueryProvider";
 import {UserProvider} from "@plextype/providers/UserProvider";

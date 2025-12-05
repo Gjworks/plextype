@@ -5,7 +5,7 @@ export const config = {
   // runtime: "nodejs",
 };
 // 미들웨어 생성
-export async function middleware(request: NextRequest, response: NextResponse) {
+export async function proxy(request: NextRequest, response: NextResponse) {
   try {
     const { cookies } = request;
     const hasAccessToken = cookies.has("accessToken");
