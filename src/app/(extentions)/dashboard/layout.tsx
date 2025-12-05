@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 
 import DefaultNav from "@plextype/components/nav/DefaultNav";
 
-import "styles/globals.css";
+import "@/app/globals.css";
 
 import nav from "@plextype/res/config/settings.json";
 import {
