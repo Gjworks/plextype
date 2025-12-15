@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
       uuid: attachment.uuid,
       name: attachment.originalName,
       size: attachment.size,
-      path: `/api${attachment.path}`,
+      path: `${attachment.path}`,
       mimeType: attachment.mimeType,
     };
 
@@ -202,7 +202,7 @@ export async function GET(req: NextRequest) {
           uuid: att.uuid,
           name: att.originalName,
           size: att.size,
-          path: `/api${att.path}`,
+          path: `${att.path}`,
           mimeType: att.mimeType,
         }))
       );
@@ -224,7 +224,7 @@ export async function GET(req: NextRequest) {
         uuid: att.uuid,
         name: att.originalName,
         size: att.size,
-        path: `/api${att.path}`,
+        path: `${att.path}`,
         mimeType: att.mimeType,
       })));
     }
