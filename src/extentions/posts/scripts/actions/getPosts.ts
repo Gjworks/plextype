@@ -83,7 +83,7 @@ export async function getPosts(pid: string, page: number = 1, pageSize: number =
       updatedAt: doc.updatedAt.toISOString(),
     };
   });
-  console.log(items)
+
   return {
     items,
     pagination: {
