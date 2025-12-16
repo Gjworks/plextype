@@ -54,3 +54,4 @@ package-lock.json
 .env.production
 
 /files
+/storage_data

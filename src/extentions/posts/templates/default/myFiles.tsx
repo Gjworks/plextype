@@ -5,6 +5,7 @@ import { getMyFiles } from "@/extentions/posts/scripts/actions/getMyFiles";
 // 파일 타입 정의 (필요시 수정)
 import { Attachment } from "./write";
 import PageNavigation from "@plextype/components/nav/PageNavigation"; // 혹은 적절한 타입 경로
+import {deleteAttachment} from "@/extentions/posts/scripts/actions/deleteAttachment";
 
 interface Props {
   onFileSelect?: (file: Attachment) => void; // 부모에게 선택된 파일을 알리기 위한 prop
@@ -56,6 +57,31 @@ export default function MyFiles({ onFileSelect }: Props) {
     setPage(newPage);
   };
 
+  // ✅ 2. 삭제 핸들러 추가
+  const handleDelete = async (e: React.MouseEvent, fileId: number) => {
+    // 🚨 중요: 부모 div의 클릭 이벤트(파일 선택)가 발생하지 않도록 막음
+    e.stopPropagation();
+
+    if (!confirm("정말 이 파일을 삭제하시겠습니까?")) return;
+
+    try {
+      const result = await deleteAttachment(fileId);
+
+      if (result.success) {
+        // UI에서 즉시 제거 (새로고침 없이)
+        setFiles((prev) => prev.filter((f) => f.id !== fileId));
+
+        // 혹은 데이터를 다시 불러오고 싶다면:
+        // await fetchData();
+      } else {
+        alert(result.error || "삭제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("오류가 발생했습니다.");
+    }
+  };
+
 
   if (loading) return <div className="p-4 text-center">로딩 중...</div>;
 
@@ -65,12 +91,22 @@ export default function MyFiles({ onFileSelect }: Props) {
         {files.map((file, index) => (
           <div
             key={file.id || index}
-            className="border rounded p-2 cursor-pointer hover:bg-gray-100"
+            className="group relative border rounded p-2 cursor-pointer hover:bg-gray-100"
             onClick={() => {
               // 파일 클릭 시 부모(Page)에게 전달
               if (onFileSelect) onFileSelect(file);
             }}
           >
+            {/* ✅ 3. 삭제 버튼 추가 (우상단) */}
+            <button
+              onClick={(e) => handleDelete(e, file.id)}
+              className="absolute top-1 right-1 z-10 bg-white rounded-full p-1 shadow-md hover:bg-red-100 border border-gray-200"
+              title="삭제"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-red-500">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
             {/* 파일 미리보기 UI 예시 */}
             {file.mimeType?.startsWith('image/') ? (
               <img src={file.path} alt={file.name} className="w-full h-20 object-cover"/>
