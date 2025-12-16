@@ -19,52 +19,34 @@ interface FileData {
 
 export async function POST(req: NextRequest) {
   try {
-    // const { searchParams } = new URL(req.url);
     const formData = await req.formData();
-    // const resourceType = formData.get("resourceType") ?? "etc";
+
+    // 1. 파라미터 파싱
     const resourceTypeValue = formData.get("resourceType");
-    const resourceTypeStr =
-      typeof resourceTypeValue === "string" ? resourceTypeValue : "etc"; // 기본값 설정
+    const resourceTypeStr = typeof resourceTypeValue === "string" ? resourceTypeValue : "etc";
     const resourceId = Number(formData.get("resourceId")) || 0;
     const documentId = Number(formData.get("documentId")) || 0;
 
+    // 2. 인증 토큰 확인
     const accessToken = req.cookies.get("accessToken")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const verifyToken = await verify(accessToken!);
-    if (!verifyToken || !verifyToken.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!verifyToken || !verifyToken.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const currentUserId = verifyToken.id;
 
+    // 3. 임시 파일(Temp) 여부 확인
     const tempIdValue = formData.get("tempId");
-    const tempIdStr =
-      typeof tempIdValue === "string" ? tempIdValue : null; // null 처리도 가능
-    const isTemporary = documentId === 0;
+    const tempIdStr = typeof tempIdValue === "string" ? tempIdValue : null;
+    const isTemporary = documentId === 0; // documentId가 0이면 새 글 작성 중(임시)
 
     if (isTemporary && !tempIdStr) {
-
-      return NextResponse.json({ error: "임시 파일 관리를 위한 tempId가 누락되었습니다." }, { status: 400 });
+      return NextResponse.json({ error: "tempId가 누락되었습니다." }, { status: 400 });
     }
 
-    const tempId = tempIdStr;
-    const dirIdentifier = isTemporary
-      ? (tempId as string)
-      : String(documentId);
-    const uploadBaseDir = path.join(process.cwd(), "files", "uploads");
-    const basePath = isTemporary ? "temp" : resourceTypeStr;
-    const uploadDir = path.join(uploadBaseDir, basePath, dirIdentifier);
-    await mkdir(uploadDir, { recursive: true });
-
-    // const formData = await req.formData();
-    // ⭐️ 클라이언트가 보내는 실제 필드 이름인 'filepond-attachments'를 사용합니다.
+    // 4. 파일 유효성 검사 (먼저 수행하여 불필요한 로직 방지)
     const fileEntry = formData.get("file-attachments");
-
-    // ⭐️ 수정된 핵심 로직: File ReferenceError를 피하기 위해 속성 기반 검증을 사용합니다.
     const isFileValid =
       fileEntry &&
       typeof fileEntry === 'object' &&
@@ -74,57 +56,84 @@ export async function POST(req: NextRequest) {
       (fileEntry as any).size > 0;
 
     if (!isFileValid) {
-      console.error("DEBUG [POST] 파일 추출 실패: fileEntry is not a valid file-like object.", fileEntry);
-      return NextResponse.json({ error: "파일 없음 또는 잘못된 형식" }, { status: 400 });
+      return NextResponse.json({ error: "파일이 없거나 잘못된 형식입니다." }, { status: 400 });
     }
 
-    console.log("uploadDir:", uploadDir);
-
-    // 이제 file 변수는 유효한 파일 객체로 간주합니다.
     const file = fileEntry as FileData;
-    // 파일명을 고유한 UUID로 생성합니다.
     const fileUuid = uuidv4();
-    const ext = path.extname(file.name || "").toLowerCase(); //확장자 소문자 처리
+    const ext = path.extname(file.name || "").toLowerCase();
     const fileName = `${fileUuid}${ext}`;
-    console.log('fileName', fileName)
-    // ✅ 허용 확장자 목록
-    const allowedExts = [
-      ".png", ".jpg", ".jpeg", ".gif",
-      ".mp3", ".mp4", ".avif", ".webm", ".webp",
-      ".mov", ".ogg", ".zip"
-    ];
 
-    // ✅ MIME 타입 기준 검증도 병행 (더 안전)
-    const allowedMimeTypes = [
-      "image/png", "image/jpeg", "image/gif", "image/avif", "image/webp",
-      "audio/mpeg", "audio/ogg",
-      "video/mp4", "video/webm", "video/quicktime", // mov = quicktime
-      "application/zip"
-    ];
+    // 확장자 및 MIME 타입 체크
+    const allowedExts = [".png", ".jpg", ".jpeg", ".gif", ".mp3", ".mp4", ".avif", ".webm", ".webp", ".mov", ".ogg", ".zip"];
+    const allowedMimeTypes = ["image/png", "image/jpeg", "image/gif", "image/avif", "image/webp", "audio/mpeg", "audio/ogg", "video/mp4", "video/webm", "video/quicktime", "application/zip"];
 
     if (!allowedExts.includes(ext) || !allowedMimeTypes.includes(file.type)) {
-      console.warn(`차단된 파일 업로드 시도: ${file.name} (${file.type})`);
       return NextResponse.json({ error: "허용되지 않은 파일 형식입니다." }, { status: 400 });
     }
 
-    await mkdir(uploadDir, { recursive: true });
+    // =================================================================================
+    // ⭐️ 5. 경로 생성 로직 분기 (핵심 수정 부분)
+    // =================================================================================
+    let uploadDir: string;
+    let dbPath: string;
+
+    if (isTemporary) {
+      // [CASE A] 임시 파일 저장 (작성 중)
+      // 물리 경로: /files/temp/{tempId}/
+      // DB 경로: /files/temp/{tempId}/{fileName}
+
+      const tempBaseDir = path.join(process.cwd(), "files", "temp");
+      uploadDir = path.join(tempBaseDir, tempIdStr as string);
+
+      dbPath = `/files/temp/${tempIdStr}/${fileName}`;
+
+    } else {
+      // [CASE B] 정식 게시글 파일 저장 (수정 시 등)
+      // 물리 경로: /files/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}/
+      // DB 경로: /files/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}/{fileName}
+
+      const now = new Date();
+      const year = now.getFullYear().toString();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+
+      // files/uploadsBase 까지
+      const uploadBaseDir = path.join(process.cwd(), "files", "uploads");
+
+      // uploads 아래의 상세 구조 생성
+      // path.join은 OS에 따라 역슬래시(\)나 슬래시(/)를 알아서 처리합니다.
+      uploadDir = path.join(
+        uploadBaseDir,
+        resourceTypeStr,    // 예: posts
+        year,               // 예: 2025
+        month,              // 예: 12
+        day,                // 예: 15
+        String(documentId)  // 예: 94
+      );
+
+      // DB 저장은 웹 URL 표준인 슬래시(/)를 강제해야 합니다.
+      dbPath = `/files/uploads/${resourceTypeStr}/${year}/${month}/${day}/${documentId}/${fileName}`;
+    }
+
+    // 6. 폴더 생성 및 파일 저장
+    // recursive: true 옵션 덕분에 중간 경로(년/월/일 등)가 없으면 알아서 다 만들어줍니다.
+    await fs.mkdir(uploadDir, { recursive: true });
+
     const fullPath = path.join(uploadDir, fileName);
-
-    // File 객체의 arrayBuffer() 메서드를 사용하여 데이터를 읽습니다.
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(fullPath, buffer);
+    await fs.writeFile(fullPath, Buffer.from(bytes));
 
-    // DB에 저장할 데이터
-    const dbPath = `/files/uploads/${basePath}/${dirIdentifier}/${fileName}`;
+    console.log(`DEBUG [POST] 저장 위치: ${fullPath}`);
 
+    // 7. DB 기록
     const attachment = await prisma.attachment.create({
       data: {
         uuid: uuidv4(),
         fileName,
         originalName: file.name || "unknown",
         mimeType: file.type || "application/octet-stream",
-        size: file.size, // 파일 객체의 size 속성 사용
+        size: file.size,
         path: dbPath,
         resourceType: resourceTypeStr,
         resourceId: resourceId,
@@ -134,19 +143,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-// GET과 동일한 구조로 통일
     const responseData = {
       id: attachment.id,
       uuid: attachment.uuid,
       name: attachment.originalName,
       size: attachment.size,
-      path: `/api${attachment.path}`,
+      path: `${attachment.path}`,
       mimeType: attachment.mimeType,
     };
 
-
-    console.log("DEBUG [POST] ✅ 파일 업로드 및 DB 기록 성공:", attachment.path);
     return NextResponse.json(responseData);
+
   } catch (err) {
     console.error("첨부파일 업로드 실패:", err);
     return NextResponse.json({ error: "업로드 실패" }, { status: 500 });
@@ -202,7 +209,7 @@ export async function GET(req: NextRequest) {
           uuid: att.uuid,
           name: att.originalName,
           size: att.size,
-          path: `/api${att.path}`,
+          path: `${att.path}`,
           mimeType: att.mimeType,
         }))
       );
@@ -224,7 +231,7 @@ export async function GET(req: NextRequest) {
         uuid: att.uuid,
         name: att.originalName,
         size: att.size,
-        path: `/api${att.path}`,
+        path: `${att.path}`,
         mimeType: att.mimeType,
       })));
     }
