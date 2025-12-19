@@ -6,37 +6,10 @@
       "route": "/features",
       "icon": "",
       "subMenu": [
-        {
-            "title": "Components",
-            "name": "components",
-            "icon": "",
-            "parent": "features",
-            "route": "/features/components"
-        },
-        {
-            "title": "Documentation",
-            "name": "documentation",
-            "icon": "",
-            "parent": "features",
-            "route": "/features/documentation"
-        }
+
         ]
     },
-    "docs": {
-      "name": "docs",
-      "title": "Documentation",
-      "route": "/docs",
-      "icon": "",
-      "subMenu": [
-        {
-            "title": "멤버쉽 관리",
-            "name": "components",
-            "icon": "",
-            "parent": "membership",
-            "route": "/membership/membership"
-        }
-        ]
-    },
+
     "store": {
       "name": "store",
       "title": "Store",

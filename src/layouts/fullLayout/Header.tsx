@@ -10,7 +10,7 @@ import Left from "@plextype/components/panel/Left";
 import AccountDropwdown from "src/widgets/forms/AccountDropwdown";
 import SideNav from "@plextype/components/nav/SideNav";
 import nav from "@plextype/res/config/navigation.json";
-import {motion} from "framer-motion";
+import {motion, AnimatePresence, Variants} from "framer-motion";
 
 import Right from "@plextype/components/panel/Right";
 import MymenuTemplate from "src/widgets/forms/MymenuTemplate";
@@ -36,6 +36,7 @@ const Header = () => {
   const [showNavigation, setShowNavigation] = useState(false);
   const [currentPage, setCurrentPage] = useState<Inspage | undefined>();
   const [showRight, setShowRight] = useState(false);
+  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
 
   const closeRight = (close) => {
     setShowRight(close);
@@ -68,31 +69,36 @@ const Header = () => {
   const handleMouseEnter = () => {
     setSubMenuState(true);
   };
-  const variants = {
-    openSubMenu: {
-      opacity: 1,
-      x: 0,
-      transition: {duration: 0.5, staggerChildren: 0.1},
-    },
-    closeSubMenu: {
-      x: -25,
+  const containerVariants: Variants = {
+    hidden: {
       opacity: 0,
-      transition: {duration: 0.5, staggerChildren: 0.1, staggerDirection: -1},
+      y: 10,
+      // transition 설정 시 에러 방지를 위해 visibility는 제거하거나
+      // transitionEnd로 옮기는 것이 좋습니다.
     },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.2,
+        ease: "easeOut", // 이제 Variants 타입 덕분에 string이 아닌 Easing 타입으로 인식됩니다.
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+      }
+    },
+    exit: {
+      opacity: 0,
+      y: 10,
+      transition: {
+        duration: 0.2,
+        ease: "easeIn"
+      }
+    }
   };
 
-  const variants2 = {
-    openSubMenu: {
-      x: 0,
-      opacity: [0, 1],
-      transition: {
-        duration: 0.4,
-      },
-    },
-    closeSubMenu: {
-      x: -25,
-      opacity: 0,
-    },
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 },
   };
 
   return (
@@ -204,42 +210,67 @@ const Header = () => {
             <motion.div
               className="col-span-3 dark:before:bg-dark-700 group relative hidden items-center justify-center rounded-full py-1 md:flex">
               <div
-                className=" relative flex gap-8"
+                className=" relative flex items-center gap-6"
                 // onMouseEnter={() => setShowNavigation(true)} // 마우스엔터(호버)시 키값이 저장된다
                 // onMouseLeave={} // 마우스리브 시에는 키값이 지워진다
               >
-                {nav.header &&
-                  Object.entries(nav.header).map((data, index) => {
-                    return (
+                <div className="flex items-center gap-10">
+                  {nav.header &&
+                    Object.entries(nav.header).map(([key, item]) => (
                       <div
-                        key={data[1].name}
-                        className="relative flex items-center gap-1"
+                        key={item.name}
+                        className="relative flex items-center h-full"
+                        onMouseEnter={() => setHoveredMenu(item.name)}
+                        onMouseLeave={() => setHoveredMenu(null)}
                       >
-                        <>
-                          <Link
-                            href={data[1].route}
-                            className={
-                              "relative  flex items-center gap-2 py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider " +
-                              (currentPage?.route === data[1].route
-                                ? "text-gray-400 dark:text-white font-medium"
-                                : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")
-                            }
-                          >
-                            <div>{data[1].title}</div>
-                            {data[1].subMenu.length > 0 ? (
-                              <>
-                                <div className="">
-                                  <ChevronDownIcon className="size-3 storke-1"/>
+                        <Link
+                          href={item.route}
+                          className={
+                            "relative flex items-center gap-2 py-2 text-xs font-normal lg:text-[0.762rem] tracking-wider transition-colors duration-200 " +
+                            (currentPage?.route === item.route
+                              ? "text-gray-400 dark:text-white font-medium"
+                              : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")
+                          }
+                        >
+                          <div>{item.title}</div>
+                          {item.subMenu.length > 0 && (
+                            <ChevronDownIcon
+                              className={`size-3 transition-transform duration-200 ${hoveredMenu === item.name ? "rotate-180" : ""}`}
+                            />
+                          )}
+                        </Link>
+
+                        {/* 2차 메뉴 영역 */}
+                        <AnimatePresence>
+                          {item.subMenu.length > 0 && hoveredMenu === item.name && (
+                            <motion.div
+                              variants={containerVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit="exit"
+                              className="absolute left-0 top-full z-50 pt-2 w-48"
+                            >
+                              <div className="overflow-hidden rounded-lg shadow-lg shadow-gray-900/5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                                <div className="flex flex-col py-1">
+                                  {item.subMenu.map((subItem) => (
+                                    <motion.div key={subItem.name} variants={itemVariants}>
+                                      <Link
+                                        href={subItem.route}
+                                        className="block px-4 py-3 text-[0.762rem] text-gray-700 dark:text-gray-200 hover:text-orange-500 transition-colors"
+                                      >
+                                        {subItem.title}
+                                      </Link>
+                                    </motion.div>
+                                  ))}
                                 </div>
-                              </>
-                            ) : (
-                              ""
-                            )}
-                          </Link>
-                        </>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    );
-                  })}
+                    ))}
+                </div>
+
                 <div className="relative flex items-center">
                   <div
                     className="relative inline-block before:absolute h-[12px] before:-translate-y-1/2 before:h-12 w-[1px] before:top-0 before:left-0 bg-gray-300 before:block before:content-['']"></div>
