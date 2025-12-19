@@ -9,19 +9,6 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import PageNavigation from "@plextype/components/nav/PageNavigation";
 import Alert from "@plextype/components/message/Alert";
 
-interface PostApiResponse {
-  success: boolean;
-  type: string | null;
-  message: string | null;
-  data: PostListInfo[];
-  pagination: {
-    page: number;
-    listCount: number;
-    totalCount: number;
-    totalPages: number;
-  };
-}
-
 interface PostListInfo {
   id: number;
   pid: string;
@@ -40,7 +27,7 @@ interface PageNavigationInfo {
 
 dayjs.extend(relativeTime);
 
-const DashboardUserList = () => {
+const DashboardUserList = ({ initialData, pagination }) => {
   const params = useSearchParams();
   const pathname = usePathname();
   const [postList, setPostList] = useState<PostListInfo[]>([]);
@@ -50,62 +37,12 @@ const DashboardUserList = () => {
     type: string | null;
     message: string | null;
   } | null>(null);
-  const [pageNavigation, setPageNavigation] = useState<PageNavigationInfo>({
-    totalCount: 0,
-    totalPages: 0,
-    page: 1,
-    listCount: 0,
-  });
+  const [pageNavigation, setPageNavigation] = useState<PageNavigationInfo>(pagination);
 
   useEffect(() => {
     const newPage = Number(params.get("page")) || 1;
     setPage(newPage);
   }, [pathname, params]);
-
-  const fetchData = async ({
-    page,
-    target,
-    keyword,
-  }: {
-    page: number | null;
-    target: string | null;
-    keyword: string | null;
-  }) => {
-    try {
-      const queryParams = new URLSearchParams();
-      if (page !== null) queryParams.append("page", page.toString());
-      if (target) queryParams.append("target", target);
-      if (keyword) queryParams.append("keyword", keyword);
-      const response = await fetch(
-        `/api/admin/posts?${queryParams.toString()}`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-      );
-
-      let responseData = null; // 응답 데이터를 저장할 변수
-      try {
-        const responseData = (await response.json()) as PostApiResponse;
-        if (responseData && responseData.success) {
-          setPostList(responseData.data || []);
-          setPageNavigation(responseData.pagination || {});
-        }
-      } catch (jsonError) {
-        console.error("JSON 파싱 오류:", jsonError);
-      }
-    } catch (error: any) {
-      console.error("패스워드 변경 오류:", error);
-    }
-  };
-  useEffect(() => {
-    const data = {
-      page: page,
-      target: params.get("target") as string | null,
-      keyword: params.get("keyword") as string | null,
-    };
-    fetchData(data);
-  }, [page, params]);
 
   const getRelativeTime = (date: string) => {
     return dayjs(date).fromNow();
@@ -117,45 +54,15 @@ const DashboardUserList = () => {
     );
   };
 
-  const handleDelete = async () => {
-    if (
-      !window.confirm("Are you sure you want to delete the selected posts?")
-    ) {
-      return; // 사용자가 취소한 경우 함수 종료
+  useEffect(() => {
+    if (pagination) {
+      setPageNavigation(pagination);
     }
-    if (!selectedIds.length) return;
-
-    const response = await fetch("/api/admin/posts", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ids: selectedIds }),
-    });
-
-    try {
-      const responseData = (await response.json()) as PostApiResponse;
-      console.log(responseData);
-      if (responseData && responseData.success) {
-        setError({ type: responseData.type, message: responseData.message });
-        // setPostList(responseData.data || []);
-        // setPageNavigation(responseData.pagination || {});
-      }
-    } catch (jsonError) {
-      console.error("JSON 파싱 오류:", jsonError);
-    }
-
-    fetchData({
-      page, // 혹은 필요한 페이지로 재조정
-      target: params.get("target"),
-      keyword: params.get("keyword"),
-    });
-    setSelectedIds([]);
-  };
+  }, [pagination]);
 
   return (
     <>
-      <div className="max-w-screen-2xl mx-auto px-3 pt-6 pb-12">
+
         {error && <Alert message={error.message} type={error.type} />}
         <div className="flex flex-wrap items-center gap-4 mb-5">
           <div className="text-gray-700 text-lg font-semibold">
@@ -234,8 +141,8 @@ const DashboardUserList = () => {
               </tr>
             </thead>
             <tbody>
-              {postList &&
-                postList?.map((item, index) => {
+              {initialData &&
+                initialData?.map((item, index) => {
                   const timeAgo = getRelativeTime(item.createdAt);
                   return (
                     <tr
@@ -287,14 +194,13 @@ const DashboardUserList = () => {
               게시판 추가
             </Link>
             <button
-              onClick={handleDelete}
               className="py-2 px-5 text-white rounded text-sm bg-orange-500 hover:bg-orange-600 disabled:bg-gray-500 disabled:text-gray-300 "
             >
               삭제
             </button>
           </div>
         </div>
-      </div>
+      <PageNavigation {...pageNavigation} />
     </>
   );
 };

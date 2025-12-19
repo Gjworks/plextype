@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import PostsList from "@/extentions/posts/templates/default/list";
-import {getPosts} from "@/extentions/posts/scripts/actions/getPosts";
+import { getPosts } from "@/extentions/posts/scripts/actions/getPosts";
 import { getSeoMetadata } from "@plextype/utils/helper/matadata";
 
 export async function generateMetadata({ params }: {params: Promise<{ pid: string }> }) {
