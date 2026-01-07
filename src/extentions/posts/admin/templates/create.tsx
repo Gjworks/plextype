@@ -110,7 +110,7 @@ const DashboardPostCreate = () => {
     try {
       await upsertPostInfo(Number(id), formData.postInfo);
       console.log("저장 성공!");
-      // router.push("/dashboard/posts/list");
+      router.push("/dashboard/posts/list");
     } catch (error) {
       console.error("저장 실패:", error);
     }

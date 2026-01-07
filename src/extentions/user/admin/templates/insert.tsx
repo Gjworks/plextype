@@ -1,46 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import Alert from "@plextype/components/message/Alert";
+import {upsertUserAction} from "@/extentions/user/admin/scripts/actions/user";
+import {initialState} from "@/extentions/user/admin/scripts/actions/definitions";
 
 const DashboardUserInsert = () => {
-  const router = useRouter();
-  const [error, setError] = useState<{ type: string; message: string } | null>(
-    null,
-  );
+  const [state, formAction, isPending] = useActionState(upsertUserAction, initialState);
 
-  const submitHandler = async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData();
-    formData.append("accountId", e.target.accountId.value);
-    formData.append("password", e.target.password.value);
-    formData.append("nickname", e.target.nickname.value);
-
-    const response = await fetch("/api/admin/user", {
-      method: "POST",
-      body: formData,
-      credentials: "include", // 쿠키 포함
-    });
-
-    const res = await response.json();
-    const { type, message, data, accessToken, element } = res;
-
-    console.log(type);
-    if (res.type === "error") {
-      setError({ type, message });
-    }
-
-    if (res.type === "success") {
-      router.replace("/auth/signin");
-    }
-  };
   return (
     <>
       <div className="max-w-screen-2xl mx-auto px-3">
-        {error && <Alert message={error.message} type={error.type} />}
-        <form onSubmit={submitHandler}>
+        {!state.success && state.message && (
+          <Alert message={state.message} type="error" />
+        )}
+        <form action={formAction}>
           <div className="max-w-screen-2xl mx-auto">
             <div className="px-3">
               <div className="grid grid-cols-4 gap-8 py-10">
