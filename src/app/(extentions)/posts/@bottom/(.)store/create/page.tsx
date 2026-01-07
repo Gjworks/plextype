@@ -37,16 +37,14 @@ const Page = async ({ params }: { params: Promise<{ pid: string }> }) => {
             </div>
           </div>
         </div>
-        <div className="max-w-screen-md mx-auto px-3">
-          <div className="py-10 rounded-2xl">
-            <div className="max-w-screen-lg mx-auto px-3">
-              <div className="py-5 px-8 rounded-2xl">
-                <div className="pt-8 mb-6">
-                  <PostWrite savePost={savePost}/>
-                </div>
-              </div>
+
+        <div className="max-w-screen-lg mx-auto px-3">
+          <div className="py-5 rounded-2xl">
+            <div className="pt-8 mb-6">
+              <PostWrite savePost={savePost}/>
             </div>
           </div>
+
         </div>
       </Bottom>
     </>

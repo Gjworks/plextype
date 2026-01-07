@@ -44,7 +44,7 @@ export default function Page() {
       <div className="relative overflow-hidden">
         <div className="relative px-3">
           <div className="relative py-20 bg-[url(/assets/images/bg46.jpg)] bg-no-repeat bg-cover bg-center rounded-2xl">
-            <div className="absolute inset-0 bg-gradient-to-b from-gray-950/90 via-gray-950/40 to-gray-950/90 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-950/90 via-gray-950/40 to-gray-950/90 dark:from-dark-950 dark:via-dark-950/40 dark:to-dark-950 rounded-2xl"></div>
             <div className="max-w-screen-xl mx-auto px-3 rounded-2xl">
               <div className="relative flex justify-center items-center rounded-2xl overflow-hidden h-[560px] md:h-[calc(100vh-232px)]">
                 <motion.div
@@ -121,15 +121,15 @@ export default function Page() {
           <div className="max-w-screen-xl mx-auto px-3">
             <div className="flex justify-center gap-6 md:gap-12 px-3">
               <div className="relative w-44 md:w-64 flex-none -rotate-[24deg] translate-y-52">
-                <div className="relative rounded-2xl p-5 bg-gray-50 transition-all duration-700 hover:-translate-y-6 h-80 hover:shadow-lg hover:shadow-gray-950/10">
+                <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-80 hover:shadow-lg hover:shadow-gray-950/10">
                   <div className="grid place-content-between h-full gap-4">
-                    <div className="text-xl font-light text-gray-400">
+                    <div className="text-xl font-light text-gray-400 dark:text-dark-400">
                       Approach expanding{" "}
-                      <span className="font-semibold text-gray-950">
+                      <span className="font-semibold text-gray-950 dark:text-white">
                         workplace
                       </span>
                     </div>
-                    <div className="text-xs text-gray-600">Sessions</div>
+                    <div className="text-xs text-gray-600 dark:text-dark-400">Sessions</div>
                   </div>
                 </div>
               </div>
@@ -139,15 +139,15 @@ export default function Page() {
                 </div>
               </div>
               <div className="relative w-44 md:w-64 flex-none -rotate-[10deg] translate-y-6">
-                <div className="relative rounded-2xl p-5 bg-gray-50 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
+                <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
                   <div className="grid place-content-between h-full gap-4">
-                    <div className="text-xl font-light text-gray-400">
+                    <div className="text-xl font-light text-gray-400 dark:text-dark-400">
                       Approach expanding{" "}
-                      <span className="font-semibold text-gray-950">
+                      <span className="font-semibold text-gray-950 dark:text-white">
                         workplace
                       </span>
                     </div>
-                    <div className="text-xs text-gray-600">Sessions</div>
+                    <div className="text-xs text-gray-600 dark:text-dark-400">Sessions</div>
                   </div>
                 </div>
               </div>
@@ -165,14 +165,14 @@ export default function Page() {
                 </div>
               </div>
               <div className="relative w-44 md:w-64 flex-none rotate-[10deg] translate-y-6">
-                <div className="relative rounded-2xl p-5 bg-gray-50 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
+                <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
                   <div className="grid place-content-between h-full gap-4">
-                    <div className="text-xl font-light text-gray-400">
+                    <div className="text-xl font-light text-gray-400 dark:text-dark-400">
                       find{" "}
-                      <span className="font-semibold text-gray-950">your</span>{" "}
+                      <span className="font-semibold text-gray-950 dark:text-white">your</span>{" "}
                       possibilities
                     </div>
-                    <div className="text-xs text-gray-600">Loquence</div>
+                    <div className="text-xs text-gray-600 dark:text-dark-400">Loquence</div>
                   </div>
                 </div>
               </div>
@@ -182,15 +182,15 @@ export default function Page() {
                 </div>
               </div>
               <div className="relative w-44 md:w-64 flex-none rotate-[24deg] translate-y-52">
-                <div className="relative rounded-2xl p-5 bg-gray-50 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
+                <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
                   <div className="grid place-content-between h-full gap-4">
-                    <div className="text-xl font-light text-gray-400">
+                    <div className="text-xl font-light text-gray-400 dark:text-dark-400">
                       Approach expanding{" "}
-                      <span className="font-semibold text-gray-950">
+                      <span className="font-semibold text-gray-950 dark:text-white">
                         workplace
                       </span>
                     </div>
-                    <div className="text-xs text-gray-600">Sessions</div>
+                    <div className="text-xs text-gray-600 dark:text-dark-400">Sessions</div>
                   </div>
                 </div>
               </div>
@@ -252,13 +252,13 @@ export default function Page() {
           >
             <div className={`grid grid-cols-12 gap-8`}>
               <div className="col-span-12  ㅊ md:col-span-6">
-                <div className="text-sm font-semibold text-gray-700 border-b border-gray-200/75 pb-2 pt-2">
-                  News
+                <div className="text-sm font-semibold text-gray-700 dark:text-dark-100 border-b border-gray-200/75 dark:border-dark-800 pb-2 pt-2">
+                  Notice
                 </div>
               </div>
               <div className="col-span-12  ㅊ md:col-span-6">
-                <div className="text-sm font-semibold text-gray-700 border-b border-gray-200/75 pb-2 pt-2">
-                  Update
+                <div className="text-sm font-semibold text-gray-700 dark:text-dark-100 border-b border-gray-200/75 dark:border-dark-800 pb-2 pt-2">
+                  Supports
                 </div>
               </div>
             </div>

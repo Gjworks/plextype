@@ -39,9 +39,8 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
       <div className="max-w-screen-xl mx-auto px-3">
         <div className="mx-auto max-w-screen-md py-20">
           <div className="text-center">
-            <div className="text-sm mb-4 text-gray-400">{document.category?.title ?? ""}</div>
             <h1
-              className="inline-block text-3xl md:text-4xl font-medium text-black py-4 dark:text-white text-center leading-10"
+              className="inline-block text-3xl md:text-4xl font-medium text-black dark:text-white text-center leading-10"
               style={{lineHeight: "140%"}}
             >
               {document.title}
@@ -214,7 +213,7 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
           </div>
         </div>
       </div>
-      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800">
+      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-400">
         {contentData.blocks.map((block: any) => {
           switch (block.type) {
             case "header": {
@@ -321,7 +320,7 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
       <div className="flex justify-end gap-2 mx-auto max-w-screen-md py-8">
         <Link
           href={`/posts/${postInfo.pid}`}
-          className="text-sm py-1 px-4 rounded-sm bg-gray-100 text-gray-600 hover:bg-gray-200"
+          className="text-xs bg-gray-50 py-1.5 px-6 rounded-sm border border-gray-100 text-gray-800 hover:text-gray-950 hover:border-gray-900 focus:border-gray-900"
         >
           목록
         </Link>
@@ -330,13 +329,13 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
              <>
                <Link
                  href={`/posts/${postInfo.pid}/${document.id}/edit`}
-                 className="text-sm py-1 px-4 rounded-sm bg-yellow-100 text-amber-600 hover:bg-yellow-200"
+                 className="text-xs bg-gray-50 py-1.5 px-6 rounded-sm  border border-gray-100 text-gray-800 hover:text-gray-950 hover:border-gray-900 focus:border-gray-900"
                >
                  수정
                </Link>
                <Link
                  href={`/posts/${postInfo.pid}/${document.id}/delete`}
-                 className="text-sm py-1 px-4 rounded-sm bg-red-100 text-red-600 hover:bg-red-200"
+                 className="text-xs bg-gray-50 py-1.5 px-6 rounded-sm border border-gray-100 text-gray-800 hover:text-gray-950 hover:border-gray-900 focus:border-gray-900"
                >
                  삭제
                </Link>

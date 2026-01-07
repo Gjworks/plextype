@@ -250,7 +250,7 @@ const Header = () => {
                               exit="exit"
                               className="absolute left-0 top-full z-50 pt-2 w-48"
                             >
-                              <div className="overflow-hidden rounded-lg shadow-lg shadow-gray-900/5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                              <div className="overflow-hidden rounded-lg shadow-lg shadow-gray-900/5 bg-white dark:bg-dark-900/75 backdrop-blur-lg border border-gray-100 dark:border-dark-800">
                                 <div className="flex flex-col py-1">
                                   {item.subMenu.map((subItem) => (
                                     <motion.div key={subItem.name} variants={itemVariants}>
@@ -273,12 +273,12 @@ const Header = () => {
 
                 <div className="relative flex items-center">
                   <div
-                    className="relative inline-block before:absolute h-[12px] before:-translate-y-1/2 before:h-12 w-[1px] before:top-0 before:left-0 bg-gray-300 before:block before:content-['']"></div>
+                    className="relative inline-block before:absolute h-[12px] before:-translate-y-1/2 before:h-12 w-[1px] before:top-0 before:left-0 bg-gray-300 dark:bg-dark-600 before:block before:content-['']"></div>
                 </div>
                 <div>
                   <div className="relative flex items-start">
                     <Link
-                      className={`relative flex items-center py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider ` + (currentPage?.route === '/works'
+                      className={`relative flex items-center gap-1 py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider ` + (currentPage?.route === '/works'
                         ? "text-gray-400 dark:text-white font-medium"
                         : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")}
                       href="/works">

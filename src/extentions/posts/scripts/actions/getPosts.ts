@@ -1,7 +1,8 @@
-import prisma from "@plextype/utils/db/prisma";
+import prisma, { Prisma } from "@plextype/utils/db/prisma";
 
 
-export async function getPosts(pid: string, page: number = 1, pageSize: number = 10) {
+export async function getPosts(pid: string, page: number = 1, pageSize: number = 10, categoryId?: string) {
+  // 1. 게시판 ID(pid)로 posts 테이블에서 id 찾기
   const posts = await prisma.posts.findUnique({
     where: { pid },
     select: { id: true },
@@ -11,18 +12,26 @@ export async function getPosts(pid: string, page: number = 1, pageSize: number =
     return { items: [], pagination: { totalCount: 0, totalPages: 0, currentPage: 1, pageSize } };
   }
 
+  // 2. ✅ 검색 조건(Where)을 동적으로 생성
+  // 기본 조건: 해당 게시판(posts.id)에 속한 'post' 타입의 문서
+  const whereCondition: Prisma.DocumentWhereInput = {
+    resourceType: "post",
+    resourceId: posts.id,
+  };
+
+  // ✅ 카테고리 ID가 있고, "0"(전체)이 아닐 경우 필터 추가
+  if (categoryId && categoryId !== "0") {
+    whereCondition.categoryId = Number(categoryId);
+  }
+
+  // 3. 조건에 맞는 게시물 총 개수 계산 (페이지네이션용)
   const totalCount = await prisma.document.count({
-    where: {
-      resourceType: "post",
-      resourceId: posts.id,
-    },
+    where: whereCondition, // ✅ 수정된 조건 적용
   });
 
+  // 4. 조건에 맞는 게시물 조회
   const documents = await prisma.document.findMany({
-    where: {
-      resourceType: "post",
-      resourceId: posts.id,
-    },
+    where: whereCondition, // ✅ 수정된 조건 적용
     orderBy: {
       createdAt: "desc",
     },
@@ -39,7 +48,7 @@ export async function getPosts(pid: string, page: number = 1, pageSize: number =
       readCount: true,
       commentCount: true,
       voteCount: true,
-      category: {   // ← 여기 추가
+      category: {
         select: {
           id: true,
           title: true,
@@ -55,30 +64,38 @@ export async function getPosts(pid: string, page: number = 1, pageSize: number =
     },
   });
 
-  // ✅ EditorJS content 일부만 추출 (첫 2~3 블록)
+  // EditorJS content 파싱 로직 (기존과 동일)
   const items = documents.map((doc) => {
     let previewContent = "";
-    if (doc.content) { // null 체크
+    let thumbnail: string | null = null;
+
+    if (doc.content) {
       try {
         const parsed = JSON.parse(doc.content);
+
+        if (parsed.blocks && Array.isArray(parsed.blocks)) {
+          const imageBlock = parsed.blocks.find((block: any) => block.type === 'image');
+          if (imageBlock && imageBlock.data?.file?.url) {
+            thumbnail = imageBlock.data.file.url;
+          }
+        }
+
         const slicedBlocks = parsed.blocks?.slice(0, 3) || [];
-        // previewContent = JSON.stringify({ ...parsed, blocks: slicedBlocks });
         const textBlocks = slicedBlocks.map((b: any) => {
           const rawText = b.data?.text || "";
-          return rawText.replace(/<[^>]+>/g, ""); // 모든 HTML 태그 제거
+          return rawText.replace(/<[^>]+>/g, "");
         });
 
-        previewContent = textBlocks.join(" "); // 공백으로 연결
+        previewContent = textBlocks.join(" ");
       } catch {
-        // JSON 파싱 실패하면 그냥 원래 문자열 넣기
         previewContent = doc.content;
       }
     }
 
-
     return {
       ...doc,
       content: previewContent,
+      thumbnail,
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     };

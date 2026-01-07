@@ -81,7 +81,7 @@ const DashboardUserList = () => {
 
   return (
     <>
-      <div className="max-w-screen-2xl mx-auto px-3">
+      <div className="">
         <div className="flex flex-wrap items-center gap-4 mb-5">
           <div className="text-gray-700 text-lg font-semibold">
             회원 목록 ({pageNavigation.totalCount}명)
