@@ -76,6 +76,11 @@ const Register = () => {
     },
   };
 
+  const inputContainerClass =
+    "group flex w-full items-center rounded-md border border-gray-200 bg-white shadow-sm transition-all duration-200 " +
+    "hover:border-gray-400 focus-within:border-gray-950 focus-within:ring-1 focus-within:ring-gray-950 " +
+    "dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:focus-within:border-dark-300 dark:focus-within:ring-dark-300";
+
   return (
     <motion.div
       className=""
@@ -116,61 +121,78 @@ const Register = () => {
       </motion.div>
       {error && <Alert message={error.message} type={error.type} />}
       <form onSubmit={submitHandler}>
-        <div className="relative mb-5 w-full">
-          <div className="flex items-center w-full text-xs">
-            <div className="group flex items-center w-full border-[0.5px] border-gray-300 dark:border-dark-600/75 dark:hover:border-dark-300 dark:focus:border-dark-300 rounded-full dark:bg-dark-950/20 transition-all duration-300 backdrop-blur-sm bg-gray-50/50">
-              <div className="px-5">
-                <span className="text-dark-300">아이디(이메일)</span>
-              </div>
-              <input
-                type="text"
-                name="accountId"
-                id="accountId"
-                className="autofill:bg-transparent outline-none bg-transparent text-sm py-3 pr-3 text-black flex-1 placeholder:text-dark-500/75 dark:text-white"
-                placeholder="example@mail.com"
-              />
+        {/* Account ID Input */}
+        <div className="mb-5">
+          <label htmlFor="accountId" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">
+            Account ID (Email)
+          </label>
+          <div className={inputContainerClass}>
+            <div className="pl-3 pr-2 text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200 transition-colors">
+              {/* Mail Icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
             </div>
+            <input
+              type="text"
+              name="accountId"
+              id="accountId"
+              className="w-full bg-transparent py-2.5 pr-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
+              placeholder="example@mail.com"
+            />
           </div>
         </div>
 
-        <div className="relative mb-5 w-full">
-          <div className="flex items-center w-full text-xs">
-            <div className="group flex items-center w-full border-[0.5px] border-gray-300 dark:border-dark-600/75 dark:hover:border-dark-300 dark:focus:border-dark-300 rounded-full dark:bg-dark-950/20 transition-all duration-300 backdrop-blur-sm bg-gray-50/50">
-              <div className="px-5">
-                <span className="text-dark-300">비밀번호</span>
-              </div>
-              <input
-                type="password"
-                name="password"
-                id=""
-                className="autofill:bg-transparent outline-none bg-transparent text-sm py-3 pr-3 text-black flex-1 placeholder:text-dark-500/75 dark:text-white"
-                placeholder="User Password"
-              />
+        {/* Password Input */}
+        <div className="mb-5">
+          <label htmlFor="password" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">
+            Password
+          </label>
+          <div className={inputContainerClass}>
+            <div className="pl-3 pr-2 text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+              </svg>
+
             </div>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              className="w-full bg-transparent py-2.5 pr-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
+              placeholder="비밀번호를 입력하세요"
+            />
           </div>
-          <div className="text-dark-400 text-xs pt-2 px-2">
-            비밀번호는 암호화 되어 안전하게 저장됩니다.
-          </div>
-        </div>
-        <div className="relative mb-5 w-full">
-          <div className="flex items-center w-full text-xs">
-            <div className="group flex items-center w-full border-[0.5px] border-gray-300 dark:border-dark-600/75 dark:hover:border-dark-300 dark:focus:border-dark-300 rounded-full dark:bg-dark-950/20 transition-all duration-300 backdrop-blur-sm bg-gray-50/50">
-              <div className="px-5">
-                <span className="text-dark-300">닉네임</span>
-              </div>
-              <input
-                type="text"
-                name="nickName"
-                id=""
-                className="autofill:bg-transparent outline-none bg-transparent text-sm py-3 pr-3 text-black flex-1 placeholder:text-dark-500/75 dark:text-white"
-                placeholder="User nick name"
-              />
-            </div>
+          <div className="text-xs text-gray-500 dark:text-dark-400 mt-2 ml-1">
+            * 비밀번호는 영문, 숫자, 특수문자 1개 이상(@, $, !, %, *, #, ?, &)을 모두 포함해야 합니다.
           </div>
         </div>
 
+        {/* Nickname Input */}
+        <div className="mb-6">
+          <label htmlFor="nickName" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">
+            Nickname
+          </label>
+          <div className={inputContainerClass}>
+            <div className="pl-3 pr-2 text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200 transition-colors">
+              {/* ID Card Icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              name="nickName"
+              id="nickName"
+              className="w-full bg-transparent py-2.5 pr-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
+              placeholder="사용하실 닉네임을 입력하세요"
+            />
+          </div>
+        </div>
+
+        {/* Submit Button */}
         <div className="mb-2">
-          <button className="flex justify-center items-center w-full bg-slate-900 dark:bg-primary-700 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white dark:text-white text-white py-3 px-5 rounded-lg transition duration-300 hover:bg-slate-700 text-sm">
+          <button className="flex w-full items-center justify-center rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white transition duration-300 hover:bg-gray-800 dark:bg-primary-700 dark:hover:bg-primary-600">
             Register Completed
           </button>
         </div>

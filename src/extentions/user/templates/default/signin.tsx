@@ -137,6 +137,11 @@ const Signin = () => {
     },
   };
 
+  const inputContainerClass =
+    "group flex w-full items-center rounded-md border border-gray-200 bg-white shadow-sm transition-all duration-200 " +
+    "hover:border-gray-400 focus-within:border-gray-950 focus-within:ring-1 focus-within:ring-gray-950 " +
+    "dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:focus-within:border-dark-300 dark:focus-within:ring-dark-300";
+
   return (
     <>
       <motion.div
@@ -157,96 +162,82 @@ const Signin = () => {
           </motion.div>
           {error && <Alert message={error.message} type={error.type} />}
           <motion.div variants={parentVariants}>
-            <div className="relative mb-5 flex">
-              <div className="flex w-full items-center text-xs">
-                <div className="dark:border-dark-600/75 dark:hover:border-dark-300 dark:focus:border-dark-300 dark:bg-dark-950/20 group flex w-full items-center rounded-full border-[0.5px] border-gray-300 bg-gray-50/50 backdrop-blur-sm transition-all duration-300">
-                  <div className="px-5">
-                    <span className="dark:text-dark-300 group-hover:text-gray-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1}
-                        stroke="currentColor"
-                        className="h-5 w-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    name="accountId"
-                    ref={refInputUserId}
-                    className="autofill:bg-transparent placeholder:text-dark-500/75 flex-1 bg-transparent py-3 pr-3 text-sm text-black outline-none dark:text-white"
-                    placeholder="Your Account ID"
-                  />
+            {/* Account ID Input */}
+            <div className="mb-5">
+              <label htmlFor="accountId" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">
+                Account ID
+              </label>
+              <div className={inputContainerClass}>
+                <div className="pl-3 pr-2 text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200 transition-colors">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="h-5 w-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25"
+                    />
+                  </svg>
                 </div>
-                {/* <TextInput
-                    inputType="email"
-                    inputName="email"
-                    inputTitle="Email"
-                    placeholder="What's your Email"
-                    getData={getData}
-                    theme="light"
-                    value=""
-                  ></TextInput> */}
-              </div>
-            </div>
-            <div className="relative mb-5 flex w-full">
-              <div className="flex w-full items-center text-xs">
-                <div className="dark:border-dark-600/75 dark:hover:border-dark-300 dark:focus:border-dark-300 dark:bg-dark-950/20 group flex w-full items-center rounded-full border-[0.5px] border-gray-300 bg-gray-50/50 backdrop-blur-sm transition-all duration-300">
-                  <div className="px-5">
-                    <span className="text-dark-300">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="h-5 w-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M7.864 4.243A7.5 7.5 0 0119.5 10.5c0 2.92-.556 5.709-1.568 8.268M5.742 6.364A7.465 7.465 0 004.5 10.5a7.464 7.464 0 01-1.15 3.993m1.989 3.559A11.209 11.209 0 008.25 10.5a3.75 3.75 0 117.5 0c0 .527-.021 1.049-.064 1.565M12 10.5a14.94 14.94 0 01-3.6 9.75m6.633-4.596a18.666 18.666 0 01-2.485 5.33"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <input
-                    type="password"
-                    name="password"
-                    ref={refInputPassword}
-                    className="autofill:bg-transparent placeholder:text-dark-500/75 flex-1 bg-transparent py-3 pr-3 text-sm text-black outline-none dark:text-white"
-                    placeholder="Your Password"
-                  />
-                </div>
-                {/* <TextInput
-                    inputType="password"
-                    inputName="password"
-                    inputTitle="비밀번호"
-                    getData={getPassword}
-                    placeholder="Your Password"
-                    theme="light"
-                    value=""
-                  ></TextInput> */}
+                <input
+                  type="text"
+                  id="accountId"
+                  name="accountId"
+                  ref={refInputUserId}
+                  className="w-full bg-transparent py-2.5 pr-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
+                  placeholder="아이디를 입력하세요"
+                />
               </div>
             </div>
 
+            {/* Password Input */}
+            <div className="mb-6">
+              <label htmlFor="password" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">
+                Password
+              </label>
+              <div className={inputContainerClass}>
+                <div className="pl-3 pr-2 text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200 transition-colors">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="h-5 w-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M7.864 4.243A7.5 7.5 0 0119.5 10.5c0 2.92-.556 5.709-1.568 8.268M5.742 6.364A7.465 7.465 0 004.5 10.5a7.464 7.464 0 01-1.15 3.993m1.989 3.559A11.209 11.209 0 008.25 10.5a3.75 3.75 0 117.5 0c0 .527-.021 1.049-.064 1.565M12 10.5a14.94 14.94 0 01-3.6 9.75m6.633-4.596a18.666 18.666 0 01-2.485 5.33"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  ref={refInputPassword}
+                  className="w-full bg-transparent py-2.5 pr-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
+                  placeholder="비밀번호를 입력하세요"
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
             <div className="mb-4 flex">
               <button
                 type="submit"
-                className="dark:bg-primary-700 dark:hover:bg-primary-600 flex w-full items-center justify-center rounded-lg bg-gray-900 px-5 py-3 text-sm text-white transition duration-300 hover:bg-gray-700 hover:text-white dark:text-white dark:hover:text-white"
+                className="flex w-full items-center justify-center rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white transition duration-300 hover:bg-gray-800 dark:bg-primary-700 dark:hover:bg-primary-600"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
-                  strokeWidth={1}
+                  strokeWidth={1.5}
                   stroke="currentColor"
                   className="h-4 w-4"
                 >
@@ -256,7 +247,7 @@ const Signin = () => {
                     d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
                   />
                 </svg>
-                <span className="pl-2 text-sm">Sign In</span>
+                <span className="pl-2">Sign In</span>
               </button>
             </div>
           </motion.div>
