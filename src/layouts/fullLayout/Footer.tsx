@@ -112,7 +112,7 @@ const Footer = () => {
                   <motion.div variants={parentVariants}>
                     <Link
                       href="/"
-                      className="dark:text-dark-400 px-3 text-xs text-gray-400 hover:text-black dark:hover:text-white"
+                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
                     >
                       License
                     </Link>

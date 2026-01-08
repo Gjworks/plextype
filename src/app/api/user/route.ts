@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 
 import { PrismaClient } from "@prisma/client";
+import { z } from "zod"; // ✅ Zod 임포트
 import { verify } from "@plextype/utils/auth/jwtAuth";
 
 import {
@@ -11,6 +12,29 @@ import {
 import { hashedPassword } from "@plextype/utils/auth/password";
 
 const prisma = new PrismaClient();
+
+// ✅ 1. Zod 유효성 검사 스키마 정의
+const RegisterSchema = z.object({
+  accountId: z
+    .string()
+    .min(1, { message: "이메일을 입력해주세요." }) // .min도 객체 방식 권장
+    .email({ message: "올바른 이메일 형식이 아닙니다." }), // 경고 해결 포인트
+
+  password: z
+    .string()
+    .min(8, { message: "비밀번호는 최소 8자 이상 입력해주세요." })
+    .regex(/[A-Za-z]/, { message: "비밀번호는 영문자를 포함해야 합니다." })
+    .regex(/\d/, { message: "비밀번호는 숫자를 포함해야 합니다." })
+    .regex(/[@$!%*#?&]/, { message: "비밀번호는 특수문자를 포함해야 합니다." }),
+
+  nickName: z
+    .string()
+    .min(2, { message: "닉네임은 최소 2자 이상이어야 합니다." })
+    .max(12, { message: "닉네임은 최대 12자까지 가능합니다." })
+    .regex(/^[가-힣a-zA-Z0-9]+$/, {
+      message: "닉네임에는 특수문자를 사용할 수 없습니다.",
+    }),
+});
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {
@@ -50,41 +74,30 @@ export async function GET(request: NextRequest): Promise<Response> {
 export async function POST(request: NextRequest): Promise<Response> {
   try {
     const formData = await request.formData();
-    const accountId = formData.get("accountId")?.toString();
-    const password = formData.get("password")?.toString();
-    const nickName = formData.get("nickName")?.toString();
 
-    if (!accountId) {
+    // FormData를 객체로 변환
+    const rawData = {
+      accountId: formData.get("accountId")?.toString(),
+      password: formData.get("password")?.toString(),
+      nickName: formData.get("nickName")?.toString(),
+    };
+
+    // ✅ 2. Zod를 이용한 유효성 검사 실행
+    const validation = RegisterSchema.safeParse(rawData);
+
+    // 검사 실패 시 에러 응답
+    if (!validation.success) {
+      // .issues를 사용하면 TypeScript 에러가 사라집니다.
+      const firstError = validation.error.issues[0]?.message || "검증 오류가 발생했습니다.";
+
       return NextResponse.json(
-        {
-          success: false,
-          type: "error",
-          message: "User ID is missing or invalid. Please check and try again.",
-        },
-        { status: 400 },
+        { success: false, type: "error", message: firstError },
+        { status: 400 }
       );
     }
 
-    if (!password) {
-      return NextResponse.json(
-        {
-          success: false,
-          type: "error",
-          message: "Password is required. Please enter a valid password.",
-        },
-        { status: 400 },
-      );
-    }
-    if (!nickName) {
-      return NextResponse.json(
-        {
-          success: false,
-          type: "error",
-          message: "Nickname is required. Please provide a valid nickname.",
-        },
-        { status: 400 },
-      );
-    }
+    // 검사 성공 시 데이터 추출
+    const { accountId, password, nickName } = validation.data;
 
     const [getUserAccountId, getUserNickname] = await Promise.all([
       getUserByAccountId(accountId),
