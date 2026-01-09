@@ -10,6 +10,7 @@ import Alert from "@plextype/components/message/Alert";
 // import { createUser } from "@/extentions/user/scripts/userController";
 
 const Register = () => {
+  const [loading, setLoading] = useState(false); // ✅ 로딩 상태 추가
   const [error, setError] = useState<{ type: string; message: string } | null>(
     null,
   );
@@ -18,28 +19,50 @@ const Register = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     setError(null);
+    setLoading(true); // ✅ 통신 시작 시 true
 
     const formData = new FormData();
     formData.append("accountId", e.target.accountId.value);
     formData.append("password", e.target.password.value);
     formData.append("nickName", e.target.nickName.value);
 
-    const response = await fetch("/api/user", {
-      method: "POST",
-      body: formData,
-      credentials: "include", // 쿠키 포함
-    });
+    // const response = await fetch("/api/user", {
+    //   method: "POST",
+    //   body: formData,
+    //   credentials: "include", // 쿠키 포함
+    // });
+    //
+    // const res = await response.json();
+    // const { type, message, data, accessToken, element } = res;
+    //
+    // if (res.type === "error") {
+    //   setError({ type, message });
+    // }
+    //
+    // if (res.type === "success") {
+    //   router.replace("/auth/signin");
+    // }
 
-    const res = await response.json();
-    const { type, message, data, accessToken, element } = res;
+    try {
+      // ... (fetch 로직 생략)
+      const response = await fetch("/api/user", {
+        method: "POST",
+        body: formData,
+        credentials: "include", // 쿠키 포함
+      });
+      const res = await response.json();
 
-    console.log(type);
-    if (res.type === "error") {
-      setError({ type, message });
-    }
+      if (res.type === "error") {
+        setError({ type: res.type, message: res.message });
+      }
 
-    if (res.type === "success") {
-      router.replace("/auth/signin");
+      if (res.type === "success") {
+        router.replace("/auth/signin");
+      }
+    } catch (err) {
+      setError({ type: "error", message: "서버 오류가 발생했습니다." });
+    } finally {
+      setLoading(false); // ✅ 통신 종료(성공/실패 모두) 시 false
     }
     // await createUser(formData)
     //   .then((response) => {
@@ -192,8 +215,16 @@ const Register = () => {
 
         {/* Submit Button */}
         <div className="mb-2">
-          <button className="flex w-full items-center justify-center rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white transition duration-300 hover:bg-gray-800 dark:bg-primary-700 dark:hover:bg-primary-600">
-            Register Completed
+          <button
+            type="submit"
+            disabled={loading} // ✅ 로딩 중 버튼 비활성화
+            className="flex w-full items-center justify-center rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white transition duration-300 hover:bg-gray-800 disabled:bg-gray-400 dark:bg-primary-700 dark:hover:bg-primary-600"
+          >
+            {loading ? ( // ✅ 로딩 상태에 따라 스피너 표시
+              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            ) : (
+              "Register Completed"
+            )}
           </button>
         </div>
       </form>
@@ -212,7 +243,7 @@ const Register = () => {
       <motion.div className="pb-10" variants={variants}>
         <div className="w-full">
           <div className="w-full">
-            <Link href="/auth/Signin" className="group text-sm text-dark-500">
+            <Link href="/auth/signin" className="group text-sm text-dark-500">
               계정이 이미 있으시다면{" "}
               <span className="group-hover:text-gray-500 text-gray-600 dark:group-hover:text-dark-400 dark:text-dark-200 underline">
                 Sign In

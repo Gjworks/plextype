@@ -231,23 +231,30 @@ const Signin = () => {
             <div className="mb-4 flex">
               <button
                 type="submit"
-                className="flex w-full items-center justify-center rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white transition duration-300 hover:bg-gray-800 dark:bg-primary-700 dark:hover:bg-primary-600"
+                disabled={mutation.isPending} // ✅ 로딩 중 버튼 비활성화
+                className="flex w-full items-center justify-center rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white transition duration-300 hover:bg-gray-800 disabled:bg-gray-400 dark:bg-primary-700 dark:hover:bg-primary-600 dark:disabled:bg-dark-700"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="h-4 w-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-                  />
-                </svg>
-                <span className="pl-2">Sign In</span>
+                {mutation.isPending ? ( // ✅ 로딩 상태에 따라 스피너 표시
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                ) : (
+                  <>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="h-4 w-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                      />
+                    </svg>
+                    <span className="pl-2">Sign In</span>
+                  </>
+                )}
               </button>
             </div>
           </motion.div>
@@ -350,7 +357,7 @@ const Signin = () => {
               </Link>
             </div>
             <div className="w-full">
-              <Link href="/" className="text-dark-500 group text-sm">
+              <Link href="/auth/find" className="text-dark-500 group text-sm">
                 계정ID와 비밀번호를 잊어버리 셨나요?
                 <span className="dark:text-dark-200 dark:hover:text-dark-400 text-gray-500 underline hover:text-gray-600 group-hover:text-gray-600">
                   계정ID / 비밀번호 찾기

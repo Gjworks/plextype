@@ -36,6 +36,7 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
   const [editorReady, setEditorReady] = useState(false);
   const editorRef = useRef<any>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [loading, setLoading] = useState(false);
   const closePopup = (close) => {
     setShowPopup(close);
   };
@@ -66,11 +67,18 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
   }
 
   const handleSubmit = async (form?: HTMLFormElement | null) => {
-    if (!form) return;
+    if (!form || loading) return; // 로딩 중 중복 클릭 방지
 
-    const formData = new FormData(form);
-    formData.append("content", JSON.stringify(content));
-    await savePost(formData);
+    setLoading(true); // 로딩 시작
+    try {
+      const formData = new FormData(form);
+      formData.append("content", JSON.stringify(content));
+      await savePost(formData);
+    } catch (error) {
+      console.error("저장 중 오류 발생:", error);
+    } finally {
+      setLoading(false); // 로딩 종료
+    }
   };
 
   const handleFileClick = async (file: Attachment) => {
@@ -204,10 +212,15 @@ const PostWrite: React.FC<PostWriteProps> = ({savePost, existingPost}) => {
           </button>
           <button
             type="button"
-            onClick={() => handleSubmit(formRef.current)} // 직접 호출
-            className="px-6 py-2 bg-blue-100 border border-blue-100 text-blue-600 rounded-md hover:bg-blue-600 hover:border-blue-600 hover:text-white text-xs"
+            disabled={loading}
+            onClick={() => handleSubmit(formRef.current)}
+            className="min-w-[100px] flex justify-center items-center px-6 py-2 bg-blue-100 border border-blue-100 text-blue-600 rounded-md hover:bg-blue-600 hover:border-blue-600 hover:text-white text-xs transition-all disabled:bg-gray-100 disabled:border-gray-100 disabled:text-gray-400"
           >
-            저장하기
+            {loading ? (
+              <span className="w-4 h-4 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin"></span>
+            ) : (
+              "저장하기"
+            )}
           </button>
         </div>
       </form>
