@@ -17,8 +17,17 @@ const prisma = new PrismaClient();
 const RegisterSchema = z.object({
   accountId: z
     .string()
-    .min(1, { message: "이메일을 입력해주세요." }) // .min도 객체 방식 권장
-    .email({ message: "올바른 이메일 형식이 아닙니다." }), // 경고 해결 포인트
+    .min(4, { message: "아이디는 최소 4자 이상 입력해주세요." })
+    .max(15, { message: "아이디는 최대 15자까지 가능합니다." })
+    .regex(/^[a-zA-Z0-9]+$/, {
+      message: "아이디는 영문과 숫자만 사용할 수 있습니다.",
+    }),
+
+  // 이메일 필드 추가
+  email: z
+    .string()
+    .min(1, { message: "이메일을 입력해주세요." })
+    .email({ message: "올바른 이메일 형식이 아닙니다." }),
 
   password: z
     .string()
@@ -78,6 +87,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     // FormData를 객체로 변환
     const rawData = {
       accountId: formData.get("accountId")?.toString(),
+      email: formData.get("email")?.toString(),
       password: formData.get("password")?.toString(),
       nickName: formData.get("nickName")?.toString(),
     };
@@ -97,7 +107,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     // 검사 성공 시 데이터 추출
-    const { accountId, password, nickName } = validation.data;
+    const { accountId, password, nickName, email } = validation.data;
 
     const [getUserAccountId, getUserNickname] = await Promise.all([
       getUserByAccountId(accountId),
@@ -147,7 +157,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         data: {
           accountId: accountId,
           password: hashedPwd,
-          email_address: accountId,
+          email_address: email,
           nickName: nickName,
         },
       });

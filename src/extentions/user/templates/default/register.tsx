@@ -23,6 +23,7 @@ const Register = () => {
 
     const formData = new FormData();
     formData.append("accountId", e.target.accountId.value);
+    formData.append("email", e.target.email.value);
     formData.append("password", e.target.password.value);
     formData.append("nickName", e.target.nickName.value);
 
@@ -147,7 +148,7 @@ const Register = () => {
         {/* Account ID Input */}
         <div className="mb-5">
           <label htmlFor="accountId" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">
-            Account ID (Email)
+            Account ID
           </label>
           <div className={inputContainerClass}>
             <div className="pl-3 pr-2 text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200 transition-colors">
@@ -160,6 +161,27 @@ const Register = () => {
               type="text"
               name="accountId"
               id="accountId"
+              className="w-full bg-transparent py-2.5 pr-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
+              placeholder="abcd"
+            />
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <label htmlFor="accountId" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">
+            Email Address
+          </label>
+          <div className={inputContainerClass}>
+            <div className="pl-3 pr-2 text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200 transition-colors">
+              {/* Mail Icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+            </div>
+            <input
+              type="email"
+              name="email"
+              id="email"
               className="w-full bg-transparent py-2.5 pr-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
               placeholder="example@mail.com"
             />
