@@ -50,7 +50,9 @@ const Signin = () => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "로그인 실패");
+      console.log(errorData)
+      setError({ type:errorData.type, message:errorData.message });
+      // throw new Error(errorData.message || "로그인 실패");
     }
 
     return response.json(); // { result, accessToken }
@@ -93,28 +95,6 @@ const Signin = () => {
     formData.append("password", e.target.password.value);
 
     mutation.mutate(formData);
-    // dispatch(fetchSignIn({ formData })).then(
-    //   (resultAction: ReturnType<typeof dispatch>) => {
-    //     // 반환 값을 확인
-    //     console.log(resultAction.payload);
-    //     // 액션의 payload와 type에 대한 타입 정의
-    //     type SignInResult = {
-    //       result: SignData;
-    //       accessToken: string;
-    //     };
-    //
-    //     if (resultAction.payload) {
-    //       // 반환된 액션에서 accessToken에 접근
-    //       const accessToken = (resultAction.payload as SignInResult)
-    //         .accessToken;
-    //       const dataInfo = (resultAction.payload as SignInResult).result;
-    //
-    //       dataInfo && setUser(dataInfo);
-    //
-    //       accessToken && router.replace("/");
-    //     }
-    //   },
-    // );
   };
 
   const parentVariants = {
@@ -179,7 +159,8 @@ const Signin = () => {
                   >
                     <path
                       strokeLinecap="round"
-                      d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25"
+                      strokeLinejoin="round"
+                      d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"
                     />
                   </svg>
                 </div>
