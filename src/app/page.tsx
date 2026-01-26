@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import MainLayout from "src/layouts/fullLayout/Layout";
-import { Square3Stack3DIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 
 export default function Page() {
@@ -99,7 +98,10 @@ export default function Page() {
                     >
                       <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[380px] h-[80px] bg-[url(/assets/svg/dotted.svg)] bg-cover bg-center bg-no-repeat"></div>
                       <div className="dark:bg-dark-800 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm p-3">
-                        <Square3Stack3DIcon className="size-5 text-white dark:text-white stroke-1" />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
+                        </svg>
+
                       </div>
                       <div className="flex-1">
                         <div className="dark:text-white mb-2 text-left text-sm text-white">

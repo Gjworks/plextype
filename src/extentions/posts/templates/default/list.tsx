@@ -1,23 +1,19 @@
 "use client";
 
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 import PostsHeader from "./header";
-import {getPostsAction} from "src/extentions/posts/scripts/actions/getPostsAction";
+import { getPostsAction } from "src/extentions/posts/scripts/actions/getPostsAction";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {usePostContext} from "./PostProvider";
+import { usePostContext } from "./PostProvider";
 import "dayjs/locale/ko";
 
 dayjs.extend(relativeTime); // ← 반드시 플러그인 확장
 dayjs.locale("ko");
-import {
-  HomeIcon,
-  ChevronRightIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
-} from "@heroicons/react/24/outline";
+
 import PageNavigation from "@plextype/components/nav/PageNavigation";
 import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
 
@@ -29,9 +25,9 @@ interface Pagination {
 }
 
 const PostsListClient = ({
-                           posts,
-                           pagination: initialPagination
-                         }: {
+  posts,
+  pagination: initialPagination
+}: {
   posts: any[];
   pagination: Pagination;
 }) => {
@@ -39,28 +35,28 @@ const PostsListClient = ({
   const [documentInfo, setDocumentInfo] = useState(posts);
   const [pagination, setPagination] = useState(initialPagination);
   const [page, setPage] = useState(pagination.currentPage);
-  const {postInfo} = usePostContext();
+  const { postInfo } = usePostContext();
 
-  const {permissions} = usePostContext();
+  const { permissions } = usePostContext();
 
   if (!permissions.doList) {
-    return <PostNotPermission/>;
+    return <PostNotPermission />;
   }
 
   const handlePageChange = async (newPage: number) => {
     setPage(newPage);
 
     // SPA처럼 서버 액션 호출
-    const {items, pagination: newPagination} = await getPostsAction(postInfo.pid, newPage, pagination.pageSize);
+    const { items, pagination: newPagination } = await getPostsAction(postInfo.pid, newPage, pagination.pageSize);
     setDocumentInfo(items);
     setPagination(newPagination);
-    router.replace(`/posts/${postInfo.pid}?page=${newPage}`, {scroll: false});
+    router.replace(`/posts/${postInfo.pid}?page=${newPage}`, { scroll: false });
   };
 
   console.log(posts)
   return (
     <>
-      <PostsHeader/>
+      <PostsHeader />
       <div className=" mb-6">
         {documentInfo.map((doc) => (
           <div
@@ -74,18 +70,18 @@ const PostsListClient = ({
                 {doc.thumbnail ? (
                   <Image
                     src={doc.thumbnail}
-                    alt={doc.title || "thumbnail"}
+                    alt={""}
                     width={80}
                     height={80}
-                    className="object-cover w-full h-full"
+                    className="object-cover w-full h-full text-[12px] text-gray-400"
                   />
                 ) : (
                   // ✅ 이미지가 없을 때 보여줄 회색 박스 (+ 아이콘)
                   <span className="text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                         stroke="currentColor" className="w-6 h-6">
+                      stroke="currentColor" className="w-6 h-6">
                       <path strokeLinecap="round" strokeLinejoin="round"
-                            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                        d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                     </svg>
                   </span>
                 )}
@@ -101,9 +97,9 @@ const PostsListClient = ({
                       {doc.thumbnail && (
                         <span className="text-gray-500">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.25}
-                               stroke="currentColor" className="w-4 h-4">
+                            stroke="currentColor" className="w-4 h-4">
                             <path strokeLinecap="round" strokeLinejoin="round"
-                                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                           </svg>
                         </span>
                       )}
@@ -153,7 +149,10 @@ const PostsListClient = ({
                     <div
                       className="flex items-center gap-4 lg:block pl-0 lg:px-4 lg:border-l border-gray-200 dark:border-dark-800">
                       <div className="flex items-center gap-2 mb-0 lg:mb-1">
-                        <ChatBubbleOvalLeftEllipsisIcon className="size-5 stroke-1 text-gray-400"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4 text-gray-400">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                        </svg>
+
                         <div className="text-xs lg:text-sm text-gray-900 dark:text-dark-100 line-clamp-1">
                           관리자
                         </div>
@@ -175,7 +174,7 @@ const PostsListClient = ({
       <div className={`flex items-center justify-end gap-4`}>
         <div className={``}>
           <Link href={`/posts/${postInfo.pid}/create`}
-                className={`text-xs bg-gray-50 py-1.5 px-6 rounded-sm border border-gray-200 text-gray-800 hover:text-gray-950 hover:border-gray-900 focus:border-gray-900`}>글쓰기</Link>
+            className={`text-xs bg-gray-50 py-1.5 px-6 rounded-sm border border-gray-200 text-gray-800 hover:text-gray-950 hover:border-gray-900 focus:border-gray-900`}>글쓰기</Link>
         </div>
       </div>
       <div className="pt-10 pb-20">

@@ -3,10 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-import { useSelector } from "react-redux";
-import { RootState } from "@plextype/redux/store";
-import { store } from "@plextype/redux/store";
-import { resetUserInfo } from "@plextype/redux/features/userSlice";
+
 import Warning from "@plextype/components/message/Warning";
 
 import { deleteUser } from "@/extentions/user/scripts/userController";
@@ -14,7 +11,7 @@ import HeaderUser from "@/extentions/user/templates/default/header";
 
 const UserDelete = (props: any) => {
   const router = useRouter();
-  const dispatch = store.dispatch;
+
   const [showPopup, setShowPopup] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loggedInfo, setLoggedInfo] = useState<UserInfo>();
@@ -23,14 +20,6 @@ const UserDelete = (props: any) => {
   );
   const [inputState, setInputState] = useState<Boolean>(false);
 
-  const userInfo = useSelector((state: RootState) => state.userInfo);
-
-  useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken");
-    setAccessToken(accessToken);
-
-    userInfo && userInfo.session && setLoggedInfo(userInfo.session);
-  }, [userInfo]);
 
   const handlerUserDeleteInput = (event) => {
     event.preventDefault();
@@ -49,7 +38,7 @@ const UserDelete = (props: any) => {
       await deleteUser({ accessToken: accessToken })
         .then((response) => {
           if (response.type === "success") {
-            dispatch(resetUserInfo());
+
             localStorage.removeItem("accessToken");
             router.replace("/");
           } else {
