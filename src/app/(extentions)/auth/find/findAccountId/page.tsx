@@ -46,8 +46,8 @@ const FindAccountID = () => {
   };
 
   const inputContainerClass =
-    "group flex w-full items-center rounded-md border border-gray-200 bg-white shadow-sm transition-all duration-200 " +
-    "hover:border-gray-400 focus-within:border-gray-950 focus-within:ring-1 focus-within:ring-gray-950 " +
+    "group flex w-full items-center rounded-md border border-gray-200 bg-white shadow-md shadow-gray-100 transition-all duration-200 " +
+    "hover:border-gray-400 focus-within:border-gray-400 focus-within:ring-4 focus-within:ring-gray-200/75 " +
     "dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:focus-within:border-dark-300 dark:focus-within:ring-dark-300";
 
   return (

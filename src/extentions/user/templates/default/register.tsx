@@ -101,8 +101,8 @@ const Register = () => {
   };
 
   const inputContainerClass =
-    "group flex w-full items-center rounded-md border border-gray-200 bg-white shadow-sm transition-all duration-200 " +
-    "hover:border-gray-400 focus-within:border-gray-950 focus-within:ring-1 focus-within:ring-gray-950 " +
+    "group flex w-full items-center rounded-md border border-gray-200 bg-white shadow-md shadow-gray-100 transition-all duration-200 " +
+    "hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 " +
     "dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:focus-within:border-dark-300 dark:focus-within:ring-dark-300";
 
   return (
@@ -216,7 +216,7 @@ const Register = () => {
         {/* Nickname Input */}
         <div className="mb-6">
           <label htmlFor="nickName" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">
-            Nickname
+            Nick Name
           </label>
           <div className={inputContainerClass}>
             <div className="pl-3 pr-2 text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200 transition-colors">
@@ -232,6 +232,9 @@ const Register = () => {
               className="w-full bg-transparent py-2.5 pr-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
               placeholder="사용하실 닉네임을 입력하세요"
             />
+          </div>
+          <div className="text-xs text-gray-500 dark:text-dark-400 mt-2 ml-1">
+            * 닉네임은 최소2~12자까지 가능하며 특수문자는 사용할 수 없습니다.
           </div>
         </div>
 

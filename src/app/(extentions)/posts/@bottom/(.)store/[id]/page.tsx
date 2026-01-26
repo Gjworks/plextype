@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Bottom from "@plextype/components/panel/Bottom";
 
-import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 const Page = () => {
 
   return (
@@ -95,7 +94,10 @@ const Page = () => {
               <div className="hidden md:flex sticky top-[64px] py-4">
                 <button className="flex items-center gap-4">
                   <div>
-                    <ChevronLeftIcon className="w-4 h-4 text-gray-500" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+
                   </div>
                   <div className="text-sm text-gray-400 hover:text-gray-950 hover:underline cursor-pointer">
                     View all posts

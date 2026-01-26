@@ -1,50 +1,224 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import DOMPurify from "isomorphic-dompurify";
 import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {usePostContext} from "./PostProvider";
+import { usePostContext } from "./PostProvider";
 import { useUser } from "@plextype/hooks/auth/useAuth";
 import PostNotPermission from "@/extentions/posts/templates/default/notPermission";
-dayjs.extend(relativeTime); // ← 반드시 플러그인 확장
+
+// ✅ TipTap 변환 관련 임포트 추가
+import { generateHTML } from "@tiptap/html";
+import StarterKit from "@tiptap/starter-kit";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { Image } from "@tiptap/extension-image";
+import { Link as TiptapLink } from "@tiptap/extension-link";
+import { Underline } from "@tiptap/extension-underline";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { Highlight } from "@tiptap/extension-highlight";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
+import ListItem from "@tiptap/extension-list-item";
+
+dayjs.extend(relativeTime);
+
+// ✅ 에디터와 동일한 익스텐션 구성 및 스타일 클래스 주입
+const tiptapExtensions = [
+  StarterKit.configure({
+    code: {
+      HTMLAttributes: {
+        class: 'bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded-md font-mono text-[0.9em] font-medium',
+      },
+    },
+    blockquote: {
+      HTMLAttributes: {
+        class: 'border-l-4 border-gray-300 pl-4 italic text-gray-600',
+      },
+    },
+    codeBlock: {
+      HTMLAttributes: {
+        class: 'rounded-md bg-gray-100 text-gray-600 p-4 font-mono text-sm my-4',
+      },
+    },
+    bulletList: false,
+    orderedList: false,
+  }),
+
+  BulletList.configure({
+    HTMLAttributes: { class: 'list-disc ml-6' },
+  }),
+  OrderedList.configure({
+    HTMLAttributes: { class: 'list-decimal ml-6' },
+  }),
+  ListItem,
+
+  Underline,
+  Highlight.configure({ multicolor: true }),
+  TiptapLink.configure({
+    openOnClick: true,
+    HTMLAttributes: { class: 'text-blue-600 underline cursor-pointer' }
+  }),
+  TextAlign.configure({ types: ['heading', 'paragraph'] }),
+  Table.configure({ resizable: true }),
+  TableRow,
+  TableHeader,
+  TableCell,
+  Image,
+];
 
 interface Participant {
   id: number;
   nickName: string;
-  profileImage?: string; // 나중에 DB에서 가져올 컬럼
+  profileImage?: string;
 }
 
 interface PostsReadProps {
   document: any;
-  participants?: Participant[]; // User 타입 배열
+  participants?: Participant[];
 }
 
-const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
-  const router = useRouter();
-  const { postInfo } = usePostContext();
-  const { data: user, isError } = useUser();
-  console.log(JSON.stringify(user))
-  const contentData = JSON.parse((document as { content?: string }).content || "{}");
-
-  const { permissions } = usePostContext();
-
-  if (!permissions.doRead) {
-    return <PostNotPermission/>;
+const EditorJsRenderer = ({ block }: { block: any }) => {
+  switch (block.type) {
+    case "header": {
+      const Tag: any = `h${block.data.level ?? 2}`;
+      return <Tag className="font-bold text-gray-900 mt-6 mb-2" dangerouslySetInnerHTML={{ __html: block.data.text }} />;
+    }
+    case "paragraph":
+      return <p className="leading-7 mb-4 text-zinc-800" dangerouslySetInnerHTML={{ __html: block.data.text }} />;
+    case "list": {
+      const ListTag = block.data.style === "ordered" ? "ol" : "ul";
+      const listClass = block.data.style === "ordered" ? "list-decimal pl-5 space-y-2" : "list-disc pl-5 space-y-2";
+      return (
+        <ListTag className={listClass}>
+          {block.data.items.map((item: string, i: number) => (
+            <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
+          ))}
+        </ListTag>
+      );
+    }
+    case "image":
+      return (
+        <figure className="my-8">
+          <img src={block.data.file?.url || block.data.url} alt="" className="rounded-2xl mx-auto shadow-sm border border-zinc-100" />
+          {block.data.caption && <figcaption className="text-center text-sm text-zinc-400 mt-3">{block.data.caption}</figcaption>}
+        </figure>
+      );
+    default:
+      return null;
   }
+};
+
+const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
+  const { postInfo, permissions } = usePostContext();
+  const { data: user } = useUser();
+
+  const renderContent = useMemo(() => {
+    let rawContent = document.content || "";
+
+    if (rawContent.startsWith('"') && rawContent.endsWith('"')) {
+      rawContent = rawContent.slice(1, -1);
+    }
+
+    if (!rawContent) return null;
+
+    try {
+      const jsonContent = JSON.parse(rawContent);
+
+      // A: TipTap 데이터인 경우
+      if (jsonContent.type === "doc") {
+        const html = generateHTML(jsonContent, tiptapExtensions);
+
+        // 정렬 기능(style 속성)을 허용하도록 sanitize 설정
+        const cleanHtml = DOMPurify.sanitize(html, {
+          ADD_ATTR: ['style', 'target', 'class', 'rel'],
+          ADD_TAGS: ['mark']
+        });
+        return (
+          <div
+            className="prose prose-zinc max-w-none dark:prose-invert
+                 /* ✅ 리스트 스타일 강제 복구 */
+                 prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4
+                 prose-ol:list-decimal prose-ol:ml-6 prose-ol:my-4
+                 prose-li:my-1
+                 /* ✅ 인라인 코드: 백틱 제거 및 스타일 */
+                 prose-code:before:content-none prose-code:after:content-none
+                 prose-code:bg-zinc-100 prose-code:text-[#eb5757] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
+                 /* ✅ 형광펜(mark) 투명화 (인라인 스타일 적용을 위해) */
+                 prose-mark:bg-transparent
+                 /* ✅ 인용구 및 기타 */
+                 prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic
+                 prose-pre:bg-gray-900 prose-pre:text-white prose-pre:p-0"
+            dangerouslySetInnerHTML={{ __html: cleanHtml }}
+          />
+        );
+      }
+
+      // B: 기존 EditorJS 데이터인 경우
+      if (jsonContent.blocks) {
+        return (
+          <div className="post-blocks space-y-4">
+            {jsonContent.blocks.map((block: any) => (
+              <EditorJsRenderer key={block.id || Math.random()} block={block} />
+            ))}
+          </div>
+        );
+      }
+    } catch (e) {
+      return (
+        <div
+          className="prose prose-zinc max-w-none dark:prose-invert"
+          dangerouslySetInnerHTML={{ __html: rawContent }}
+        />
+      );
+    }
+
+    return <div dangerouslySetInnerHTML={{ __html: rawContent }} />;
+  }, [document.content]);
+
+  if (!permissions.doRead) return <PostNotPermission />;
+
+  console.log(document)
 
   return (
     <>
       <div className="max-w-screen-xl mx-auto px-3">
-        <div className="mx-auto max-w-screen-md py-20">
-          <div className="text-center">
-            <h1
-              className="inline-block text-3xl md:text-4xl font-medium text-black dark:text-white text-center leading-10"
-              style={{lineHeight: "140%"}}
+        <div className="mx-auto max-w-screen-md pt-10">
+          <div className="flex items-center gap-2">
+            <Link href={`/posts/${postInfo.pid}`} className="hover:bg-gray-200/50 rounded-lg py-1.5 px-1.5">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 19.5L8.25 12l7.5-7.5"
+                />
+              </svg>
+            </Link>
+          </div>
+          <div className="hidden pt-12">
+            <div className="text-[13px] text-black dark:text-white">
+              {document.category.title}
+            </div>
+          </div>
+          <div className="flex justify-center pb-12 pt-12">
+            <div
+              className="inline-block text-3xl md:text-4xl font-medium text-black dark:text-white leading-10"
+              style={{ lineHeight: "140%" }}
             >
               {document.title}
-            </h1>
+            </div>
           </div>
         </div>
         <div className="mx-auto max-w-screen-md">
@@ -214,140 +388,39 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
         </div>
       </div>
       <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-400">
-        {contentData.blocks.map((block: any) => {
-          switch (block.type) {
-            case "header": {
-              // 저장된 level 값 사용 (h1 ~ h6)
-              const level = block.data.level ?? 2; // 기본값 h2
-              const Tag: any = `h${level}`;
-              return (
-                <Tag
-                  key={block.id}
-                  dangerouslySetInnerHTML={{ __html: block.data.text }}
-                />
-              );
-            }
-            case "paragraph":
-              return (
-                <p
-                  key={block.id}
-                  dangerouslySetInnerHTML={{ __html: block.data.text }}
-                />
-              );
-
-            case "list": {
-              const items = block.data.items || [];
-              return block.data.style === "ordered" ? (
-                <ol key={block.id}>
-                  {items.map((item: string, idx: number) => (
-                    <li key={idx} dangerouslySetInnerHTML={{ __html: item }} />
-                  ))}
-                </ol>
-              ) : (
-                <ul key={block.id}>
-                  {items.map((item: string, idx: number) => (
-                    <li key={idx} dangerouslySetInnerHTML={{ __html: item }} />
-                  ))}
-                </ul>
-              );
-            }
-
-            case "checklist": {
-              const items = block.data.items || [];
-              return (
-                <ul key={block.id}>
-                  {items.map((item: any, idx: number) => (
-                    <li key={idx}>
-                      <input type="checkbox" checked={item.checked} readOnly />{" "}
-                      <span dangerouslySetInnerHTML={{ __html: item.text }} />
-                    </li>
-                  ))}
-                </ul>
-              );
-            }
-
-            case "quote":
-              return (
-                <blockquote key={block.id}>
-                  <p dangerouslySetInnerHTML={{ __html: block.data.text }} />
-                  {block.data.caption && (
-                    <cite dangerouslySetInnerHTML={{ __html: block.data.caption }} />
-                  )}
-                </blockquote>
-              );
-
-            case "table":
-              const rows = block.data.content || [];
-              return (
-                <table key={block.id} className="border-collapse border border-gray-300">
-                  <tbody>
-                  {rows.map((row: any[], rIdx: number) => (
-                    <tr key={rIdx}>
-                      {row.map((cell: string, cIdx: number) => (
-                        <td
-                          key={cIdx}
-                          className="border border-gray-300 p-1"
-                          dangerouslySetInnerHTML={{ __html: cell }}
-                        />
-                      ))}
-                    </tr>
-                  ))}
-                  </tbody>
-                </table>
-              );
-
-            case "image":
-              return (
-                <figure key={block.id} className="my-6">
-                  <img
-                    src={block.data.file?.url || block.data.url}
-                    alt={block.data.caption || ""}
-                    className=""
-                  />
-                  {block.data.caption && (
-                    <figcaption className="text-center text-sm text-gray-500 mt-2">
-                      {block.data.caption}
-                    </figcaption>
-                  )}
-                </figure>
-              );
-
-            default:
-              return null;
-          }
-        })}
+        {renderContent}
       </div>
       <div className="flex justify-end gap-2 mx-auto max-w-screen-md py-8">
         <Link
           href={`/posts/${postInfo.pid}`}
-          className="text-xs bg-gray-50 py-1.5 px-6 rounded-sm border border-gray-100 text-gray-800 hover:text-gray-950 hover:border-gray-900 focus:border-gray-900"
+          className="text-xs bg-gray-50 py-1.5 px-6 border border-gray-100 text-gray-800 hover:text-gray-950 hover:bg-gray-100 focus:border-gray-900 rounded-full "
         >
           목록
         </Link>
         {
           (user?.id === document.userId) ? (
-             <>
-               <Link
-                 href={`/posts/${postInfo.pid}/${document.id}/edit`}
-                 className="text-xs bg-gray-50 py-1.5 px-6 rounded-sm  border border-gray-100 text-gray-800 hover:text-gray-950 hover:border-gray-900 focus:border-gray-900"
-               >
-                 수정
-               </Link>
-               <Link
-                 href={`/posts/${postInfo.pid}/${document.id}/delete`}
-                 className="text-xs bg-gray-50 py-1.5 px-6 rounded-sm border border-gray-100 text-gray-800 hover:text-gray-950 hover:border-gray-900 focus:border-gray-900"
-               >
-                 삭제
-               </Link>
+            <>
+              <Link
+                href={`/posts/${postInfo.pid}/${document.id}/edit`}
+                className="text-xs bg-gray-50 py-1.5 px-6  border border-gray-100 text-gray-800 hover:text-gray-950 hover:bg-gray-100 focus:border-gray-900 rounded-full "
+              >
+                수정
+              </Link>
+              <Link
+                href={`/posts/${postInfo.pid}/${document.id}/delete`}
+                className="text-xs bg-gray-50 py-1.5 px-6 border border-gray-100 text-gray-800 hover:text-gray-950 hover:bg-gray-100 focus:border-gray-900 rounded-full "
+              >
+                삭제
+              </Link>
 
-             </>
+            </>
           ) : null
         }
       </div>
-        <div className="dark:bg-dark-900 border-t border-gray-100 dark:border-dark-800"></div>
+      <div className="dark:bg-dark-900 border-t border-gray-100 dark:border-dark-800"></div>
 
-      </>
-      );
-      };
+    </>
+  );
+};
 
 export default PostsRead;
