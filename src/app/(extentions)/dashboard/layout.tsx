@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
 import DefaultNav from "@plextype/components/nav/DefaultNav";
@@ -11,14 +9,6 @@ import DefaultNav from "@plextype/components/nav/DefaultNav";
 import "@/app/globals.css";
 
 import nav from "@plextype/res/config/settings.json";
-import {
-  HomeIcon,
-  ChatBubbleBottomCenterTextIcon,
-  BellIcon,
-  ArchiveBoxIcon,
-  EllipsisHorizontalIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
 
 export default function DashboardLayout({
   children, // will be a page or nested layout
@@ -63,14 +53,20 @@ export default function DashboardLayout({
           <div className="flex">
             <Link href="/" className="flex gap-4 items-center px-3">
               <div className="flex items-center text-white">
-                <HomeIcon className="size-5 text-white stroke-1" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+
               </div>
               <div className="flex items-center text-white mr-3">홈 페이지</div>
             </Link>
             <div className="flex-1"></div>
             <div className="flex items-center px-3">
               <div className="max-w-xl flex items-center rounded-full bg-gray-700/75 backdrop-blur-lg px-3 text-white">
-                <MagnifyingGlassIcon className="size-5 text-white stroke-1.5" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+
                 <input
                   type="text"
                   className="bg-transparent text-white py-2 outline-none px-3 text-sm w-full"
@@ -79,13 +75,21 @@ export default function DashboardLayout({
             </div>
             <div className="flex gap-4 px-3">
               <div className="flex items-center text-gray-300 hover:text-white">
-                <ChatBubbleBottomCenterTextIcon className="size-5 stroke-1.5" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                </svg>
+
               </div>
               <div className="flex items-center text-gray-300 hover:text-white">
-                <BellIcon className="size-5 stroke-1.5" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                </svg>
               </div>
               <div className="flex items-center text-gray-300 hover:text-white">
-                <ArchiveBoxIcon className="size-5 stroke-1.5" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                </svg>
+
               </div>
             </div>
             <div className="flex items-center py-3 bg-gray-600/25 backdrop-blur-lg px-5">
@@ -112,7 +116,10 @@ export default function DashboardLayout({
                   <div className="rounded-full w-2 h-2 bg-lime-400"></div>
                 </div>
                 <div className="text-black dark:text-dark-400 cursor-pointer border border-slate-200 dark:border-dark-700 rounded-md py-1 px-2 hover:bg-slate-200/25 dark:hover:bg-gray-800/25">
-                  <EllipsisHorizontalIcon className="size-5" />
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                  </svg>
+
                 </div>
               </div>
               <div className="text-gray-500 text-xs">Dashboard 홈으로 가기</div>

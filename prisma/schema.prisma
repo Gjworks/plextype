@@ -63,27 +63,28 @@ model UserGroupUser {
 }
 
 model Document {
-  id             Int       @id @default(autoincrement())
-  uuid           String?   @unique @default(cuid())
+  id             Int          @id @default(autoincrement())
+  uuid           String?      @unique @default(cuid())
   categoryId     Int?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  published      Boolean?  @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  published      Boolean?     @default(false)
   userId         Int?
-  authorName     String?   @db.VarChar(45)
+  authorName     String?      @db.VarChar(45)
   authorPassword String?
-  title          String?   @db.VarChar(255)
+  title          String?      @db.VarChar(255)
   content        String?
-  isNotice       Boolean?  @default(false)
-  isSecrets      Boolean?  @default(false)
-  readCount      Int?      @default(0)
-  commentCount   Int?      @default(0)
-  voteCount      Int?      @default(0)
+  isNotice       Boolean?     @default(false)
+  isSecrets      Boolean?     @default(false)
+  readCount      Int?         @default(0)
+  commentCount   Int?         @default(0)
+  voteCount      Int?         @default(0)
   resourceId     Int
   resourceType   String
   Comment        Comment[]
-  category       Category? @relation("DocumentCategory", fields: [categoryId], references: [id])
-  user           User?     @relation(fields: [userId], references: [id])
+  category       Category?    @relation("DocumentCategory", fields: [categoryId], references: [id])
+  user           User?        @relation(fields: [userId], references: [id])
+  attachments    Attachment[]
 
   @@index([resourceType, resourceId], map: "idx_document_resource")
   @@index([categoryId], map: "idx_document_category")
@@ -172,8 +173,8 @@ model DocumentViewLog {
 }
 
 model Attachment {
-  id           Int      @id @default(autoincrement())
-  uuid         String   @unique @default(cuid())
+  id           Int       @id @default(autoincrement())
+  uuid         String    @unique @default(cuid())
   fileName     String
   originalName String
   mimeType     String
@@ -183,10 +184,11 @@ model Attachment {
   documentId   Int?
   resourceType String // posts, users, store, shop 등
   tempId       String? // ✨ 임시 파일 식별자
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   userId       Int? // 업로더 User ID
-  uploadedBy   User?    @relation(fields: [userId], references: [id])
+  uploadedBy   User?     @relation(fields: [userId], references: [id])
+  document     Document? @relation(fields: [documentId], references: [id])
 
   @@index([resourceType, resourceId], map: "idx_attachment_resource")
   @@index([userId], map: "idx_attachment_user")

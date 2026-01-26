@@ -1,11 +1,22 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-const RightPortal = ({ children }) => {
-  if (typeof window === 'undefined') return <></>
+const RightPortal = ({ children }: { children: React.ReactNode }) => {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted || typeof window === 'undefined') return null
+
   const element = document.getElementById('right')
+
+  // element가 null인지 명확히 체크해줍니다.
+  if (!element) return null
+
   return createPortal(children, element)
 }
 

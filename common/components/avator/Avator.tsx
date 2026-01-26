@@ -5,7 +5,7 @@ const Avator = ({ username, isLoggedIn }) => {
   return (
     <div className="flex gap-2">
       <div className="flex items-center">
-        <div className="relative dark:bg-dark-400 block h-5 w-5 rounded-full bg-gray-600/60">
+        <div className="relative dark:bg-dark-400 block h-5 w-5 rounded-full bg-gray-400/60">
           {isLoggedIn && (
             <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-400 rounded-full"></div>
           )}
