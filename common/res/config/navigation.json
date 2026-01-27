@@ -4,6 +4,7 @@
       "name": "features",
       "title": "Features",
       "route": "/features",
+      "parent": "features",
       "icon": "",
       "subMenu": [
 
@@ -14,6 +15,7 @@
       "name": "store",
       "title": "Store",
       "route": "/posts/store",
+      "parent": "store",
       "icon": "",
       "subMenu": [
         
@@ -24,6 +26,7 @@
       "title": "Supports",
       "route": "/posts/supports",
       "icon": "",
+      "parent": "supports",
       "subMenu": [
         {
             "title": "기술지원",

@@ -23,6 +23,15 @@ export type NavType = {
   route: string;
 };
 
+interface MenuItem {
+  name: string;
+  title: string;
+  route: string;
+  icon?: string;
+  parent?: string;
+  subMenu?: MenuItem[];
+}
+
 interface Inspage {
   route?: string;
 }
@@ -47,7 +56,6 @@ const Header = () => {
     if (params?.length) {
       const page = params?.length > 2 ? `${params?.[2]}` : `${params?.[1]}`;
 
-      console.log(page); // "store"
       setCurrentPage({ route: page });
     }
   }, [pathname]);
@@ -100,6 +108,20 @@ const Header = () => {
     hidden: { opacity: 0, x: -10 },
     visible: { opacity: 1, x: 0 },
   };
+
+  const getMenuByName = (menuConfig: Record<string, MenuItem>, name: string): MenuItem | null => {
+    // reduce<반환타입>을 명시하여 found와 menu의 타입을 확정짓습니다.
+    return Object.values(menuConfig).reduce<MenuItem | null>((found, menu) => {
+      // 이제 menu는 MenuItem 타입으로 인식됩니다.
+      if (found) return found;
+      if (menu.name === name) return menu;
+
+      return menu.subMenu?.find((sub) => sub.name === name) || null;
+    }, null);
+  };
+
+// 컴포넌트 내부
+  const matched = getMenuByName(nav.header, currentPage?.route ?? "");
 
   return (
     <>
@@ -226,10 +248,10 @@ const Header = () => {
                         <Link
                           href={item.route}
                           className={
-                            "relative flex items-center gap-2 py-2 px-5 text-xs font-normal lg:text-[0.762rem] tracking-wider transition-colors duration-200 hover:bg-gray-900/5 rounded-full " +
-                            (currentPage?.route === item.name
-                              ? "text-gray-900 dark:text-white font-medium bg-gray-900/5 backdrop-blur-lg "
-                              : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")
+                            "relative flex items-center gap-2 py-2 px-5 text-xs font-normal lg:text-[0.762rem] tracking-wider transition-colors duration-200 " +
+                            (matched?.parent === item.parent
+                              ? "text-gray-900 dark:text-white font-medium bg-gray-900/5 backdrop-blur-lg hover:bg-gray-900/5 rounded-full "
+                              : "dark:text-dark-500 text-gray-950 hover:text-gray-400 dark:hover:text-white")
                           }
                         >
                           <div>{item.title}</div>
@@ -261,7 +283,10 @@ const Header = () => {
                                     >
                                       <Link
                                         href={subItem.route}
-                                        className="block px-4 py-3 text-[0.762rem] text-gray-700 dark:text-gray-200 hover:text-gray-950 transition-colors"
+                                        className={
+                                        "block px-4 py-3 text-[0.762rem] dark:text-gray-200 transition-colors " +
+                                          (subItem.name === currentPage?.route ? " text-gray-400 " : "  text-gray-900 hover:text-gray-400")
+                                        }
                                       >
                                         {subItem.title}
                                       </Link>
