@@ -30,9 +30,7 @@ const UpdateFormClient = ({ user, groupList }) => {
 
     startTransition(async () => {
       const res = await updateUserAction(formData);
-      if (res.success) {
-        alert("저장 완료");
-      }
+      router.refresh();
     });
   };
 
