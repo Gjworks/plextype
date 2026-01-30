@@ -56,7 +56,7 @@ Prisma를 활용한 체계적인 DB 설계와 관리자 계정, 기본 그룹 �
 ```bash
 git clone [https://github.com/Gjworks/plextype.git](https://github.com/Gjworks/plextype.git)
 cd plextype
-
+```
 
 ## 📄 License
 
