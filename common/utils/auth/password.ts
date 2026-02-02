@@ -1,68 +1,38 @@
-import CryptoJS from "crypto-js";
-
-const secretKey = process.env.SECRET_KEY;
-if (!secretKey) {
-  throw new Error("SECRET_KEY is not defined");
-}
-
-// AES 키 생성
-const key = CryptoJS.enc.Utf8.parse(secretKey.padEnd(32, " "));
+import bcrypt from "bcrypt";
 
 /**
- * 🔐 비밀번호 암호화
+ * 🔐 비밀번호 해싱 (저장용)
+ * AES와 달리 SECRET_KEY가 필요 없으며, 결과에 Salt가 포함됩니다.
  */
 export async function hashedPassword(password: string): Promise<string> {
   try {
-    const encrypted = CryptoJS.AES.encrypt(password, key, {
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7,
-    });
+    // 숫자가 높을수록 보안은 강해지지만 계산 속도가 느려집니다. (보통 10 권장)
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(password, saltRounds);
 
-    const cipherText = encrypted.toString(); // 🚀 Base64 문자열 변환
-
-    console.log("🔐 Encrypted Password:", cipherText);
-    return cipherText;
+    console.log("🔐 Hashed Password created.");
+    return hash;
   } catch (error) {
-    console.error("Encryption Error:", error);
-    throw new Error("Encryption failed");
+    console.error("Hashing Error:", error);
+    throw new Error("Hashing failed");
   }
 }
 
 /**
- * 🔓 비밀번호 검증 (복호화 후 비교)
+ * 🔓 비밀번호 검증 (입력값과 DB 해시값 비교)
  */
 export async function verifyPassword(
   plainPassword: string,
-  hashedPassword: string,
+  hashedPassword: string
 ): Promise<boolean> {
   try {
-    console.log("🔐 Received hashedPassword:", hashedPassword);
+    // bcrypt.compare가 내부적으로 Salt를 추출하여 비교해줍니다.
+    const isMatch = await bcrypt.compare(plainPassword, hashedPassword);
 
-    // Base64 검증
-    try {
-      const decoded = atob(hashedPassword);
-      console.log("📌 Base64 Decoded:", decoded);
-    } catch (e) {
-      console.error("🚨 Invalid Base64 Encoding:", e);
-      return false;
-    }
-
-    // AES 복호화 수행
-    const decryptedPassword = CryptoJS.AES.decrypt(hashedPassword, key, {
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7,
-    }).toString(CryptoJS.enc.Utf8);
-
-    console.log("🔓 Decrypted Password:", decryptedPassword);
-
-    if (!decryptedPassword) {
-      console.error("Decryption Error: Empty result");
-      return false;
-    }
-
-    return decryptedPassword === plainPassword;
+    console.log("🔓 Password verification result:", isMatch);
+    return isMatch;
   } catch (error) {
-    console.error("Decryption Error:", error);
+    console.error("Verification Error:", error);
     return false;
   }
 }
