@@ -3,6 +3,7 @@ import "./style.css";
 import ReactQueryProvider from "@plextype/providers/ReactQueryProvider";
 import { UserProvider } from "@plextype/providers/UserProvider";
 import Log from "@plextype/utils/debug/Log";
+export const dynamic = 'force-dynamic';
 
 export default function RootLayout({ children }) {
   if (typeof globalThis.Log === "undefined") {
