@@ -209,7 +209,7 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
           </div>
           <div className="hidden pt-12">
             <div className="text-[13px] text-black dark:text-white">
-              {document.category.title}
+              {document.category?.title}
             </div>
           </div>
           <div className="flex justify-center pb-12 pt-12">

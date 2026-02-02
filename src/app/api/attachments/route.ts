@@ -80,26 +80,26 @@ export async function POST(req: NextRequest) {
 
     if (isTemporary) {
       // [CASE A] 임시 파일 저장 (작성 중)
-      // 물리 경로: /files/temp/{tempId}/
-      // DB 경로: /files/temp/{tempId}/{fileName}
+      // 물리 경로: /storage/temp/{tempId}/
+      // DB 경로: /storage/temp/{tempId}/{fileName}
 
-      const tempBaseDir = path.join(process.cwd(), "files", "temp");
+      const tempBaseDir = path.join(process.cwd(), "storage", "temp");
       uploadDir = path.join(tempBaseDir, tempIdStr as string);
 
-      dbPath = `/files/temp/${tempIdStr}/${fileName}`;
+      dbPath = `/storage/temp/${tempIdStr}/${fileName}`;
 
     } else {
       // [CASE B] 정식 게시글 파일 저장 (수정 시 등)
-      // 물리 경로: /files/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}/
-      // DB 경로: /files/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}/{fileName}
+      // 물리 경로: /storage/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}/
+      // DB 경로: /storage/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}/{fileName}
 
       const now = new Date();
       const year = now.getFullYear().toString();
       const month = (now.getMonth() + 1).toString().padStart(2, '0');
       const day = now.getDate().toString().padStart(2, '0');
 
-      // files/uploadsBase 까지
-      const uploadBaseDir = path.join(process.cwd(), "files", "uploads");
+      // storage/uploadsBase 까지
+      const uploadBaseDir = path.join(process.cwd(), "storage", "uploads");
 
       // uploads 아래의 상세 구조 생성
       // path.join은 OS에 따라 역슬래시(\)나 슬래시(/)를 알아서 처리합니다.
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       );
 
       // DB 저장은 웹 URL 표준인 슬래시(/)를 강제해야 합니다.
-      dbPath = `/files/uploads/${resourceTypeStr}/${year}/${month}/${day}/${documentId}/${fileName}`;
+      dbPath = `/storage/uploads/${resourceTypeStr}/${year}/${month}/${day}/${documentId}/${fileName}`;
     }
 
     // 6. 폴더 생성 및 파일 저장
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
         path: dbPath,
         resourceType: resourceTypeStr,
         resourceId: resourceId,
-        documentId: isTemporary ? 0 : documentId,
+        documentId: isTemporary ? null : documentId,
         tempId: isTemporary ? tempIdStr : null,
         userId: currentUserId,
       },
@@ -190,7 +190,7 @@ export async function GET(req: NextRequest) {
       const attachments = await prisma.attachment.findMany({
         where: {
           userId: currentUserId, // 로그인한 회원 ID
-          documentId: 0,         // 아직 문서에 연결되지 않은 임시 파일
+          documentId: null,         // 아직 문서에 연결되지 않은 임시 파일
         },
         orderBy: { createdAt: "desc" },
         select: {
@@ -254,10 +254,10 @@ export async function DELETE(req: NextRequest) {
 
     // 실제 파일 경로 계산
     let relativePath = attachment.path;
-    if (relativePath.startsWith("/files/uploads/")) {
-      relativePath = relativePath.replace("/files/uploads/", "");
+    if (relativePath.startsWith("/storage/uploads/")) {
+      relativePath = relativePath.replace("/storage/uploads/", "");
     }
-    const filePath = path.join(process.cwd(), "files", "uploads", relativePath);
+    const filePath = path.join(process.cwd(), "storage", "uploads", relativePath);
 
     // 파일 삭제
     try {
