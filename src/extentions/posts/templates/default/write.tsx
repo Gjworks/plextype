@@ -147,7 +147,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="제목을 입력해주세요."
-          className=" rounded-lg border border-gray-300 hover:border-gray-900 focus:border-gray-900 w-full bg-transparent py-2.5 px-3 text-sm text-black outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-dark-500"
+          className="w-full border py-2 px-4 outline-none rounded-lg border-gray-200 bg-white shadow-md shadow-gray-100 transition-all duration-200 hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:focus-within:border-dark-300 dark:focus-within:ring-dark-300"
         />
         <div className="">
           <TiptapEditor

@@ -27,7 +27,7 @@ export async function commitAttachments(
     const updateResult = await prisma.attachment.updateMany({
       where: {
         tempId: tempId,
-        documentId: 0,
+        documentId: null,
       },
       data: {
         resourceType: finalResourceType,
@@ -49,19 +49,19 @@ export async function commitAttachments(
     // =================================================================
 
     // [물리적 경로]
-    // Old: 프로젝트루트/files/temp/{tempId}
-    const oldDir = path.join(process.cwd(), "files", "temp", tempId);
+    // Old: 프로젝트루트/storage/temp/{tempId}
+    const oldDir = path.join(process.cwd(), "storage", "temp", tempId);
 
-    // New Base: 프로젝트루트/files/uploads/{resourceType}/{Year}/{Month}/{Day}
-    const newBaseDir = path.join(process.cwd(), "files", "uploads", finalResourceType, year, month, day);
+    // New Base: 프로젝트루트/storage/uploads/{resourceType}/{Year}/{Month}/{Day}
+    const newBaseDir = path.join(process.cwd(), "storage", "uploads", finalResourceType, year, month, day);
     // New Final: .../{documentId}
     const newDir = path.join(newBaseDir, String(newDocumentId));
 
     // [DB/웹 URL 경로] (슬래시 / 강제 사용)
-    // Old: /files/temp/{tempId}
-    const oldDbPrefix = `/files/temp/${tempId}`;
-    // New: /files/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}
-    const newDbPrefix = `/files/uploads/${finalResourceType}/${year}/${month}/${day}/${newDocumentId}`;
+    // Old: /storage/temp/{tempId}
+    const oldDbPrefix = `/storage/temp/${tempId}`;
+    // New: /storage/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}
+    const newDbPrefix = `/storage/uploads/${finalResourceType}/${year}/${month}/${day}/${newDocumentId}`;
 
 
     // =================================================================
@@ -71,7 +71,7 @@ export async function commitAttachments(
       // 3-1. 목표 경로의 상위 폴더(날짜 폴더)가 없으면 생성
       await mkdir(newBaseDir, { recursive: true });
 
-      // 3-2. 폴더 통째로 이동 (files/temp/abc -> files/uploads/.../99)
+      // 3-2. 폴더 통째로 이동 (storage/temp/abc -> storage/uploads/.../99)
       await rename(oldDir, newDir);
       console.log(`[Commit] 폴더 이동 완료: ${oldDir} -> ${newDir}`);
 
@@ -111,7 +111,7 @@ export async function commitAttachments(
     });
 
     if (post?.content) {
-      // 본문 HTML 안에 있는 "/files/temp/..." 문자열을 모두 새 경로로 변경
+      // 본문 HTML 안에 있는 "/storage/temp/..." 문자열을 모두 새 경로로 변경
       const updatedContent = post.content.replaceAll(oldDbPrefix, newDbPrefix);
 
       // 변경사항이 있을 때만 업데이트
