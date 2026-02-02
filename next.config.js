@@ -1,15 +1,7 @@
 /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   reactStrictMode: true,
-//   swcMinify: true,
-//   experimental: {
-//     appDir: 'src/app',
-//     serverActions: true,
-//     serverComponents: true,
-//   },
-// }
 
 const nextConfig = {
+  output: 'standalone', // Docker 빌드를 위해
   reactStrictMode: true,
   // output: "standalone", // PM2 실행 시 필요
   experimental: {
