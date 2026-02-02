@@ -1,19 +1,19 @@
-import { PrismaClient } from '@prisma/client';
-import CryptoJS from "crypto-js";
+const { PrismaClient } = require('@prisma/client');
+const CryptoJS = require("crypto-js");
 
 const prisma = new PrismaClient();
 
-// 사용자님이 제공해주신 환경변수 및 키 설정 로직
+// 환경변수 로드
 const secretKey = process.env.SECRET_KEY || "your-fallback-secret-key-32chars!!";
-const adminIdFromEnv = process.env.ADMIN_ACCOUNT_ID || "admin"; // 기본값 설정
-const adminPwFromEnv = process.env.ADMIN_PASSWORD || "admin1234"; // 기본값 설정
+const adminIdFromEnv = process.env.ADMIN_ACCOUNT_ID || "admin";
+const adminPwFromEnv = process.env.ADMIN_PASSWORD || "admin1234";
 
 const key = CryptoJS.enc.Utf8.parse(secretKey.padEnd(32, " "));
 
 /**
- * 🔐 비밀번호 암호화
+ * 🔐 비밀번호 암호화 (Plain JS 버전)
  */
-async function hashedPassword(password: string): Promise<string> {
+async function hashedPassword(password) {
   const encrypted = CryptoJS.AES.encrypt(password, key, {
     mode: CryptoJS.mode.ECB,
     padding: CryptoJS.pad.Pkcs7,
@@ -22,12 +22,11 @@ async function hashedPassword(password: string): Promise<string> {
 }
 
 async function main() {
-  // 1. 제공해주신 AES 방식으로 관리자 비밀번호 암호화
   const encryptedAdminPassword = await hashedPassword(adminPwFromEnv);
 
-  console.log('🌱 Seeding database...');
+  console.log('🌱 Seeding database (JavaScript version)...');
 
-  // 2. 기본 사용자 그룹 생성
+  // 1. 기본 사용자 그룹 생성
   await prisma.userGroup.upsert({
     where: { groupName: 'regular' },
     update: {},
@@ -38,8 +37,8 @@ async function main() {
     },
   });
 
-  // 3. 기본 관리자 계정 생성 (.env 값 적용)
-  const adminUser = await prisma.user.upsert({
+  // 2. 기본 관리자 계정 생성
+  await prisma.user.upsert({
     where: { accountId: adminIdFromEnv },
     update: {},
     create: {
@@ -54,7 +53,7 @@ async function main() {
 
   console.log(`✅ Seed completed. Admin ID: ${adminIdFromEnv}`);
 
-  // 4. 'notice' 게시판 생성
+  // 3. 'notice' 게시판 생성
   await prisma.posts.upsert({
     where: { postName: 'notice' },
     update: {},
@@ -66,11 +65,13 @@ async function main() {
     },
   });
 
-  console.log('✅ Seed completed with AES encrypted password.');
+  console.log('✅ Seed completed successfully with node engine.');
 }
 
 main()
-  .then(async () => await prisma.$disconnect())
+  .then(async () => {
+    await prisma.$disconnect();
+  })
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();
