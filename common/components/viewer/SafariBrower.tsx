@@ -23,7 +23,7 @@ const SafariBrower = ({ children }) => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  gjworks.dev
+                  plextype.com
                 </div>
               </div>
               <div className="flex items-center">
