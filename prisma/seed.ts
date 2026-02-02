@@ -5,10 +5,13 @@ const prisma = new PrismaClient();
 
 // 사용자님이 제공해주신 환경변수 및 키 설정 로직
 const secretKey = process.env.SECRET_KEY || "your-fallback-secret-key-32chars!!";
+const adminIdFromEnv = process.env.ADMIN_ACCOUNT_ID || "admin"; // 기본값 설정
+const adminPwFromEnv = process.env.ADMIN_PASSWORD || "admin1234"; // 기본값 설정
+
 const key = CryptoJS.enc.Utf8.parse(secretKey.padEnd(32, " "));
 
 /**
- * 🔐 비밀번호 암호화 (사용자님 제공 로직)
+ * 🔐 비밀번호 암호화
  */
 async function hashedPassword(password: string): Promise<string> {
   const encrypted = CryptoJS.AES.encrypt(password, key, {
@@ -20,12 +23,12 @@ async function hashedPassword(password: string): Promise<string> {
 
 async function main() {
   // 1. 제공해주신 AES 방식으로 관리자 비밀번호 암호화
-  const adminPassword = await hashedPassword('admin1234');
+  const encryptedAdminPassword = await hashedPassword(adminPwFromEnv);
 
   console.log('🌱 Seeding database...');
 
   // 2. 기본 사용자 그룹 생성
-  const adminGroup = await prisma.userGroup.upsert({
+  await prisma.userGroup.upsert({
     where: { groupName: 'regular' },
     update: {},
     create: {
@@ -35,19 +38,21 @@ async function main() {
     },
   });
 
-  // 3. 기본 관리자 계정 생성 (AES 암호화된 비번 적용)
+  // 3. 기본 관리자 계정 생성 (.env 값 적용)
   const adminUser = await prisma.user.upsert({
-    where: { accountId: 'admin' },
+    where: { accountId: adminIdFromEnv },
     update: {},
     create: {
-      accountId: 'admin',
+      accountId: adminIdFromEnv,
       email_address: 'admin@plextype.com',
       nickName: '운영자',
-      password: adminPassword,
+      password: encryptedAdminPassword,
       isAdmin: true,
       isManagers: true,
     },
   });
+
+  console.log(`✅ Seed completed. Admin ID: ${adminIdFromEnv}`);
 
   // 4. 'notice' 게시판 생성
   await prisma.posts.upsert({
