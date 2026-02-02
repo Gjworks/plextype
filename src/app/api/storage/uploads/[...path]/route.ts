@@ -8,14 +8,14 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const pathname = url.pathname; // /api/files/uploads/temp/.../파일.png
-    const relativePath = pathname.replace(/^\/api\/files\/uploads\//, "");
+    const pathname = url.pathname; // /api/storage/uploads/temp/.../파일.png
+    const relativePath = pathname.replace(/^\/api\/storage\/uploads\//, "");
 
     if (!relativePath || relativePath.includes("..")) {
       return NextResponse.json({ error: "유효하지 않은 경로" }, { status: 400 });
     }
 
-    const fileSystemPath = path.join(process.cwd(), "files", "uploads", relativePath);
+    const fileSystemPath = path.join(process.cwd(), "storage", "uploads", relativePath);
 
     console.log("pathname:", pathname);
     console.log("relativePath:", relativePath);
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("[GET /api/files/uploads] 오류:", err);
+    console.error("[GET /api/storage/uploads] 오류:", err);
     return NextResponse.json({ error: "서버 오류 발생" }, { status: 500 });
   }
 }
