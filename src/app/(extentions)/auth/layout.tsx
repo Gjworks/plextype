@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import AuthLayout from 'src/layouts/authLayout/Layout'
 
 const PageLayout = ({ children }) => {
