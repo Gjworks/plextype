@@ -46,7 +46,7 @@ const AccountDropdown = () => {
     { title: "로그아웃", name: "Signout", route: "/" },
   ];
 
-  if (isLoading) return null;
+  if (isLoading) return <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />;
 
   const isLoggedIn = !!user;
 
