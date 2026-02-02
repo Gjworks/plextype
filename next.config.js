@@ -10,6 +10,7 @@
 // }
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   // output: "standalone", // PM2 실행 시 필요
   experimental: {
