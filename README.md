@@ -2,8 +2,6 @@
 
 # Install
 
-[https://github.com/Gjworks/plextype](https://github.com/Gjworks/plextype)
-
 ```bash
 git clone [git@github.com](mailto:git@github.com):Gjworks/plextype.git
 npm install
