@@ -22,7 +22,7 @@ export async function proxy(request: NextRequest, response: NextResponse) {
       };
       if (
         !decodeToken?.isAdmin &&
-        request.nextUrl.pathname.startsWith("/dashboard")
+        request.nextUrl.pathname.startsWith("/admin")
       ) {
         return NextResponse.redirect(new URL("/access", request.url));
       }
@@ -34,7 +34,7 @@ export async function proxy(request: NextRequest, response: NextResponse) {
     ) {
       return NextResponse.redirect(new URL("/auth/signin", request.url));
     }
-    if (!hasAccessToken && request.nextUrl.pathname.startsWith("/dashboard")) {
+    if (!hasAccessToken && request.nextUrl.pathname.startsWith("/admin")) {
       return NextResponse.redirect(new URL("/auth/signin", request.url));
     }
 

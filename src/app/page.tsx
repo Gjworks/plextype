@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import MainLayout from "src/layouts/fullLayout/Layout";
 import Image from "next/image";
+import ContentListWidget from "@widgets/content/ContentListWidget";
 
 export default function Page() {
   const parentVariants = {
@@ -257,10 +258,16 @@ export default function Page() {
                 <div className="text-sm font-semibold text-gray-700 dark:text-dark-100 border-b border-gray-200/75 dark:border-dark-800 pb-2 pt-2">
                   Notice
                 </div>
+                <div>
+                  <ContentListWidget pid="notice" count={5} />
+                </div>
               </div>
               <div className="col-span-12  ㅊ md:col-span-6">
                 <div className="text-sm font-semibold text-gray-700 dark:text-dark-100 border-b border-gray-200/75 dark:border-dark-800 pb-2 pt-2">
                   Supports
+                </div>
+                <div>
+                  <ContentListWidget pid="notice" count={5} />
                 </div>
               </div>
             </div>

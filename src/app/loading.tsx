@@ -1,4 +1,4 @@
-import LoadingSpinner from "@plextype/components/loading/loadingSpinner";
+import LoadingSpinner from "@/components/loading/loadingSpinner";
 
 const Loading = () => {
   return (

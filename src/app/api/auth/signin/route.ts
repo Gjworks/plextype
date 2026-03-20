@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { z } from "zod"; // ✅ Zod 추가
-import { verifyPassword } from "@plextype/utils/auth/password";
-import { sign, refresh } from "@plextype/utils/auth/jwtAuth";
+import { verifyPassword } from "@/utils/auth/password";
+import { sign, refresh } from "@/utils/auth/jwtAuth";
 import { PrismaClient } from "@prisma/client";
-import { timeToSeconds } from "@plextype/utils/date/timeToSeconds";
+import { timeToSeconds } from "@/utils/date/timeToSeconds";
 
 const prisma = new PrismaClient();
 

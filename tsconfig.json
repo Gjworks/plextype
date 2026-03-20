@@ -25,17 +25,41 @@
       }
     ],
     "paths": {
-      "@plextype/*": [
-        "./common/*"
-      ],
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "@app/*" : [
+        "./src/app/*"
+      ],
+      "@extentions/*": [
+        "./src/app/(extentions)/*"
+      ],
+      "@components/*": [
+        "./src/components/*"
+      ],
+      "@hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@layouts/*" : [
+        "./src/layouts/*"
+      ],
+      "@providers/*": [
+        "./src/layouts/*"
+      ],
+      "@res/*": [
+        "./src/res/*"
+      ],
+      "@utils/*": [
+        "./src/utils/*"
+      ],
+      "@widgets/*": [
+        "./src/widgets/*"
+      ],
     },
     "strictNullChecks": true
   },
   "include": [
-    "common/types/*.ts",
+    "src/types/*.ts",
     "types/next-auth.d.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",
