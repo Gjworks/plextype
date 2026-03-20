@@ -1,120 +1,56 @@
-import { NextResponse, NextRequest } from "next/server";
-
-import { PrismaClient } from "@prisma/client";
-import { verify } from "@plextype/utils/auth/jwtAuth";
-import { jsonResponse } from "@plextype/utils/helper/jsonResponse";
-
+import { NextRequest } from "next/server";
+import { verify } from "@/utils/auth/jwtAuth";
+import { jsonResponse } from "@/utils/helper/jsonResponse";
 import {
-  getUserByAccountId,
-  getUserById,
-  getUserByNickname,
-} from "@/extentions/user/scripts/userModel";
-import { hashedPassword } from "@plextype/utils/auth/password";
+  saveUser,
+} from "@extentions/user/_actions/user.action";
 
-const prisma = new PrismaClient();
-
+/**
+ * [GET] 관리자 권한 확인
+ */
 export async function GET(request: NextRequest): Promise<Response> {
   try {
     const accessToken = request.cookies.get("accessToken")?.value;
-    if (!accessToken)
-      return jsonResponse(
-        403,
-        "Unauthorized access. Please log in to continue",
-      );
+    if (!accessToken) return jsonResponse(403, "로그인이 필요합니다.", false);
 
-    const verifyToken = await verify(accessToken!);
-    if (!verifyToken || verifyToken.isAdmin !== true) {
-      return jsonResponse(
-        403,
-        "Access denied. You do not have administrator privileges.",
-      );
+    const verifyToken = await verify(accessToken);
+    if (!verifyToken || !verifyToken.isAdmin) {
+      return jsonResponse(403, "관리자 권한이 없습니다.", false);
     }
-    // ✅ 정상 관리자 접근 시에도 반드시 Response 반환
-    return jsonResponse(200, "Access granted. Admin verified.");
+
+    return jsonResponse(200, "관리자 인증 성공", true);
   } catch (error) {
-    console.error("Server error:", error);
-    return jsonResponse(500, "Internal server error. Please try again later.");
+    return jsonResponse(500, "서버 오류가 발생했습니다.", false);
   }
 }
 
+/**
+ * [POST] 사용자 등록
+ */
 export async function POST(request: NextRequest): Promise<Response> {
   try {
     const accessToken = request.cookies.get("accessToken")?.value;
-    if (!accessToken)
-      return jsonResponse(
-        403,
-        "Unauthorized access. Please log in to continue",
-      );
+    const verifyToken = accessToken ? await verify(accessToken) : null;
 
-    const verifyToken = await verify(accessToken!);
-    if (!verifyToken || verifyToken.isAdmin !== true) {
-      return jsonResponse(
-        403,
-        "Access denied. You do not have administrator privileges.",
-      );
+    if (!verifyToken || !verifyToken.isAdmin) {
+      return jsonResponse(403, "관리자만 유저를 등록할 수 있습니다.", false);
     }
 
     const formData = await request.formData();
-    const accountId = formData.get("accountId")?.toString();
-    const password = formData.get("password")?.toString();
-    const nickName = formData.get("nickName")?.toString();
+    const result = await saveUser(formData);
 
-    if (!accountId)
-      return jsonResponse(
-        400,
-        "User ID is missing or invalid. Please check and try again.",
-      );
-    if (!password)
-      return jsonResponse(
-        400,
-        "Password is required. Please enter a valid password.",
-      );
-    if (!nickName)
-      return jsonResponse(
-        400,
-        "Nickname is required. Please provide a valid nickname.",
-      );
-
-    const [getUserAccountId, getUserNickname] = await Promise.all([
-      getUserByAccountId(accountId),
-      getUserByNickname(nickName),
-    ]);
-
-    if (getUserAccountId)
-      return jsonResponse(409, "This user ID is already taken.");
-    if (getUserNickname)
-      return jsonResponse(409, "This nickname is already in use.");
-
-    let hashedPwd;
-    try {
-      hashedPwd = await hashedPassword(password);
-    } catch (error) {
-      console.error("Password hashing error:", error);
-      return jsonResponse(
-        500,
-        "An error occurred while encrypting the password.",
-      );
+    if (result.success) {
+      return jsonResponse(201, result.message, true, result.data);
+    } else {
+      const status = result.message.includes("사용 중") ? 409 : 400;
+      return jsonResponse(status, result.message, false, result.fieldErrors);
     }
 
-    try {
-      await prisma.user.create({
-        data: {
-          accountId,
-          password: hashedPwd,
-          email_address: accountId,
-          nickName,
-        },
-      });
-      return jsonResponse(201, "User registered successfully.", true);
-    } catch (e) {
-      console.error("register error:", e);
-      return jsonResponse(
-        500,
-        "An error occurred during the registration process.",
-      );
-    }
   } catch (error) {
-    console.error("Server error:", error);
-    return jsonResponse(500, "Internal server error. Please try again later.");
+    console.error("API Register Error:", error);
+    return jsonResponse(500, "서버 내부 오류가 발생했습니다.", false);
   }
 }
+
+// 🌟 혹시라도 위 export들이 인식 안 될 때를 대비한 명시적 모듈 선언 (생략 가능하지만 안전함)
+export {};

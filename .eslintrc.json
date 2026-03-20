@@ -1,0 +1,25 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["**/*.query", "**/*.query.ts"],
+            "message": "🚨 [아키텍처 위반] UI 컴포넌트나 Page에서 DB Query를 직접 호출할 수 없습니다! 데이터 검증을 위해 반드시 Action(.action.ts)을 거쳐서 호출해주세요."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      // 💡 예외 처리: 오직 .action.ts 로 끝나는 파일에서만 query.ts를 부를 수 있도록 허용!
+      "files": ["**/*.action.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { verify } from "@plextype/utils/auth/jwtAuth";
-import { getUserById } from "@/extentions/user/scripts/userModel";
+import { verify } from "@/utils/auth/jwtAuth";
+import { findUserById } from "@extentions/user/_actions/user.query";
 
 const prisma = new PrismaClient();
 
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     const verifyToken = await verify(accessToken!);
     if (verifyToken) {
-      const user = await getUserById(verifyToken.id);
+      const user = await findUserById(verifyToken.id);
 
       if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });

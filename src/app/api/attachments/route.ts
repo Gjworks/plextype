@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import fs from "fs/promises";
-import { mkdir, writeFile, readFile,stat } from "fs/promises";
+import { mkdir, writeFile, readdir, unlink, rmdir, stat } from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
-import prisma from "@plextype/utils/db/prisma";
-import mime from "mime-types";
-import {verify} from "@plextype/utils/auth/jwtAuth";
+import prisma from "@/utils/db/prisma";
+import dayjs from "dayjs";
+import {verify} from "@/utils/auth/jwtAuth";
 
 export const runtime = "nodejs";
+
+const ALLOWED_EXTS = [".png", ".jpg", ".jpeg", ".gif", ".mp3", ".mp4", ".avif", ".webm", ".webp", ".mov", ".ogg", ".zip"];
+const ALLOWED_MIMES = ["image/png", "image/jpeg", "image/gif", "image/avif", "image/webp", "audio/mpeg", "audio/ogg", "video/mp4", "video/webm", "video/quicktime", "application/zip"];
 
 interface FileData {
   name: string;
@@ -21,147 +23,86 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
 
-    // 1. 파라미터 파싱
-    const resourceTypeValue = formData.get("resourceType");
-    const resourceTypeStr = typeof resourceTypeValue === "string" ? resourceTypeValue : "etc";
-    const resourceId = Number(formData.get("resourceId")) || 0;
-    const documentId = Number(formData.get("documentId")) || 0;
-
-    // 2. 인증 토큰 확인
+    // 1. 인증 확인 및 회원 번호(userId) 추출
     const accessToken = req.cookies.get("accessToken")?.value;
-    if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!accessToken) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
 
-    const verifyToken = await verify(accessToken!);
-    if (!verifyToken || !verifyToken.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const verifyToken = await verify(accessToken);
+    if (!verifyToken || !verifyToken.id) return NextResponse.json({ error: "유효하지 않은 토큰입니다." }, { status: 401 });
+    const userId = verifyToken.id;
 
-    const currentUserId = verifyToken.id;
+    // 2. 파라미터 파싱 (논리적 연결용)
+    const resourceType = (formData.get("resourceType") as string) || "posts";
+    const resourceId = Number(formData.get("resourceId")) || 0;
+    const tempId = formData.get("tempId") as string | null;
 
-    // 3. 임시 파일(Temp) 여부 확인
-    const tempIdValue = formData.get("tempId");
-    const tempIdStr = typeof tempIdValue === "string" ? tempIdValue : null;
-    const isTemporary = documentId === 0; // documentId가 0이면 새 글 작성 중(임시)
-
-    if (isTemporary && !tempIdStr) {
-      return NextResponse.json({ error: "tempId가 누락되었습니다." }, { status: 400 });
-    }
-
-    // 4. 파일 유효성 검사 (먼저 수행하여 불필요한 로직 방지)
-    const fileEntry = formData.get("file-attachments");
-    const isFileValid =
-      fileEntry &&
-      typeof fileEntry === 'object' &&
-      'name' in fileEntry &&
-      'size' in fileEntry &&
-      typeof (fileEntry as any).arrayBuffer === 'function' &&
-      (fileEntry as any).size > 0;
-
-    if (!isFileValid) {
+    // 3. 파일 유효성 검사
+    const file = formData.get("file-attachments") as unknown as File;
+    if (!file || file.size === 0) {
       return NextResponse.json({ error: "파일이 없거나 잘못된 형식입니다." }, { status: 400 });
     }
 
-    const file = fileEntry as FileData;
-    const fileUuid = uuidv4();
-    const ext = path.extname(file.name || "").toLowerCase();
-    const fileName = `${fileUuid}${ext}`;
-
-    // 확장자 및 MIME 타입 체크
-    const allowedExts = [".png", ".jpg", ".jpeg", ".gif", ".mp3", ".mp4", ".avif", ".webm", ".webp", ".mov", ".ogg", ".zip"];
-    const allowedMimeTypes = ["image/png", "image/jpeg", "image/gif", "image/avif", "image/webp", "audio/mpeg", "audio/ogg", "video/mp4", "video/webm", "video/quicktime", "application/zip"];
-
-    if (!allowedExts.includes(ext) || !allowedMimeTypes.includes(file.type)) {
+    const ext = path.extname(file.name).toLowerCase();
+    if (!ALLOWED_EXTS.includes(ext) || !ALLOWED_MIMES.includes(file.type)) {
       return NextResponse.json({ error: "허용되지 않은 파일 형식입니다." }, { status: 400 });
     }
 
-    // =================================================================================
-    // ⭐️ 5. 경로 생성 로직 분기 (핵심 수정 부분)
-    // =================================================================================
-    let uploadDir: string;
-    let dbPath: string;
+    // 4. 🌟 물리적 경로 및 파일명 생성
+    const fileUuid = uuidv4();
+    const fileName = `${fileUuid}${ext}`;
+    const datePath = dayjs().format("YYYY/MM"); // 예: 2026/03/19
 
-    if (isTemporary) {
-      // [CASE A] 임시 파일 저장 (작성 중)
-      // 물리 경로: /storage/temp/{tempId}/
-      // DB 경로: /storage/temp/{tempId}/{fileName}
+    // 물리 경로: 프로젝트루트/storage/uploads/{userId}/{날짜}/
+    const uploadDir = path.join(process.cwd(), "storage", "uploads", String(userId), datePath);
+    // DB 저장용 경로 (웹 URL 표준)
+    const dbPath = `/storage/uploads/${userId}/${datePath}/${fileName}`;
 
-      const tempBaseDir = path.join(process.cwd(), "storage", "temp");
-      uploadDir = path.join(tempBaseDir, tempIdStr as string);
+    // 5. 📂 물리적 파일 저장 (mkdir & writeFile)
+    // recursive: true 옵션으로 userId부터 날짜 폴더까지 한 번에 생성합니다.
+    await mkdir(uploadDir, { recursive: true });
 
-      dbPath = `/storage/temp/${tempIdStr}/${fileName}`;
-
-    } else {
-      // [CASE B] 정식 게시글 파일 저장 (수정 시 등)
-      // 물리 경로: /storage/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}/
-      // DB 경로: /storage/uploads/{resourceType}/{Year}/{Month}/{Day}/{documentId}/{fileName}
-
-      const now = new Date();
-      const year = now.getFullYear().toString();
-      const month = (now.getMonth() + 1).toString().padStart(2, '0');
-      const day = now.getDate().toString().padStart(2, '0');
-
-      // storage/uploadsBase 까지
-      const uploadBaseDir = path.join(process.cwd(), "storage", "uploads");
-
-      // uploads 아래의 상세 구조 생성
-      // path.join은 OS에 따라 역슬래시(\)나 슬래시(/)를 알아서 처리합니다.
-      uploadDir = path.join(
-        uploadBaseDir,
-        resourceTypeStr,    // 예: posts
-        year,               // 예: 2025
-        month,              // 예: 12
-        day,                // 예: 15
-        String(documentId)  // 예: 94
-      );
-
-      // DB 저장은 웹 URL 표준인 슬래시(/)를 강제해야 합니다.
-      dbPath = `/storage/uploads/${resourceTypeStr}/${year}/${month}/${day}/${documentId}/${fileName}`;
-    }
-
-    // 6. 폴더 생성 및 파일 저장
-    // recursive: true 옵션 덕분에 중간 경로(년/월/일 등)가 없으면 알아서 다 만들어줍니다.
-    await fs.mkdir(uploadDir, { recursive: true });
-
-    const fullPath = path.join(uploadDir, fileName);
+    // 파일 데이터를 Buffer로 변환하여 기록합니다.
     const bytes = await file.arrayBuffer();
-    await fs.writeFile(fullPath, Buffer.from(bytes));
+    await writeFile(path.join(uploadDir, fileName), Buffer.from(bytes));
 
-    console.log(`DEBUG [POST] 저장 위치: ${fullPath}`);
+    console.log(`[UPLOAD SUCCESS] User: ${userId}, Path: ${dbPath}`);
 
-    // 7. DB 기록
+    // 6. 📝 DB(Attachment) 기록
+    // 물리 경로는 고정되었지만, 게시글과의 연결을 위해 tempId와 userId를 기록합니다.
     const attachment = await prisma.attachment.create({
       data: {
         uuid: uuidv4(),
-        fileName,
-        originalName: file.name || "unknown",
-        mimeType: file.type || "application/octet-stream",
+        fileName: fileName,
+        originalName: file.name,
+        mimeType: file.type,
         size: file.size,
         path: dbPath,
-        resourceType: resourceTypeStr,
+        resourceType: resourceType,
         resourceId: resourceId,
-        documentId: isTemporary ? null : documentId,
-        tempId: isTemporary ? tempIdStr : null,
-        userId: currentUserId,
+        tempId: tempId,       // 새 글 작성 시 연결 고리
+        userId: userId,       // 소유자 (회원 번호)
+        documentId: null,     // 아직 게시글 저장 전
       },
     });
 
-    const responseData = {
+    // 7. 클라이언트 응답 (PostWrite 등에서 사용)
+    return NextResponse.json({
       id: attachment.id,
       uuid: attachment.uuid,
       name: attachment.originalName,
       size: attachment.size,
-      path: `${attachment.path}`,
+      path: attachment.path,
       mimeType: attachment.mimeType,
-    };
-
-    return NextResponse.json(responseData);
+    });
 
   } catch (err) {
-    console.error("첨부파일 업로드 실패:", err);
+    console.error("첨부파일 업로드 중 서버 오류:", err);
     return NextResponse.json({ error: "업로드 실패" }, { status: 500 });
   }
 }
 
 // =========================================================================
-// GET: 파일 목록 조회 및 파일 콘텐츠 전송 (ArrayBuffer 복사 적용)
+// GET: 파일 목록 조회
 // =========================================================================
 export async function GET(req: NextRequest) {
   try {
@@ -170,122 +111,124 @@ export async function GET(req: NextRequest) {
     const documentId = Number(searchParams.get("documentId"));
     const tempId = searchParams.get("tempId");
 
+    // 인증 확인
     const accessToken = req.cookies.get("accessToken")?.value;
+    if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const verifyToken = await verify(accessToken!);
-    if (!verifyToken || !verifyToken.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const verifyToken = await verify(accessToken);
+    if (!verifyToken || !verifyToken.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const currentUserId = verifyToken.id;
+
     if (!resourceType && !documentId && !tempId) {
       return NextResponse.json({ error: "조회 조건이 없습니다." }, { status: 400 });
     }
 
+    let attachments;
+
     if (tempId) {
-      const attachments = await prisma.attachment.findMany({
+      // 1. 임시 파일 조회 (작성 중인 유저 본인 것만)
+      attachments = await prisma.attachment.findMany({
         where: {
-          userId: currentUserId, // 로그인한 회원 ID
-          documentId: null,         // 아직 문서에 연결되지 않은 임시 파일
+          userId: currentUserId,
+          tempId: tempId,
+          documentId: null,
         },
         orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          uuid: true,
-          originalName: true,
-          size: true,
-          path: true,
-          mimeType: true,
-        },
       });
-
-      return NextResponse.json(
-        attachments.map(att => ({
-          id: att.id,
-          uuid: att.uuid,
-          name: att.originalName,
-          size: att.size,
-          path: `${att.path}`,
-          mimeType: att.mimeType,
-        }))
-      );
+    } else if (documentId) {
+      // 2. 특정 게시글에 연결된 파일 조회
+      attachments = await prisma.attachment.findMany({
+        where: {
+          resourceType: resourceType || undefined,
+          documentId: documentId,
+        },
+        orderBy: { createdAt: "asc" },
+      });
+    } else {
+      attachments = [];
     }
 
-    // 기존 글 첨부파일 조회
-    if (documentId) {
-      const attachments = await prisma.attachment.findMany({
-        where: { resourceType: resourceType ?? undefined, documentId },
-        orderBy: { createdAt: "desc" },
-        select: { id: true, uuid: true, originalName: true, size: true, path: true, mimeType: true },
-      });
-
-      attachments.forEach(att => {
-        console.log("attachment path:", att.path);
-      });
-      return NextResponse.json(attachments.map(att => ({
+    return NextResponse.json(
+      attachments.map(att => ({
         id: att.id,
         uuid: att.uuid,
         name: att.originalName,
         size: att.size,
-        path: `${att.path}`,
+        path: att.path,
         mimeType: att.mimeType,
-      })));
-    }
+      }))
+    );
 
-    return NextResponse.json([], { status: 200 });
   } catch (err) {
     console.error("[GET /api/attachments] 오류:", err);
     return NextResponse.json({ error: "서버 오류 발생" }, { status: 500 });
   }
 }
 
+// =========================================================================
+// DELETE: 파일 삭제 (물리 파일 + 빈 폴더 정리 + DB 삭제)
+// =========================================================================
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const fileId = Number(searchParams.get("fileId"));
-    if (!fileId) return NextResponse.json({ error: "fileId 필요" }, { status: 400 });
+    if (!fileId) return NextResponse.json({ error: "fileId가 필요합니다." }, { status: 400 });
 
-    const attachment = await prisma.attachment.findUnique({ where: { id: fileId } });
-    if (!attachment) return NextResponse.json({ error: "파일 없음" }, { status: 404 });
+    // 1. 인증 및 권한 확인
+    const accessToken = req.cookies.get("accessToken")?.value;
+    if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // 실제 파일 경로 계산
-    let relativePath = attachment.path;
-    if (relativePath.startsWith("/storage/uploads/")) {
-      relativePath = relativePath.replace("/storage/uploads/", "");
+    const verifyToken = await verify(accessToken);
+    if (!verifyToken || !verifyToken.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const currentUserId = verifyToken.id;
+
+    // 2. DB에서 파일 정보 조회
+    const attachment = await prisma.attachment.findUnique({
+      where: { id: fileId },
+    });
+
+    if (!attachment) return NextResponse.json({ error: "파일을 찾을 수 없습니다." }, { status: 404 });
+
+    // 3. 본인 파일인지 확인 (관리자 예외 처리 가능)
+    if (attachment.userId !== currentUserId) {
+      return NextResponse.json({ error: "삭제 권한이 없습니다." }, { status: 403 });
     }
-    const filePath = path.join(process.cwd(), "storage", "uploads", relativePath);
 
-    // 파일 삭제
-    try {
-      await fs.unlink(filePath);
-      console.log("🗑️ 파일 삭제 완료:", filePath);
-    } catch (err: any) {
-      if (err.code !== "ENOENT") throw err;
-      console.warn("⚠️ 파일 이미 없음:", filePath);
-    }
+    // 4. 물리 파일 삭제 경로 계산
+    // DB path 예: /storage/uploads/1/2026/03/19/uuid.png
+    // 실제 경로: 프로젝트루트 + storage/uploads/1/2026/03/19/uuid.png
+    const filePath = path.join(process.cwd(), attachment.path.substring(1));
 
-    // 폴더 정리
-    const folderPath = path.dirname(filePath);
     try {
-      const filesInFolder = await fs.readdir(folderPath);
+      // 물리 파일 삭제
+      await unlink(filePath);
+      console.log(`🗑️ 물리 파일 삭제 완료: ${filePath}`);
+
+      // 5. 빈 폴더 정리 (날짜 폴더가 비었으면 삭제)
+      const folderPath = path.dirname(filePath);
+      const filesInFolder = await readdir(folderPath);
+
       if (filesInFolder.length === 0) {
-        await fs.rmdir(folderPath);
-        console.log("📁 빈 폴더 삭제 완료:", folderPath);
+        await rmdir(folderPath);
+        console.log(`📁 빈 폴더 삭제 완료: ${folderPath}`);
       }
     } catch (err: any) {
-      if (err.code !== "ENOENT") throw err;
+      if (err.code !== "ENOENT") {
+        console.error("파일 삭제 중 오류 발생:", err);
+      } else {
+        console.warn("파일이 이미 존재하지 않습니다.");
+      }
     }
 
-    // DB 기록 삭제
-    await prisma.attachment.delete({ where: { id: fileId } });
+    // 6. DB 레코드 삭제
+    await prisma.attachment.delete({
+      where: { id: fileId },
+    });
 
     return NextResponse.json({ success: true });
+
   } catch (err) {
-    console.error("❌ 파일 삭제 오류:", err);
-    return NextResponse.json({ error: "파일 삭제 실패" }, { status: 500 });
+    console.error("❌ 파일 삭제 처리 실패:", err);
+    return NextResponse.json({ error: "삭제 실패" }, { status: 500 });
   }
 }

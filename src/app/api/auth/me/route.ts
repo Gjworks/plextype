@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 
-import { sign, verify, refreshVerify } from "@plextype/utils/auth/jwtAuth";
+import { sign, verify, refreshVerify } from "@/utils/auth/jwtAuth";
 
-import { getUserById } from "@/extentions/user/scripts/userModel";
-import { timeToSeconds } from "@plextype/utils/date/timeToSeconds";
+import { findUserById } from "@extentions/user/_actions/user.query";
+import { timeToSeconds } from "@/utils/date/timeToSeconds";
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest): Promise<Response> {
         const accessTokenExpire = timeToSeconds(process.env.ACCESSTOKEN_EXPIRES_IN || "1h");
 
         // 유저 정보 가져오기 (공통 로직으로 통합)
-        const user = await getUserById(userId!);
+        const user = await findUserById(userId!);
         if (user) {
           const response = NextResponse.json({
             isLoggedIn: true,
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     // 3. 유저 정보 반환 (정상 로그인 상태)
     if (userId) {
-      const user = await getUserById(userId);
+      const user = await findUserById(userId);
       if (user) {
         return NextResponse.json({
           isLoggedIn: true,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies, headers } from "next/headers";
 import { PrismaClient } from "@prisma/client";
 import { decodeJwt } from "jose";
-import { getAuthenticatedUser } from "@/extentions/posts/scripts/authenticateUser";
+// import { getAuthenticatedUser } from "@extentions/posts/_actions/authenticateUser";
 
 const prisma = new PrismaClient();
 
@@ -29,7 +29,7 @@ export async function GET(
     return NextResponse.json(response);
   }
 
-  const userInfo = await getAuthenticatedUser(request);
+  // const userInfo = await getAuthenticatedUser(request);
 
   response = {
     success: true,
