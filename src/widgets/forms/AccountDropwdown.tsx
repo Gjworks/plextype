@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Dropdown from "@plextype/components/dropdown/Dropdown";
-import Avator from "@plextype/components/avator/Avator";
-import DefaultList from "@plextype/components/nav/DefaultList";
-import { useUser } from "@plextype/hooks/auth/useAuth";
+import Dropdown from "@/components/dropdown/Dropdown";
+import Avator from "@/components/avator/Avator";
+import DefaultList from "@/components/nav/DefaultList";
+import { useUser } from "@/hooks/auth/useAuth";
 
 interface Item {
   title: string;

@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import Codehighlighte from '@plextype/components/codehighlight/Codehighlighter'
+import Codehighlighte from '@/components/codehighlight/Codehighlighter'
 
-import Modal from '@plextype/components/modal/Modal'
+import Modal from '@/components/modal/Modal'
 
 const Page = () => {
   const [showModalTop, setShowModalTop] = useState(false)

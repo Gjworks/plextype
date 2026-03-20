@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 
-import { verify } from "@plextype/utils/auth/jwtAuth";
-import { jsonResponse } from "@plextype/utils/helper/jsonResponse";
-import prisma, { PermissionSubject } from "@plextype/utils/db/prisma";
+import { verify } from "@/utils/auth/jwtAuth";
+import { jsonResponse } from "@/utils/helper/jsonResponse";
+import prisma, { PermissionSubject } from "@/utils/db/prisma";
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {

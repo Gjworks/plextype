@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import nav from '@plextype/res/config/navigation.json'
+import nav from '@/res/config/navigation.json'
 
 const SideNavTemplate = props => {
   const pathname = usePathname()
