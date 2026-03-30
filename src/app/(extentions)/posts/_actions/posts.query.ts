@@ -1,7 +1,7 @@
 // src/app/(extentions)/posts/_actions/posts.query.ts
 import prisma from "@utils/db/prisma";
 import { Prisma } from "@prisma/client";
-import { PostsParams } from "./_type"; // 경로에 맞게 호출
+import { PostsParams, ExtraFieldConfig } from "./_type"; // 경로에 맞게 호출
 // ==========================================
 // [Document] 실제 게시글 관련 쿼리
 // ==========================================
@@ -90,5 +90,15 @@ export async function deletePosts(ids: number[]) {
     });
 
     return result;
+  });
+}
+
+export async function updatePostExtraFields(pid: string, extraFields: ExtraFieldConfig[]) {
+  return prisma.posts.update({
+    where: { pid },
+    data: {
+      // 💡 Prisma.InputJsonValue로 캐스팅하여 에러 해결
+      extraFields: extraFields as unknown as Prisma.InputJsonValue,
+    },
   });
 }

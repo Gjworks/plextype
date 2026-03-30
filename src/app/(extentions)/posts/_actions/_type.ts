@@ -38,7 +38,9 @@ export type PrismaDocumentWithRelations = Prisma.DocumentGetPayload<{
 }>;
 
 // 💡 안전한 게시글 객체 (비밀글 비밀번호 등 민감정보 제외)
-export interface DocumentInfo extends Omit<PrismaDocumentWithRelations, 'authorPassword'> {}
+export interface DocumentInfo extends Omit<PrismaDocumentWithRelations, 'authorPassword'> {
+  extraFieldData: ExtraFieldData | any;
+}
 
 // 📌 [Document] 게시글 목록 응답 데이터 (페이지네이션)
 export interface DocumentListResponseData {
@@ -119,6 +121,7 @@ export const DocumentUpsertSchema = z.object({
 
   // 💡 첨부파일 임시 아이디 (업로드 맵핑용)
   tempId: z.string().optional().nullable(),
+  extraFieldData: z.record(z.string(), z.any()).optional(),
 });
 export type DocumentParams = z.infer<typeof DocumentUpsertSchema>;
 
@@ -255,3 +258,16 @@ export interface TreeItem {
   resourceType: string;
 }
 
+export interface ExtraFieldConfig {
+  [key: string]: any; // 💡 인덱스 시그니처 추가
+  name: string;
+  label: string;
+  type: 'text' | 'tags' | 'number' | 'date' | 'select';
+  required?: boolean;
+  options?: string[];
+}
+
+// 2. 게시물에 저장될 실제 데이터 타입 (K-V 쌍)
+export interface ExtraFieldData {
+  [key: string]: string | string[] | number | boolean | null | any;
+}
