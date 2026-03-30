@@ -8,6 +8,7 @@ const PostCategory = ({ postId }: { postId: string }) => {
   const links = [
     { href: `/admin/posts/${postId}/update`, label: "게시판 정보" },
     { href: `/admin/posts/${postId}/categories`, label: "카테고리" },
+    { href: `/admin/posts/${postId}/extraField`, label: "확장필드" },
   ];
 
   return (

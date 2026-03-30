@@ -120,6 +120,9 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
   const { postInfo, permissions } = usePostContext();
   const { data: user } = useUser();
 
+  const extraFields = postInfo?.extraFields || [];
+  const extraData = document.extraFieldData || {};
+
   const renderContent = useMemo(() => {
     let rawContent = document.content || "";
 
@@ -184,8 +187,6 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
   }, [document.content]);
 
   if (!permissions.doRead) return <PostNotPermission />;
-
-  console.log(document)
 
   return (
     <>
@@ -376,6 +377,31 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
           </div>
         </div>
       </div>
+      <div className="px-3">
+        <div className="max-w-screen-md mx-auto">
+          {extraFields.length > 0 && Object.keys(extraData).length > 0 && (
+            <div className="">
+              <div className="">
+                {extraFields.map((field: any) => {
+                  const value = extraData[field.name];
+                  // 값이 없으면 렌더링하지 않음
+                  if (value === undefined || value === null || value === "") return null;
+
+                  return (
+                    <div key={field.name} className="grid grid-cols-2 gap-4 flex items-center justify-between border-b border-gray-200/40 dark:border-dark-700/50  bg-gray-50">
+                      <div className="px-3 py-3 text-xs font-medium text-gray-500 dark:text-dark-400">{field.label}</div>
+                      <div className="px-3 py-3 bg-white text-sm font-bold text-gray-900 dark:text-dark-100">
+                        {field.type === 'date' ? dayjs(value).format('YYYY-MM-DD') : String(value)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-400">
         {renderContent}
       </div>

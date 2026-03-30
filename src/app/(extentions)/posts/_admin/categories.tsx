@@ -397,7 +397,7 @@ const SortableTree: React.FC<{ collapsible?: boolean }> = ({ collapsible }) => {
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="bg-white dark:bg-dark-950 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/50 dark:shadow-none overflow-hidden">
+      <div className="bg-white dark:bg-dark-950 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm shadow-gray-200/50 dark:shadow-none overflow-hidden">
         {/* 상단 헤더바 추가 */}
         <div className="px-6 py-4 border-b border-gray-50 dark:border-gray-800 bg-gray-50/30 dark:bg-dark-900/50 flex justify-between items-center">
           <div>

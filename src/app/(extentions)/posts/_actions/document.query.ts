@@ -46,12 +46,17 @@ export async function findDocumentList(postsId: number, page: number, pageSize: 
   return { items, totalCount };
 }
 
-export async function insertDocument(data: Prisma.DocumentUncheckedCreateInput) {
-  return prisma.document.create({ data });
+export async function insertDocument(data: any) {
+  return prisma.document.create({
+    data: data as Prisma.DocumentUncheckedCreateInput
+  });
 }
 
-export async function updateDocument(id: number, data: Prisma.DocumentUncheckedUpdateInput) {
-  return prisma.document.update({ where: { id }, data });
+export async function updateDocument(id: number, data: any) {
+  return prisma.document.update({
+    where: { id },
+    data: data as Prisma.DocumentUncheckedUpdateInput
+  });
 }
 
 export async function deleteDocument(id: number) {

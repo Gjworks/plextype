@@ -81,6 +81,7 @@ model Document {
   voteCount      Int?         @default(0)
   resourceId     Int
   resourceType   String
+  extraFieldData Json?        @default("{}")
   Comment        Comment[]
   category       Category?    @relation("DocumentCategory", fields: [categoryId], references: [id])
   user           User?        @relation(fields: [userId], references: [id])
@@ -109,15 +110,16 @@ model Category {
 }
 
 model Posts {
-  id        Int      @id @default(autoincrement())
-  pid       String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  postName  String   @unique
-  postDesc  String?
-  grant     Json?    @db.Json
-  config    Json?    @db.Json
-  status    String?  @db.VarChar(45)
+  id          Int      @id @default(autoincrement())
+  pid         String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  postName    String   @unique
+  postDesc    String?
+  grant       Json?    @db.Json
+  config      Json?    @db.Json
+  status      String?  @db.VarChar(45)
+  extraFields Json?    @default("[]")
 
   @@index([status], map: "idx_posts_status")
 }
