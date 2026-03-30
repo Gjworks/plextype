@@ -7,7 +7,7 @@ import { decodeJwt } from "jose";
 import * as query from "./posts.query";
 import * as documentQuery from "./document.query";
 import { commitAttachments } from "@extentions/posts/_actions/attachment.action";
-import { ActionState, DocumentUpsertSchema, PostsUpsertSchema,DocumentInfo } from "./_type";
+import {ActionState, DocumentUpsertSchema, PostsUpsertSchema, DocumentInfo, ExtraFieldConfig} from "./_type";
 import { validateForm } from "@/utils/validation/formValidator";
 import {deletePosts} from "./posts.query";
 import {redirect} from "next/navigation";
@@ -35,6 +35,8 @@ export async function getPostsInfo(pid: string): Promise<ActionState<any>> {
       query.findCategoriesByResourceId(postInfo.id),
     ]);
 
+    const extraFields = (postInfo.extraFields as unknown as ExtraFieldConfig[]) || [];
+
     const mappedPermissions = {
       listPermissions: permissions.filter(p => p.action === "list").map(p => ({ subjectType: p.subjectType, subjectId: p.subjectId })),
       readPermissions: permissions.filter(p => p.action === "read").map(p => ({ subjectType: p.subjectType, subjectId: p.subjectId })),
@@ -43,8 +45,14 @@ export async function getPostsInfo(pid: string): Promise<ActionState<any>> {
     };
 
     return {
-      success: true, message: "조회 성공",
-      data: { ...postInfo, permissions: mappedPermissions, categories }
+      success: true,
+      message: "조회 성공",
+      data: {
+        ...postInfo,
+        extraFields,
+        permissions: mappedPermissions,
+        categories
+      }
     };
   } catch (error) {
     return { success: false, type: "error", message: "게시판 정보를 불러오지 못했습니다." };
@@ -187,5 +195,24 @@ export async function removePostsAction(ids: number[], paths?: string): Promise<
   } catch (error) {
     console.error(error);
     return { success: false, message: "삭제 중 오류가 발생했습니다." };
+  }
+}
+
+export async function savePostConfigAction(pid: string, extraFields: ExtraFieldConfig[]) {
+  try {
+    // 1. query.ts에 만든 함수를 실행합니다.
+    await query.updatePostExtraFields(pid, extraFields);
+
+    // 2. 변경된 데이터를 화면에 즉시 반영하기 위해 캐시를 갱신합니다.
+    revalidatePath(`/admin/posts/${pid}`);
+    revalidatePath(`/posts/${pid}/write`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("[SavePostConfig Error]:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "설정 저장에 실패했습니다."
+    };
   }
 }

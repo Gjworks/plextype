@@ -54,6 +54,8 @@ export async function getDocument(id: number): Promise<ActionState<DocumentInfo>
 // ==========================================
 // [ACTION - Document] 게시글 저장/수정
 // ==========================================
+// src/app/(extentions)/posts/_actions/document.action.ts
+
 export const saveDocument = async (pid: string, formData: FormData, paths?: string): Promise<ActionState<number>> => {
   try {
     const loggedInfo = await getLoggedInfo();
@@ -61,6 +63,15 @@ export const saveDocument = async (pid: string, formData: FormData, paths?: stri
 
     const postInfo = await postsQuery.findPostsByPid(pid);
     if (!postInfo) return { success: false, type: "error", message: "존재하지 않는 게시판입니다." };
+
+    // 🌟 [추가] 확장 필드 데이터 추출 로직
+    const extraFieldData: Record<string, any> = {};
+    formData.forEach((value, key) => {
+      if (key.startsWith("extraData__")) {
+        const cleanKey = key.replace("extraData__", "");
+        extraFieldData[cleanKey] = value;
+      }
+    });
 
     const formPayload = {
       id: formData.get("id"),
@@ -71,10 +82,12 @@ export const saveDocument = async (pid: string, formData: FormData, paths?: stri
       isSecrets: formData.get("isSecrets"),
       resourceId: postInfo.id,
       resourceType: "posts",
-      // tempIds: formData.getAll("tempIds[]"),
       tempId: formData.get("tempId"),
+      // 🌟 추출한 데이터를 페이로드에 포함
+      extraFieldData: extraFieldData,
     };
 
+    // validation 시 DocumentUpsertSchema에 extraFieldData가 정의되어 있어야 합니다.
     const validation = validateForm(DocumentUpsertSchema, formPayload);
     if (!validation.isValid) return validation.errorResponse;
     const data = validation.data;
@@ -88,17 +101,30 @@ export const saveDocument = async (pid: string, formData: FormData, paths?: stri
         return { success: false, type: "error", message: "수정 권한이 없습니다." };
       }
 
+      // 🌟 업데이트 시 extraFieldData 포함
       const updated = await documentQuery.updateDocument(data.id, {
-        title: data.title, content: data.content, categoryId: data.categoryId,
-        isNotice: data.isNotice, isSecrets: data.isSecrets, updatedAt: new Date()
+        title: data.title,
+        content: data.content,
+        categoryId: data.categoryId,
+        isNotice: data.isNotice,
+        isSecrets: data.isSecrets,
+        extraFieldData: data.extraFieldData, // 추가
+        updatedAt: new Date()
       });
       resultId = updated.id;
     } else {
+      // 🌟 신규 등록 시 extraFieldData 포함
       const created = await documentQuery.insertDocument({
-        resourceType: data.resourceType, resourceId: data.resourceId,
-        title: data.title, content: data.content, userId: loggedInfo.id,
-        categoryId: data.categoryId, isNotice: data.isNotice, isSecrets: data.isSecrets,
-        authorName: "작성자", // TODO: 실제 DB에서 닉네임 가져와서 맵핑 필요
+        resourceType: data.resourceType,
+        resourceId: data.resourceId,
+        title: data.title,
+        content: data.content,
+        userId: loggedInfo.id,
+        categoryId: data.categoryId,
+        isNotice: data.isNotice,
+        isSecrets: data.isSecrets,
+        extraFieldData: data.extraFieldData, // 추가
+        authorName: "작성자",
         published: true,
       });
       resultId = created.id;
