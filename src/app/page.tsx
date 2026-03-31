@@ -259,7 +259,7 @@ export default function Page() {
                   Notice
                 </div>
                 <div>
-                  <ContentListWidget pid="notice" count={5} />
+                  <ContentListWidget mid="notice" count={5} />
                 </div>
               </div>
               <div className="col-span-12  ㅊ md:col-span-6">
@@ -267,7 +267,7 @@ export default function Page() {
                   Supports
                 </div>
                 <div>
-                  <ContentListWidget pid="notice" count={5} />
+                  <ContentListWidget mid="notice" count={5} />
                 </div>
               </div>
             </div>

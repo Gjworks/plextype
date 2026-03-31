@@ -4,7 +4,7 @@ import {
   saveUser,
   getUserSession,
   removeMyAccount,
-} from "@extentions/user/_actions/user.action";
+} from "@modules/user/_actions/user.action";
 
 /**
  * [GET] 내 정보 조회

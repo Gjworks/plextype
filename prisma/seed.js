@@ -48,7 +48,7 @@ async function main() {
     where: { postName: 'notice' },
     update: {},
     create: {
-      pid: 'notice',
+      mid: 'notice',
       postName: 'notice',
       postDesc: '공지사항 게시판입니다.',
       status: 'active',
