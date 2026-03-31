@@ -192,24 +192,6 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
     <>
       <div className="max-w-screen-xl mx-auto px-3">
         <div className="mx-auto max-w-screen-md pt-10">
-          <div className="flex items-center gap-2">
-            <Link href={`/posts/${postInfo.pid}`} className="hover:bg-gray-200/50 rounded-lg py-1.5 px-1.5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 19.5L8.25 12l7.5-7.5"
-                />
-              </svg>
-            </Link>
-          </div>
           <div className="hidden pt-12">
             <div className="text-[13px] text-black dark:text-white">
               {document.category?.title}
