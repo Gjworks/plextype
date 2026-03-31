@@ -32,8 +32,8 @@ const HIGHLIGHT_COLORS = [
 ];
 
 export interface TiptapEditorProps {
-  onChange: (content: string) => void;
   initialContent?: string;
+  onChange?: (html: string) => void;
 }
 
 
@@ -86,7 +86,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
     content: parseContent(initialContent),
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange?.(editor.getHTML());
     },
     editorProps: {
       attributes: {

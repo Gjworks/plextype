@@ -1,26 +1,20 @@
 "use client";
 
 import {useEffect, useState, useRef, useMemo} from "react";
-import Alert from "@/components/message/Alert"
+import Alert from "@components/message/Alert"
+
 interface Attachment {
   id: number;
-  uuid:string;
+  uuid: string;
   originalName: string;
   path: string;
   size: number;
   mimeType: string;
-  name: string;
 }
 
 interface UploadFileManagerProps {
-  resourceType: string;
-  resourceId: number;
-  documentId: number;
-  tempId: string | null;
-  onTempId: (id: string | null) => void;
-  onUploadSuccess?: () => void;
-  onFileClick?: (file: Attachment) => void; // ✅ 추가
-  // onUpdate?: (files: Attachment[]) => void;
+  onUploadSuccess: () => void;
+  onFileClick: (file: any) => void;
 }
 
 interface UploadFileStatus {
@@ -31,83 +25,19 @@ interface UploadFileStatus {
 }
 
 export default function UploadFileManager({
-                                            resourceType,
-                                            resourceId,
-                                            documentId,
-                                            onTempId,
-                                            onUploadSuccess, // ✅ 프롭 추출
+                                            onUploadSuccess,
                                             onFileClick,
                                           }: UploadFileManagerProps) {
   const [files, setFiles] = useState<UploadFileStatus[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [errorData, setErrorData] = useState<{ message: string; type: string }>({
-    message: "",
-    type: "",
-  });
+  const [errorData, setErrorData] = useState({ message: "", type: "" });
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const isTemporary = documentId === 0;
 
-  const tempId = useMemo(() => (isTemporary ? crypto.randomUUID() : null), [isTemporary]);
-  // const finalResourceId = isTemporary ? 0 : resourceId;
-
-  useEffect(() => {
-    if (isTemporary && onTempId) {
-      onTempId(tempId);
-    } else if (onTempId) {
-      onTempId(null);
-    }
-  }, [isTemporary, tempId, onTempId]);
-
-  // 기존 파일 목록 불러오기
-  useEffect(() => {
-    const fetchFiles = async () => {
-      if (!resourceType) return;
-
-      // 새 글인 경우(tempId로), 기존 글인 경우(resourceId로)
-      const queryParams = new URLSearchParams({
-        resourceType,
-        ...(resourceId ? { resourceId: String(resourceId) } : {}),
-        ...(documentId > 0 ? { documentId: String(documentId) } : tempId ? { tempId } : {}),
-      });
-
-      if (![...queryParams.keys()].includes("documentId") && !tempId) return;
-
-      const res = await fetch(`/api/attachments?${queryParams.toString()}`);
-      if (!res.ok) return;
-      const existingFiles: Attachment[] = await res.json();
-      console.log(existingFiles)
-      const initialFiles: UploadFileStatus[] = existingFiles.map((f) => ({
-        file: new File([], f.originalName),
-        progress: 100,
-        status: "done",
-        uploadedAttachment: f,
-      }));
-
-      console.log(initialFiles)
-
-      setFiles(initialFiles);
-      // onUpdate?.(existingFiles);
-    };
-
-    fetchFiles();
-  }, [resourceType, resourceId, documentId, tempId]);
 
   // 파일 업로드 처리
   const handleFiles = async (selectedFiles: FileList) => {
-    let currentTempId = tempId;
-    if (!documentId && !tempId) {
-      currentTempId = crypto.randomUUID();
-      onTempId(currentTempId);
-    }
-
-    // ✅ 1️⃣ 업로드 전에 필터링 (여기가 핵심)
-    const allowedExts = [
-      "png", "jpg", "jpeg", "gif",
-      "mp3", "mp4", "avif", "webm", "webp",
-      "mov", "ogg", "zip"
-    ];
-
+    const allowedExts = ["png", "jpg", "jpeg", "gif", "mp3", "mp4", "avif", "webm", "webp", "mov", "ogg", "zip"];
     const allowedMimeTypes = [
       "image/png", "image/jpeg", "image/gif", "image/avif", "image/webp",
       "audio/mpeg", "audio/ogg",
@@ -118,49 +48,33 @@ export default function UploadFileManager({
     const validFiles = Array.from(selectedFiles).filter((file) => {
       const ext = file.name.split('.').pop()?.toLowerCase() || "";
       const isValid = allowedExts.includes(ext) && allowedMimeTypes.includes(file.type);
-
-      if (!isValid) {
-        console.warn(`🚫 업로드 불가 파일: ${file.name} (${file.type})`);
-        setErrorData({message:'허용되지 않은 파일 형식입니다.', type:'error'})
-      }
-
+      if (!isValid) setErrorData({ message: `허용되지 않는 형식: ${file.name}`, type: 'error' });
       return isValid;
     });
 
-    const newFiles: UploadFileStatus[] = Array.from(selectedFiles).map((file) => ({
+    if (validFiles.length === 0) return;
+
+    const newFiles: UploadFileStatus[] = validFiles.map((file) => ({
       file,
       progress: 0,
       status: "uploading",
-      tempKey: crypto.randomUUID(), // 추가
     }));
 
     setFiles((prev) => [...prev, ...newFiles]);
 
-    // 순차적으로 업로드 처리
     for (const fileStatus of newFiles) {
-      // 진행률 더미 애니메이션
+      // 진행률 가짜 애니메이션 (필요시 그대로 유지)
       let progressValue = 0;
       const interval = setInterval(() => {
-        progressValue = Math.min(progressValue + Math.random() * 5, 90);
-        setFiles(prev =>
-          prev.map(f =>
-            f.file.name === fileStatus.file.name && f.file.size === fileStatus.file.size
-              ? { ...f, progress: progressValue }
-              : f
-          )
-        );
+        progressValue = Math.min(progressValue + 10, 95);
+        updateFileStatus(fileStatus.file, { progress: progressValue });
       }, 200);
 
       try {
         const formData = new FormData();
         formData.append("file-attachments", fileStatus.file);
 
-        formData.append("file-attachments", fileStatus.file);
-        formData.append("resourceType", resourceType);
-        formData.append("resourceId", String(resourceId));
-        formData.append("documentId", String(documentId));
-        formData.append("tempId", currentTempId || "");
-
+        // 🌟 이제 resourceId, tempId 같은 거 안 보냅니다. 서버는 쿠키(세션)로 누군지 아니까요.
         const res = await fetch(`/api/attachments`, {
           method: "POST",
           body: formData,
@@ -168,42 +82,34 @@ export default function UploadFileManager({
 
         clearInterval(interval);
 
-        if (!res.ok) {
-          const errorOK = await res.json().catch(() => null);
-          const message = errorOK?.error || "업로드 실패";
-          setErrorData({message:'허용되지 않은 파일 형식입니다.', type:'error'})
-          throw new Error(message);
-        }
+        if (!res.ok) throw new Error("업로드 실패");
+
         const uploaded: Attachment = await res.json();
 
-        // ✅ 파일 업로드 성공 시 부모(PostWrite)에게 알려 목록 갱신 트리거 실행
-        if (onUploadSuccess) {
-          onUploadSuccess();
-        }
+        updateFileStatus(fileStatus.file, {
+          progress: 100,
+          status: "done",
+          uploadedAttachment: uploaded
+        });
 
-        // 100% 표시
-        setFiles(prev =>
-          prev.map(f =>
-            f.file.name === fileStatus.file.name && f.file.size === fileStatus.file.size
-              ? { ...f, progress: 100, status: "done", uploadedAttachment: uploaded }
-              : f
-          )
-        );
+        // 에디터에 바로 꽂아주기
+        onFileClick(uploaded);
+        // 부모의 목록 갱신 트리거
+        if (onUploadSuccess) onUploadSuccess();
 
-        // onUpdate?.(
-        //   [...files, uploaded].filter((f): f is Attachment => !!(f as any).id)
-        // );
-      } catch (err) {
+      } catch (err: any) {
         clearInterval(interval);
-        setFiles(prev =>
-          prev.map(f =>
-            f.file.name === fileStatus.file.name && f.file.size === fileStatus.file.size
-              ? { ...f, progress: 0, status: "error" }
-              : f
-          )
-        );
+        setErrorData({ message: err.message, type: 'error' });
+        updateFileStatus(fileStatus.file, { status: "error", progress: 0 });
       }
     }
+  };
+
+  /** 헬퍼: 파일 상태 업데이트 */
+  const updateFileStatus = (targetFile: File, update: Partial<UploadFileStatus>) => {
+    setFiles(prev =>
+      prev.map(f => (f.file === targetFile ? { ...f, ...update } : f))
+    );
   };
 
   // 드래그앤드랍
@@ -280,6 +186,34 @@ export default function UploadFileManager({
       {errorData.message &&
         <Alert message={errorData.message} type={errorData.type} />
       }
+
+      {files.length > 0 && (
+        <div className="space-y-2 mt-4">
+          {files.map((f, idx) => (
+            <div key={idx} className="flex items-center justify-between p-3 bg-white border rounded-lg shadow-sm">
+              <div className="flex-1 mr-4">
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs font-medium truncate max-w-[200px]">{f.file.name}</span>
+                  <span className="text-[10px] text-gray-400">{f.progress}%</span>
+                </div>
+                {/* 프로그레스 바 */}
+                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${f.status === 'error' ? 'bg-red-500' : 'bg-blue-500'}`}
+                    style={{ width: `${f.progress}%` }}
+                  />
+                </div>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDelete(f); }}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <input
         ref={inputRef}
