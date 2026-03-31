@@ -1,12 +1,11 @@
 import React, { Suspense } from "react";
-import PostsList from "@extentions/posts/_tpl/default/list";
+import { Post } from "@extentions/posts"; // 🌟 우리가 만든 스마트 블록 가져오기
 import { getDocumentList } from "@extentions/posts/_actions/document.action";
 import { getSeoMetadata } from "@/utils/helper/matadata";
 
-export async function generateMetadata({ params }: {params: Promise<{ pid: string }> }) {
+// 📌 1. 메타데이터 생성 (여기는 데이터를 읽어야 하니 기존 로직 유지)
+export async function generateMetadata({ params }: { params: Promise<{ pid: string }> }) {
   const { pid } = await params;
-
-  // 💡 2. 메타데이터용 첫 번째 글 가져오기 (Action 포장지 뜯기!)
   const res = await getDocumentList(pid, 1, 1);
   const items = res.success && res.data ? res.data.documentList : [];
 
@@ -17,33 +16,25 @@ export async function generateMetadata({ params }: {params: Promise<{ pid: strin
   });
 }
 
-const Page = async ({params, searchParams}: {
+// 📌 2. 페이지 컴포넌트 (세상에서 제일 깔끔!)
+const Page = async ({ params, searchParams }: {
   params: Promise<{ pid: string }>;
   searchParams?: Promise<{ page?: string; category?: string }>;
 }) => {
   const { pid } = await params;
-  const { page: pageParam, category } = (await searchParams) || {};
-
-  const page = parseInt(pageParam ?? "1", 10);
-  const currentCategory = category ?? "all";
-
-  // 💡 3. 새 매니저에게 pid, page, limit(5), category를 전달하여 요청합니다!
-  const res = await getDocumentList(pid, page, 5, category);
-
-  // 💡 4. ActionState 포장지를 뜯어서 알맹이를 안전하게 꺼냅니다!
-  // (PostsList 컴포넌트가 예전 이름인 posts, pagination을 기대하므로 맞춰서 맵핑해줍니다)
-  const items = res.success && res.data ? res.data.documentList : [];
-  const pagination = res.success && res.data ? res.data.navigation : {
-    totalCount: 0, totalPages: 1, page: 1, listCount: 0
-  };
+  const { page, category } = (await searchParams) || {};
 
   return (
     <div className="max-w-screen-lg mx-auto px-3">
-      <Suspense fallback={<div>Loading posts...</div>}>
-        <PostsList
-          key={`${currentCategory}-${page}`}
-          posts={items} // 💡 추출한 items(documentList)를 넘겨줌
-          pagination={pagination} // 💡 추출한 pagination(navigation)을 넘겨줌
+      {/* 🌟 [핵심] 이제 복잡한 로직은 Post.List 블록이 다 알아서 합니다.
+         우리는 그냥 레고 블록 끼우듯이 한 줄만 딱!
+      */}
+      <Suspense fallback={<div className="py-20 text-center text-gray-400">게시글을 불러오는 중입니다...</div>}>
+        <Post.List
+          pid={pid}
+          page={Number(page || 1)}
+          limit={10}
+          category={category} // 만약 index.tsx에서 category를 받게 수정했다면!
         />
       </Suspense>
     </div>
