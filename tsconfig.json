@@ -31,8 +31,8 @@
       "@app/*" : [
         "./src/app/*"
       ],
-      "@extentions/*": [
-        "./src/app/(extentions)/*"
+      "@modules/*": [
+        "./src/app/(modules)/*"
       ],
       "@components/*": [
         "./src/components/*"

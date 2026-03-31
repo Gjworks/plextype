@@ -3,17 +3,17 @@
 import React from "react"
 
 interface ContentListWidgetProps {
-  pid: string;   // 소문자 string 권장
+  mid: string;   // 소문자 string 권장
   count: number;
 }
 
-const ContentListWidget = ({ pid, count }: ContentListWidgetProps) => {
+const ContentListWidget = ({ mid, count }: ContentListWidgetProps) => {
 
   return (
     <>
       <div className="p-4 rounded-lg bg-card text-card-foreground">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium tracking-tight">콘텐츠 목록 ({pid})</h3>
+          <h3 className="text-sm font-medium tracking-tight">콘텐츠 목록 ({mid})</h3>
           <span className="text-xs text-muted-foreground">최대 {count}개</span>
         </div>
 

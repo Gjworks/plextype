@@ -63,78 +63,92 @@ model UserGroupUser {
 }
 
 model Document {
-  id             Int          @id @default(autoincrement())
-  uuid           String?      @unique @default(cuid())
+  id             Int         @id @default(autoincrement())
+  uuid           String?     @unique @default(cuid())
   categoryId     Int?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  published      Boolean?     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  published      Boolean?    @default(false)
   userId         Int?
-  authorName     String?      @db.VarChar(45)
+  authorName     String?     @db.VarChar(45)
   authorPassword String?
-  title          String?      @db.VarChar(255)
+  title          String?     @db.VarChar(255)
   content        String?
-  isNotice       Boolean?     @default(false)
-  isSecrets      Boolean?     @default(false)
-  readCount      Int?         @default(0)
-  commentCount   Int?         @default(0)
-  voteCount      Int?         @default(0)
-  resourceId     Int
-  resourceType   String
-  extraFieldData Json?        @default("{}")
+  isNotice       Boolean?    @default(false)
+  isSecrets      Boolean?    @default(false)
+  readCount      Int?        @default(0)
+  commentCount   Int?        @default(0)
+  voteCount      Int?        @default(0)
+  moduleId       Int
+  moduleType     String
+  extraFieldData Json?       @default("{}")
   Comment        Comment[]
-  category       Category?    @relation("DocumentCategory", fields: [categoryId], references: [id])
-  user           User?        @relation(fields: [userId], references: [id])
-  attachments    Attachment[]
+  category       Category?   @relation("DocumentCategory", fields: [categoryId], references: [id])
+  user           User?       @relation(fields: [userId], references: [id])
+  module         Modules     @relation(fields: [moduleId], references: [id])
+  FieldGroup     FieldGroup? @relation(fields: [fieldGroupId], references: [id])
+  fieldGroupId   Int?
 
-  @@index([resourceType, resourceId], map: "idx_document_resource")
+  @@index([moduleType, moduleId], map: "idx_document_module")
   @@index([categoryId], map: "idx_document_category")
   @@index([userId], map: "idx_document_user")
 }
 
 model Category {
-  id           Int        @id @default(autoincrement())
-  title        String     @db.VarChar(45)
-  desc         String?
-  color        String?    @db.VarChar(45)
-  order        Int        @default(0)
-  parentId     Int?
-  resourceId   Int?
-  resourceType String     @default("posts")
-  parent       Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
-  children     Category[] @relation("CategoryChildren")
-  documents    Document[] @relation("DocumentCategory")
+  id         Int        @id @default(autoincrement())
+  title      String     @db.VarChar(45)
+  desc       String?
+  color      String?    @db.VarChar(45)
+  order      Int        @default(0)
+  parentId   Int?
+  moduleId   Int?
+  moduleType String     @default("modules")
+  module     Modules?   @relation(fields: [moduleId], references: [id])
+  parent     Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children   Category[] @relation("CategoryChildren")
+  documents  Document[] @relation("DocumentCategory")
 
   @@index([parentId], map: "idx_category_parent")
-  @@index([resourceType, resourceId], map: "idx_category_resource")
+  @@index([moduleType, moduleId], map: "idx_category_module")
 }
 
-model Posts {
-  id          Int      @id @default(autoincrement())
-  pid         String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  postName    String   @unique
-  postDesc    String?
-  grant       Json?    @db.Json
-  config      Json?    @db.Json
-  status      String?  @db.VarChar(45)
-  extraFields Json?    @default("[]")
+model Modules {
+  id           Int         @id @default(autoincrement())
+  mid          String      @unique
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  moduleName   String      @unique
+  moduleDesc   String?
+  grant        Json?       @db.Json
+  config       Json?       @db.Json
+  status       String?     @db.VarChar(45)
+  FieldGroup   FieldGroup? @relation(fields: [fieldGroupId], references: [id])
+  fieldGroupId Int?
+  documents    Document[]
+  Categorys    Category[]
 
-  @@index([status], map: "idx_posts_status")
+  @@index([status], map: "idx_modules_status")
+}
+
+model FieldGroup {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique // 예: "basic_post_fields", "product_fields"
+  fields    Json // [{"name": "price", "type": "number", ...}]
+  documents Document[] // 이 설계를 사용하는 문서들
+  modules   Modules[] // 이 설계를 사용하는 게시판들
 }
 
 model Permission {
-  id           Int               @id @default(autoincrement())
-  action       String
-  subjectType  PermissionSubject
-  subjectId    Int?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  resourceId   Int               @default(0)
-  resourceType String            @default("unknown")
+  id          Int               @id @default(autoincrement())
+  action      String
+  subjectType PermissionSubject
+  subjectId   Int?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  moduleId    Int               @default(0)
+  moduleType  String            @default("unknown")
 
-  @@index([resourceType, resourceId], map: "idx_permission_resource")
+  @@index([moduleType, moduleId], map: "idx_permission_module")
   @@index([subjectType, subjectId], map: "idx_permission_subject")
 }
 
@@ -175,24 +189,18 @@ model DocumentViewLog {
 }
 
 model Attachment {
-  id           Int       @id @default(autoincrement())
-  uuid         String    @unique @default(cuid())
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(cuid())
   fileName     String
   originalName String
   mimeType     String
   size         Int
   path         String // 실제 저장 경로: /uploads/posts/... 등
-  resourceId   Int // 게시글, 유저, 스토어 등 리소스 ID
-  documentId   Int?
-  resourceType String // posts, users, store, shop 등
-  tempId       String? // ✨ 임시 파일 식별자
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   userId       Int? // 업로더 User ID
-  uploadedBy   User?     @relation(fields: [userId], references: [id])
-  document     Document? @relation(fields: [documentId], references: [id])
+  uploadedBy   User?    @relation(fields: [userId], references: [id])
 
-  @@index([resourceType, resourceId], map: "idx_attachment_resource")
   @@index([userId], map: "idx_attachment_user")
 }
 
