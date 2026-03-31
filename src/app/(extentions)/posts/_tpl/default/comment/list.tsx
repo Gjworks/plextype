@@ -74,6 +74,7 @@ export default function CommentsList({
   const [commentsState, setCommentsState] = useState(commentsData);
   const { permissions } = usePostContext();
 
+  console.log("체크된 권한:", permissions);
   if (!permissions.doRead) {
     return "";
   }
