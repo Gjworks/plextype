@@ -47,11 +47,11 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange }) => {
                 <div className="col-span-3 sm:col-span-2">
                   <InputField
                     inputTitle="모듈ID"
-                    name="pid"
+                    name="mid"
                     type="text"
                     placeholder="/?mid=post"
                     // 💡 value 대신 defaultValue를 써서 인풋의 통제권을 브라우저에게 살짝 넘깁니다.
-                    value={value.pid || ""}
+                    value={value.mid || ""}
                     onChange={handleInputChange}
                     // readOnly={!!id && id !== "create"} // 수정 모드일 때 ID 수정 불가하게 하려면 활성화
                   />

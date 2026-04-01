@@ -4,12 +4,12 @@ import { unlink, readdir, rmdir } from "fs/promises";
 import path from "path";
 
 // 2. DB 내 경로 문자열 일괄 치환 (Raw Query)
-export async function updateAttachmentPathStrings(documentId: number, resourceType: string, oldPrefix: string, newPrefix: string) {
+export async function updateAttachmentPathStrings(documentId: number, moduleType: string, oldPrefix: string, newPrefix: string) {
   return prisma.$executeRaw`
       UPDATE "Attachment"
       SET "path" = REPLACE("path", ${oldPrefix}, ${newPrefix})
       WHERE "documentId" = ${documentId}
-        AND "resourceType" = ${resourceType}
+        AND "moduleType" = ${moduleType}
   `;
 }
 

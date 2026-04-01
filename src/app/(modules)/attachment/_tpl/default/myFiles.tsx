@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { getMyFiles, deleteAttachment } from "@modules/attachment/_actions/attachment.action";
 // 파일 타입 정의 (필요시 수정)
-import { Attachment } from "../../../posts/_tpl/default/write";
+import { Attachment } from "@modules/attachment/_actions/_type";
 import PageNavigation from "@components/nav/PageNavigation"; // 혹은 적절한 타입 경로
 
 interface Props {

@@ -35,7 +35,7 @@ const Page = async () => {
       <DashboardPostCreate
         initialData={defaultData}
         groupList={groupList || []}
-        pid="create"
+        mid="create"
       />
     </div>
   );
