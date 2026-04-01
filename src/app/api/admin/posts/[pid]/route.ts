@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         { status: 403 },
       );
     } else {
-      const post = await prisma.posts.findUnique({
+      const post = await prisma.modules.findUnique({
         where: { id: Number(id) },
         // include: {
         //   categories: {
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
       // 해당 게시물에 대한 그룹 권한 조회
       const permissions = await prisma.permission.findMany({
         where: {
-          resourceType: "posts",
-          resourceId: Number(id),
+          moduleType: "posts",
+          moduleId: Number(id),
           subjectType: "group",
           subjectId: { in: groupIds },
         },

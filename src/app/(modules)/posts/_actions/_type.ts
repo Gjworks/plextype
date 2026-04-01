@@ -84,8 +84,8 @@ export const DocumentListSchema = z.object({
   target: z.enum(["title", "content", "authorName"]).default("title"),
   listCount: z.coerce.number().min(1).max(100).default(20),
   categoryId: z.coerce.number().optional().nullable(),
-  resourceId: z.coerce.number(), // 어떤 게시판(Posts)에 속하는지
-  resourceType: z.string().default("posts"),
+  moduleId: z.coerce.number(), // 어떤 게시판(Posts)에 속하는지
+  moduleType: z.string().default("posts"),
 });
 export type DocumentListParams = z.input<typeof DocumentListSchema>;
 export type DocumentListParsedParams = z.infer<typeof DocumentListSchema>;
@@ -107,8 +107,8 @@ export const CategoryUpsertSchema = z.object({
   parentId: z.coerce.number().optional().nullable(),
 
   // 🌟 여기서 필드명을 바꿔줘야 합니다!
-  moduleId: z.coerce.number(),            // resourceId -> moduleId
-  moduleType: z.string().default("posts"), // resourceType -> moduleType
+  moduleId: z.coerce.number(),
+  moduleType: z.string().default("posts"),
 });
 
 // 이제 CategoryParams 타입에도 moduleId가 자동으로 포함됩니다!
