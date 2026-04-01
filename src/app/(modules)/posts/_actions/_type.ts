@@ -118,8 +118,8 @@ export type CategoryParams = z.infer<typeof CategoryUpsertSchema>;
 export interface PostInfoData {
   id: number;
   mid: string;
-  postName: string;
-  postDesc: string | null;
+  moduleName: string;
+  moduleDesc: string | null;
   // 💡 데이터 구조를 config 주머니가 있는 모양으로 바꿉니다!
   config: {
     listCount: number;
