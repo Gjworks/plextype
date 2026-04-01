@@ -63,9 +63,9 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange }) => {
                 <div className="col-span-3 sm:col-span-2">
                   <InputField
                     inputTitle="게시판이름"
-                    name="postName"
+                    name="moduleName"
                     type="text"
-                    value={value.postName || ""}
+                    value={value.moduleName || ""}
                     onChange={handleInputChange}
                   />
                 </div>

@@ -65,8 +65,8 @@ const DashboardPostCreate = ({ initialData, groupList, mid }: {
 
     if (info.id) fd.append("id", String(info.id));
     fd.append("mid", info.mid);
-    fd.append("postName", info.postName);
-    fd.append("postDesc", info.postDesc || "");
+    fd.append("moduleName", info.moduleName);
+    fd.append("moduleDesc", info.moduleDesc || "");
     fd.append("config", JSON.stringify(info.config));
     fd.append("permissions", JSON.stringify(info.permissions));
 

@@ -10,7 +10,7 @@ const PostsHeader = () => {
     <>
       <div className="">
         <div className="text-3xl text-center font-semibold dark:text-white py-10">
-          {postInfo.postName}
+          {postInfo.moduleName}
         </div>
         <div className="">
           <PostsCategories />
