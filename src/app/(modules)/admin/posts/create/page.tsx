@@ -11,9 +11,9 @@ const Page = async () => {
   // 💡 2. 생성 모드용 기본 데이터 세팅
   const defaultData = {
     id: 0,
-    pid: "",
-    postName: "",
-    postDesc: "",
+    mid: "",
+    moduleName: "",
+    moduleDesc: "",
     config: {
       listCount: 20,
       pageCount: 10,

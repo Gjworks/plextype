@@ -84,12 +84,14 @@ export async function savePostsInfo(formData: FormData, paths?: string): Promise
 
     const formPayload = {
       id: formData.get("id"),
-      mid: formData.get("pid"),
-      moduleName: formData.get("postName"),
-      moduleDesc: formData.get("postDesc"),
+      mid: formData.get("mid"),
+      moduleName: formData.get("moduleName"),
+      moduleDesc: formData.get("moduleDesc"),
       config: JSON.parse(formData.get("config") as string || "{}"),
       permissions: JSON.parse(formData.get("permissions") as string || "{}"),
     };
+
+    console.log(formPayload)
 
     const validation = validateForm(PostsUpsertSchema, formPayload);
     if (!validation.isValid) {
@@ -157,10 +159,10 @@ export async function getPostsList(page: number = 1, pageSize: number = 10, keyw
 
 // src/app/(extentions)/posts/_actions/posts.action.ts 에 추가
 
-export async function getPostsInfo(pid: string): Promise<ActionState<any>> {
+export async function getPostsInfo(mid: string): Promise<ActionState<any>> {
   try {
     // 💡 1. PID가 아닌 PK(id)로 게시판을 찾습니다. (쿼리에 findPostsById 가 있다고 가정)
-    const postInfo = await query.findPostsByPid(pid);
+    const postInfo = await query.findPostsByPid(mid);
     if (!postInfo) return { success: false, type: "error", message: "게시판을 찾을 수 없습니다." };
 
     const [permissions, categories] = await Promise.all([
@@ -243,14 +245,14 @@ export async function removePostsAction(ids: number[], paths?: string): Promise<
   }
 }
 
-export async function savePostConfigAction(pid: string, extraFields: ExtraFieldConfig[]) {
+export async function savePostConfigAction(mid: string, extraFields: ExtraFieldConfig[]) {
   try {
     // 1. query.ts에 만든 함수를 실행합니다.
-    await query.updateModuleFieldSchema(pid, extraFields);
+    await query.updateModuleFieldSchema(mid, extraFields);
 
     // 2. 변경된 데이터를 화면에 즉시 반영하기 위해 캐시를 갱신합니다.
-    revalidatePath(`/admin/posts/${pid}`);
-    revalidatePath(`/posts/${pid}/write`);
+    revalidatePath(`/admin/posts/${mid}`);
+    revalidatePath(`/posts/${mid}/write`);
 
     return { success: true };
   } catch (error) {

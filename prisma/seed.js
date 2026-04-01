@@ -45,12 +45,12 @@ async function main() {
 
   // 4. 'notice' 게시판 생성 로직 (동일)
   await prisma.modules.upsert({
-    where: { postName: 'notice' },
+    where: { moduleName: 'notice' },
     update: {},
     create: {
       mid: 'notice',
-      postName: 'notice',
-      postDesc: '공지사항 게시판입니다.',
+      moduleName: 'notice',
+      moduleDesc: '공지사항 게시판입니다.',
       status: 'active',
     },
   });
