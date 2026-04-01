@@ -93,9 +93,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       } = data as Record<keyof FormDataFields, string>;
 
       // 🚧 중복 게시판 확인
-      const existingPost = await prisma.posts.findFirst({
+      const existingPost = await prisma.modules.findFirst({
         where: {
-          OR: [{ pid: moduleId }, { postName: moduleName }],
+          OR: [{ mid: moduleId }, { moduleName: moduleName }],
         },
       });
 
@@ -111,11 +111,11 @@ export async function POST(request: NextRequest): Promise<Response> {
         );
       }
 
-      const newPost = await prisma.posts.create({
+      const newPost = await prisma.modules.create({
         data: {
-          pid: moduleId,
-          postName: moduleName,
-          postDesc: "",
+          mid: moduleId,
+          moduleName: moduleName,
+          moduleDesc: "",
           config: JSON.stringify({
             listCount: Number(listCount),
             pageCount: Number(pageCount),
@@ -197,7 +197,7 @@ export async function DELETE(request: NextRequest) {
         );
 
       try {
-        await prisma.posts.deleteMany({
+        await prisma.modules.deleteMany({
           where: { id: { in: ids } },
         });
         return NextResponse.json(

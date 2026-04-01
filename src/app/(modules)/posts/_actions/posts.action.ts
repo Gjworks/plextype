@@ -110,7 +110,7 @@ export async function savePostsInfo(formData: FormData, paths?: string): Promise
       await query.deletePermissions(postId);
       const newPermissions = Object.entries(formPayload.permissions).flatMap(([type, list]: [string, any]) =>
         list.map((p: any) => ({
-          resourceType: "posts", resourceId: postId,
+          moduleType: "posts", moduleId: postId,
           action: type.replace("Permissions", "").toLowerCase(),
           subjectType: p.subjectType, subjectId: p.subjectId ?? null,
         }))

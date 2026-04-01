@@ -44,7 +44,7 @@ async function main() {
   console.log(`✅ Seed completed. Admin ID: ${adminIdFromEnv}`);
 
   // 4. 'notice' 게시판 생성 로직 (동일)
-  await prisma.posts.upsert({
+  await prisma.modules.upsert({
     where: { postName: 'notice' },
     update: {},
     create: {
