@@ -96,6 +96,8 @@ export type DocumentListParsedParams = z.infer<typeof DocumentListSchema>;
 // ------------------------------------------
 // 📝 [Category] 게시판 카테고리 스키마
 // ------------------------------------------
+// src/app/(modules)/posts/_actions/_type.ts (또는 해당 파일)
+
 export const CategoryUpsertSchema = z.object({
   id: z.coerce.number().optional(),
   title: z.string().min(1, "카테고리명을 입력해주세요."),
@@ -103,9 +105,13 @@ export const CategoryUpsertSchema = z.object({
   color: z.string().optional().nullable(),
   order: z.coerce.number().default(0),
   parentId: z.coerce.number().optional().nullable(),
-  resourceId: z.coerce.number(),
-  resourceType: z.string().default("posts"),
+
+  // 🌟 여기서 필드명을 바꿔줘야 합니다!
+  moduleId: z.coerce.number(),            // resourceId -> moduleId
+  moduleType: z.string().default("posts"), // resourceType -> moduleType
 });
+
+// 이제 CategoryParams 타입에도 moduleId가 자동으로 포함됩니다!
 export type CategoryParams = z.infer<typeof CategoryUpsertSchema>;
 
 

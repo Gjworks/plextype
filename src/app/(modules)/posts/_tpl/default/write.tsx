@@ -13,6 +13,7 @@ import ExtraFieldRenderer from "@modules/posts/_tpl/default/ExtraFieldRenderer";
 import TiptapEditor from "@components/editor/tiptap/tiptapEditor";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
+import SelectField from "@components/form/SelectField";
 
 // 1. 프롭 타입 정의 (이게 빠지면 에러 납니다)
 interface PostWriteProps {
@@ -29,7 +30,7 @@ interface PostWriteProps {
 const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
   const { postInfo, permissions } = usePostContext();
   const router = useRouter();
-
+  console.log(postInfo)
   // 2. 필수 상태 및 Ref 선언
   const formRef = useRef<HTMLFormElement | null>(null);
   const editorRef = useRef<any>(null);
@@ -112,26 +113,39 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
     setContent(editor.getHTML());
   };
 
+  const IconCategory = () => (
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+      />
+    </svg>
+  );
+
   return (
     <form ref={formRef} className="space-y-6">
       {/* 4. 수정 모드일 때 ID 전송 */}
       {existingPost && <input type="hidden" name="id" value={existingPost.id} />}
 
-      {/* 카테고리 선택 (데이터가 있을 때만) */}
+      <div className="text-center text-2xl font-semibold py-8">{postInfo.moduleName}</div>
+
       {postInfo.categories && postInfo.categories.length > 0 && (
-        <select
+        <SelectField
+          inputTitle="카테고리"
           name="categoryId"
           defaultValue={existingPost?.categoryId ?? ""}
-          className="w-full border p-2 rounded-lg"
-        >
-          <option value="">카테고리 선택</option>
-          {postInfo.categories.map((cat: any) => (
-            <option key={cat.id} value={cat.id}>{cat.title}</option>
-          ))}
-        </select>
+          options={postInfo.categories}
+          icon={<IconCategory />} // 필요하다면 아이콘 추가
+        />
       )}
 
-      <div className="text-center text-2xl font-semibold py-8">{postInfo.moduleName}</div>
       <InputField
         inputTitle="제목"
         type="text"

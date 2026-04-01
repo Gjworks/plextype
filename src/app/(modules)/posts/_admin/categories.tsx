@@ -185,7 +185,7 @@ const SortableTreeItem: React.FC<{
   );
 };
 
-const SortableTree: React.FC<{ collapsible?: boolean }> = ({ collapsible }) => {
+const SortableTree: React.FC<{ moduleId: number; collapsible?: boolean }> = ({ moduleId, collapsible }) => {
   const [items, setItems] = useState<TreeItem[]>([]);
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -201,18 +201,23 @@ const SortableTree: React.FC<{ collapsible?: boolean }> = ({ collapsible }) => {
   );
 
   const loadCategories = async () => {
-    const res = await getCategoriesAction("posts");
+    // 🌟 moduleId가 정상이 아닐 때는 아예 호출하지 않음
+    if (!moduleId || isNaN(moduleId)) return;
 
-    if (res.success && res.data) {
-      setItems(res.data);
+    const res = await getCategoriesAction(moduleId, "posts");
+
+    // 🌟 success가 true면 데이터가 [] 이더라도 setItems를 실행!
+    if (res.success) {
+      setItems(res.data || []);
     } else {
+      // 🌟 진짜 DB 오류나 서버 에러일 때만 alert
       alert(res.message || "카테고리를 불러오는데 실패했습니다.");
     }
   };
 
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [moduleId]); // moduleId가 바뀔 때마다 실행
 
   const handleCollapse = (id: string) => {
     if (!collapsible) return;
@@ -295,18 +300,20 @@ const SortableTree: React.FC<{ collapsible?: boolean }> = ({ collapsible }) => {
   const handleAdd = async (parentId: string | null) => {
     const siblings = items.filter((i) => i.parentId === parentId);
 
-    // 1. 서버에 새 항목 추가 요청
-    const res = await addCategoryAction("새 항목", parentId, "posts");
+    const res = await addCategoryAction("새 항목", parentId, moduleId, "posts");
 
     if (res.success && res.data) {
-      // 🌟 서버에서 온 데이터의 ID를 확실하게 문자열로 변환 (타입 에러 방지)
+      // 🌟 서버에서 온 데이터를 TreeItem 규격에 완벽하게 맞춥니다.
       const actualNewItem: TreeItem = {
         ...res.data,
-        id: res.data.id.toString(),
-        parentId: res.data.parentId?.toString() ?? null
+        id: res.data.id.toString(), // DB ID(숫자) -> DnD용 ID(문자열)
+        parentId: res.data.parentId?.toString() ?? null,
+        moduleId: res.data.moduleId,     // 🌟 추가 (타입 에러 방지)
+        moduleType: res.data.moduleType, // 🌟 추가 (타입 에러 방지)
+        children: []                     // 🌟 새 항목이니 빈 배열 초기화
       };
 
-      // 순서 값 수동 보정
+      // 순서 값 수동 보정 (현재 형제들 맨 뒤로)
       actualNewItem.order = siblings.length;
 
       // 2. 클라이언트 상태 업데이트 (UI 즉시 반영)
@@ -314,11 +321,7 @@ const SortableTree: React.FC<{ collapsible?: boolean }> = ({ collapsible }) => {
       setItems(updatedItems);
       setEditingId(actualNewItem.id);
 
-      // ❌ saveCategoryTreeAction(updatedItems, "posts") 호출을 제거합니다.
-      // 이유: addCategoryAction 내부에서 이미 DB 저장이 완료되었습니다.
-      // 트리 전체 저장은 오직 '드래그 앤 드롭'으로 순서/구조가 뒤바뀔 때만 필요합니다.
-
-      // 🌟 만약 해당 부모가 접혀있었다면 펼쳐줍니다.
+      // 🌟 부모가 접혀있었다면 펼쳐주는 로직 유지
       if (parentId && collapsedIds.has(parentId)) {
         setCollapsedIds(prev => {
           const next = new Set(prev);
@@ -438,13 +441,13 @@ export const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =
   <div className="max-w-2xl mx-auto p-4">{children}</div>
 );
 
-const DashboardPostCategories = () => {
+const DashboardPostCategories = ({ moduleId }) => {
   return (
     <Wrapper>
       <div className="mb-6">
         <p className="text-sm text-gray-500 mt-1">드래그하여 순서와 구조를 변경할 수 있습니다.</p>
       </div>
-      <SortableTree collapsible />
+      <SortableTree moduleId={moduleId} collapsible />
     </Wrapper>
   );
 };

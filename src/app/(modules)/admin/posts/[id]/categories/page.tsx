@@ -7,12 +7,13 @@ import { useParams } from "next/navigation";
 const Page = () => {
   const params = useParams();
   const id = params?.id as string;
+
   return (
     <>
       <div className="py-6">
         <PostCategory postId={id} />
       </div>
-      <DashboardPostCategories />
+      <DashboardPostCategories moduleId={id} />
     </>
   );
 };
