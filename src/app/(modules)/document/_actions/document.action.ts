@@ -141,18 +141,27 @@ export const saveDocument = async (mid: string, formData: FormData, paths?: stri
 // ==========================================
 // [ACTION - Document] 게시글 목록 조회 (썸네일 파싱 포함)
 // ==========================================
-export async function getDocumentList(mid: string, page: number = 1, pageSize: number = 10, categoryId?: string): Promise<ActionState<any>> {
+export async function getDocumentList(
+  mid: string,
+  page: number = 1,
+  pageSize: number = 10,
+  categoryId?: string
+): Promise<ActionState<any>> {
   try {
+    // 1. 게시판(모듈) 정보 확인
     const postInfo = await postsQuery.findModuleByMid(mid);
     if (!postInfo) return { success: false, type: "error", message: "게시판을 찾을 수 없습니다." };
 
     const parsedCategoryId = categoryId ? Number(categoryId) : undefined;
+
+    // 🌟 [중요] documentQuery.findDocumentList에서 extraFieldData를 select/include 하고 있는지 확인해야 합니다.
     const { items, totalCount } = await documentQuery.findDocumentList(postInfo.id, page, pageSize, parsedCategoryId);
 
-    const formattedItems = items.map((doc) => {
+    const formattedItems = items.map((doc: any) => {
       let previewContent = "";
       let thumbnail: string | null = null;
 
+      // --- 기존 컨텐츠 파싱 로직 (유지) ---
       if (doc.content) {
         try {
           let rawContent = doc.content;
@@ -192,18 +201,39 @@ export async function getDocumentList(mid: string, page: number = 1, pageSize: n
         }
       }
 
+      // 🌟 [추가] extraFieldData가 문자열로 저장되어 있을 경우를 대비한 안전한 파싱
+      let extraFieldData = doc.extraFieldData || {};
+      if (typeof extraFieldData === 'string') {
+        try {
+          extraFieldData = JSON.parse(extraFieldData);
+        } catch (e) {
+          extraFieldData = {};
+        }
+      }
 
-      return { ...doc, content: previewContent, thumbnail };
+      return {
+        ...doc,
+        content: previewContent,
+        thumbnail,
+        extraFieldData // 🌟 명시적으로 포함
+      };
     });
 
     return {
-      success: true, message: "조회 성공",
+      success: true,
+      message: "조회 성공",
       data: {
         documentList: formattedItems,
-        navigation: { totalCount, totalPages: Math.ceil(totalCount / pageSize), page, listCount: formattedItems.length }
+        navigation: {
+          totalCount,
+          totalPages: Math.ceil(totalCount / pageSize),
+          page,
+          listCount: formattedItems.length
+        }
       }
     };
   } catch (error) {
+    console.error("getDocumentList 에러:", error);
     return { success: false, type: "error", message: "목록 조회 중 오류가 발생했습니다." };
   }
 }

@@ -4,17 +4,37 @@ import prisma from "@utils/db/prisma";
 import { Prisma } from "@prisma/client";
 
 
-export async function findDocument(id: number) {
+export async function findDocument(id: number | string) {
+  const numericId = Number(id);
+
+  if (isNaN(numericId)) {
+    console.error(`[findDocument] Invalid ID provided: ${id}`);
+    return null;
+  }
+
   return prisma.document.findUnique({
-    where: { id },
+    where: {
+      id: numericId // 👈 이제 무조건 숫자(Int)만 들어갑니다.
+    },
     include: {
       user: {
-        select: { id: true, nickName: true, email_address: true, profile: true }
+        select: {
+          id: true,
+          nickName: true,
+          email_address: true,
+          profile: true
+        }
       },
       category: {
-        select: { id: true, title: true, desc: true, color: true, parentId: true }
-      },
-    },
+        select: {
+          id: true,
+          title: true,
+          desc: true,
+          color: true,
+          parentId: true
+        }
+      }
+    }
   });
 }
 
@@ -32,8 +52,17 @@ export async function findDocumentList(postsId: number, page: number, pageSize: 
       skip: (page - 1) * pageSize,
       take: pageSize,
       select: {
-        id: true, title: true, content: true, createdAt: true, updatedAt: true,
-        isNotice: true, isSecrets: true, readCount: true, commentCount: true, voteCount: true,
+        id: true,
+        title: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        isNotice: true,
+        isSecrets: true,
+        readCount: true,
+        commentCount: true,
+        voteCount: true,
+        extraFieldData: true,
         category: { select: { id: true, title: true, parentId: true } },
         user: { select: { id: true, nickName: true } },
       },
