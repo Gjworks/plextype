@@ -157,11 +157,11 @@ export async function getPostsList(page: number = 1, pageSize: number = 10, keyw
   }
 }
 
-// src/app/(extentions)/posts/_actions/posts.action.ts 에 추가
 
 export async function getPostsInfo(mid: string): Promise<ActionState<any>> {
   try {
-    // 💡 1. PID가 아닌 PK(id)로 게시판을 찾습니다. (쿼리에 findPostsById 가 있다고 가정)
+    // 1. 게시판 정보를 가져올 때, 쿼리(findPostsByPid)에서
+    // 반드시 'FieldGroup'을 include해서 가져오도록 되어 있어야 합니다!
     const postInfo = await query.findPostsByPid(mid);
     if (!postInfo) return { success: false, type: "error", message: "게시판을 찾을 수 없습니다." };
 
@@ -170,7 +170,10 @@ export async function getPostsInfo(mid: string): Promise<ActionState<any>> {
       query.findCategoriesByModuleId(postInfo.id),
     ]);
 
-    // ... (기존 getPostsInfo와 동일한 권한 매핑 로직) ...
+    // 🌟 2. 확장 필드 설계도(fields) 추출
+    const extraFields = postInfo.FieldGroup?.fields || [];
+
+    // 권한 매핑 로직 (기존 유지)
     const mappedPermissions = {
       listPermissions: permissions.filter(p => p.action === "list").map(p => ({ subjectType: p.subjectType, subjectId: p.subjectId })),
       readPermissions: permissions.filter(p => p.action === "read").map(p => ({ subjectType: p.subjectType, subjectId: p.subjectId })),
@@ -181,9 +184,15 @@ export async function getPostsInfo(mid: string): Promise<ActionState<any>> {
     return {
       success: true,
       message: "조회 성공",
-      data: { ...postInfo, permissions: mappedPermissions, categories }
+      data: {
+        ...postInfo,
+        extraFields,
+        permissions: mappedPermissions,
+        categories
+      }
     };
   } catch (error) {
+    console.error(error);
     return { success: false, type: "error", message: "정보를 불러오지 못했습니다." };
   }
 }
@@ -200,6 +209,8 @@ export async function getPostsInfoById(id: number): Promise<ActionState<any>> {
       query.findCategoriesByModuleId(postInfo.id),
     ]);
 
+    const extraFields = postInfo.FieldGroup?.fields || [];
+
     // ... (기존 getPostsInfo와 동일한 권한 매핑 로직) ...
     const mappedPermissions = {
       listPermissions: permissions.filter(p => p.action === "list").map(p => ({ subjectType: p.subjectType, subjectId: p.subjectId })),
@@ -211,7 +222,7 @@ export async function getPostsInfoById(id: number): Promise<ActionState<any>> {
     return {
       success: true,
       message: "조회 성공",
-      data: { ...postInfo, permissions: mappedPermissions, categories }
+      data: { ...postInfo,extraFields, permissions: mappedPermissions, categories }
     };
   } catch (error) {
     return { success: false, type: "error", message: "정보를 불러오지 못했습니다." };
