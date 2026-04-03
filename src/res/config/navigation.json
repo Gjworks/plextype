@@ -11,11 +11,11 @@
         ]
     },
 
-    "store": {
-      "name": "store",
-      "title": "Store",
-      "route": "/posts/store",
-      "parent": "store",
+    "labs": {
+      "name": "labs",
+      "title": "Labs",
+      "route": "/posts/labs",
+      "parent": "labs",
       "icon": "",
       "subMenu": [
         
