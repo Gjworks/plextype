@@ -267,7 +267,7 @@ export default function Page() {
                   Supports
                 </div>
                 <div>
-                  <ContentListWidget mid="notice" count={5} />
+                  <ContentListWidget mid="supports" count={5} />
                 </div>
               </div>
             </div>
