@@ -75,6 +75,9 @@ export async function insertPermissions(data: Prisma.PermissionCreateManyInput[]
 export async function findPostsById(id: number) {
   return prisma.modules.findUnique({
     where: { id },
+    include: {
+      FieldGroup: true,
+    }
   });
 }
 
@@ -91,6 +94,9 @@ export async function findModuleById(id: number) {
 export async function findPostsByPid(mid: string) {
   return prisma.modules.findUnique({
     where: { mid },
+    include: {
+      FieldGroup: true,
+    }
   });
 }
 
@@ -115,25 +121,45 @@ export async function deletePosts(ids: number[]) {
   });
 }
 
-
-export async function updateModuleFieldSchema(mid: string, fields: ExtraFieldConfig[]) {
-  // 1. 변수명을 module -> foundModule 로 변경합니다.
+export async function updateModuleFieldSchema(mid: string, extraFields: any[]) {
+  // 1. 우선 모듈이 있는지 확인합니다.
   const foundModule = await prisma.modules.findUnique({
-    where: { mid: mid },
-    select: { fieldGroupId: true }
+    where: { mid },
+    select: { id: true, fieldGroupId: true }
   });
 
-  // 2. 체크 로직에서도 변경된 변수명을 사용합니다.
-  if (!foundModule?.fieldGroupId) {
-    throw new Error("이 모듈에 연결된 필드 그룹이 없습니다.");
+  if (!foundModule) {
+    throw new Error("해당 모듈을 찾을 수 없습니다.");
   }
 
-  // 3. 찾은 fieldGroupId의 fields를 업데이트합니다.
-  return prisma.fieldGroup.update({
-    where: { id: foundModule.fieldGroupId },
-    data: {
-      // 💡 Prisma JSON 필드 저장을 위한 타입 캐스팅 유지
-      fields: fields as unknown as Prisma.InputJsonValue,
-    },
+  // 🌟 [핵심] 트랜잭션으로 안전하게 생성 혹은 업데이트 진행
+  return prisma.$transaction(async (tx) => {
+
+    // 2. 만약 연결된 필드 그룹(fieldGroupId)이 없다면? (현재 희정님의 DB 초기화 상황)
+    if (!foundModule.fieldGroupId) {
+      // 신규 필드 그룹 생성
+      const newGroup = await tx.fieldGroup.create({
+        data: {
+          name: `${mid}_extra_fields_${Date.now()}`, // 고유 이름 부여
+          fields: extraFields,
+        }
+      });
+
+      // 3. 생성된 그룹 ID를 현재 모듈에 연결 (이게 빠지면 다음에 또 에러 납니다)
+      await tx.modules.update({
+        where: { mid },
+        data: { fieldGroupId: newGroup.id }
+      });
+
+      console.log(`[Success] New FieldGroup created for module: ${mid}`);
+      return newGroup;
+    }
+
+    // 4. 이미 연결된 필드 그룹이 있다면? (기존에 쓰던 상황)
+    // 128번 줄의 에러 대신, 그냥 바로 업데이트를 때려버립니다.
+    return tx.fieldGroup.update({
+      where: { id: foundModule.fieldGroupId },
+      data: { fields: extraFields }
+    });
   });
 }
