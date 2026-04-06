@@ -20,7 +20,7 @@ const Page = async ({ searchParams }: { searchParams: Promise<{ page?: string }>
   };
 
   return (
-    <div className="p-6">
+    <div className="">
       <div className="max-w-screen-2xl mx-auto px-3 pt-6 pb-12">
         <Suspense fallback={<div>목록 로딩 중...</div>}>
           <DashboardPostsList initialData={items} pagination={pagination} />

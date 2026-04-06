@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { useUser } from "@/hooks/auth/useAuth";
+import { motion, Variants } from "framer-motion";
 
 interface Item {
   title: string;
@@ -30,21 +29,35 @@ const DefaultList = ({ list, loggedInfo, callback }: DefaultListProps) => {
     if (name && callback) callback(name);
   };
 
-  // 부모 컨테이너 애니메이션
-  const containerVariants = {
+  const containerVariants: Variants = {
     open: {
       transition: {
-        delayChildren: 0.2, // ← 여기서 0.2초 딜레이 후 자식 stagger 시작
-        staggerChildren: 0.05, // 자식 요소 순차적 등장 간격
+        staggerChildren: 0.04,
+        delayChildren: 0.05,
       },
     },
-    close: {},
+    close: {
+      transition: {
+        staggerChildren: 0.03,
+        staggerDirection: -1,
+      },
+    },
   };
 
-  // 각 메뉴 아이템 애니메이션
-  const itemVariants = {
-    open: { opacity: 1, x: 0, transition: { duration: 0.2 },  display:'block' },
-    close: { opacity: 0, x: -20, transition: { duration: 0.15 }, display:'none' },
+  const itemVariants: Variants = {
+    open: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        ease: [0.21, 0.47, 0.32, 0.98]
+      }
+    },
+    close: {
+      opacity: 0,
+      y: 10,
+      transition: { duration: 0.2 }
+    },
   };
 
   return (
@@ -53,44 +66,67 @@ const DefaultList = ({ list, loggedInfo, callback }: DefaultListProps) => {
       animate="open"
       exit="close"
       variants={containerVariants}
+      className="flex flex-col py-1"
     >
       {list?.map((item, index) => {
-        if (item.name === "divider") {
-          return (
-            <div key={index} className="block py-2">
-              <div className="h-[1px] bg-gray-200/75 dark:bg-dark-700/75" />
-            </div>
-          );
-        }
+        // 🌟 [수정] 훅(useMemo) 대신 일반 함수 로직 사용
+        const getShowItem = () => {
+          if (!item.condition) return true;
+          if (!loggedInfo) return false;
 
-        const showItem =
-          !item.condition ||
-          (item.condition &&
-            loggedInfo &&
-            loggedInfo[item.condition.name] === item.condition.variable);
+          const { operation, name, variable } = item.condition;
+          const userValue = loggedInfo[name];
+
+          switch (operation) {
+            case "equals":
+              return userValue === variable;
+            case "not-equals":
+              return userValue !== variable;
+            default:
+              return userValue === variable;
+          }
+        };
+
+        const showItem = getShowItem();
 
         if (!showItem) return null;
 
+        // 구분선(Divider) 처리
+        if (item.name === "divider") {
+          return (
+            <motion.div
+              key={`div-${index}`}
+              variants={itemVariants}
+              className="py-1.5 px-3"
+            >
+              <div className="h-[1px] bg-black/[0.04]" />
+            </motion.div>
+          );
+        }
+
+        const isActive = pathname === item.route;
+
         return (
           <motion.div
-            key={index}
+            key={item.route + index}
             variants={itemVariants}
-            className="overflow-hidden"
+            className="px-1.5"
           >
-            <div className="min-w-48">
-              <Link
-                href={item.route}
-                onClick={() => handlerCallback(item.name)}
-                className={
-                  "dark:hover:bg-dark-100/10 block rounded bg-transparent px-4 py-2 text-xs text-gray-800 hover:bg-gray-950 hover:text-white dark:text-white dark:hover:text-white" +
-                  (pathname === item.route ? "bg-gray-950" : "bg-white")
-                }
-              >
-                <div className="flex justify-between items-center">
-                  <span>{item.title}</span>
-                </div>
-              </Link>
-            </div>
+            <Link
+              href={item.route}
+              onClick={() => handlerCallback(item.name)}
+              className={`
+                group flex items-center justify-between w-full px-3 py-2 rounded-lg text-[13px] font-medium transition-all mb-1
+                ${isActive
+                ? "bg-blue-50 text-blue-600"
+                : "text-zinc-600 hover:bg-black/[0.03] hover:text-black"}
+              `}
+            >
+              <span>{item.title}</span>
+              {isActive && (
+                <div className="w-1 h-1 rounded-full bg-blue-600" />
+              )}
+            </Link>
           </motion.div>
         );
       })}
