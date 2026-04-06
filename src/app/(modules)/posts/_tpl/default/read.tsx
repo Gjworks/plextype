@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DOMPurify from "isomorphic-dompurify";
+import { useEditor, EditorContent } from "@tiptap/react";
 import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -10,6 +11,7 @@ import { usePostContext } from "./PostProvider";
 import { useUser } from "@hooks/auth/useAuth";
 import PostNotPermission from "@modules/posts/_tpl/default/notPermission";
 import Button from "@components/button/Button";
+import CodeBlockShiki from 'tiptap-extension-code-block-shiki'
 
 // ✅ TipTap 변환 관련 임포트 추가
 import { generateHTML } from "@tiptap/html";
@@ -32,6 +34,7 @@ dayjs.extend(relativeTime);
 // ✅ 에디터와 동일한 익스텐션 구성 및 스타일 클래스 주입
 const tiptapExtensions = [
   StarterKit.configure({
+    codeBlock: false,
     code: {
       HTMLAttributes: {
         class: 'bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded-md font-mono text-[0.9em] font-medium',
@@ -42,15 +45,15 @@ const tiptapExtensions = [
         class: 'border-l-4 border-gray-300 pl-4 italic text-gray-600',
       },
     },
-    codeBlock: {
-      HTMLAttributes: {
-        class: 'rounded-md bg-gray-100 text-gray-600 p-4 font-mono text-sm my-4',
-      },
-    },
     bulletList: false,
     orderedList: false,
   }),
-
+  CodeBlockShiki.configure({
+    defaultTheme: 'slack-ochin',
+    HTMLAttributes: {
+      class: 'plextype-shiki-block',
+    },
+  }),
   BulletList.configure({
     HTMLAttributes: { class: 'list-disc ml-6' },
   }),
@@ -123,6 +126,42 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
   const extraFields = postInfo?.extraFields || [];
   const extraData = document.extraFieldData || {};
 
+  const parseContent = (content?: string) => {
+    if (!content) return "";
+    let raw = content;
+
+    // 1. 혹시라도 문자열 양끝에 따옴표가 중복으로 감싸져 있다면 제거
+    if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
+      raw = raw.slice(1, -1);
+    }
+
+    try {
+      // 2. JSON 문자열을 객체로 파싱
+      const json = JSON.parse(raw);
+
+      // 3. TipTap 데이터 형식(type: "doc")이 맞는지 확인 후 리턴
+      if (json && json.type === "doc") return json;
+      return raw;
+    } catch (e) {
+      // 4. 파싱 실패 시 일반 텍스트나 HTML로 간주하고 그대로 리턴
+      return raw;
+    }
+  };
+
+  const readOnlyEditor = useEditor({
+    extensions: tiptapExtensions,
+    content: parseContent(document.content), // 초기 내용
+    editable: false, // 🌟 핵심: 읽기 전용으로 설정
+    immediatelyRender: false,
+  });
+
+  // ✅ 2. 문서 내용이 바뀌면 에디터 내용도 업데이트
+  useEffect(() => {
+    if (readOnlyEditor && document.content) {
+      readOnlyEditor.commands.setContent(parseContent(document.content));
+    }
+  }, [document.content, readOnlyEditor]);
+
   const renderContent = useMemo(() => {
     let rawContent = document.content || "";
 
@@ -144,23 +183,12 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
           ADD_ATTR: ['style', 'target', 'class', 'rel'],
           ADD_TAGS: ['mark']
         });
+        if (!readOnlyEditor) return <div className="animate-pulse h-40 bg-gray-50 rounded-xl" />;
         return (
-          <div
-            className="prose prose-zinc max-w-none dark:prose-invert
-                 /* ✅ 리스트 스타일 강제 복구 */
-                 prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4
-                 prose-ol:list-decimal prose-ol:ml-6 prose-ol:my-4
-                 prose-li:my-1
-                 /* ✅ 인라인 코드: 백틱 제거 및 스타일 */
-                 prose-code:before:content-none prose-code:after:content-none
-                 prose-code:bg-zinc-100 prose-code:text-[#eb5757] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
-                 /* ✅ 형광펜(mark) 투명화 (인라인 스타일 적용을 위해) */
-                 prose-mark:bg-transparent
-                 /* ✅ 인용구 및 기타 */
-                 prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic
-                 prose-pre:bg-gray-900 prose-pre:text-white prose-pre:p-0"
-            dangerouslySetInnerHTML={{ __html: cleanHtml }}
-          />
+          <div className="prose prose-zinc max-w-none dark:prose-invert
+               prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0">
+            <EditorContent editor={readOnlyEditor} />
+          </div>
         );
       }
 
@@ -184,7 +212,7 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
     }
 
     return <div dangerouslySetInnerHTML={{ __html: rawContent }} />;
-  }, [document.content]);
+  }, [document.content, readOnlyEditor]);
 
   if (!permissions.doRead) return <PostNotPermission />;
 
@@ -385,6 +413,19 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
       </div>
 
       <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-400">
+        <style dangerouslySetInnerHTML={{ __html: `
+      .plextype-shiki-block {
+        display: block !important;
+        background-color: #f9fafb  !important;
+        border-radius: 16px;
+        margin: 2.5rem 0;
+        padding: 1.5rem 2rem !important; 
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 14px !important;
+        line-height: 1.8 !important;
+        overflow-x: auto !important;
+      }
+    `}} />
         {renderContent}
       </div>
       <div className="flex justify-end gap-2 mx-auto max-w-screen-md py-8">
