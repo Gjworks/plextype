@@ -1,62 +1,59 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useRef } from "react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
-const Dropdown = ({ state, close, children }) => {
-  const [dropdownState, setDropdownState] = useState(false);
+interface DropdownProps {
+  state: boolean;
+  close: (val: boolean) => void;
+  children: React.ReactNode;
+  className?: string; // 🌟 외부에서 위치(top, right 등)를 미세조정할 수 있게 추가
+}
 
-  const handleClickOutside = () => {
-    close(false);
-    setDropdownState(false);
-  };
-  // const { mid } = router?.query;
+const Dropdown = ({ state, close, children, className = "right-0 top-[calc(100%+8px)]" }: DropdownProps) => {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    document.addEventListener("click", handleClickOutside, true);
-    return () => {
-      document.removeEventListener("click", handleClickOutside, true);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        close(false);
+      }
     };
-  }, []);
+    if (state) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [state, close]);
 
-  useEffect(() => {
-    setDropdownState(state);
-  }, [state]);
-  const initial = {
-    opacity: 0,
-  };
-
-  const variants = {
+  const variants: Variants = {
     open: {
       opacity: 1,
       y: 0,
-      display: "block",
-      transition: {
-        duration: 0.3,
-        delayChildren: 0.1,
-        staggerChildren: 0.1,
-      },
+      scale: 1,
+      transition: { duration: 0.2, ease: [0.21, 0.47, 0.32, 0.98] },
     },
     close: {
       opacity: 0,
-      y: "15%",
-      transitionEnd: {
-        display: "none",
-      },
+      y: 8,
+      scale: 0.98, // 살짝만 작아지게 변경
+      transition: { duration: 0.15 },
     },
   };
+
   return (
-    <>
-      <motion.div
-        initial={initial}
-        animate={dropdownState === true ? "open" : "close"}
-        variants={variants}
-        transition={{ duration: 0.5 }}
-        className={
-          "dark:bg-dark-950/75 dark:border-dark-300/10 shadow-xs absolute right-0 top-10 z-[101] mt-2 overflow-hidden rounded-md border border-gray-200 bg-white/90 p-2 shadow-lg shadow-gray-950/10 backdrop-blur-lg dark:shadow-black/50 dark:backdrop-blur-lg"
-        }
-      >
-        <div className="relative z-[100]">{children}</div>
-      </motion.div>
-    </>
+    <AnimatePresence>
+      {state && (
+        <motion.div
+          ref={dropdownRef}
+          initial="close"
+          animate="open"
+          exit="close"
+          variants={variants}
+          // 🌟 스타일을 최소화했습니다. 'absolute'와 'z-index'만 유지합니다.
+          className={`absolute z-[101] ${className}`}
+        >
+          {/* 이제 여기서 children이 모든 스타일(배경색, 테두리, 그림자 등)을 가집니다. */}
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

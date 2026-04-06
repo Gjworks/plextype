@@ -16,7 +16,7 @@ const fetchUser = async () => {
   return data;
 };
 
-export const useUser = () => {
+export const useUser = (options?: Partial<UseQueryOptions<any, Error>>) => {
   const queryOptions: UseQueryOptions<any, Error> = {
     queryKey: ["user"],
     queryFn: fetchUser,
@@ -24,6 +24,7 @@ export const useUser = () => {
     staleTime: 5 * 60 * 1000, // 5분 동안 데이터가 신선하다고 간주 (새로고침 시에도 기존 데이터 사용)
     // cacheTime: 10 * 60 * 1000, // 캐시된 데이터가 10분 동안 유지됨
     refetchOnWindowFocus: false, // 윈도우가 다시 포커스될 때 자동으로 데이터를 새로 고침하지 않도록 설정
+    ...options,
   };
 
   return useQuery(queryOptions); // queryOptions 객체 전달

@@ -1,210 +1,454 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
-import { useState, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation"; // ✅ useRouter 추가
+import { motion, AnimatePresence } from "framer-motion";
+import pkg from "../../../../package.json";
+import {
+  LayoutGrid, Settings, MessageSquareText, Users,
+  Search, Bell, ChevronRight, Globe, ChevronDown,
+  LogOut, UserCircle, Zap
+} from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Dropdown from "@/components/dropdown/Dropdown";
+import DefaultList from "@/components/nav/DefaultList";
+import { useUserContext } from "@/providers/UserProvider";
 
-import DefaultNav from "@components/nav/DefaultNav";
+const MENU_CONFIG = [
+  { id: "dashboard", href: "/admin", icon: <LayoutGrid size={18} />, label: "Dashboard" },
+  {
+    id: "users",
+    icon: <Users size={18} />,
+    label: "회원 설정",
+    items: [
+      { label: "회원 목록", href: "/admin/user/list" },
+      { label: "회원 추가", href: "/admin/user/create" },
+      { label: "권한 관리", href: "/admin/user/roles" },
+    ]
+  },
+  {
+    id: "posts",
+    icon: <MessageSquareText size={18} />,
+    label: "게시판 설정",
+    items: [
+      { label: "게시판 목록", href: "/admin/posts/list" },
+      { label: "게시판 생성", href: "/admin/posts/create" },
+      { label: "카테고리 관리", href: "/admin/posts/category" },
+    ]
+  },
+  { id: "infra", href: "/infra", icon: <Globe size={18} />, label: "Infrastructure" },
+];
 
-import "@/app/globals.css";
-
-import nav from "@res/config/settings.json";
-
-export default function DashboardLayout({
-  children, // will be a page or nested layout
-}: {
-  children: React.ReactNode;
-}) {
+const AdminLayout = ({ children }: { children: React.ReactNode }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
-  const [dashbaordNav, setDashboardNav] = useState<object>([]);
-  const [title, setTitle] = useState<string>("");
-  const [params, setParams] = useState<any[]>([]);
+  const { user, isLoading } = useUserContext();
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  useEffect(() => {
-    const htmlElement = document.documentElement;
-    if (htmlElement.classList.contains("dark")) {
-      htmlElement.classList.remove("dark");
-    }
-  }, []); // 빈 배열을 두 번째 인수로 전달하면 컴포넌트가 처음 마운트될 때만 실행됩니다.
+  const dropdownRef = useRef<HTMLDivElement>(null); // 🌟 드롭다운 영역 감지용 Ref
 
+  // 🌟 [핵심 로직] 영역 밖 클릭 감지
   useEffect(() => {
-    const params = pathname?.split("/");
-    setParams(params);
-    Object.entries(nav.navigation).map((item, index) => {
-      if (item[0] === params[2]) {
-        setDashboardNav(item[1].subMenu);
-        setTitle(item[1].title);
+    const handleClickOutside = (event: MouseEvent) => {
+      // 클릭된 곳이 dropdownRef(버튼+메뉴) 안쪽이 아니라면 닫기
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false);
       }
-      if (!params[2]) {
-        setDashboardNav([]);
-        setTitle("");
-      }
+    };
+
+    // 마우스를 누를 때(mousedown) 감지 시작
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      // 컴포넌트가 사라질 때 이벤트 제거 (메모리 누수 방지)
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const isLoggedIn = !!user;
+
+  const userNav = [
+    { title: "내 정보", name: "user", route: "/user" },
+    { title: "알림", name: "notification", route: "#right" },
+    { title: "로그아웃", name: "Signout", route: "/" },
+  ];
+
+  const handleSignOut = async () => {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/";
+  };
+
+  const callbackName = (name: string) => {
+    if (name === "Signout") handleSignOut();
+  };
+
+  // 1️⃣ 공통 유틸: 경로 끝의 슬래시 제거
+  const cleanPath = (p: string) => p.replace(/\/$/, "");
+  const normalizedPathname = cleanPath(pathname);
+
+  // 2️⃣ 모바일 체크 (실시간 해상도 감지) - 사이드바 대응용
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // 3️⃣ 사이드바 확장 로직 (삭제하면 사이드바가 안 움직여요!)
+  const closedPaths = ["/", "/admin"];
+  const isEntryPage = closedPaths.includes(normalizedPathname);
+  const isExpanded = !isMobile && (isHovered || !isEntryPage);
+
+  // 4️⃣ 본문 탭 메뉴 로직 (새로 추가된 것!)
+  const activeSubMenus = useMemo(() => {
+    const pathSegments = normalizedPathname.split('/');
+    const baseCategoryPath = pathSegments.slice(0, 3).join('/'); // "/admin/posts"
+
+    const parent = MENU_CONFIG.find(menu => {
+      // 대메뉴 자체 href와 일치하거나
+      if (menu.href && cleanPath(menu.href) === baseCategoryPath) return true;
+
+      // 서브 아이템 중 하나라도 대분류 경로와 일치하는게 있는지 확인
+      return menu.items?.some(sub => cleanPath(sub.href).startsWith(baseCategoryPath));
     });
-  }, [pathname]);
+
+    return parent?.items || null;
+  }, [normalizedPathname]);
 
   return (
-    <div className="selection:text-white selection:bg-orange-500 min-h-screen">
-      <div className="h-full">
-        <div className="fixed w-full top-0 bg-gray-950/90 dark:bg-dark-950/90 backdrop-blur-lg h-[60px] z-101">
-          <div className="flex">
-            <Link href="/" className="flex gap-4 items-center px-3">
-              <div className="flex items-center text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                </svg>
+    <div className="flex h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:text-black overflow-hidden font-sans relative">
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
 
-              </div>
-              <div className="flex items-center text-white mr-3">홈 페이지</div>
-            </Link>
-            <div className="flex-1"></div>
-            <div className="flex items-center px-3">
-              <div className="max-w-xl flex items-center rounded-full bg-gray-700/75 backdrop-blur-lg px-3 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>
+      {/* 1. SIDENAV */}
+      <motion.aside
+        initial={false}
+        animate={{ width: isExpanded ? 240 : 72 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="flex flex-col border-r border-white/40 bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
+      >
+        <div className="h-16 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 bg-black rounded-xl shadow-gray-400 flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg cursor-pointer">G</div>
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.span initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 0 }}
+                           className="ml-3 text-[14px] font-bold tracking-tight truncate text-zinc-800 whitespace-nowrap"
+              >
+                Gjworks
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
 
-                <input
-                  type="text"
-                  className="bg-transparent text-white py-2 outline-none px-3 text-sm w-full"
-                />
-              </div>
-            </div>
-            <div className="flex gap-4 px-3">
-              <div className="flex items-center text-gray-300 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                </svg>
+        <div className="flex-1 py-6 overflow-y-auto px-3 space-y-1 scrollbar-hide">
+          {MENU_CONFIG.map((menu) => (
+            <SideAccordionItem key={menu.id} menu={menu} isExpanded={isExpanded} isMobile={isMobile} />
+          ))}
+          <div className="py-6 px-4">
+            <div className="h-[1px] bg-black/5" />
+          </div>
+          <SideItem href="/settings" icon={<Settings size={18} />} label="Settings" isExpanded={isExpanded} />
+        </div>
 
-              </div>
-              <div className="flex items-center text-gray-300 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                </svg>
-              </div>
-              <div className="flex items-center text-gray-300 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-                </svg>
+        <div className="p-5 mt-auto"> {/* mt-auto를 주면 사이드바 최하단에 고정됩니다 */}
+          <div className={`flex items-center justify-center md:justify-start gap-3 px-3 py-2 rounded-2xl transition-all ${isExpanded ? 'bg-black/[0.03] border border-black/[0.03]' : ''}`}>
+            {/* 버전에 어울리는 파란색 도트로 변경해봤어요 */}
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] shrink-0" />
 
-              </div>
-            </div>
-            <div className="flex items-center py-3 bg-gray-600/25 backdrop-blur-lg px-5">
-              <div className="rounded-full w-8 h-8 bg-gray-500"></div>
-              <div className="px-2">
-                <div className="text-white text-sm">Jhon Kury</div>
-                <div className="text-xs text-gray-300">CEO Business</div>
-              </div>
-            </div>
+            {isExpanded && (
+              <motion.div
+                initial={{ opacity: 0, x: -5 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -5 }}
+                className="flex flex-col items-start leading-none"
+              >
+        <span className="text-[9px] font-bold text-zinc-400 font-mono tracking-widest uppercase mb-0.5">
+          System Version
+        </span>
+                <span className="text-[11px] font-bold text-zinc-600 font-mono tracking-tighter">
+          v{pkg.version}
+        </span>
+              </motion.div>
+            )}
           </div>
         </div>
-        <div className="h-[60px]"></div>
-        <div className="fixed w-[300px] backdrop-blur-lg h-screen overflow-hidden overflow-y-auto border-r border-slate-200 dark:border-dark-600">
-          <div className="py-6 px-5">
-            <div className="">
-              <div className="flex items-center mb-1">
-                <Link
-                  href="/dashboard"
-                  className="flex flex-1 text-black dark:text-white text-xl font-semibold"
+      </motion.aside>
+
+      {/* 2. RIGHT WRAPPER */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header className="h-16 flex items-center justify-between px-8 bg-white/40 backdrop-blur-2xl border-b border-white/60 shrink-0 z-40 relative">
+
+          {/* Left: Breadcrumbs */}
+          <div className="flex items-center gap-2 text-[12px] font-medium text-zinc-400">
+            <span className="uppercase tracking-widest text-[10px]">gjworks</span>
+            <ChevronRight size={14} className="text-zinc-200" />
+            <span className="text-black font-bold uppercase tracking-widest text-[10px]">
+              {pathname === "/admin" ? "Overview" : pathname.split('/').pop()}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="relative group hidden lg:block">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={14} />
+              <input type="text" placeholder="Quick search..." className="bg-black/5 border border-white/60 rounded-full py-1.5 pl-9 pr-4 text-[12px] w-48 focus:w-64 focus:bg-white transition-all outline-none" />
+            </div>
+
+            <button className="p-2 text-zinc-500 hover:bg-black/5 rounded-full transition-all relative">
+              <Bell size={18} />
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-600 rounded-full border-2 border-white" />
+            </button>
+
+            <div className="h-4 w-[1px] bg-zinc-200/60 mx-1" />
+
+            {/* 🌟 런타임 데이터가 반영된 유저 드롭다운 버튼 */}
+            <div className="relative" ref={dropdownRef}>
+              {isLoading ? (
+                <div className="w-28 h-9 bg-black/[0.03] animate-pulse rounded-full" />
+              ) : (
+                <button
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className={`flex items-center gap-3 pl-4 pr-3 py-1.5 rounded-full transition-all border border-transparent group ${
+                    showUserDropdown ? 'bg-white shadow-sm border-white/60' : 'hover:bg-white/80 hover:border-white/60 hover:shadow-sm'
+                  }`}
                 >
-                  Dashboard
-                </Link>
-                <div className="px-3">
-                  <div className="rounded-full w-2 h-2 bg-lime-400"></div>
-                </div>
-                <div className="text-black dark:text-dark-400 cursor-pointer border border-slate-200 dark:border-dark-700 rounded-md py-1 px-2 hover:bg-slate-200/25 dark:hover:bg-gray-800/25">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-                  </svg>
+                  {/* 상태 도트 */}
+                  <div className="relative flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  </div>
 
-                </div>
-              </div>
-              <div className="text-gray-500 text-xs">Dashboard 홈으로 가기</div>
-            </div>
-          </div>
-          <div className="border-t border-gray-100 dark:border-dark-600"></div>
-          <div className="py-6 px-5">
-            <div className="">
-              <div className="text-xs text-gray-400/75 font-semibold mb-5">
-                관리기능
-              </div>
-              {nav.navigation &&
-                Object.entries(nav.navigation).map((item, index) => {
-                  return (
-                    <div key={index} className="mb-1">
-                      <>
-                        <Link
-                          href={item[1].route}
-                          className={
-                            "flex gap-4 text-sm py-2.5 rounded " +
-                            (item[1].name === params[2]
-                              ? " bg-cyan-500 text-white hover:text-white hover:bg-cyan-600 "
-                              : " hover:text-gray-950 hover:bg-gray-200 dark:text-dark-400 dark:hover:text-white dark:hover:bg-dark-700 ")
-                          }
-                        >
-                          <div></div>
-                          <div className="px-3">{item[1].title}</div>
-                        </Link>
-                      </>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-          <div className="border-t border-gray-100 dark:border-dark-600"></div>
-          <div className="py-6 px-5">
-            <div className="text-xs text-gray-400/75 font-semibold mb-5">
-              최근활동 회원
-            </div>
-            <div className="">
-              <div className="px-3 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                  <div className="text-sm text-gray-500">지제이웍스</div>
-                </div>
-              </div>
-              <div className="px-3 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                  <div className="text-sm text-gray-500">맥도날드와버거킹</div>
-                </div>
-              </div>
-              <div className="px-3 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                  <div className="text-sm text-gray-500">나이트크로우</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="relative top-0 ml-[300px]">
-          <div className="relative">
-            {title && (
-              <div className=" pt-10">
-                <div className="max-w-screen-2xl mx-auto px-3">
-                  <div className="">
-                    <div className="flex flex-wrap items-center gap-4 mb-5">
-                      <div className="text-black dark:text-white text-2xl font-semibold">
-                        {title}
+                  <div className="flex flex-col items-start leading-tight -space-y-0.5 text-left">
+            <span className="text-[13px] font-bold text-zinc-900 tracking-tight">
+              {user?.nickName || "Guest User"}
+            </span>
+                    <span className="text-[9px] text-zinc-400 font-mono uppercase tracking-widest font-medium">
+              Administrator
+            </span>
+                  </div>
+
+                  <ChevronDown size={14} className={`text-zinc-300 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+                </button>
+              )}
+
+              {/* 2. 드롭다운 메뉴 */}
+              <AnimatePresence>
+                {showUserDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-[calc(100%+8px)] w-60 z-[100]"
+                  >
+                    <div className="overflow-hidden bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[20px] shadow-xl p-2">
+                      <div className="px-3.5 py-3 border-b border-black/[0.04] mb-1.5">
+                        <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-tighter mb-0.5">Signed in as</p>
+                        <p className="text-[13px] font-bold text-zinc-900 truncate">{user?.email}</p>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <DefaultList list={userNav} loggedInfo={user} callback={callbackName} />
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="sticky top-[52px] lg:top-[60px] w-full bg-white/90 dark:bg-dark-950/90 backdrop-blur-lg z-90 border-b border-gray-100 dark:border-dark-700">
-              <div className="overflow-scroll-hide overflow-hidden overflow-x-auto flex gap-8 max-w-screen-2xl mx-auto px-3">
-                <DefaultNav list={dashbaordNav} />
-              </div>
-            </div>
-            <div className="">
-              <div className="">{children}</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
+        </header>
+
+        <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-4 overflow-hidden relative">
+          <main className="h-full w-full bg-white/80 backdrop-blur-lg rounded-xl md:rounded-2xl border border-zinc-100/50 flex flex-col overflow-hidden">
+
+            {/* 🌟 탭 내비게이션: 서브 메뉴가 있을 때만 출력 */}
+            <AnimatePresence mode="wait">
+              {activeSubMenus && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="shrink-0 border-b border-zinc-100 bg-white/50 backdrop-blur-sm px-6 md:px-10"
+                >
+                  <div className="flex items-center gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
+                    {activeSubMenus.map((sub) => {
+                      const subHref = cleanPath(sub.href);
+                      const isSubActive = normalizedPathname.includes(subHref.split('/').pop() || "");
+
+                      return (
+                        <Link key={sub.href} href={sub.href} className="relative py-4 shrink-0">
+                        <span className={`text-[13px] font-bold transition-colors ${
+                        isSubActive ? 'text-blue-600' : 'text-zinc-400 hover:text-zinc-900'
+                      }`}>
+                      {sub.label}
+                    </span>
+                      {isSubActive && (
+                        <motion.div
+                          layoutId="activeTab"
+                          className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-600 rounded-full"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                    </Link>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 실제 컨텐츠 스크롤 영역 */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide px-6 md:px-12 py-8 md:py-12">
+              <div className="max-w-[1200px] mx-auto">
+                {children}
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     </div>
   );
-}
+};
+
+// --- 서브 컴포넌트들 ---
+
+// ... (상단 MENU_CONFIG 및 imports는 동일)
+const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const cleanPath = (p: string) => p.replace(/\/$/, "");
+  const normalizedPathname = cleanPath(pathname);
+
+  // 🌟 1. 활성화 판별 로직 고도화
+  const isActive = useMemo(() => {
+    const pathSegments = normalizedPathname.split("/");
+    const currentBase = pathSegments.slice(0, 3).join("/"); // "/admin/posts" 등
+
+    // [Case A] 서브 메뉴가 있는 아코디언 메뉴 (Posts, Settings 등)
+    if (menu.items) {
+      return menu.items.some((sub: any) => {
+        const subHref = cleanPath(sub.href);
+        const subBase = subHref.split("/").slice(0, 3).join("/");
+
+        // 현재 주소가 서브 메뉴로 시작하거나, 대분류(Prefix)가 같으면 활성화
+        return normalizedPathname.startsWith(subHref) || subBase === currentBase;
+      });
+    }
+
+    // [Case B] 단일 메뉴 (Dashboard 등)
+    if (menu.href) {
+      const targetHref = cleanPath(menu.href);
+
+      // 🌟 핵심: 대시보드(/admin)는 '정확히' 일치할 때만 활성화
+      // 그 외의 단일 메뉴는 'startsWith'로 처리
+      if (targetHref === "/admin") {
+        return normalizedPathname === "/admin";
+      }
+
+      return normalizedPathname.startsWith(targetHref);
+    }
+
+    return false;
+  }, [normalizedPathname, menu]);
+
+  // 🌟 2. 하위 메뉴 중 정확히 어디에 불을 켤지 결정 (isChildActive)
+  const isChildActive = (subHref: string) => {
+    const cleanedSub = cleanPath(subHref);
+    // URL에 'category'나 'list' 같은 핵심 키워드가 포함되어 있는지 확인
+    const subKeyword = cleanedSub.split("/").pop();
+    return normalizedPathname.includes(subKeyword || "");
+  };
+
+  const [isOpen, setIsOpen] = useState(isActive);
+
+  // 페이지 이동 시 활성화 상태라면 아코디언 자동으로 열기
+  useEffect(() => {
+    if (isActive) setIsOpen(true);
+  }, [isActive]);
+
+  const handleMenuClick = () => {
+    if (isMobile && menu.items) {
+      router.push(menu.items[0].href);
+    } else {
+      setIsOpen(!isOpen);
+    }
+  };
+
+  if (!menu.items) {
+    return <SideItem href={menu.href} icon={menu.icon} label={menu.label} isExpanded={isExpanded} active={isActive} />;
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <button
+        onClick={handleMenuClick}
+        className={`group flex items-center w-full rounded-xl transition-all h-10 px-3 cursor-pointer ${
+          isActive
+            ? 'bg-white/80 text-black shadow-sm border border-white/60'
+            : 'text-zinc-400 hover:text-black hover:bg-white/40 border border-transparent'
+        }`}
+      >
+        <span className={`${isActive ? 'text-blue-600' : 'text-zinc-400 group-hover:text-black'} shrink-0 transition-colors`}>
+          {menu.icon}
+        </span>
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 items-center justify-between ml-3 overflow-hidden">
+              <span className={`text-[13px] font-bold tracking-tight truncate ${isActive ? 'text-black' : ''}`}>
+                {menu.label}
+              </span>
+              <motion.span animate={{ rotate: isOpen ? 180 : 0 }}>
+                <ChevronDown size={14} className={isActive ? 'text-black' : 'text-zinc-300'} />
+              </motion.span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </button>
+
+      {/* 아코디언 내용 */}
+      <AnimatePresence initial={false}>
+        {isOpen && isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden ml-9 flex flex-col border-l border-black/5"
+          >
+            {menu.items.map((sub: any) => {
+              const active = isChildActive(sub.href); // 고도화된 체크 함수 사용
+              return (
+                <Link key={sub.href} href={sub.href}>
+                  <div className={`px-4 py-2 text-[12px] font-medium transition-colors hover:text-black rounded-lg cursor-pointer ${
+                    active ? 'text-blue-600 font-bold' : 'text-zinc-400'
+                  }`}>
+                    {sub.label}
+                  </div>
+                </Link>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const SideItem = ({ href, icon, label, isExpanded, active }: any) => {
+  const pathname = usePathname();
+  const isActive = active !== undefined ? active : pathname.replace(/\/$/, "") === href.replace(/\/$/, "");
+
+  return (
+    <Link href={href}>
+      <button className={`group flex items-center w-full rounded-xl transition-all h-10 px-3 mt-0.5 cursor-pointer ${
+        isActive ? 'bg-white/80 text-black shadow-sm border border-white/60' : 'text-zinc-400 hover:text-black hover:bg-white/40 border border-transparent'
+      }`}>
+        <span className={`${isActive ? 'text-blue-600' : 'text-zinc-400 group-hover:text-black'} shrink-0 transition-colors`}>{icon}</span>
+        {isExpanded && <span className="ml-3 text-[13px] font-bold tracking-tight">{label}</span>}
+      </button>
+    </Link>
+  );
+};
+
+export default AdminLayout;
