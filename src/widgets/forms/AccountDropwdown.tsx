@@ -76,19 +76,16 @@ const AccountDropdown = () => {
         <Dropdown state={showDropdown} close={closeDropdown}>
           {user ? (
             <>
-              <div className="w-64 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-xl shadow-gray-100 overflow-hidden p-2">
+              <div className="w-64 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-xl shadow-gray-950/5 overflow-hidden p-2">
                 <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-                  <p className="text-sm font-bold">희정님 환영합니다</p>
+                  <p className="text-sm font-bold">{user?.nickName}님 환영합니다</p>
                 </div>
                 <DefaultList list={userNav} loggedInfo={user} callback={callbackName} />
               </div>
             </>
           ) : (
             <>
-              <div className="w-64 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-xl shadow-gray-100 overflow-hidden p-2">
-                <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-                  <p className="text-sm font-bold">희정님 환영합니다</p>
-                </div>
+              <div className="w-64 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-xl shadow-gray-950/5 overflow-hidden p-2">
                 <DefaultList list={guestNav} callback={callbackName} />
               </div>
             </>

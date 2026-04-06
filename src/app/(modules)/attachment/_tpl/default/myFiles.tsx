@@ -86,9 +86,9 @@ export default function MyFiles({ onFileSelect }: Props) {
 
 
   return (
-    <div className="flex flex-col h-full min-h-[400px] bg-white">
+    <div className="flex flex-col h-full min-h-[400px]">
       {/* 상단 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <div className="flex items-center justify-between px-2 py-1 border-b border-gray-100 mb-4">
         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
           My Library <span className="text-blue-500">{files.length}</span>
         </div>
@@ -96,7 +96,7 @@ export default function MyFiles({ onFileSelect }: Props) {
       </div>
 
       {/* 메인 그리드 */}
-      <div className="p-4 overflow-y-auto max-h-[500px] scrollbar-hide">
+      <div className="overflow-y-auto max-h-[500px] scrollbar-hide">
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {files.map((file) => (
             <div

@@ -76,9 +76,11 @@ export const Attachment = {
         />
 
         <Popup
+          id="user-file-storage"
           state={showPopup}
           title="나의 첨부파일 보관함"
           close={() => setShowPopup(false)}
+          showFooter={false}
         >
           <MyFiles
             onFileSelect={(file) => {
