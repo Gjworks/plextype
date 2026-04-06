@@ -60,6 +60,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     // 3. 유저 정보 반환 (정상 로그인 상태)
     if (userId) {
       const user = await findUserById(userId);
+      console.log(user)
       if (user) {
         return NextResponse.json({
           isLoggedIn: true,
@@ -86,5 +87,6 @@ function formatUserResponse(user: any) {
     accountId: user.accountId,
     nickName: user.nickName,
     email_address: user.email_address,
+    isAdmin: user.isAdmin,
   };
 }
