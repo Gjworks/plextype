@@ -211,11 +211,16 @@ export async function getDocumentList(
         }
       }
 
+      const latestComment = doc.Comment && doc.Comment.length > 0
+        ? doc.Comment[0]
+        : null;
+
       return {
         ...doc,
         content: previewContent,
         thumbnail,
-        extraFieldData // 🌟 명시적으로 포함
+        extraFieldData,
+        latestComment
       };
     });
 

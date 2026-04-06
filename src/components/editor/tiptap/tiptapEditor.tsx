@@ -13,6 +13,7 @@ import { Highlight } from "@tiptap/extension-highlight"; // ✅ 추가
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
+import CodeBlockShiki from 'tiptap-extension-code-block-shiki'
 
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
@@ -35,7 +36,7 @@ export interface TiptapEditorProps {
   initialContent?: string;
   onChange?: (html: string) => void;
 }
-
+const SHIKI_THEME = 'slack-ochin'; // 희정님 스타일
 
 const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
   const { onChange, initialContent } = props;
@@ -60,14 +61,31 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
     extensions: [
       StarterKit.configure({
         // ✅ 1. 인라인 코드 스타일 클래스 주입
+        codeBlock: false,
         code: {
           HTMLAttributes: {
             class: 'bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded-md font-mono text-[0.9em] font-medium',
           },
         },
         blockquote: { HTMLAttributes: { class: 'border-l-4 border-gray-300 pl-4 italic text-gray-600' } },
-        codeBlock: { HTMLAttributes: { class: 'rounded-md bg-gray-100 text-gray-600 p-4 font-mono text-sm my-4' } },
+        // codeBlock: { HTMLAttributes: { class: 'rounded-md bg-gray-100 text-gray-600 p-4 font-mono text-sm my-4' } },
       }),
+      CodeBlockShiki.configure({
+        defaultTheme: SHIKI_THEME,
+        languages: [
+          'javascript', 'typescript', 'jsx', 'tsx', // Next.js & React
+          'php',                                     // PHP
+          'sql',                                     // Query
+          'css', 'scss',                             // Tailwind & CSS
+          'bash', 'shell',                           // 터미널
+          'dart',                                    // Flutter
+          'html', 'json', 'yaml'                     // 기타 설정 파일
+        ],
+        defaultLanguage: 'typescript',
+        HTMLAttributes: {
+          class: 'plextype-shiki-block', // 디자인을 위한 클래스
+        },
+      }as any),
       BulletList.configure({
         HTMLAttributes: { class: 'list-disc ml-4' },
       }),
@@ -91,11 +109,9 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
     editorProps: {
       attributes: {
         // ✅ 2. Tailwind prose 커스텀: 앞뒤 따옴표(`) 제거 및 에디터 내부 스타일 강화
-        class: "prose prose-zinc prose-sm focus:outline-none max-w-none min-h-[400px] px-4 py-8 text-gray-800 " +
-          "prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-gray-400 " + // 리스트 스타일 강제 적용
-          "prose-code:before:content-none prose-code:after:content-none " +
-          "prose-code:bg-zinc-100 prose-code:text-[#eb5757] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md " +
-          "prose-blockquote:border-l-4 prose-blockquote:border-gray-300 ",
+        class: "prose prose-zinc prose-sm focus:outline-none max-w-none min-h-[400px] px-6 py-10 text-gray-800 " +
+          "prose-pre:p-0 prose-pre:bg-transparent " + // Shiki 자체 배경과 패딩을 쓰기 위해 prose 스타일 무력화
+          "prose-code:before:content-none prose-code:after:content-none ",
       },
     },
   });
@@ -351,6 +367,13 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
         </div>
 
         <Divider />
+        <ToolbarButton
+          tooltip="코드 블록 (Shiki)"
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          active={editor.isActive("codeBlock")}
+          icon={<SquareCode className="w-4 h-4" />}
+        />
+        <Divider />
 
         {/* 기타 블록 */}
         <ToolbarButton tooltip="인용구" onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} icon={<Quote className="w-4 h-4" />} />
@@ -360,13 +383,57 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
           active={editor.isActive("code")}
           icon={<Code className="w-4 h-4" />}
         />
-        <ToolbarButton tooltip="코드 블록" onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive("codeBlock")} icon={<SquareCode className="w-4 h-4" />} />
+
         <ToolbarButton tooltip="가로 구분선" onClick={() => editor.chain().focus().setHorizontalRule().run()} icon={<Minus className="w-4 h-4" />} />
         <ToolbarButton tooltip="표 삽입" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} icon={<TableIcon className="w-4 h-4" />} />
       </div>
 
       <div className="min-h-[400px] max-h-[800px] overflow-y-auto overflow-x-hidden resize-y border-b border-gray-50 bg-white"
            style={{ direction: 'ltr' }}>
+        <style dangerouslySetInnerHTML={{ __html: `
+  /* 1. 이 클래스가 곧 <pre> 태그입니다! */
+  .plextype-shiki-block {
+    display: block !important;
+    background-color: #f9fafb !important;
+    border-radius: 16px;
+    margin: 2.5rem 0;
+
+    /* 🌟 핵심 여백: pre 태그(자신)에게 직접 패딩을 줍니다 */
+    padding: 1.5rem 2rem !important; 
+
+    /* 폰트 및 텍스트 스타일 */
+    font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.8 !important;
+    letter-spacing: -0.01em;
+    
+    /* 가로 스크롤 설정 */
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    white-space: pre !important; /* 코드니까 줄바꿈 없이 그대로 */
+  }
+
+  /* 2. 내부에 있는 <code> 태그 스타일 */
+  .plextype-shiki-block code {
+    background: none !important;
+    padding: 0 !important;
+    color: inherit !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    white-space: inherit !important;
+  }
+
+  /* 크롬/사파리 스크롤바 숨기기 */
+  .plextype-shiki-block::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 에디터 내부 커서 및 라인 높이 보정 */
+  .tiptap {
+    outline: none !important;
+  }
+`}} />
         <EditorContent editor={editor} />
       </div>
     </div>
