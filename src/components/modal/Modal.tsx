@@ -1,195 +1,143 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import ModalPortal from "@/components/modal/ModalPortal";
 
 interface ModalProps {
   state: boolean;
   close: (state: boolean) => void;
-  size?: string;
-  position?: string;
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  position?: "center" | "top" | "bottom";
   escClose?: boolean;
   overlay?: boolean;
   overlayClose?: boolean;
   children: React.ReactNode;
 }
 
-interface ModalPosition {
-  y: string;
-  iniY: string;
-  pos: string;
-}
+const SIZE_MAP = {
+  sm: "max-w-screen-sm",
+  md: "max-w-screen-md",
+  lg: "max-w-screen-lg",
+  xl: "max-w-screen-xl",
+  "2xl": "max-w-screen-2xl",
+};
+
+const POSITION_MAP = {
+  center: "items-center",
+  top: "items-start pt-10",
+  bottom: "items-end pb-10",
+};
+
+const ModalContext = createContext<{ close: () => void } | undefined>(undefined);
+
+// 🌟 2. 편하게 쓰기 위한 커스텀 훅
+export const useModal = () => {
+  const context = useContext(ModalContext);
+  if (!context) throw new Error("useModal은 Modal 안에서만 쓸 수 있어요!");
+  return context;
+};
+
 const Modal: React.FC<ModalProps> = ({
-  state,
-  close,
-  size = "md",
-  position = "center",
-  escClose = true,
-  overlay = true,
-  overlayClose = true,
-  children,
-}) => {
-  const [modalState, setModalState] = useState(false);
+                                       state,
+                                       close,
+                                       size = "md",
+                                       position = "center",
+                                       escClose = true,
+                                       overlay = true,
+                                       overlayClose = true,
+                                       children,
+                                     }) => {
+  // 🌟 퉁퉁거리는 효과를 위한 상태
+  const [isDenied, setIsDenied] = useState(false);
+
+  // 스크롤 잠금
   useEffect(() => {
-    setModalState(state);
+    if (!state) return;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = "unset"; };
   }, [state]);
 
-  let modalSize;
-  switch (size) {
-    case "sm":
-      modalSize = "max-w-screen-sm";
-      break;
-    case "md":
-      modalSize = "max-w-screen-md";
-      break;
-    case "lg":
-      modalSize = "max-w-screen-lg";
-      break;
-    case "xl":
-      modalSize = "max-w-screen-xl";
-      break;
-    case "2xl":
-      modalSize = "max-w-screen-2xl";
-      break;
-    default:
-      modalSize = "max-w-screen-md";
-  }
-
-  let modalPosition: ModalPosition = {
-    y: "-50%",
-    iniY: "-60%",
-    pos: "top-1/2",
-  };
-  switch (position) {
-    case "center":
-      modalPosition = {
-        y: "-50%",
-        iniY: "-60%",
-        pos: "top-1/2",
-      };
-      break;
-    case "top":
-      modalPosition = {
-        y: "0%",
-        iniY: "-10%",
-        pos: "top-5",
-      };
-      break;
-    case "bottom":
-      modalPosition = {
-        y: "0%",
-        iniY: "40%",
-        pos: "bottom-2",
-      };
-      break;
-    default:
-      break;
-  }
-
+  // 🌟 ESC 키 이벤트 로직
   useEffect(() => {
-    if (modalState === true) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "unset";
-      };
-    }
-  }, [modalState]);
-
-  const variants = {
-    openModal: {
-      opacity: 1,
-      y: "0%",
-      transition: { duration: 0.3 },
-    },
-    closeModal: {
-      opacity: 0,
-      y: "-10%",
-      transition: { duration: 0.3 },
-    },
-  };
-  const modalVariants = {
-    openModal: {
-      opacity: 1,
-      y: modalPosition.y,
-      x: "-50%",
-      transition: { duration: 0.3 },
-    },
-    closeModal: {
-      opacity: 0,
-      y: modalPosition.y,
-      transition: { duration: 0.3 },
-    },
-  };
-  const exit = {
-    opacity: 0,
-    transition: { duration: 0.3 },
-  };
-  const handleCloseModal = () => {
-    close(false);
-  };
-  const handleOverlayCloseModal = () => {
-    overlayClose && close(false);
-  };
-
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      escClose &&
-        event.key === "Escape" &&
-        // ESC 키를 눌렀을 때 실행할 함수 호출
-        close(false);
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && state) {
+        if (escClose) {
+          close(false);
+        } else {
+          // 🌟 닫기 거부 시 효과 트리거
+          setIsDenied(true);
+          // 애니메이션이 끝날 즈음 상태 리셋
+          setTimeout(() => setIsDenied(false), 300);
+        }
+      }
     };
-
     document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [state, escClose, close]);
 
-    // 컴포넌트가 언마운트될 때 이벤트 리스너를 정리
-    return () => {
-      document.removeEventListener("keydown", handleKeyPress);
-    };
-  }, []); // useEffect가 처음에 한 번만 호출되도록 빈 배열을 전달
+  const overlayVariants: Variants = {
+    open: { opacity: 1 },
+    close: { opacity: 0 },
+  };
+
+  const contentVariants: Variants = {
+    open: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { type: "spring", damping: 25, stiffness: 300 }
+    },
+    close: {
+      opacity: 0,
+      y: 20,
+      scale: 0.95,
+      transition: { duration: 0.2 }
+    },
+    // 🌟 여기를 수정합니다!
+    denied: {
+      opacity: 1, // 🌟 퉁퉁거리는 동안 투명해지지 않게 고정
+      y: 0,       // 🌟 위치도 위아래로 튀지 않게 고정
+      scale: [1, 1.04, 0.98, 1.02, 1],
+      transition: { duration: 0.3 }
+    }
+  };
+
   return (
-    <>
-      <AnimatePresence>
-        {state && (
-          <>
-            <ModalPortal>
+    <AnimatePresence>
+      {state && (
+        <ModalPortal>
+          <div
+            className={`fixed inset-0 z-[100] flex justify-center px-4 ${POSITION_MAP[position]}`}
+            role="dialog"
+            aria-modal="true"
+          >
+            {overlay && (
               <motion.div
-                initial={{ opacity: 0, y: modalPosition.iniY, x: "-50%" }}
-                animate={modalState === true ? "openModal" : "closeModal"}
-                variants={modalVariants}
-                exit={exit}
-                className={`bootom-1 z-101 dark:bg-dark-800/95 dark:border-dark-900/75 dark:border-t-dark-800 fixed left-1/2 ${modalPosition.pos} mx-auto mb-2 w-full ${modalSize} overflow-hidden rounded-xl bg-white  backdrop-blur-lg lg:mb-10 dark:border`}
-              >
-                <div className="" onClick={handleCloseModal}></div>
-                <motion.div
-                  initial={{ opacity: 0, y: "-10%" }}
-                  animate={{
-                    opacity: 1,
-                    y: "0%",
-                    transition: { duration: 0.5 },
-                  }}
-                  exit={{
-                    opacity: 1,
-                    y: "-10%",
-                    transition: { duration: 0.5 },
-                  }}
-                  className="z-101"
-                >
-                  {children}
-                </motion.div>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={modalState === true ? "openModal" : "closeModal"}
-                variants={variants}
-                exit={exit}
-                onClick={handleOverlayCloseModal}
-                className="dark: z-100 fixed inset-0 bg-gray-950/70 dark:bg-dark-800/20 backdrop-blur"
-              ></motion.div>
-            </ModalPortal>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+                initial="close"
+                animate="open"
+                exit="close"
+                variants={overlayVariants}
+                onClick={() => overlayClose && close(false)}
+                className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm"
+              />
+            )}
+
+            <motion.div
+              initial="close"
+              // 🌟 isDenied가 true면 denied 애니메이션을, 아니면 open/close 상태 유지
+              animate={isDenied ? "denied" : (state ? "open" : "close")}
+              exit="close"
+              variants={contentVariants}
+              className={`relative z-[101] w-full ${SIZE_MAP[size]} bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800`}
+            >
+              <ModalContext.Provider value={{ close: () => close(false) }}>
+                {children}
+              </ModalContext.Provider>
+            </motion.div>
+          </div>
+        </ModalPortal>
+      )}
+    </AnimatePresence>
   );
 };
 
