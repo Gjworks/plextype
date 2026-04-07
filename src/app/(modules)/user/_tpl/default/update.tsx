@@ -179,7 +179,7 @@ const UpdateUser = ({ initialUser }: Props) => {
         </form>
       </div>
 
-      <Popup state={showPopup} title="비밀번호 변경" close={closePopup}>
+      <Popup id="change-password-popup" state={showPopup} title="비밀번호 변경" close={closePopup}>
         <ChangePassword close={closePopup} />
       </Popup>
     </>
