@@ -13,6 +13,7 @@ import Link from "next/link";
 import Dropdown from "@/components/dropdown/Dropdown";
 import DefaultList from "@/components/nav/DefaultList";
 import { useUserContext } from "@/providers/UserProvider";
+import Avator from "@components/avator/Avator";
 
 const MENU_CONFIG = [
   { id: "dashboard", href: "/admin", icon: <LayoutGrid size={18} />, label: "Dashboard" },
@@ -40,11 +41,16 @@ const MENU_CONFIG = [
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
+  const pathname = usePathname();
+  // 1️⃣ 공통 유틸: 경로 끝의 슬래시 제거
+  const cleanPath = (p: string) => p.replace(/\/$/, "");
+  const normalizedPathname = cleanPath(pathname);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const pathname = usePathname();
+
   const { user, isLoading } = useUserContext();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const isDashboardMain = normalizedPathname === "/admin";
 
   const dropdownRef = useRef<HTMLDivElement>(null); // 🌟 드롭다운 영역 감지용 Ref
 
@@ -81,10 +87,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const callbackName = (name: string) => {
     if (name === "Signout") handleSignOut();
   };
-
-  // 1️⃣ 공통 유틸: 경로 끝의 슬래시 제거
-  const cleanPath = (p: string) => p.replace(/\/$/, "");
-  const normalizedPathname = cleanPath(pathname);
 
   // 2️⃣ 모바일 체크 (실시간 해상도 감지) - 사이드바 대응용
   useEffect(() => {
@@ -128,10 +130,10 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="flex flex-col border-r border-white/40 bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
+        className="flex flex-col bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
       >
         <div className="h-16 flex items-center justify-center shrink-0">
-          <div className="w-10 h-10 bg-black rounded-xl shadow-gray-400 flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg cursor-pointer">G</div>
+          <div className="w-10 h-10 bg-black rounded-xl shadow-gray-400 flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg shadow-gray-950/25 cursor-pointer">G</div>
           <AnimatePresence>
             {isExpanded && (
               <motion.span initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 0 }}
@@ -179,10 +181,10 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* 2. RIGHT WRAPPER */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 flex items-center justify-between px-8 bg-white/40 backdrop-blur-2xl border-b border-white/60 shrink-0 z-40 relative">
+        <header className="h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 relative">
 
           {/* Left: Breadcrumbs */}
-          <div className="flex items-center gap-2 text-[12px] font-medium text-zinc-400">
+          <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-zinc-400">
             <span className="uppercase tracking-widest text-[10px]">gjworks</span>
             <ChevronRight size={14} className="text-zinc-200" />
             <span className="text-black font-bold uppercase tracking-widest text-[10px]">
@@ -190,11 +192,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-0 md:gap-3">
             {/* Search */}
             <div className="relative group hidden lg:block">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={14} />
-              <input type="text" placeholder="Quick search..." className="bg-black/5 border border-white/60 rounded-full py-1.5 pl-9 pr-4 text-[12px] w-48 focus:w-64 focus:bg-white transition-all outline-none" />
+              <input type="text" placeholder="Quick search..." className="bg-black/5 rounded-full py-1.5 pl-9 pr-4 text-[12px] w-48 focus:w-64 focus:bg-white transition-all outline-none" />
             </div>
 
             <button className="p-2 text-zinc-500 hover:bg-black/5 rounded-full transition-all relative">
@@ -211,23 +213,15 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               ) : (
                 <button
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
-                  className={`flex items-center gap-3 pl-4 pr-3 py-1.5 rounded-full transition-all border border-transparent group ${
+                  className={`flex items-center gap-3 pl-4 pr-3 py-1.5 rounded-full transition-all border border-transparent group cursor-pointer ${
                     showUserDropdown ? 'bg-white shadow-sm border-white/60' : 'hover:bg-white/80 hover:border-white/60 hover:shadow-sm'
                   }`}
                 >
                   {/* 상태 도트 */}
                   <div className="relative flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    <Avator username={user?.nickName} isLoggedIn={!!user} tokenExpiryTime={user?.expiry || (Date.now() + 3600000)} />
                   </div>
 
-                  <div className="flex flex-col items-start leading-tight -space-y-0.5 text-left">
-            <span className="text-[13px] font-bold text-zinc-900 tracking-tight">
-              {user?.nickName || "Guest User"}
-            </span>
-                    <span className="text-[9px] text-zinc-400 font-mono uppercase tracking-widest font-medium">
-              Administrator
-            </span>
-                  </div>
 
                   <ChevronDown size={14} className={`text-zinc-300 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
                 </button>
@@ -241,6 +235,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
                     transition={{ duration: 0.15 }}
+                    style={{ transform: "translateZ(0)" }}
                     className="absolute right-0 top-[calc(100%+8px)] w-60 z-[100]"
                   >
                     <div className="overflow-hidden bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[20px] shadow-xl p-2">
@@ -261,7 +256,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         </header>
 
         <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-4 overflow-hidden relative">
-          <main className="h-full w-full bg-white/80 backdrop-blur-lg rounded-xl md:rounded-2xl border border-zinc-100/50 flex flex-col overflow-hidden">
+          <main className={`h-full w-full flex flex-col overflow-hidden transition-all duration-500 ${
+            isDashboardMain
+              ? "bg-transparent border-none shadow-none" // 대시보드일 때 스타일
+              : "bg-white/80 backdrop-blur-lg rounded-xl md:rounded-2xl border border-zinc-100/50 shadow-sm" // 일반 페이지 스타일
+          }`}>
 
             {/* 🌟 탭 내비게이션: 서브 메뉴가 있을 때만 출력 */}
             <AnimatePresence mode="wait">
@@ -301,7 +300,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
             {/* 실제 컨텐츠 스크롤 영역 */}
             <div className="flex-1 overflow-y-auto scrollbar-hide px-6 md:px-12 py-8 md:py-12">
-              <div className="max-w-[1200px] mx-auto">
+              <div>
                 {children}
               </div>
             </div>
@@ -356,9 +355,22 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
   // 🌟 2. 하위 메뉴 중 정확히 어디에 불을 켤지 결정 (isChildActive)
   const isChildActive = (subHref: string) => {
     const cleanedSub = cleanPath(subHref);
-    // URL에 'category'나 'list' 같은 핵심 키워드가 포함되어 있는지 확인
-    const subKeyword = cleanedSub.split("/").pop();
-    return normalizedPathname.includes(subKeyword || "");
+
+    // 🌟 1. 정확히 일치하면 당연히 True
+    if (normalizedPathname === cleanedSub) return true;
+
+    // 🌟 2. 동적 경로(/2/categories 등) 대응 로직
+    const subSegments = cleanedSub.split("/"); // ["", "admin", "user", "list"]
+    const pathSegments = normalizedPathname.split("/"); // ["", "admin", "posts", "list"]
+
+    // 핵심: 대분류 카테고리(index 2번: user vs posts)가 다르면 무조건 탈락!
+    const isSameCategory = subSegments[2] === pathSegments[2];
+
+    // 소분류 키워드(list, category 등) 포함 여부 확인
+    const subKeyword = [...subSegments].pop(); // 원본 훼손 방지를 위해 복사 후 pop
+    const hasKeyword = normalizedPathname.includes(subKeyword || "");
+
+    return isSameCategory && hasKeyword;
   };
 
   const [isOpen, setIsOpen] = useState(isActive);
