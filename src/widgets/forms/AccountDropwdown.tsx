@@ -69,7 +69,7 @@ const AccountDropdown = () => {
             className="hover:bg-gray-100/20 py-2 px-3 rounded-md transition-colors cursor-pointer"
           >
             {/* 아바타는 user 데이터 유무에 따라 알아서 동작 */}
-            <Avator username={user?.nickName} isLoggedIn={!!user} />
+            <Avator username={user?.nickName} isLoggedIn={!!user} tokenExpiryTime={user?.expiry || (Date.now() + 3600000)} />
           </button>
         )}
 
