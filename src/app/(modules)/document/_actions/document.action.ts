@@ -22,7 +22,6 @@ async function getLoggedInfo() {
 export async function getDocument(id: number): Promise<ActionState<DocumentInfo>> {
   try {
     const document = await documentQuery.findDocument(id);
-    console.log(document)
     if (!document) {
       return {
         success: false,

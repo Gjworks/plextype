@@ -4,6 +4,7 @@
 import { revalidatePath } from "next/cache";
 import * as query from "./comment.query";
 import { ActionState, CommentWithChildren, CommentListResponse } from "../../comment/_actions/_type";
+import { withTrigger } from "@/utils/trigger/triggerWrapper";
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
 
@@ -49,7 +50,8 @@ export async function getCommentsAction(documentId: number, page: number = 1, pa
 }
 
 // [SAVE] 원본의 addComment + addCommentAndIncrementCount 통합
-export async function saveCommentAction(formData: FormData, paths?: string): Promise<ActionState<CommentWithChildren>> {
+export const saveCommentAction = withTrigger("comment.saved", async (formData: FormData, paths?: string): Promise<ActionState<CommentWithChildren>> => {
+  console.log("🚀 saveCommentAction 시작됨!");
   try {
     const loggedInfo = await getLoggedInfo();
     if (!loggedInfo) return { success: false, message: "로그인 필요" };
@@ -74,6 +76,7 @@ export async function saveCommentAction(formData: FormData, paths?: string): Pro
       }
       result = await query.insertComment({ content, documentId, userId: loggedInfo.id, parentId: finalParentId, depth });
 
+      console.log("🔥 DB 저장 직후 결과:", JSON.stringify(result, null, 2));
       // ✅ 여기서 원본의 addCommentAndIncrementCount 로직 실행
       await query.incrementDocumentCommentCount(documentId);
     }
@@ -83,7 +86,7 @@ export async function saveCommentAction(formData: FormData, paths?: string): Pro
   } catch (error) {
     return { success: false, message: "저장 실패" };
   }
-}
+});
 
 // [REMOVE] 원본의 deleteComment + deleteCommentAndDecrementCount 통합
 export async function removeCommentAction(documentId: number, commentId: number, paths?: string): Promise<ActionState<null>> {

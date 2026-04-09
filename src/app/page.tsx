@@ -1,11 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import MainLayout from "src/layouts/fullLayout/Layout";
+import MainLayout from "src/layouts/default/Layout";
 import Image from "next/image";
 import ContentListWidget from "@widgets/content/ContentListWidget";
+import { useEffect } from "react";
+
 
 export default function Page() {
+
   const parentVariants = {
     onscreen: {
       transition: { staggerChildren: 0.05 },

@@ -4,6 +4,8 @@ import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import { UserProvider } from "@/providers/UserProvider";
 import Log from "@/utils/debug/Log";
 export const dynamic = 'force-dynamic';
+import { ToastContainer } from "@components/toast/toast";
+import RealtimeNotificationListener from "@components/toast/RealtimeNotificationListener";
 
 export default function RootLayout({ children }) {
   if (typeof globalThis.Log === "undefined") {
@@ -16,8 +18,11 @@ export default function RootLayout({ children }) {
       <body>
         <ReactQueryProvider>
           <UserProvider>
+            <RealtimeNotificationListener />
+
             {children}
-            <div id="toast"></div>
+
+            <ToastContainer position="top-right" />
             <div id="left"></div>
             <div id="right"></div>
             <div id="bottom"></div>

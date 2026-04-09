@@ -34,6 +34,8 @@
       "@modules/*": [
         "./src/app/(modules)/*"
       ],
+      "@extensions/*": ["./src/extensions/*"],
+      "@extensions/trigger": ["./src/extensions/trigger/index.ts"],
       "@components/*": [
         "./src/components/*"
       ],

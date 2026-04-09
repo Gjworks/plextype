@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import DefaultLayout from 'src/layouts/fullLayout/Layout'
+import DefaultLayout from '@layouts/default/Layout'
 
 const PageLayout = ({ children }) => {
   return <DefaultLayout>{children}</DefaultLayout>
