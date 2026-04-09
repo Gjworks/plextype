@@ -1,0 +1,13 @@
+{
+  "comment.saved": [
+    {
+      "handler": "sendNotification",
+      "map": {
+        "userId": "data.document.userId",
+        "title": "💬 새로운 댓글 알림",
+        "content": "data.content",
+        "linkUrl": "/posts/{{data.document.module.mid}}/{{data.document.id}}"
+      }
+    }
+  ]
+}

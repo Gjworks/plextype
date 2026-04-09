@@ -31,8 +31,6 @@ export async function saveUser(formData: FormData): Promise<ActionState<null>> {
     group: formData.getAll("groups[]").map(g => ({ groupId: g })),
   };
 
-  console.log(formPayload)
-
   // 🛡️ [1차 방어선] Zod 형식 검사
   const validation = validateForm(UserUpsertSchema, formPayload);
   if (!validation.isValid) return validation.errorResponse;
