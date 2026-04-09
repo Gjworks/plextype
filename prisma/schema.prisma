@@ -25,6 +25,7 @@ model User {
   profile       Profile?
   userGroups    UserGroupUser[]
   Attachment    Attachment[]
+  notifications Notification[]
 
   @@index([email_address], map: "idx_user_email")
   @@index([isAdmin], map: "idx_user_isAdmin")
@@ -209,4 +210,42 @@ enum PermissionSubject {
   member
   admin
   group
+}
+
+model Notification {
+  id   Int    @id @default(autoincrement())
+  uuid String @unique @default(cuid())
+
+  // 👤 수신자 (기존 User 모델과 연결)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type     NotificationType @default(info)
+  title    String?          @db.VarChar(100) // 알림 제목 (예: "새로운 댓글", "시스템 보안")
+  content  String           @db.Text // 알림 본문 (Toast의 message)
+  imageUrl String?          @db.Text // 프로필 이미지, 앱 아이콘, 썸네일 경로
+
+  // 🔗 액션 (클릭 시 이동할 경로)
+  linkUrl String? @db.Text // 예: "/board/free/123" 또는 "https://..."
+
+  // 🛠️ 상태 및 메타데이터
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  // 확장성을 위한 JSON (예: 어떤 게시물인지, 누가 보냈는지 상세 ID 저장)
+  metadata Json? @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId], map: "idx_notification_user")
+  @@index([isRead], map: "idx_notification_unread")
+  @@index([createdAt], map: "idx_notification_created")
+}
+
+enum NotificationType {
+  info
+  success
+  warning
+  error
 }

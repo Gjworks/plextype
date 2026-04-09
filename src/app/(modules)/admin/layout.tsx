@@ -24,7 +24,7 @@ const MENU_CONFIG = [
     items: [
       { label: "회원 목록", href: "/admin/user/list" },
       { label: "회원 추가", href: "/admin/user/create" },
-      { label: "권한 관리", href: "/admin/user/roles" },
+      { label: "회원 그룹 관리", href: "/admin/user/groupList" },
     ]
   },
   {
@@ -118,7 +118,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   }, [normalizedPathname]);
 
   return (
-    <div className="flex h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:text-black overflow-hidden font-sans relative">
+    <div className="flex h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden font-sans relative">
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
@@ -137,7 +137,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           <AnimatePresence>
             {isExpanded && (
               <motion.span initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 0 }}
-                           className="ml-3 text-[14px] font-bold tracking-tight truncate text-zinc-800 whitespace-nowrap"
+                           className="ml-3 text-[14px] font-bold tracking-tight truncate text-gray-800 whitespace-nowrap"
               >
                 Gjworks
               </motion.span>
@@ -167,10 +167,10 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 exit={{ opacity: 0, x: -5 }}
                 className="flex flex-col items-start leading-none"
               >
-        <span className="text-[9px] font-bold text-zinc-400 font-mono tracking-widest uppercase mb-0.5">
+        <span className="text-[9px] font-bold text-gray-400 font-mono tracking-widest uppercase mb-0.5">
           System Version
         </span>
-                <span className="text-[11px] font-bold text-zinc-600 font-mono tracking-tighter">
+                <span className="text-[11px] font-bold text-gray-600 font-mono tracking-tighter">
           v{pkg.version}
         </span>
               </motion.div>
@@ -184,9 +184,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         <header className="h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 relative">
 
           {/* Left: Breadcrumbs */}
-          <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-zinc-400">
+          <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
             <span className="uppercase tracking-widest text-[10px]">gjworks</span>
-            <ChevronRight size={14} className="text-zinc-200" />
+            <ChevronRight size={14} className="text-gray-200" />
             <span className="text-black font-bold uppercase tracking-widest text-[10px]">
               {pathname === "/admin" ? "Overview" : pathname.split('/').pop()}
             </span>
@@ -195,16 +195,16 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-0 md:gap-3">
             {/* Search */}
             <div className="relative group hidden lg:block">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={14} />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
               <input type="text" placeholder="Quick search..." className="bg-black/5 rounded-full py-1.5 pl-9 pr-4 text-[12px] w-48 focus:w-64 focus:bg-white transition-all outline-none" />
             </div>
 
-            <button className="p-2 text-zinc-500 hover:bg-black/5 rounded-full transition-all relative">
+            <button className="p-2 text-gray-500 hover:bg-black/5 rounded-full transition-all relative">
               <Bell size={18} />
               <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-600 rounded-full border-2 border-white" />
             </button>
 
-            <div className="h-4 w-[1px] bg-zinc-200/60 mx-1" />
+            <div className="h-4 w-[1px] bg-gray-200/60 mx-1" />
 
             {/* 🌟 런타임 데이터가 반영된 유저 드롭다운 버튼 */}
             <div className="relative" ref={dropdownRef}>
@@ -223,7 +223,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                   </div>
 
 
-                  <ChevronDown size={14} className={`text-zinc-300 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={14} className={`text-gray-300 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
                 </button>
               )}
 
@@ -240,8 +240,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                   >
                     <div className="overflow-hidden bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[20px] shadow-xl p-2">
                       <div className="px-3.5 py-3 border-b border-black/[0.04] mb-1.5">
-                        <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-tighter mb-0.5">Signed in as</p>
-                        <p className="text-[13px] font-bold text-zinc-900 truncate">{user?.email}</p>
+                        <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tighter mb-0.5">Signed in as</p>
+                        <p className="text-[13px] font-bold text-gray-900 truncate">{user?.email}</p>
                       </div>
 
                       <div className="space-y-0.5">
@@ -256,10 +256,10 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         </header>
 
         <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-4 overflow-hidden relative">
-          <main className={`h-full w-full flex flex-col overflow-hidden transition-all duration-500 ${
+          <main className={`h-full w-full flex flex-col overflow-hidden ${
             isDashboardMain
               ? "bg-transparent border-none shadow-none" // 대시보드일 때 스타일
-              : "bg-white/80 backdrop-blur-lg rounded-xl md:rounded-2xl border border-zinc-100/50 shadow-sm" // 일반 페이지 스타일
+              : "bg-white/80 backdrop-blur-lg rounded-xl md:rounded-xl shadow-xl shadow-gray-100" // 일반 페이지 스타일
           }`}>
 
             {/* 🌟 탭 내비게이션: 서브 메뉴가 있을 때만 출력 */}
@@ -269,7 +269,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="shrink-0 border-b border-zinc-100 bg-white/50 backdrop-blur-sm px-6 md:px-10"
+                  className="shrink-0 border-b border-gray-100 bg-white/50 backdrop-blur-sm px-6 md:px-10"
                 >
                   <div className="flex items-center gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
                     {activeSubMenus.map((sub) => {
@@ -279,7 +279,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                       return (
                         <Link key={sub.href} href={sub.href} className="relative py-4 shrink-0">
                         <span className={`text-[13px] font-bold transition-colors ${
-                        isSubActive ? 'text-blue-600' : 'text-zinc-400 hover:text-zinc-900'
+                        isSubActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-900'
                       }`}>
                       {sub.label}
                     </span>
@@ -299,7 +299,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </AnimatePresence>
 
             {/* 실제 컨텐츠 스크롤 영역 */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide px-6 md:px-12 py-8 md:py-12">
+            <div className="flex-1 overflow-y-auto scrollbar-hide px-2 py-3">
               <div>
                 {children}
               </div>
@@ -399,20 +399,20 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
         className={`group flex items-center w-full rounded-xl transition-all h-10 px-3 cursor-pointer ${
           isActive
             ? 'bg-white/80 text-black shadow-sm border border-white/60'
-            : 'text-zinc-400 hover:text-black hover:bg-white/40 border border-transparent'
+            : 'text-gray-400 hover:text-black hover:bg-white/40 border border-transparent'
         }`}
       >
-        <span className={`${isActive ? 'text-blue-600' : 'text-zinc-400 group-hover:text-black'} shrink-0 transition-colors`}>
+        <span className={`${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-black'} shrink-0 transition-colors`}>
           {menu.icon}
         </span>
         <AnimatePresence>
           {isExpanded && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 items-center justify-between ml-3 overflow-hidden">
-              <span className={`text-[13px] font-bold tracking-tight truncate ${isActive ? 'text-black' : ''}`}>
+              <span className={`text-[13px] font-semibold tracking-tight truncate ${isActive ? 'text-black' : ''}`}>
                 {menu.label}
               </span>
               <motion.span animate={{ rotate: isOpen ? 180 : 0 }}>
-                <ChevronDown size={14} className={isActive ? 'text-black' : 'text-zinc-300'} />
+                <ChevronDown size={14} className={isActive ? 'text-black' : 'text-gray-300'} />
               </motion.span>
             </motion.div>
           )}
@@ -432,8 +432,8 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
               const active = isChildActive(sub.href); // 고도화된 체크 함수 사용
               return (
                 <Link key={sub.href} href={sub.href}>
-                  <div className={`px-4 py-2 text-[12px] font-medium transition-colors hover:text-black rounded-lg cursor-pointer ${
-                    active ? 'text-blue-600 font-bold' : 'text-zinc-400'
+                  <div className={`px-4 py-2 text-xs font-medium transition-colors hover:text-black rounded-lg cursor-pointer ${
+                    active ? 'text-blue-600' : 'text-gray-500'
                   }`}>
                     {sub.label}
                   </div>
@@ -454,10 +454,10 @@ const SideItem = ({ href, icon, label, isExpanded, active }: any) => {
   return (
     <Link href={href}>
       <button className={`group flex items-center w-full rounded-xl transition-all h-10 px-3 mt-0.5 cursor-pointer ${
-        isActive ? 'bg-white/80 text-black shadow-sm border border-white/60' : 'text-zinc-400 hover:text-black hover:bg-white/40 border border-transparent'
+        isActive ? 'bg-white/80 text-black shadow-sm border border-white/60' : 'text-gray-400 hover:text-black hover:bg-white/40 border border-transparent'
       }`}>
-        <span className={`${isActive ? 'text-blue-600' : 'text-zinc-400 group-hover:text-black'} shrink-0 transition-colors`}>{icon}</span>
-        {isExpanded && <span className="ml-3 text-[13px] font-bold tracking-tight">{label}</span>}
+        <span className={`${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-black'} shrink-0 transition-colors`}>{icon}</span>
+        {isExpanded && <span className="ml-3 text-[13px] font-semibold tracking-tight">{label}</span>}
       </button>
     </Link>
   );

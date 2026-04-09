@@ -1,110 +1,70 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import RightPortal from "@/components/panel/RightPortal";
+import { X } from "lucide-react";
 
 const Right = ({ state, close, children }) => {
-  const [panelState, setPanelState] = useState(false);
-  useEffect(() => {
-    setPanelState(state);
-  }, [state]);
-  // useEffect(() => {
-  //   if (panelState === true) {
-  //     const $body = document.querySelector('body')
-  //     const overflow = $body.style.overflow
-  //     $body.style.overflow = 'hidden'
-  //     return () => {
-  //       $body.style.overflow = overflow
-  //     }
-  //   }
-  // }, [panelState])
+  // state(부모의 showRight)를 직접 사용해도 됩니다.
+  // panelState를 굳이 또 만들면 싱크가 늦게 맞을 수 있어요.
 
   useEffect(() => {
-    if (panelState === true) {
+    if (state === true) {
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "unset";
       };
     }
-  }, [panelState]);
+  }, [state]);
 
-  const variants = {
+  const variants: Variants = {
     openPanel: {
-      right: "0px",
+      x: 0, // right 대신 x(translate)를 쓰는게 성능상 훨씬 부드러워요
+      transition: { type: "spring", damping: 30, stiffness: 300, mass: 0.8 },
+    },
+    closePanel: {
+      x: "100%", // 화면 밖으로 완전히 밀어냄
       transition: { duration: 0.3 },
     },
-    closePanel: {
-      right: "-480px",
-      transition: { duration: 0.5 },
-    },
   };
-  const exit = {
-    right: "-480px",
-    transition: { duration: 0.5 },
-  };
-  const variants2 = {
-    openPanel: {
-      opacity: 1,
-      transition: { duration: 0.5 },
-    },
-    closePanel: {
-      opacity: 0,
-      transition: { duration: 0.5 },
-    },
-  };
-  const exit2 = {
-    opacity: 0,
-    transition: { duration: 0.5 },
-  };
+
   const handleClosePanel = () => {
     close(false);
   };
+
   return (
-    <>
-      <AnimatePresence>
-        {state && (
-          <RightPortal>
-            <motion.div
-              initial={{ right: "-480px" }}
-              animate={panelState === true ? "openPanel" : "closePanel"}
-              variants={variants}
-              exit={exit}
-              className="z-99 fixed bottom-0 top-0 w-[380px] transform"
-            >
-              <button
-                onClick={handleClosePanel}
-                className="z-99 absolute right-2 top-2 hidden rounded-full p-2"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="h-6 w-6 text-black dark:text-white "
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-              <div className="z-98 relative overflow-hidden">{children}</div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={panelState === true ? "openPanel" : "closePanel"}
-              variants={variants2}
-              exit={exit2}
-              onClick={handleClosePanel}
-              className="z-90 fixed inset-0 bg-gray-950/20 dark:bg-dark-800/20"
-            ></motion.div>
-          </RightPortal>
-        )}
-      </AnimatePresence>
-    </>
+    <AnimatePresence>
+      {state && (
+        <RightPortal>
+          {/* 1. 뒷배경 오버레이 (Portal 안에 있어야 함) */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleClosePanel}
+            className="fixed inset-0 z-[99] bg-black/10 backdrop-blur-[2px]"
+          />
+
+          {/* 2. 슬라이드 패널 */}
+          <motion.div
+            initial={{ x: "100%" }} // 오른쪽 밖에서 시작
+            animate="openPanel"
+            exit="closePanel"
+            variants={variants}
+            // 🌟 z-index를 표준 방식으로 수정
+            className="fixed bottom-0 right-0 top-0 z-[100] w-[400px] flex shadow-2xl"
+          >
+
+            {/* 실제 내용 (MymenuTemplate이 들어오는 곳) */}
+            <div className="flex-1 overflow-hidden">
+              {children}
+            </div>
+          </motion.div>
+        </RightPortal>
+      )}
+    </AnimatePresence>
   );
 };
+
 export default Right;

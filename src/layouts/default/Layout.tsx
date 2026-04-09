@@ -1,9 +1,9 @@
 "use client";
 
-import Header from "src/layouts/fullLayout/Header";
-import Footer from "src/layouts/fullLayout/Footer";
+import Header from "@layouts/default/Header";
+import Footer from "@layouts/default/Footer";
 
-const FullLayout = ({ children }) => {
+const DefaultLayout = ({ children }) => {
   // useEffect(() => {
   //   const htmlElement = document.documentElement;
   //   if (!htmlElement.classList.contains("dark")) {
@@ -21,4 +21,4 @@ const FullLayout = ({ children }) => {
   );
 };
 
-export default FullLayout;
+export default DefaultLayout;

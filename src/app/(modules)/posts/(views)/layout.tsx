@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import React from "react";
-import DefaultLayout from "@/layouts/fullLayout/Layout";
+import DefaultLayout from "@layouts/default/Layout";
 
 export default async function PageLayout({
                                            children,

@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import DefaultLayout from "@/layouts/fullLayout/Layout";
+import DefaultLayout from "@layouts/default/Layout";
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
 
