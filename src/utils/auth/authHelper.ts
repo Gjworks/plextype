@@ -9,7 +9,8 @@ export async function getAuthenticatedUser() {
 
   // 🌟 cookies() 역시 Promise이므로 await가 필요합니다.
   const cookieStore = await cookies();
-  const tokenFromCookie = cookieStore.get("access_token")?.value;
+  console.log("현재 쿠키 목록:", cookieStore.getAll().map(c => c.name));
+  const tokenFromCookie = cookieStore.get("accessToken")?.value;
 
   const token = tokenFromHeader || tokenFromCookie;
 

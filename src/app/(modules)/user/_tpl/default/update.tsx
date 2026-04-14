@@ -13,7 +13,7 @@ import Button from "@components/button/Button"; // 💡 공용 버튼
 // 💡 1. InputField 임포트 추가! (경로가 다르면 수정해주세요)
 import InputField from "@components/form/InputField";
 
-import { saveUser } from "@modules/user/_actions/user.action";
+import { saveUserAction } from "@modules/user/_actions/user.action";
 import { UserInfo } from "@modules/user/_actions/_type";
 
 type Props = {
@@ -47,7 +47,7 @@ const UpdateUser = ({ initialUser }: Props) => {
         formData.append("password", "");
       }
 
-      return await saveUser(formData);
+      return await saveUserAction(formData);
     },
     onSuccess: async (res) => {
       if (!res.success) {

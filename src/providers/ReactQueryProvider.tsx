@@ -13,7 +13,7 @@ export default function ReactQueryProvider({ children }) {
             staleTime: 5 * 60 * 1000,
             gcTime: 10 * 60 * 1000,
             refetchOnMount: false, // 뒤로가기 시 불필요한 재요청 방지
-            refetchOnWindowFocus: false,
+            refetchOnWindowFocus: true,
           },
         },
       })
