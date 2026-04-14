@@ -1,7 +1,7 @@
 // src/app/(extentions)/user/_actions/group.action.ts
 "use server";
 
-import { getUserSession } from "@modules/user/_actions/user.action"; // 파일 경로에 맞게 수정
+import { getUserSessionAction } from "@modules/user/_actions/user.action"; // 파일 경로에 맞게 수정
 import * as query from "./group.query";
 import { validateForm } from "@/utils/validation/formValidator";
 import { ActionState, GroupInfo, GroupUpsertSchema } from "./_type";
@@ -55,7 +55,7 @@ export async function getAllGroupRecords() {
 // [ACTION] 그룹 추가/수정 (Zod 파싱 + ActionState 적용)
 // ==========================================
 export const upsertGroup = async (formData: FormData): Promise<ActionState<GroupInfo>> => {
-  const sessionInfo = await getUserSession();
+  const sessionInfo = await getUserSessionAction();
 
   // 1. 관리자 권한 체크
   if (!sessionInfo?.data?.isAdmin) {
@@ -113,7 +113,7 @@ export const upsertGroup = async (formData: FormData): Promise<ActionState<Group
 
 // 그룹 삭제 (Action)
 export const deleteGroup = async (groupId: number) => {
-  const sessionInfo = await getUserSession();
+  const sessionInfo = await getUserSessionAction();
 
   if (!sessionInfo?.data?.isAdmin) {
     return { success: false, type: "error", message: '권한이 없습니다.', data: {} };

@@ -4,7 +4,7 @@ import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Alert from "@components/message/Alert";
 
-import { saveUser } from "@modules/user/_actions/user.action";
+import { saveUserAction } from "@modules/user/_actions/user.action";
 import InputField from "@components/form/InputField";
 import Button from "@components/button/Button";
 
@@ -63,7 +63,7 @@ const UpsertForm = ({ user, groupList }:UpsertFormProps) => {
     selectedGroups.forEach((id) => formData.append("groups[]", id));
 
     startTransition(async () => {
-      const res = await saveUser(formData);
+      const res = await saveUserAction(formData);
 
       if (!res.success) {
         setError({ type: res.type || "error", message: res.message, fieldErrors: res.fieldErrors });

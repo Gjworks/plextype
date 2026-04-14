@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Alert from "@components/message/Alert";
-import {saveUser} from "@modules/user/_actions/user.action";
+import {saveUserAction} from "@modules/user/_actions/user.action";
 import { ActionResponse } from "@modules/user/_actions/_type"
 
 const DashboardUserInsert = () => {
@@ -19,7 +19,7 @@ const DashboardUserInsert = () => {
 
     try {
       // 💡 useActionState를 안 쓰므로 이제 prevState 없이 formData만 보냅니다!
-      const result = await saveUser(formData);
+      const result = await saveUserAction(formData);
       setResponse(result);
     } catch (error) {
       setResponse({ success: false, message: "연결 오류가 발생했습니다.", type: "error" });

@@ -1,18 +1,18 @@
 import { NextRequest } from "next/server";
 import { jsonResponse } from "@/utils/helper/jsonResponse";
 import {
-  saveUser,
-  getUserSession,
+  saveUserAction,
+  getUserSessionAction,
   removeMyAccount,
 } from "@modules/user/_actions/user.action";
 
 /**
  * [GET] 내 정보 조회
- * - 전용 액션(getUserSession)을 사용하여 보안과 로직을 통합합니다.
+ * - 전용 액션(getUserSessionAction)을 사용하여 보안과 로직을 통합합니다.
  */
 export async function GET(): Promise<Response> {
   try {
-    const result = await getUserSession();
+    const result = await getUserSessionAction();
 
     if (result.success) {
       return jsonResponse(200, result.message, true, result.data);
@@ -26,7 +26,7 @@ export async function GET(): Promise<Response> {
 
 /**
  * [POST] 회원가입
- * - saveUser 액션 하나로 [유효성 검사 + 중복 체크 + 해싱 + 저장]을 한 번에 끝냅니다.
+ * - saveUserAction 액션 하나로 [유효성 검사 + 중복 체크 + 해싱 + 저장]을 한 번에 끝냅니다.
  */
 export async function POST(request: NextRequest): Promise<Response> {
   try {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       formData.append("email_address", formData.get("email") as string);
     }
 
-    const result = await saveUser(formData);
+    const result = await saveUserAction(formData);
 
     if (result.success) {
       return jsonResponse(201, result.message, true, result.data);
@@ -53,14 +53,14 @@ export async function POST(request: NextRequest): Promise<Response> {
 
 /**
  * [PUT] 회원정보 수정
- * - saveUser 액션은 id가 있으면 자동으로 UPDATE로 동작합니다.
+ * - saveUserAction 액션은 id가 있으면 자동으로 UPDATE로 동작합니다.
  */
 export async function PUT(request: NextRequest): Promise<Response> {
   try {
     const formData = await request.formData();
 
     // 현재 로그인된 세션 정보를 가져와서 안전하게 ID를 할당합니다.
-    const session = await getUserSession();
+    const session = await getUserSessionAction();
     if (!session.success || !session.data) {
       return jsonResponse(401, "로그인이 만료되었습니다.", false);
     }
@@ -69,7 +69,7 @@ export async function PUT(request: NextRequest): Promise<Response> {
     formData.set("id", session.data.id.toString());
     if (formData.has("email")) formData.set("email_address", formData.get("email") as string);
 
-    const result = await saveUser(formData);
+    const result = await saveUserAction(formData);
 
     if (result.success) {
       return jsonResponse(200, result.message, true, result.data);
