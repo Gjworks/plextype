@@ -10,6 +10,8 @@ import * as postsQuery from "../../posts/_actions/posts.query"; // 게시판 정
 import { ActionState, DocumentUpsertSchema, DocumentInfo } from "../../document/_actions/_type";
 import { validateForm } from "@utils/validation/formValidator";
 import * as documentQuery from "@modules/document/_actions/document.query";
+import {withTrigger} from "@utils/trigger/triggerWrapper";
+import {CommentWithChildren} from "@modules/comment/_actions/_type";
 
 // 내부 유틸: 로그인 유저 확인
 async function getLoggedInfo() {
@@ -51,8 +53,7 @@ export async function getDocument(id: number): Promise<ActionState<DocumentInfo>
 // [ACTION - Document] 게시글 저장/수정
 // ==========================================
 // src/app/(extentions)/posts/_actions/document.action.ts
-
-export const saveDocument = async (mid: string, formData: FormData, paths?: string): Promise<ActionState<number>> => {
+export const saveDocument = withTrigger("document.saved",  async (mid: string, formData: FormData, paths?: string): Promise<ActionState<number>> => {
   try {
     const loggedInfo = await getLoggedInfo();
     if (!loggedInfo) return { success: false, type: "error", message: "로그인이 필요합니다." };
@@ -88,7 +89,7 @@ export const saveDocument = async (mid: string, formData: FormData, paths?: stri
     if (!validation.isValid) return validation.errorResponse;
     const data = validation.data;
 
-    let resultId: number;
+    let resultData: any;
 
     if (data.id) {
       const existing = await documentQuery.findDocument(data.id);
@@ -107,7 +108,8 @@ export const saveDocument = async (mid: string, formData: FormData, paths?: stri
         extraFieldData: data.extraFieldData, // 추가
         updatedAt: new Date()
       });
-      resultId = updated.id;
+
+      resultData = { ...updated, _isNew: false };
     } else {
       // 🌟 신규 등록 시 extraFieldData 포함
       const created = await documentQuery.insertDocument({
@@ -123,19 +125,20 @@ export const saveDocument = async (mid: string, formData: FormData, paths?: stri
         authorName: "작성자",
         published: true,
       });
-      resultId = created.id;
+
+      resultData = { ...created, _isNew: true };
     }
 
     if (paths) {
       revalidatePath(paths);
     }
 
-    return { success: true, type: "success", message: "저장되었습니다.", data: resultId };
+    return { success: true, type: "success", message: "저장되었습니다.", data: resultData };
   } catch (error) {
     console.error("saveDocument 에러:", error);
     return { success: false, type: "error", message: "게시글 저장 중 오류가 발생했습니다." };
   }
-};
+});
 
 // ==========================================
 // [ACTION - Document] 게시글 목록 조회 (썸네일 파싱 포함)
@@ -245,11 +248,12 @@ export async function getDocumentList(
 // ==========================================
 // [ACTION - Document] 게시글 삭제
 // ==========================================
-export async function removeDocument(id: number, mid: string): Promise<ActionState<null>> {
+export const removeDocument = withTrigger("document.removed", async (id: number, mid: string): Promise<ActionState<any>> => {
   try {
     const loggedInfo = await getLoggedInfo();
     if (!loggedInfo) return { success: false, type: "error", message: "로그인이 필요합니다." };
 
+    // 🌟 1. 삭제 전, 해당 문서를 미리 찾아둡니다. (이미 로직에 있네요!)
     const doc = await documentQuery.findDocument(id);
     if (!doc) return { success: false, type: "error", message: "이미 삭제되었거나 존재하지 않는 글입니다." };
 
@@ -257,15 +261,24 @@ export async function removeDocument(id: number, mid: string): Promise<ActionSta
       return { success: false, type: "error", message: "삭제 권한이 없습니다." };
     }
 
+    // 🌟 2. DB에서 삭제를 진행합니다.
     await documentQuery.deleteDocument(id);
+
     revalidatePath(`/posts/${mid}`);
 
-    return { success: true, type: "success", message: "게시글이 삭제되었습니다." };
+    // 🌟 3. 결과 데이터(data)에 삭제된 문서 정보를 통째로 담아서 보냅니다.
+    // 이렇게 해야 트리거가 "누가 쓴 어떤 글이 지워졌나"를 알 수 있습니다.
+    return {
+      success: true,
+      type: "success",
+      message: "게시글이 삭제되었습니다.",
+      data: doc
+    };
   } catch (error) {
     console.error("removeDocument 에러:", error);
     return { success: false, type: "error", message: "삭제 중 오류가 발생했습니다." };
   }
-}
+});
 
 
 /**

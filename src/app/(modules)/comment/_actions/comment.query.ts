@@ -32,27 +32,31 @@ export async function findChildComments(documentId: number, rootIds: number[]) {
 }
 
 export async function insertComment(data: any) {
-  return prisma.comment.create({
+  const result = await prisma.comment.create({
     data,
     include: {
-      // 1. 댓글 쓴 사람 정보 (현재 유지)
       user: { select: { id: true, nickName: true, profile: true } },
-
-      // 🌟 2. [추가] 게시글(document) 정보와 그 작성자의 ID를 가져옵니다.
       document: {
         select: {
           id: true,
-          userId: true,  // 알림 받을 사람 ID
-          uuid: true,     // 알림 링크 생성을 위해 필요
-          module: {
-            select: {
-              mid: true     // 이게 바로 "notice"가 들어있는 필드!
-            }
-          }
+          userId: true, // 게시글 작성자
+          module: { select: { mid: true } }
         }
+      },
+      // 🌟 1. 부모 댓글의 작성자 정보를 가져옵니다.
+      parent: {
+        select: { userId: true }
       }
     }
   });
+
+  // 🌟 2. 알림 수신자(targetUserId) 결정 로직
+  // 부모 댓글(parentId)이 있으면 부모 댓글 작성자에게, 없으면 게시글 작성자에게 보냅니다.
+  const targetUserId = result.parentId ? result.parent?.userId : result.document.userId;
+
+  const notificationTitle = result.parentId ? "💬 내 댓글에 답글이 달렸습니다" : "💬 새 댓글이 달렸습니다";
+
+  return { ...result, targetUserId, notificationTitle };
 }
 
 export async function updateComment(id: number, data: any) {

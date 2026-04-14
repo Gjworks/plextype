@@ -3,10 +3,15 @@
     {
       "handler": "sendNotification",
       "map": {
-        "userId": "data.document.userId",
+        "userId": "data.targetUserId",
         "title": "💬 새로운 댓글 알림",
         "content": "data.content",
-        "linkUrl": "/posts/{{data.document.module.mid}}/{{data.document.id}}"
+        "linkUrl": "/posts/{{data.document.module.mid}}/{{data.document.id}}",
+        "metadata": {
+          "appId": "gjworks",
+          "groupKey": "COMMUNITY",
+          "subType": "comment"
+        }
       }
     }
   ]
