@@ -14,6 +14,9 @@ import Dropdown from "@/components/dropdown/Dropdown";
 import DefaultList from "@/components/nav/DefaultList";
 import { useUserContext } from "@/providers/UserProvider";
 import Avator from "@components/avator/Avator";
+import NotificationBell from "@components/bell/bell";
+import Right from "@components/panel/Right";
+import MymenuTemplate from "@widgets/forms/MymenuTemplate";
 
 const MENU_CONFIG = [
   { id: "dashboard", href: "/admin", icon: <LayoutGrid size={18} />, label: "Dashboard" },
@@ -47,10 +50,14 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const normalizedPathname = cleanPath(pathname);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showRight, setShowRight] = useState(false);
 
   const { user, isLoading } = useUserContext();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const isDashboardMain = normalizedPathname === "/admin";
+  const closeRight = (close) => {
+    setShowRight(close);
+  };
 
   const dropdownRef = useRef<HTMLDivElement>(null); // 🌟 드롭다운 영역 감지용 Ref
 
@@ -118,196 +125,205 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   }, [normalizedPathname]);
 
   return (
-    <div className="flex h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden font-sans relative">
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
+    <>
+      <div className="flex h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden font-sans relative">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* 1. SIDENAV */}
-      <motion.aside
-        initial={false}
-        animate={{ width: isExpanded ? 240 : 72 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className="flex flex-col bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
-      >
-        <div className="h-16 flex items-center justify-center shrink-0">
-          <div className="w-10 h-10 bg-black rounded-xl shadow-gray-400 flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg shadow-gray-950/25 cursor-pointer">G</div>
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.span initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 0 }}
-                           className="ml-3 text-[14px] font-bold tracking-tight truncate text-gray-800 whitespace-nowrap"
-              >
-                Gjworks
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="flex-1 py-6 overflow-y-auto px-3 space-y-1 scrollbar-hide">
-          {MENU_CONFIG.map((menu) => (
-            <SideAccordionItem key={menu.id} menu={menu} isExpanded={isExpanded} isMobile={isMobile} />
-          ))}
-          <div className="py-6 px-4">
-            <div className="h-[1px] bg-black/5" />
+        {/* 1. SIDENAV */}
+        <motion.aside
+          initial={false}
+          animate={{ width: isExpanded ? 240 : 72 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className="flex flex-col bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
+        >
+          <div className="h-16 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-black rounded-xl shadow-gray-400 flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg shadow-gray-950/25 cursor-pointer">G</div>
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 0 }}
+                             className="ml-3 text-[14px] font-bold tracking-tight truncate text-gray-800 whitespace-nowrap"
+                >
+                  Gjworks
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
-          <SideItem href="/settings" icon={<Settings size={18} />} label="Settings" isExpanded={isExpanded} />
-        </div>
 
-        <div className="p-5 mt-auto"> {/* mt-auto를 주면 사이드바 최하단에 고정됩니다 */}
-          <div className={`flex items-center justify-center md:justify-start gap-3 px-3 py-2 rounded-2xl transition-all ${isExpanded ? 'bg-black/[0.03] border border-black/[0.03]' : ''}`}>
-            {/* 버전에 어울리는 파란색 도트로 변경해봤어요 */}
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] shrink-0" />
+          <div className="flex-1 py-6 overflow-y-auto px-3 space-y-1 scrollbar-hide">
+            {MENU_CONFIG.map((menu) => (
+              <SideAccordionItem key={menu.id} menu={menu} isExpanded={isExpanded} isMobile={isMobile} />
+            ))}
+            <div className="py-6 px-4">
+              <div className="h-[1px] bg-black/5" />
+            </div>
+            <SideItem href="/settings" icon={<Settings size={18} />} label="Settings" isExpanded={isExpanded} />
+          </div>
 
-            {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -5 }}
-                className="flex flex-col items-start leading-none"
-              >
+          <div className="p-5 mt-auto"> {/* mt-auto를 주면 사이드바 최하단에 고정됩니다 */}
+            <div className={`flex items-center justify-center md:justify-start gap-3 px-3 py-2 rounded-2xl transition-all ${isExpanded ? 'bg-black/[0.03] border border-black/[0.03]' : ''}`}>
+              {/* 버전에 어울리는 파란색 도트로 변경해봤어요 */}
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] shrink-0" />
+
+              {isExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, x: -5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -5 }}
+                  className="flex flex-col items-start leading-none"
+                >
         <span className="text-[9px] font-bold text-gray-400 font-mono tracking-widest uppercase mb-0.5">
           System Version
         </span>
-                <span className="text-[11px] font-bold text-gray-600 font-mono tracking-tighter">
+                  <span className="text-[11px] font-bold text-gray-600 font-mono tracking-tighter">
           v{pkg.version}
         </span>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
+            </div>
           </div>
-        </div>
-      </motion.aside>
+        </motion.aside>
 
-      {/* 2. RIGHT WRAPPER */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 relative">
+        {/* 2. RIGHT WRAPPER */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <header className="h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 relative">
 
-          {/* Left: Breadcrumbs */}
-          <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
-            <span className="uppercase tracking-widest text-[10px]">gjworks</span>
-            <ChevronRight size={14} className="text-gray-200" />
-            <span className="text-black font-bold uppercase tracking-widest text-[10px]">
+            {/* Left: Breadcrumbs */}
+            <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
+              <span className="uppercase tracking-widest text-[10px]">gjworks</span>
+              <ChevronRight size={14} className="text-gray-200" />
+              <span className="text-black font-bold uppercase tracking-widest text-[10px]">
               {pathname === "/admin" ? "Overview" : pathname.split('/').pop()}
             </span>
-          </div>
-
-          <div className="flex items-center gap-0 md:gap-3">
-            {/* Search */}
-            <div className="relative group hidden lg:block">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-              <input type="text" placeholder="Quick search..." className="bg-black/5 rounded-full py-1.5 pl-9 pr-4 text-[12px] w-48 focus:w-64 focus:bg-white transition-all outline-none" />
             </div>
 
-            <button className="p-2 text-gray-500 hover:bg-black/5 rounded-full transition-all relative">
-              <Bell size={18} />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-600 rounded-full border-2 border-white" />
-            </button>
+            <div className="flex items-center gap-0 md:gap-3">
+              {/* Search */}
+              <div className="relative group hidden lg:block">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <input type="text" placeholder="Quick search..." className="bg-black/5 rounded-full py-1.5 pl-9 pr-4 text-[12px] w-48 focus:w-64 focus:bg-white transition-all outline-none" />
+              </div>
 
-            <div className="h-4 w-[1px] bg-gray-200/60 mx-1" />
+              <button
+                className="cursor-pointer"
+                // onClick={() => setShowModal(!showModal)}
+                onClick={() => setShowRight(true)}
+              >
+                <NotificationBell />
 
-            {/* 🌟 런타임 데이터가 반영된 유저 드롭다운 버튼 */}
-            <div className="relative" ref={dropdownRef}>
-              {isLoading ? (
-                <div className="w-28 h-9 bg-black/[0.03] animate-pulse rounded-full" />
-              ) : (
-                <button
-                  onClick={() => setShowUserDropdown(!showUserDropdown)}
-                  className={`flex items-center gap-3 pl-4 pr-3 py-1.5 rounded-full transition-all border border-transparent group cursor-pointer ${
-                    showUserDropdown ? 'bg-white shadow-sm border-white/60' : 'hover:bg-white/80 hover:border-white/60 hover:shadow-sm'
-                  }`}
-                >
-                  {/* 상태 도트 */}
-                  <div className="relative flex items-center justify-center">
-                    <Avator username={user?.nickName} isLoggedIn={!!user} tokenExpiryTime={user?.expiry || (Date.now() + 3600000)} />
-                  </div>
+              </button>
 
+              <div className="h-4 w-[1px] bg-gray-200/60 mx-1" />
 
-                  <ChevronDown size={14} className={`text-gray-300 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
-                </button>
-              )}
-
-              {/* 2. 드롭다운 메뉴 */}
-              <AnimatePresence>
-                {showUserDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    transition={{ duration: 0.15 }}
-                    style={{ transform: "translateZ(0)" }}
-                    className="absolute right-0 top-[calc(100%+8px)] w-60 z-[100]"
+              {/* 🌟 런타임 데이터가 반영된 유저 드롭다운 버튼 */}
+              <div className="relative" ref={dropdownRef}>
+                {isLoading ? (
+                  <div className="w-28 h-9 bg-black/[0.03] animate-pulse rounded-full" />
+                ) : (
+                  <button
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                    className={`flex items-center gap-3 py-1.5  transition-all border border-transparent group cursor-pointer ${
+                      showUserDropdown ? '' : ''
+                    }`}
                   >
-                    <div className="overflow-hidden bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[20px] shadow-xl p-2">
-                      <div className="px-3.5 py-3 border-b border-black/[0.04] mb-1.5">
-                        <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tighter mb-0.5">Signed in as</p>
-                        <p className="text-[13px] font-bold text-gray-900 truncate">{user?.email}</p>
-                      </div>
+                    {/* 상태 도트 */}
+                    <div className="relative flex items-center justify-center">
+                      <Avator username={user?.nickName} isLoggedIn={!!user} tokenExpiryTime={user?.expiry || (Date.now() + 3600000)} />
+                    </div>
 
-                      <div className="space-y-0.5">
-                        <DefaultList list={userNav} loggedInfo={user} callback={callbackName} />
+
+                    <ChevronDown size={14} className={`text-gray-400 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                )}
+
+                {/* 2. 드롭다운 메뉴 */}
+                <AnimatePresence>
+                  {showUserDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      style={{ transform: "translateZ(0)" }}
+                      className="absolute right-0 top-[calc(100%+8px)] w-60 z-[100]"
+                    >
+                      <div className="overflow-hidden bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[20px] shadow-xl p-2">
+                        <div className="px-3.5 py-3 border-b border-black/[0.04] mb-1.5">
+                          <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tighter mb-0.5">Signed in as</p>
+                          <p className="text-[13px] font-bold text-gray-900 truncate">{user?.email}</p>
+                        </div>
+
+                        <div className="space-y-0.5">
+                          <DefaultList list={userNav} loggedInfo={user} callback={callbackName} />
+                        </div>
                       </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </header>
+
+          <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-4 overflow-hidden relative">
+            <main className={`h-full w-full flex flex-col overflow-hidden ${
+              isDashboardMain
+                ? "bg-transparent border-none shadow-none" // 대시보드일 때 스타일
+                : "bg-white/80 backdrop-blur-lg rounded-xl md:rounded-xl shadow-xl shadow-gray-100" // 일반 페이지 스타일
+            }`}>
+
+              {/* 🌟 탭 내비게이션: 서브 메뉴가 있을 때만 출력 */}
+              <AnimatePresence mode="wait">
+                {activeSubMenus && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="shrink-0 border-b border-gray-100 bg-white/50 backdrop-blur-sm px-6 md:px-10"
+                  >
+                    <div className="flex items-center gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
+                      {activeSubMenus.map((sub) => {
+                        const subHref = cleanPath(sub.href);
+                        const isSubActive = normalizedPathname.includes(subHref.split('/').pop() || "");
+
+                        return (
+                          <Link key={sub.href} href={sub.href} className="relative py-4 shrink-0">
+                        <span className={`text-[13px] font-bold transition-colors ${
+                          isSubActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-900'
+                        }`}>
+                      {sub.label}
+                    </span>
+                            {isSubActive && (
+                              <motion.div
+                                layoutId="activeTab"
+                                className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-600 rounded-full"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                              />
+                            )}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          </div>
-        </header>
 
-        <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-4 overflow-hidden relative">
-          <main className={`h-full w-full flex flex-col overflow-hidden ${
-            isDashboardMain
-              ? "bg-transparent border-none shadow-none" // 대시보드일 때 스타일
-              : "bg-white/80 backdrop-blur-lg rounded-xl md:rounded-xl shadow-xl shadow-gray-100" // 일반 페이지 스타일
-          }`}>
-
-            {/* 🌟 탭 내비게이션: 서브 메뉴가 있을 때만 출력 */}
-            <AnimatePresence mode="wait">
-              {activeSubMenus && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="shrink-0 border-b border-gray-100 bg-white/50 backdrop-blur-sm px-6 md:px-10"
-                >
-                  <div className="flex items-center gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
-                    {activeSubMenus.map((sub) => {
-                      const subHref = cleanPath(sub.href);
-                      const isSubActive = normalizedPathname.includes(subHref.split('/').pop() || "");
-
-                      return (
-                        <Link key={sub.href} href={sub.href} className="relative py-4 shrink-0">
-                        <span className={`text-[13px] font-bold transition-colors ${
-                        isSubActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-900'
-                      }`}>
-                      {sub.label}
-                    </span>
-                      {isSubActive && (
-                        <motion.div
-                          layoutId="activeTab"
-                          className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-600 rounded-full"
-                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                        />
-                      )}
-                    </Link>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* 실제 컨텐츠 스크롤 영역 */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide px-2 py-3">
-              <div>
-                {children}
+              {/* 실제 컨텐츠 스크롤 영역 */}
+              <div className="flex-1 overflow-y-auto scrollbar-hide px-2 py-3">
+                <div>
+                  {children}
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+      <Right state={showRight} close={closeRight}>
+        <MymenuTemplate />
+      </Right>
+    </>
   );
 };
 

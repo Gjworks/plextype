@@ -27,7 +27,10 @@ export async function deleteAttachment(fileId: number) {
 
     // 물리 파일 삭제
     let relativePath = attachment.path.startsWith("/") ? attachment.path.substring(1) : attachment.path;
-    const filePath = path.join(process.cwd(), relativePath);
+    const filePath = path.join(
+      /* turbopackIgnore: true */ process.cwd(),
+      relativePath
+    );
 
     try { await unlink(filePath); } catch (err: any) {
       if (err.code !== "ENOENT") console.error("FS Unlink Error:", err);
