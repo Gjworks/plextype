@@ -22,6 +22,8 @@ export function useRealtimeNotification(userId: string | number | undefined) {
           imageUrl: data.imageUrl,
           linkUrl: data.linkUrl,
         });
+
+        window.dispatchEvent(new Event('refresh-unread'));
       } catch (err) {
         console.error("SSE 파싱 에러:", err);
       }
