@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { verify } from "@/utils/auth/jwtAuth";
 import { jsonResponse } from "@/utils/helper/jsonResponse";
 import {
-  saveUser,
+  saveUserAction,
 } from "@modules/user/_actions/user.action";
 
 /**
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     const formData = await request.formData();
-    const result = await saveUser(formData);
+    const result = await saveUserAction(formData);
 
     if (result.success) {
       return jsonResponse(201, result.message, true, result.data);

@@ -43,7 +43,10 @@ export async function POST(req: NextRequest) {
     const datePath = dayjs().format("YYYY/MM");
 
     // 물리 저장 경로: 프로젝트루트/storage/uploads/...
-    const uploadDir = path.join(process.cwd(), "storage", "uploads", String(userId), datePath);
+    const uploadDir = path.join(
+      /* turbopackIgnore: true */ process.cwd(),
+      "storage", "uploads", String(userId), datePath
+    );
     // DB 저장 경로 (브라우저 접근용): /storage/uploads/...
     const dbPath = `/storage/uploads/${userId}/${datePath}/${fileName}`;
 
@@ -116,7 +119,10 @@ export async function DELETE(req: NextRequest) {
     }
 
     // 물리 파일 삭제 (심볼릭 링크 덕분에 /storage 경로 기준 삭제 가능)
-    const filePath = path.join(process.cwd(), attachment.path.substring(1));
+    const filePath = path.join(
+      /* turbopackIgnore: true */ process.cwd(),
+      attachment.path.substring(1)
+    );
     await unlink(filePath).catch(() => {});
 
     await prisma.attachment.delete({ where: { id: fileId } });
