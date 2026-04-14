@@ -4,10 +4,12 @@
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
 import { hashedPassword, verifyPassword } from "@utils/auth/password";
-
+import { saveUser, removeUser, getUserList, decodeUserToken, getUserSession } from "./user";
 import { ActionState, UserUpsertSchema, PasswordChangeSchema, UserListParams, UserListSchema, UserListResponseData, LoggedParams, UserInfo, UserParams, PasswordVerifySchema } from "./_type";
 import * as query from "./user.query"; // 분리된 쿼리 함수 임포트
 import { validateForm } from "@/utils/validation/formValidator";
+import { revalidatePath } from "next/cache";
+
 /**
  * 💡 공통 유틸: Prisma 결과물에서 민감한 정보(비밀번호 등) 제외하기
  */
@@ -19,207 +21,148 @@ function excludeSensitiveData(user: any): UserInfo {
 // ==========================================
 // [ACTION] 유저 등록 / 수정 (Zod 파싱 적용)
 // ==========================================
-export async function saveUser(formData: FormData): Promise<ActionState<null>> {
+export const saveUserAction = async (formData: FormData, paths?: string): Promise<ActionState<any>> => {
+  // 1. 웹 전용 데이터(isProfileUpdate) 추출
   const isProfileUpdate = formData.get("isProfileUpdate") === "true";
+
   const formPayload = {
-    id: formData.get("id"),
-    accountId: formData.get("accountId"),
-    email_address: formData.get("email_address"),
-    nickName: formData.get("nickName"),
-    password: formData.get("password"),
-    isAdmin: formData.get("isAdmin"),
+    id: formData.get("id") ? Number(formData.get("id")) : undefined,
+    accountId: formData.get("accountId")?.toString() || "",
+    email_address: formData.get("email_address")?.toString() || "",
+    nickName: formData.get("nickName")?.toString() || "",
+    password: formData.get("password")?.toString() || "",
+    isAdmin: formData.get("isAdmin") === "true",
     group: formData.getAll("groups[]").map(g => ({ groupId: g })),
   };
 
-  // 🛡️ [1차 방어선] Zod 형식 검사
+  // 2. Zod 유효성 검사
   const validation = validateForm(UserUpsertSchema, formPayload);
   if (!validation.isValid) return validation.errorResponse;
-  const data = validation.data;
 
   try {
-    // 🛡️ [2차 방어선] DB 중복 검사 (단일 쿼리로 통합!)
-    // CREATE일 땐 data.id가 undefined라서 전체 검사, UPDATE일 땐 본인 제외 검사
-    const duplicates = await query.findUser(data.accountId, data.email_address, data.nickName, data.id);
+    // 🌟 3. 알맹이(Core) 호출
+    // validation.data(깔끔한 객체)와 isProfileUpdate 플래그를 넘깁니다.
+    const result = await saveUser(validation.data, isProfileUpdate);
 
-    if (duplicates.length > 0) {
-      const fieldErrors: Record<string, string> = {};
-
-      duplicates.forEach(dup => {
-        if (dup.accountId === data.accountId) fieldErrors.accountId = "이미 사용 중인 아이디입니다.";
-        if (dup.email_address === data.email_address) fieldErrors.email_address = "이미 사용 중인 이메일입니다.";
-        if (dup.nickName === data.nickName) fieldErrors.nickName = "이미 사용 중인 닉네임입니다.";
-      });
-
-      // 🎯 핵심: fieldErrors에 담긴 값들 중 첫 번째 메시지를 메인 문구로 꺼내옵니다.
-      const firstErrorMessage = Object.values(fieldErrors)[0] || "중복된 정보가 있습니다.";
-
+    if (!result.success) {
       return {
         success: false,
         type: "error",
-        message: firstErrorMessage, // 👉 이제 "이미 사용 중인 이메일입니다."가 Alert 창에 예쁘게 뜹니다!
-        fieldErrors
+        message: result.message || "저장에 실패했습니다.",
+        fieldErrors: result.fieldErrors
       };
     }
 
-    // 🌟 모든 검문소 통과 완료! 이제 맘 편하게 DB에 저장만 하면 됩니다.
-    if (!data.id) {
-      // --- [CREATE] ---
-      if (!data.password) {
-        return { success: false, type: "error", message: "비밀번호는 필수입니다.", fieldErrors: { password: "비밀번호는 필수입니다." } };
-      }
+    // 웹 전용: 캐시 갱신
+    if (paths) revalidatePath(paths);
 
-      const pw = await hashedPassword(data.password);
-      const insertData = {
-        accountId: data.accountId,
-        password: pw,
-        email_address: data.email_address,
-        nickName: data.nickName,
-        isAdmin: data.isAdmin
-      };
+    return {
+      success: true,
+      type: "success",
+      message: "저장되었습니다.",
+      data: result.data
+    };
 
-      await query.upsertUser(false, null, insertData, data.group?.map(g => Number(g.groupId)) || []);
-    } else {
-      // --- [UPDATE] ---
-      const updateData: any = {
-        nickName: data.nickName,
-        email_address: data.email_address,
-        isAdmin: data.isAdmin,
-        accountId: data.accountId
-      };
-
-      if (data.password?.trim()) {
-        updateData.password = await hashedPassword(data.password);
-      }
-
-      const groupsToUpdate = isProfileUpdate
-        ? undefined
-        : (data.group?.map(g => Number(g.groupId)) || []);
-
-      await query.upsertUser(true, data.id, updateData, groupsToUpdate);
-    }
-
-    return { success: true, type: "success", message: "저장되었습니다." };
   } catch (error: any) {
-    console.error(error);
+    console.error("saveUserAction 에러:", error);
     return { success: false, type: "error", message: "데이터베이스 처리 중 오류가 발생했습니다." };
   }
-}
+};
 
 // ==========================================
 // [ACTION] 목록 조회 (getUserListAction -> getUserList 로 이름 변경)
 // ==========================================
-export async function getUserList(params: UserListParams): Promise<ActionState<UserListResponseData>> {
+export async function getUserListAction(params: UserListParams): Promise<ActionState<UserListResponseData>> {
   try {
-    const validatedParams = UserListSchema.parse(params);
-    validatedParams.listCount = 20;
-
-    // 💡 query.findUserList 호출로 명확한 규칙 적용!
-    const result = await query.findUserList(validatedParams);
-
-    const safeUserList = result.userList.map(excludeSensitiveData);
+    // 🌟 알맹이 호출
+    const data = await getUserList(params);
 
     return {
       success: true,
       message: "조회 성공",
-      data: { userList: safeUserList, navigation: result.navigation }
+      data: data // { userList, navigation }
     };
   } catch (error) {
-    return { success: false, type: "error", message: "목록을 불러오지 못했습니다." };
+    console.error("getUserListAction 에러:", error);
+    return {
+      success: false,
+      type: "error",
+      message: "목록을 불러오지 못했습니다."
+    };
   }
 }
 
 // 💡 파라미터를 (id: number) 로 아주 직관적으로 바꿉니다!
-export const removeUser = async (id: number): Promise<ActionState<null>> => {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-
-  if (!accessToken) return { success: false, type: "error", message: "토큰 정보가 없습니다." };
-
-  const decodeToken: any = await decodeJwt(accessToken);
-  const loggedInfo = { id: decodeToken.id, accountId: decodeToken.accountId, isAdmin: decodeToken.isAdmin };
-
+export const removeUserAction = async (id: number): Promise<ActionState<any>> => {
   try {
-    // 💡 getUser에는 임시로 우회(as any)해서 id만 객체로 감싸서 던져줍니다.
-    const targetRes = await getUser({ id } as any);
+    // 💡 이름을 getLoggedUserAction으로 변경
+    const loggedInfo = await getLoggedUserAction();
 
-    if (!targetRes.success || !targetRes.data || !targetRes.data.id) {
-      return { success: false, type: "error", message: "삭제할 회원 정보를 찾을 수 없습니다." };
-    }
-
-    const targetUser = targetRes.data;
-
-    if (!loggedInfo.isAdmin && targetUser.accountId !== loggedInfo.accountId) {
+    // 권한 체크 로직 (예시)
+    if (!loggedInfo.isAdmin && loggedInfo.id !== id) {
       return { success: false, type: "error", message: "권한이 없습니다." };
     }
 
-    // 트랜잭션 쿼리 실행
-    await query.deleteUser(targetUser.id);
+    // 🌟 1. 알맹이(Core) 호출 (user.ts에 있는 함수)
+    const deletedUser = await removeUser(id);
 
-    if (targetUser.id === loggedInfo.id) {
+    // 2. 웹 전용 로직 (본인 삭제 시 쿠키 파기)
+    if (deletedUser.id === loggedInfo.id) {
+      const cookieStore = await cookies();
       cookieStore.delete("refreshToken");
       cookieStore.delete("accessToken");
     }
 
-    return { success: true, type: "success", message: "회원 계정정보가 모두 삭제되었습니다." };
+    return { success: true, type: "success", message: "삭제 완료" };
   } catch (error: any) {
-    console.error("Delete User Error:", error);
-    return { success: false, type: "error", message: "삭제 중 오류가 발생했습니다." };
+    console.error("removeUserAction 에러:", error);
+    return { success: false, type: "error", message: error.message || "삭제 중 오류 발생" };
   }
 };
-
-export const getUserLogged = async (): Promise<LoggedParams> => {
+/**
+ * 🚀 [ACTION] 로그인된 유저 요약 정보 (쿠키 기반)
+ */
+export const getLoggedUserAction = async (): Promise<LoggedParams> => {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
-  let tokenInfo: LoggedParams = { id: 0, accountId: "", isAdmin: false };
 
-  if (accessToken) {
-    const decodeToken: any = await decodeJwt(accessToken);
-    tokenInfo.accountId = decodeToken.accountId;
-    tokenInfo.id = decodeToken.id;
-    tokenInfo.isAdmin = decodeToken.isAdmin;
-  }
-  return tokenInfo;
-};
-// ==========================================
-// [ACTION] 단일 유저 조회 (get 통일)
-// ==========================================
-export const getLoggedUser = async (): Promise<LoggedParams> => { // 💡 getUserLogged -> getLoggedUser 로 변경
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-  let tokenInfo: LoggedParams = { id: 0, accountId: "", isAdmin: false };
+  if (!accessToken) return { id: 0, accountId: "", isAdmin: false };
 
-  if (accessToken) {
-    const decodeToken: any = await decodeJwt(accessToken);
-    tokenInfo.accountId = decodeToken.accountId;
-    tokenInfo.id = decodeToken.id;
-    tokenInfo.isAdmin = decodeToken.isAdmin;
-  }
-  return tokenInfo;
+  // 🌟 알맹이(Core)의 토큰 해석기 사용
+  return await decodeUserToken(accessToken);
 };
 
-export const getUserSession = async (): Promise<ActionState<UserInfo>> => {
-  const tokenInfo = await getLoggedUser(); // 이름 바뀐 함수 호출
+/**
+ * 🚀 [ACTION] 로그인된 유저 상세 정보 (웹 세션용)
+ */
+export const getUserSessionAction = async (): Promise<ActionState<UserInfo>> => {
+  // 1. 쿠키에서 요약 정보 가져오기
+  const tokenInfo = await getLoggedUserAction();
 
-  if (tokenInfo && tokenInfo.accountId) {
-    try {
-      // 💡 query.findUserSessionData 호출!
-      const userInfo = await query.findUserSessionData(tokenInfo.accountId);
-      if (!userInfo) throw new Error("Not Found");
+  if (!tokenInfo.accountId) {
+    return { success: false, type: "error", message: "토큰 정보가 올바르지 않습니다." };
+  }
 
-      return {
-        success: true,
-        message: "사용자 정보를 성공적으로 가져왔습니다.",
-        data: excludeSensitiveData(userInfo)
-      };
-    } catch (e) {
+  try {
+    // 🌟 2. 알맹이(Core)의 세션 조회 로직 사용
+    const safeUserInfo = await getUserSession(tokenInfo.accountId);
+
+    if (!safeUserInfo) {
       return { success: false, type: "error", message: "회원정보가 없습니다." };
     }
+
+    return {
+      success: true,
+      message: "사용자 정보를 성공적으로 가져왔습니다.",
+      data: safeUserInfo
+    };
+  } catch (e) {
+    return { success: false, type: "error", message: "서버 오류 발생" };
   }
-  return { success: false, type: "error", message: "토큰 정보가 올바르지 않습니다." };
 };
 
 export const getUser = async (params: UserParams): Promise<ActionState<UserInfo>> => {
-  const tokenInfo = await getLoggedUser();
+  const tokenInfo = await getLoggedUserAction();
   let obj: any = {};
 
   if (params.id) obj.id = params.id;
@@ -281,7 +224,7 @@ export async function changePassword(formData: FormData): Promise<ActionState<nu
 
   try {
     // 💡 2. 현재 로그인한 내 정보 가져오기
-    const loggedInfo = await getLoggedUser();
+    const loggedInfo = await getLoggedUserAction();
     if (!loggedInfo || !loggedInfo.id) {
       return { success: false, type: "error", message: "로그인 정보가 없습니다. 다시 로그인해주세요." };
     }
@@ -317,7 +260,6 @@ export async function changePassword(formData: FormData): Promise<ActionState<nu
   }
 }
 
-
 export async function removeMyAccount(formData: FormData): Promise<ActionState<null>> {
   const formPayload = {
     password: formData.get("password") || "",
@@ -330,7 +272,7 @@ export async function removeMyAccount(formData: FormData): Promise<ActionState<n
   const data = validation.data;
 
   try {
-    const loggedInfo = await getLoggedUser();
+    const loggedInfo = await getLoggedUserAction();
     if (!loggedInfo || !loggedInfo.id) {
       return { success: false, type: "error", message: "로그인 정보가 없습니다." };
     }
@@ -380,7 +322,7 @@ export async function verifyMyPassword(password: string): Promise<ActionState<nu
   }
 
   try {
-    const loggedInfo = await getLoggedUser();
+    const loggedInfo = await getLoggedUserAction();
     if (!loggedInfo || !loggedInfo.id) {
       return { success: false, type: "error", message: "로그인 정보가 없습니다." };
     }

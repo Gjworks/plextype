@@ -125,38 +125,45 @@ export async function upsertUser(
 ) {
   return prisma.$transaction(async (tx) => {
     let finalId = targetId;
+    let userRecord; // 🌟 유저 정보를 담을 변수 선언
 
     if (!isUpdate) {
       // [생성]
-      const newUser = await tx.user.create({ data: data as Prisma.UserCreateInput });
-      finalId = newUser.id;
+      userRecord = await tx.user.create({ data: data as Prisma.UserCreateInput });
+      finalId = userRecord.id;
     } else {
-      // [수정] 💡 여기 있던 무조건 삭제 코드를 뺐습니다!
-      await tx.user.update({
+      // [수정]
+      userRecord = await tx.user.update({
         where: { id: finalId! },
         data: data as Prisma.UserUpdateInput
       });
     }
 
-    // 🌟 오직 groups가 넘어왔을 때(관리자 페이지일 때)만 기존 그룹을 지우고 새로 씁니다!
+    // 🌟 groups 처리 로직 (기존과 동일)
     if (groups !== undefined) {
-      // 1. 기존 매핑 다 지우기
       await tx.userGroupUser.deleteMany({ where: { userId: finalId! } });
-
-      // 2. 체크된 그룹이 1개라도 있으면 다시 생성
       if (groups.length > 0) {
         await tx.userGroupUser.createMany({
           data: groups.map((groupId) => ({ groupId, userId: finalId! })),
         });
       }
     }
+
+    // 🔥 가장 중요: 트랜잭션의 결과로 유저 객체를 리턴합니다!
+    return userRecord;
   });
 }
 
 export async function deleteUser(userId: number) {
   return prisma.$transaction(async (tx) => {
+    // 1. 그룹 매핑 삭제
     await tx.userGroupUser.deleteMany({ where: { userId } });
-    await tx.user.delete({ where: { id: userId } });
+
+    // 2. 유저 삭제 후 결과 담기
+    const deletedUser = await tx.user.delete({ where: { id: userId } });
+
+    // 🌟 3. 삭제된 유저 정보를 리턴!
+    return deletedUser;
   });
 }
 

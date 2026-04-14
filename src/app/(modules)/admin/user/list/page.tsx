@@ -1,5 +1,5 @@
 import DashboardUserList from "@modules/user/_admin/list";
-import { getUserList } from "@modules/user/_actions/user.action";
+import { getUserListAction } from "@modules/user/_actions/user.action";
 
 // 💡 Next.js 15+ 에서는 searchParams가 Promise로 들어옵니다.
 const Page = async ({ searchParams }: { searchParams: Promise<{ page?: string; target?: string; keyword?: string }> }) => {
@@ -14,7 +14,7 @@ const Page = async ({ searchParams }: { searchParams: Promise<{ page?: string; t
     : "accountId";
 
   // 💡 서버에서 직접 DB 데이터를 가져옵니다! (useEffect 필요 없음)
-  const response = await getUserList({ page, target, keyword });
+  const response = await getUserListAction({ page, target, keyword });
 
   // 안전하게 데이터 추출
   const userList = response.success && response.data ? response.data.userList : [];
