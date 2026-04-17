@@ -10,10 +10,10 @@ import { Attachment } from "@modules/attachment";
 import { usePostContext } from "./PostProvider";
 import PostNotPermission from "@modules/posts/_tpl/default/notPermission";
 import ExtraFieldRenderer from "@modules/posts/_tpl/default/ExtraFieldRenderer";
-import TiptapEditor from "@components/editor/tiptap/tiptapEditor";
-import Button from "@components/button/Button";
-import InputField from "@components/form/InputField";
-import SelectField from "@components/form/SelectField";
+import TiptapEditor from "@/core/components/editor/tiptap/tiptapEditor";
+import Button from "@/core/components/button/Button";
+import InputField from "@/core/components/form/InputField";
+import SelectField from "@/core/components/form/SelectField";
 
 // 1. 프롭 타입 정의 (이게 빠지면 에러 납니다)
 interface PostWriteProps {

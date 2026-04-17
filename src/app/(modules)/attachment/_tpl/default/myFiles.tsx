@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { getMyFiles, deleteAttachment } from "@modules/attachment/_actions/attachment.action";
 // 파일 타입 정의 (필요시 수정)
 import { Attachment } from "@modules/attachment/_actions/_type";
-import PageNavigation from "@components/nav/PageNavigation"; // 혹은 적절한 타입 경로
+import PageNavigation from "@/core/components/nav/PageNavigation"; // 혹은 적절한 타입 경로
 
 interface Props {
   onFileSelect?: (file: Attachment) => void; // 부모에게 선택된 파일을 알리기 위한 prop

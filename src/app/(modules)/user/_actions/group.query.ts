@@ -1,5 +1,5 @@
 // src/app/(extentions)/user/_actions/group.query.ts
-import prisma from "@utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 
 // 1. 유저-그룹 매핑 초기화 및 재생성 (트랜잭션/createMany 최적화)
 export const updateUserGroupQuery = async (userId: number, groupIds: number[]) => {

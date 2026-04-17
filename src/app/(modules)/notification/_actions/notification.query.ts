@@ -1,4 +1,4 @@
-import prisma from "@utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 
 /** 🌟 [INSERT] */
 export const insertNotification = async (data: any) => {

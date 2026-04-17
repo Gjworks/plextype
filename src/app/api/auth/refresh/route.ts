@@ -7,7 +7,7 @@ import {
   verify,
   refresh,
   refreshVerify,
-} from "@/utils/auth/jwtAuth";
+} from "@/core/utils/auth/jwtAuth";
 import { PrismaClient } from "@prisma/client";
 
 export async function POST(request: NextRequest): Promise<Response> {

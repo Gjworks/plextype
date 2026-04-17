@@ -1,7 +1,7 @@
 "use client";
 
 import { ExtraFieldConfig } from "@modules/posts/_actions/_type";
-import InputField from "@/components/form/InputField";
+import InputField from "@/core/components/form/InputField";
 
 interface Props {
   fields: ExtraFieldConfig[];

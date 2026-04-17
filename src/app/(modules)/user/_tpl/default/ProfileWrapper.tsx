@@ -1,6 +1,6 @@
 "use client";
 
-import ProfileComponent from "@components/account/Profile";
+import ProfileComponent from "@/core/components/account/Profile";
 
 export default function ProfileWrapper({ currentUser }: { currentUser: any }) {
   return (

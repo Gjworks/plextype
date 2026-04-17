@@ -1,8 +1,24 @@
 // src/app/(extentions)/posts/_actions/document.query.ts
 
-import prisma from "@utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 import { Prisma } from "@prisma/client";
+import { nanoid } from "nanoid";
 
+export async function findDocumentBySlug(slug: string) {
+  return prisma.document.findUnique({
+    where: {
+      slug: slug // 👈 문자열(NanoID)로 직접 조회
+    },
+    include: {
+      user: {
+        select: { id: true, nickName: true, email_address: true, profile: true }
+      },
+      category: {
+        select: { id: true, title: true, desc: true, color: true, parentId: true }
+      }
+    }
+  });
+}
 
 export async function findDocument(id: number | string) {
   const numericId = Number(id);
@@ -53,6 +69,7 @@ export async function findDocumentList(postsId: number, page: number, pageSize: 
       take: pageSize,
       select: {
         id: true,
+        slug:true,
         title: true,
         content: true,
         createdAt: true,

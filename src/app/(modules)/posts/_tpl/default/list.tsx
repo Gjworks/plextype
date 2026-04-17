@@ -16,8 +16,8 @@ import { getDocumentList } from "@modules/document/_actions/document.action";
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
 
-import PageNavigation from "@components/nav/PageNavigation";
-import Button from "@components/button/Button";
+import PageNavigation from "@/core/components/nav/PageNavigation";
+import Button from "@/core/components/button/Button";
 import PostNotPermission from "@modules/posts/_tpl/default/notPermission";
 
 // 💡 2. 새 Action의 응답 규격(navigation)에 맞춰 인터페이스를 통일합니다!
@@ -93,7 +93,7 @@ const PostsListClient = ({
                 )}
               </div>
               <div className="flex items-center flex-1 flex-wrap gap-4">
-                <Link href={`/posts/${postInfo.mid}/${doc.id}`} className="w-full lg:flex-1">
+                <Link href={`/posts/${postInfo.mid}/${doc.slug}`} className="w-full lg:flex-1">
                   <div>
                     <div className="flex items-center gap-2 text-sm lg:text-base font-semibold text-gray-950 dark:text-white line-clamp-2 mb-2">
                       {doc.title}

@@ -1,8 +1,8 @@
 // src/app/(extentions)/users/_actions/user.ts
-import { hashedPassword, verifyPassword } from "@utils/auth/password";
+import { hashedPassword, verifyPassword } from "@/core/utils/auth/password";
 import { decodeJwt } from "jose";
 import * as query from "./user.query";
-import { dispatchTrigger } from "@utils/trigger/triggerHub";
+import { dispatchTrigger } from "@/core/utils/trigger/triggerHub";
 import { ActionState, UserUpsertSchema, PasswordChangeSchema, UserListParams, UserListSchema, UserListResponseData, LoggedParams, UserInfo, UserParams, PasswordVerifySchema } from "./_type";
 
 /**

@@ -3,9 +3,9 @@
 import React, { useState, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 
-import Alert from "@components/message/Alert";
-import InputField from "@components/form/InputField";
-import Button from "@components/button/Button";
+import Alert from "@/core/components/message/Alert";
+import InputField from "@/core/components/form/InputField";
+import Button from "@/core/components/button/Button";
 
 import { changePassword } from "@modules/user/_actions/user.action";
 

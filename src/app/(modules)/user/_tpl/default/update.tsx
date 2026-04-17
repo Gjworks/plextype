@@ -4,14 +4,14 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 
-import Popup from "@components/modal/Popup";
-import Alert from "@components/message/Alert";
+import Popup from "@/core/components/modal/Popup";
+import Alert from "@/core/components/message/Alert";
 import ChangePassword from "./changePassword";
 import HeaderUser from "@modules/user/_tpl/default/header";
 
-import Button from "@components/button/Button"; // 💡 공용 버튼
+import Button from "@/core/components/button/Button"; // 💡 공용 버튼
 // 💡 1. InputField 임포트 추가! (경로가 다르면 수정해주세요)
-import InputField from "@components/form/InputField";
+import InputField from "@/core/components/form/InputField";
 
 import { saveUserAction } from "@modules/user/_actions/user.action";
 import { UserInfo } from "@modules/user/_actions/_type";

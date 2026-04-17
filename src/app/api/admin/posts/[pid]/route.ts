@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/utils/db/prisma";
-import { verify } from "@/utils/auth/jwtAuth"; // Prisma 클라이언트 경로 확인
+import prisma from "@/core/utils/db/prisma";
+import { verify } from "@/core/utils/auth/jwtAuth"; // Prisma 클라이언트 경로 확인
 
 export async function GET(request: NextRequest) {
   try {

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import Alert from "@/components/message/Alert";
+import Alert from "@/core/components/message/Alert";
 
 const FindAccountID = () => {
   const [phase, setPhase] = useState<"input" | "result">("input");

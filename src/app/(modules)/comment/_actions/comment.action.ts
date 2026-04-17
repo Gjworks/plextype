@@ -4,7 +4,7 @@
 import { revalidatePath } from "next/cache";
 import * as query from "./comment.query";
 import { ActionState, CommentWithChildren, CommentListResponse } from "../../comment/_actions/_type";
-import { withTrigger } from "@/utils/trigger/triggerWrapper";
+import { withTrigger } from "@/core/utils/trigger/triggerWrapper";
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
 

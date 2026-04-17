@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonResponse } from "@/utils/helper/jsonResponse";
+import { jsonResponse } from "@/core/utils/helper/jsonResponse";
 import {
   saveUserAction,
   getUserSessionAction,

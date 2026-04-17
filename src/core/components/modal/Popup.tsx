@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import ModalPortal from "@/components/modal/ModalPortal";
+import ModalPortal from "@/core/components/modal/ModalPortal";
 import { X, ChevronLeft } from "lucide-react";
 
 interface PopupProps {

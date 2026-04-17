@@ -4,7 +4,7 @@ import React from "react";
 // 💡 1. 짭(?) 타입 선언은 지우고, 근본 있는 공통 타입을 불러옵니다!
 import type { PostInfoData } from "@modules/posts/_actions/_type";
 // 💡 2. 공용 InputField 컴포넌트 호출
-import InputField from "@components/form/InputField";
+import InputField from "@/core/components/form/InputField";
 
 type PostInfoProps = {
   id?: string;

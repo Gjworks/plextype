@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition } from "react";
 import {TreeItem} from "@modules/posts/_actions/_type"
 import { motion, AnimatePresence } from "framer-motion";
-import Button from "@components/button/Button"
+import Button from "@/core/components/button/Button"
 import {
   DndContext,
   DragEndEvent,

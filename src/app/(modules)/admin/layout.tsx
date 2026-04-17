@@ -10,12 +10,12 @@ import {
   LogOut, UserCircle, Zap
 } from "lucide-react";
 import Link from "next/link";
-import Dropdown from "@/components/dropdown/Dropdown";
-import DefaultList from "@/components/nav/DefaultList";
-import { useUserContext } from "@/providers/UserProvider";
-import Avator from "@components/avator/Avator";
-import NotificationBell from "@components/bell/bell";
-import Right from "@components/panel/Right";
+import Dropdown from "@/core/components/dropdown/Dropdown";
+import DefaultList from "@/core/components/nav/DefaultList";
+import { useUserContext } from "@/core/providers/UserProvider";
+import Avator from "@/core/components/avator/Avator";
+import NotificationBell from "@/core/components/bell/bell";
+import Right from "@/core/components/panel/Right";
 import MymenuTemplate from "@widgets/forms/MymenuTemplate";
 
 const MENU_CONFIG = [

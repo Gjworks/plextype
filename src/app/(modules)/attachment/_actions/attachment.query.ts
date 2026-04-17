@@ -1,5 +1,5 @@
 // src/app/(extentions)/posts/_actions/attachment.query.ts
-import prisma from "@utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 import { unlink, readdir, rmdir } from "fs/promises";
 import path from "path";
 

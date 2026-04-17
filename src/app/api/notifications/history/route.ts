@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@utils/auth/authHelper";
+import { getAuthenticatedUser } from "@/core/utils/auth/authHelper";
 import { findHistoryPage } from "@modules/notification/_actions/notification.action"; // 액션에서 가져오기
 
 export async function GET(request: Request) {

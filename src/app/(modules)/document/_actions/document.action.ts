@@ -8,10 +8,11 @@ import * as query from "./document.query";
 import { revalidatePath } from "next/cache";
 import * as postsQuery from "../../posts/_actions/posts.query"; // 게시판 정보 조회를 위해 필요
 import { ActionState, DocumentUpsertSchema, DocumentInfo } from "../../document/_actions/_type";
-import { validateForm } from "@utils/validation/formValidator";
+import { validateForm } from "@/core/utils/validation/formValidator";
 import * as documentQuery from "@modules/document/_actions/document.query";
-import {withTrigger} from "@utils/trigger/triggerWrapper";
+import {withTrigger} from "@/core/utils/trigger/triggerWrapper";
 import {CommentWithChildren} from "@modules/comment/_actions/_type";
+import { nanoid } from "nanoid";
 
 // 내부 유틸: 로그인 유저 확인
 async function getLoggedInfo() {
@@ -53,7 +54,7 @@ export async function getDocument(id: number): Promise<ActionState<DocumentInfo>
 // [ACTION - Document] 게시글 저장/수정
 // ==========================================
 // src/app/(extentions)/posts/_actions/document.action.ts
-export const saveDocument = withTrigger("document.saved",  async (mid: string, formData: FormData, paths?: string): Promise<ActionState<number>> => {
+export const saveDocument = withTrigger("document.saved",  async (mid: string, formData: FormData, paths?: string): Promise<ActionState<any>> => {
   try {
     const loggedInfo = await getLoggedInfo();
     if (!loggedInfo) return { success: false, type: "error", message: "로그인이 필요합니다." };
@@ -122,6 +123,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
         isNotice: data.isNotice,
         isSecrets: data.isSecrets,
         extraFieldData: data.extraFieldData, // 추가
+        slug: nanoid(10),
         authorName: "작성자",
         published: true,
       });
@@ -298,6 +300,23 @@ export async function increaseViewCount(documentId: number, userId?: number, ip?
   } catch (error) {
     // 조회수 증가는 실패해도 사용자 서비스에 치명적이지 않으므로 로그만 남깁니다.
     console.error("increaseViewCount 에러:", error);
+  }
+}
+
+export async function getDocumentBySlugAction(slug: string): Promise<ActionState<DocumentInfo>> {
+  try {
+    const document = await documentQuery.findDocumentBySlug(slug); // 🌟 Query에 추가할 함수
+    if (!document) {
+      return { success: false, type: "error", message: "존재하지 않는 게시글입니다." };
+    }
+    return {
+      success: true,
+      type: "success",
+      message: "게시글 조회 성공",
+      data: document as DocumentInfo
+    };
+  } catch (error) {
+    return { success: false, type: "error", message: "조회 중 오류 발생" };
   }
 }
 

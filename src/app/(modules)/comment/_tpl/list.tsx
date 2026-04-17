@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
 import { useRouter } from "next/navigation";
-import Modal from "@components/modal/Modal";
-import Button from "@components/button/Button";
+import Modal from "@/core/components/modal/Modal";
+import Button from "@/core/components/button/Button";
 import { usePostContext } from "@modules/posts/_tpl/default/PostProvider";
 import { CommentWithChildren } from "@modules/comment/_actions/_type";
 

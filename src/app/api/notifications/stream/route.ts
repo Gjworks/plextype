@@ -1,5 +1,5 @@
 // src/app/api/notifications/stream/route.ts
-import { notificationEvents } from "@/utils/trigger/notificationEvents";
+import { notificationEvents } from "@/core/utils/trigger/notificationEvents";
 
 export const dynamic = "force-dynamic";
 

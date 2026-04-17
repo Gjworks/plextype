@@ -1,5 +1,5 @@
 import { Prisma, PermissionSubject } from "@prisma/client";
-import { ActionResponse } from "@/types/actions";
+import { ActionResponse } from "@/core/types/actions";
 import { z } from "zod";
 import {contentBaseRule} from "@modules/posts/_actions/_type";
 

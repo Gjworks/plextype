@@ -1,21 +1,20 @@
-// src/app/(extentions)/posts/(views)/[mid]/[id]/page.tsx
 
 import React, { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { Post } from "@modules/posts"; // 🌟 스마트 블록
-import { getDocument } from "@modules/document/_actions/document.action";
-import { getSeoMetadata } from "@/utils/helper/matadata";
+import {getDocumentBySlugAction} from "@modules/document/_actions/document.action";
+import { getSeoMetadata } from "@/core/utils/helper/matadata";
 
 interface PageProps {
-  params: Promise<{ mid: string; id: string }>;
+  params: Promise<{ mid: string; slug: string }>;
   searchParams?: Promise<{ page?: string }>;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ mid: string; id: string }> }) {
-  const { mid, id } = await params;
-  if (id === "create") return getSeoMetadata({ title: "글 작성" });
+export async function generateMetadata({ params }: { params: Promise<{ mid: string; slug: string }> }) {
+  const { mid, slug } = await params;
+  if (slug === "create") return getSeoMetadata({ title: "글 작성" });
 
-  const res = await getDocument(Number(id));
+  const res = await getDocumentBySlugAction(slug);
   const doc = res.data;
 
   return getSeoMetadata({
@@ -25,23 +24,25 @@ export async function generateMetadata({ params }: { params: Promise<{ mid: stri
 }
 
 const Page = async ({ params, searchParams }: PageProps) => {
-  const { mid, id } = await params;
+  const resolvedParams = await params;
+  console.log("🚀 지금 들어온 파라미터:", resolvedParams);
+  const { mid, slug } = await params;
   const { page } = (await searchParams) || {};
-  const docId = Number(id);
+  const docId = slug;
 
   // 1. 작성/예외 페이지 처리
-  if (id === "create" || id === "undefined") redirect(`/posts/${mid}/create`);
+  if (slug === "create" || slug === "undefined") redirect(`/posts/${mid}/create`);
 
   return (
     <div className="max-w-screen-xl mx-auto">
       <Suspense fallback={<div className="py-20 text-center text-gray-400">본문을 불러오는 중...</div>}>
-        <Post.Read mid={mid} id={docId} />
+        <Post.Read mid={mid} slug={docId} />
       </Suspense>
 
       <Suspense fallback={<div className="py-10 text-center text-gray-400">댓글을 불러오는 중...</div>}>
         <Post.Comments
           mid={mid}
-          id={docId}
+          slug={docId}
           page={Number(page || 1)}
         />
       </Suspense>

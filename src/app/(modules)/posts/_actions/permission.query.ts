@@ -1,6 +1,6 @@
 // src/app/(extentions)/posts/_actions/permission.query.ts
 
-import prisma from "@utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 import { PermissionData } from "./_type";
 import { PermissionSubject } from "@prisma/client";
 

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { ActionResponse } from "@/types/actions";
+import { ActionResponse } from "@/core/types/actions";
 import { z } from "zod";
 
 export type { ActionResponse }; // 외부에서 쓸 수 있게 다시 내보내기

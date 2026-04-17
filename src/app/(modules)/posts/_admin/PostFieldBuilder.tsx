@@ -4,8 +4,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExtraFieldConfig } from "@modules/posts/_actions/_type";
 import { Plus, Trash2, GripVertical, LayoutGrid } from "lucide-react";
-import  Button  from "@components/button/Button";
-import InputField from "@components/form/InputField";
+import  Button  from "@/core/components/button/Button";
+import InputField from "@/core/components/form/InputField";
 
 interface PostFieldBuilderProps {
   initialFields: ExtraFieldConfig[];

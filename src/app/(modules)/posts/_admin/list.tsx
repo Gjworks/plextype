@@ -7,9 +7,9 @@ import dayjs from "dayjs";
 import {removePostsAction} from "@modules/posts/_actions/posts.action"
 import relativeTime from "dayjs/plugin/relativeTime";
 
-import PageNavigation from "@components/nav/PageNavigation";
-import Alert from "@components/message/Alert";
-import Button from "@components/button/Button";
+import PageNavigation from "@/core/components/nav/PageNavigation";
+import Alert from "@/core/components/message/Alert";
+import Button from "@/core/components/button/Button";
 
 interface PostListInfo {
   id: number;

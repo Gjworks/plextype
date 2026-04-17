@@ -8,9 +8,9 @@ import AttachmentList from "./_tpl/default/AttachmentList";
 import MyFiles from "./_tpl/default/myFiles";
 
 // ✅ 공용 컴포넌트 임포트
-import UploadFileManager from "@components/editor/UploadFileManager";
-import Popup from "@components/modal/Popup";
-import Button from "@components/button/Button";
+import UploadFileManager from "@/core/components/editor/UploadFileManager";
+import Popup from "@/core/components/modal/Popup";
+import Button from "@/core/components/button/Button";
 
 // ✅ 🌟 [수정] 타입 이름이 겹치지 않게 별칭(as)을 줍니다.
 import { Attachment as IAttachment } from "./_actions/_type";

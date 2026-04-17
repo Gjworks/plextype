@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { verify } from "@/utils/auth/jwtAuth";
-import { jsonResponse } from "@/utils/helper/jsonResponse";
+import { verify } from "@/core/utils/auth/jwtAuth";
+import { jsonResponse } from "@/core/utils/helper/jsonResponse";
 import {
   saveUserAction,
 } from "@modules/user/_actions/user.action";

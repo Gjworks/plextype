@@ -1,5 +1,5 @@
 // src/app/(extentions)/posts/_actions/comment.query.ts
-import prisma from "@utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 
 // --- 조회(Find) ---
 export async function findCommentById(id: number) {
@@ -39,6 +39,7 @@ export async function insertComment(data: any) {
       document: {
         select: {
           id: true,
+          slug:true,
           userId: true, // 게시글 작성자
           module: { select: { mid: true } }
         }

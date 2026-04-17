@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ActionResponse } from "@/types/actions";
+import { ActionResponse } from "@/core/types/actions";
 import { useRouter } from "next/navigation";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 
-import InputField from "@components/form/InputField";
-import Button from "@components/button/Button";
-import Alert from "@components/message/Alert";
+import InputField from "@/core/components/form/InputField";
+import Button from "@/core/components/button/Button";
+import Alert from "@/core/components/message/Alert";
 
 interface SignData {
   type: string;

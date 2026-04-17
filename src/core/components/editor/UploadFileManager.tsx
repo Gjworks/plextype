@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect, useState, useRef, useMemo} from "react";
-import Alert from "@components/message/Alert"
+import Alert from "@/core/components/message/Alert"
 
 interface Attachment {
   id: number;

@@ -8,9 +8,9 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { usePostContext } from "./PostProvider";
-import { useUser } from "@hooks/auth/useAuth";
+import { useUser } from "@/core/hooks/auth/useAuth";
 import PostNotPermission from "@modules/posts/_tpl/default/notPermission";
-import Button from "@components/button/Button";
+import Button from "@/core/components/button/Button";
 import CodeBlockShiki from 'tiptap-extension-code-block-shiki'
 
 // ✅ TipTap 변환 관련 임포트 추가

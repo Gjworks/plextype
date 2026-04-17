@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useToastStore, ToastPosition } from "@/store/useToastStore";
+import { useToastStore, ToastPosition } from "@/core/store/useToastStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";

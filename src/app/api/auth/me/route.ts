@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 
-import { sign, verify, refreshVerify } from "@/utils/auth/jwtAuth";
+import { sign, verify, refreshVerify } from "@/core/utils/auth/jwtAuth";
 
 import { findUserById } from "@modules/user/_actions/user.query";
-import { timeToSeconds } from "@/utils/date/timeToSeconds";
+import { timeToSeconds } from "@/core/utils/date/timeToSeconds";
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {
