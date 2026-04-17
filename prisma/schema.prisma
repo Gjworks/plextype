@@ -85,6 +85,7 @@ model Document {
   moduleId       Int
   moduleType     String
   extraFieldData Json?       @default("{}")
+  thumbnail      String?     @db.Text
   Comment        Comment[]
   category       Category?   @relation("DocumentCategory", fields: [categoryId], references: [id])
   user           User?       @relation(fields: [userId], references: [id])

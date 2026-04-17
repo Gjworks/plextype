@@ -32,7 +32,7 @@
         "./src/app/*"
       ],
       "@modules/*": [
-        "./src/app/(modules)/*"
+        "./src/modules/*"
       ],
       "@extensions/*": ["./src/extensions/*"],
       "@extensions/trigger": ["./src/extensions/trigger/index.ts"],
