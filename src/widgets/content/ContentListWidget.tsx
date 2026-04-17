@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
-import { getDocumentList } from "@modules/document/_actions/document.action"
+import { getDocumentList } from "@/modules/document/actions/document.action"
 
 interface ContentListWidgetProps {
   mid: string;

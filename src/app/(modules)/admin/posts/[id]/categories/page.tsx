@@ -1,7 +1,7 @@
 "use client";
 
-import DashboardPostCategories from "@modules/posts/_admin/categories";
-import PostCategory from "@modules/posts/_admin/components/postCategory";
+import DashboardPostCategories from "@/modules/posts/admin/categories";
+import PostCategory from "@/modules/posts/admin/components/postCategory";
 import { useParams } from "next/navigation";
 
 const Page = () => {

@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 
 import { sign, verify, refreshVerify } from "@/core/utils/auth/jwtAuth";
 
-import { findUserById } from "@modules/user/_actions/user.query";
+import { findUserById } from "@/modules/user/actions/user.query";
 import { timeToSeconds } from "@/core/utils/date/timeToSeconds";
 
 export async function GET(request: NextRequest): Promise<Response> {
