@@ -22,6 +22,8 @@ export const DocumentUpsertSchema = z.object({
   title: titleBaseRule,
   content: contentBaseRule.optional().nullable(), // 에디터를 쓰면 빈 값이 넘어올 수도 있음
 
+  thumbnail: z.string().optional().nullable(),
+
   // 💡 체크박스 값("true" / "false")을 완벽하게 boolean으로 파싱
   isNotice: z.preprocess((val) => val === "true" || val === true, z.boolean()).optional().default(false),
   isSecrets: z.preprocess((val) => val === "true" || val === true, z.boolean()).optional().default(false),

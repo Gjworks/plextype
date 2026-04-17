@@ -1,20 +1,14 @@
 import React, { Suspense } from "react";
 import { Post } from "@/modules/posts"; // 🌟 우리가 만든 스마트 블록 가져오기
-import { getDocumentList } from "@/modules/document/actions/document.action";
-import { getSeoMetadata } from "@utils/helper/matadata";
+import { getPostListMetadata } from "@modules/posts/actions/seo.action";
 
 // 📌 1. 메타데이터 생성 (여기는 데이터를 읽어야 하니 기존 로직 유지)
-export async function generateMetadata({ params }: { params: Promise<{ mid: string }> }) {
-  const { mid } = await params;
-  const res = await getDocumentList(mid, 1, 1);
-  const items = res.success && res.data ? res.data.documentList : [];
 
-  return getSeoMetadata({
-    title: `${process.env.PROJECT_TITLE || '게시판'} - ${mid}`,
-    description: items?.[0]?.title ?? `${mid} 게시판의 글 목록`,
-    url: `https://example.com/posts/${mid}`,
-  });
+export async function generateMetadata({params}: any) {
+  const {mid} = await params;
+  return await getPostListMetadata(mid); // 👈 한 줄 컷!
 }
+
 
 // 📌 2. 페이지 컴포넌트 (세상에서 제일 깔끔!)
 const Page = async ({ params, searchParams }: {
