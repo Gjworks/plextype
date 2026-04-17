@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/core/utils/auth/authHelper";
-import { setReadStatus } from "@modules/notification/_actions/notification.action";
+import { setReadStatus } from "@/modules/notification/actions/notification.action";
 
 // 🌟 params의 타입을 Promise로 감싸주는 게 핵심입니다.
 export async function PATCH(

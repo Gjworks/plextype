@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { removeNotification } from "@modules/notification/_actions/notification.action";
+import { removeNotification } from "@/modules/notification/actions/notification.action";
 import {getAuthenticatedUser} from "@/core/utils/auth/authHelper";
 
 export async function DELETE(

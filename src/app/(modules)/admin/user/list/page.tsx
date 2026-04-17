@@ -1,5 +1,5 @@
-import DashboardUserList from "@modules/user/_admin/list";
-import { getUserListAction } from "@modules/user/_actions/user.action";
+import DashboardUserList from "@/modules/user/admin/list";
+import { getUserListAction } from "@/modules/user/actions/user.action";
 
 // 💡 Next.js 15+ 에서는 searchParams가 Promise로 들어옵니다.
 const Page = async ({ searchParams }: { searchParams: Promise<{ page?: string; target?: string; keyword?: string }> }) => {

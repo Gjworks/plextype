@@ -1,6 +1,6 @@
-import UpsertForm from "@modules/user/_admin/upsertForm";
-import { getUserFullById } from "@modules/user/_actions/user.action";
-import { getAllGroupRecords } from "@modules/user/_actions/group.action";
+import UpsertForm from "@/modules/user/admin/upsertForm";
+import { getUserFullById } from "@/modules/user/actions/user.action";
+import { getAllGroupRecords } from "@/modules/user/actions/group.action";
 
 const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;

@@ -1,11 +1,11 @@
 // src/app/(extentions)/admin/posts/[id]/extraField/page.tsx
-import {findModuleById, findPostsById} from "@modules/posts/_actions/posts.query";
-import { savePostConfigAction } from "@modules/posts/_actions/posts.action";
-import PostFieldBuilder from "@modules/posts/_admin/PostFieldBuilder";
+import {findModuleById, findPostsById} from "@/modules/posts/actions/posts.query";
+import { savePostConfigAction } from "@/modules/posts/actions/posts.action";
+import PostFieldBuilder from "@/modules/posts/admin/PostFieldBuilder";
 import { notFound } from "next/navigation";
-import { ExtraFieldConfig } from "@modules/posts/_actions/_type";
+import { ExtraFieldConfig } from "@/modules/posts/actions/_type";
 import { ChevronRight } from "lucide-react";
-import PostCategory from "@modules/posts/_admin/components/postCategory"; // 브레드크럼용 아이콘
+import PostCategory from "@/modules/posts/admin/components/postCategory"; // 브레드크럼용 아이콘
 
 export default async function ExtraFieldPage({
                                                params

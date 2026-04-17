@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import DashboardPostsList from "@modules/posts/_admin/list";
-import { getPostsList } from "@modules/posts/_actions/posts.action";
+import DashboardPostsList from "@/modules/posts/admin/list";
+import { getPostsList } from "@/modules/posts/actions/posts.action";
 
 const Page = async ({ searchParams }: { searchParams: Promise<{ page?: string }> }) => {
   const { page: pageParam } = (await searchParams) || {};
