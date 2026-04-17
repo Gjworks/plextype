@@ -8,8 +8,8 @@ import type { PostInfoData } from "@modules/posts/_actions/_type";
 
 import PostInfo from "./components/postInfo";
 import PostPermissions from "./components/postPermissions";
-import Button from "@components/button/Button";
-import Alert from "@components/message/Alert";
+import Button from "@/core/components/button/Button";
+import Alert from "@/core/components/message/Alert";
 
 const DashboardPostCreate = ({ initialData, groupList, mid }: {
   initialData: any;

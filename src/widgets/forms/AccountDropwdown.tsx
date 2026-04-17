@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Dropdown from "@/components/dropdown/Dropdown";
-import Avator from "@/components/avator/Avator";
-import DefaultList from "@/components/nav/DefaultList";
+import Dropdown from "@/core/components/dropdown/Dropdown";
+import Avator from "@/core/components/avator/Avator";
+import DefaultList from "@/core/components/nav/DefaultList";
 // 🌟 이제 엔진 대신 '파이프(Context)'를 연결합니다.
-import { useUserContext } from "@/providers/UserProvider";
+import { useUserContext } from "@/core/providers/UserProvider";
 
 interface Item {
   title: string;

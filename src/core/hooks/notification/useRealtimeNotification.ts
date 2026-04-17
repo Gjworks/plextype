@@ -1,6 +1,6 @@
 // src/hooks/notification/useRealtimeNotification.ts
 import { useEffect } from "react";
-import { useToastStore } from "@/store/useToastStore";
+import { useToastStore } from "@/core/store/useToastStore";
 
 // src/hooks/notification/useRealtimeNotification.ts
 

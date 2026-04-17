@@ -4,12 +4,12 @@
 import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { UserInfo, UserListResponseData } from "@modules/user/_actions/_type";
-import PageNavigation from "@components/nav/PageNavigation";
+import PageNavigation from "@/core/components/nav/PageNavigation";
 // 💡 검색 기능을 위해 라우터 추가
 import { useRouter, useSearchParams } from "next/navigation";
 import { removeUserAction } from "@modules/user/_actions/user.action";
 
-import Button from "@components/button/Button"
+import Button from "@/core/components/button/Button"
 
 type Props = {
   initialUserList: UserInfo[];

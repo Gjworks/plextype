@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import {getAuthenticatedUser} from "@utils/auth/authHelper";
+import {getAuthenticatedUser} from "@/core/utils/auth/authHelper";
 
 // 만약 action에 getHistory가 있다면 추가
 // import { getHistory } from "@modules/notification/_actions/notification.action";

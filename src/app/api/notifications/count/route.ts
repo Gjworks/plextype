@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUnreadCount } from "@modules/notification/_actions/notification.action";
-import { getAuthenticatedUser } from "@utils/auth/authHelper";
+import { getAuthenticatedUser } from "@/core/utils/auth/authHelper";
 
 export async function GET() {
   try {

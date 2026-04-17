@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
-import prisma from "@/utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 import DocumentDelete from "@modules/posts/_tpl/default/delete";
 
 const Page = async ({  params: rawParams  }: { params: Promise<{ mid: string; id?: string }> }) => {

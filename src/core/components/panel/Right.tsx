@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import RightPortal from "@/components/panel/RightPortal";
+import RightPortal from "@/core/components/panel/RightPortal";
 import { X } from "lucide-react";
 
 const Right = ({ state, close, children }) => {

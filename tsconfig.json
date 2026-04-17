@@ -37,22 +37,22 @@
       "@extensions/*": ["./src/extensions/*"],
       "@extensions/trigger": ["./src/extensions/trigger/index.ts"],
       "@components/*": [
-        "./src/components/*"
+        "./src/core/components/*"
       ],
       "@hooks/*": [
-        "./src/hooks/*"
+        "./src/core/hooks/*"
       ],
       "@layouts/*" : [
         "./src/layouts/*"
       ],
       "@providers/*": [
-        "./src/layouts/*"
+        "./src/core/layouts/*"
       ],
       "@res/*": [
-        "./src/res/*"
+        "./src/core/res/*"
       ],
       "@utils/*": [
-        "./src/utils/*"
+        "./src/core/utils/*"
       ],
       "@widgets/*": [
         "./src/widgets/*"
@@ -61,7 +61,7 @@
     "strictNullChecks": true
   },
   "include": [
-    "src/types/*.ts",
+    "src/core/types/*.ts",
     "types/next-auth.d.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",

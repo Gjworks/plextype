@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma, { PermissionSubject } from "@/utils/db/prisma";
-import { verify } from "@/utils/auth/jwtAuth";
-import { jsonResponse } from "@/utils/helper/jsonResponse"; // Prisma 클라이언트 경로 확인
+import prisma, { PermissionSubject } from "@/core/utils/db/prisma";
+import { verify } from "@/core/utils/auth/jwtAuth";
+import { jsonResponse } from "@/core/utils/helper/jsonResponse"; // Prisma 클라이언트 경로 확인
 
 interface FormDataFields {
   moduleId: string;

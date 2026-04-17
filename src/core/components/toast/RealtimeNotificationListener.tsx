@@ -1,7 +1,7 @@
 "use client";
 
-import { useRealtimeNotification } from "@/hooks/notification/useRealtimeNotification";
-import { useUserContext } from "@/providers/UserProvider";
+import { useRealtimeNotification } from "@hooks/notification/useRealtimeNotification";
+import { useUserContext } from "@/core/providers/UserProvider";
 
 export default function RealtimeNotificationListener() {
   const { user, isLoading } = useUserContext();

@@ -1,11 +1,11 @@
 import "./globals.css";
 import "./style.css";
-import ReactQueryProvider from "@/providers/ReactQueryProvider";
-import { UserProvider } from "@/providers/UserProvider";
-import Log from "@/utils/debug/Log";
+import ReactQueryProvider from "@/core/providers/ReactQueryProvider";
+import { UserProvider } from "@/core/providers/UserProvider";
+import Log from "@/core/utils/debug/Log";
 export const dynamic = 'force-dynamic';
-import { ToastContainer } from "@components/toast/toast";
-import RealtimeNotificationListener from "@components/toast/RealtimeNotificationListener";
+import { ToastContainer } from "@/core/components/toast/toast";
+import RealtimeNotificationListener from "@/core/components/toast/RealtimeNotificationListener";
 
 export default function RootLayout({ children }) {
   if (typeof globalThis.Log === "undefined") {

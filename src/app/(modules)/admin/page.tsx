@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 // 🌟 [수정] HardDrive 아이콘을 추가로 임포트했습니다!
 import { Users, FileText, MessageSquare, Activity, ArrowUpRight, Zap, Globe, HardDrive } from "lucide-react";
-import {useToastStore} from "@/store/useToastStore";
+import {useToastStore} from "@/core/store/useToastStore";
 
 
 

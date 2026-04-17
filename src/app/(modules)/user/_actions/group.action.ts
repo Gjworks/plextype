@@ -3,7 +3,7 @@
 
 import { getUserSessionAction } from "@modules/user/_actions/user.action"; // 파일 경로에 맞게 수정
 import * as query from "./group.query";
-import { validateForm } from "@/utils/validation/formValidator";
+import { validateForm } from "@/core/utils/validation/formValidator";
 import { ActionState, GroupInfo, GroupUpsertSchema } from "./_type";
 
 export const getGroups = async () => {
