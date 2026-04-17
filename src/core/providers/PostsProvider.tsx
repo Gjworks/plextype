@@ -3,10 +3,10 @@ import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
 
 // 기존 액션 및 프로바이더 임포트
-import { getPostsInfo } from "@modules/posts/_actions/posts.action";
-import { checkPermissions } from "@modules/posts/_actions/permission.action";
-import PostProvider from "@modules/posts/_tpl/default/PostProvider"; // 실제 컨텍스트 프로바이더
-import PostNotFound from "@modules/posts/_tpl/default/notFound";
+import { getPostsInfo } from "@/modules/posts/actions/posts.action";
+import { checkPermissions } from "@/modules/posts/actions/permission.action";
+import PostProvider from "@/modules/posts/tpl/default/PostProvider"; // 실제 컨텍스트 프로바이더
+import PostNotFound from "@/modules/posts/tpl/default/notFound";
 
 // 1. 권한 기본값 정의 (Permissions가 null일 때 에러 방지용)
 const DEFAULT_PERMISSIONS = {

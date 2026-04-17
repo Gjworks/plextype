@@ -1,7 +1,7 @@
 // src/app/(extentions)/admin/user/groupList/page.tsx
-import DashboardUserGroupList from "@modules/user/_admin/groupList";
+import DashboardUserGroupList from "@/modules/user/admin/groupList";
 // 💡 경로를 group.action 으로 명확하게 지정해 줍니다!
-import { getAllGroupRecords } from "@modules/user/_actions/group.action";
+import { getAllGroupRecords } from "@/modules/user/actions/group.action";
 
 const Page = async () => {
   // 💡 1. 서버가 화면을 그리기 전에 DB를 직통으로 찔러서 그룹 목록을 싹 가져옵니다.

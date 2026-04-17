@@ -1,5 +1,5 @@
-import UpsertForm from "@modules/user/_admin/upsertForm";
-import { getAllGroupRecords } from "@modules/user/_actions/group.action";
+import UpsertForm from "@/modules/user/admin/upsertForm";
+import { getAllGroupRecords } from "@/modules/user/actions/group.action";
 
 const Page = async () => {
   const groupList = await getAllGroupRecords();

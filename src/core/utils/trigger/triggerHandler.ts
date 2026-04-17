@@ -1,6 +1,6 @@
 // src/utils/trigger/triggerHandler.ts
 
-import { saveNotification } from "@modules/notification/_actions/notification.action";
+import { saveNotification } from "@/modules/notification/actions/notification.action";
 import { notificationEvents } from "./notificationEvents";
 
 export const sendNotification = async (data: any, context: any) => {

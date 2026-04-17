@@ -1,8 +1,8 @@
 // src/app/(extentions)/admin/posts/create/page.tsx
 
-import DashboardPostCreate from "@modules/posts/_admin/create";
+import DashboardPostCreate from "@/modules/posts/admin/create";
 
-import { getGroups } from "@modules/user/_actions/group.action";
+import { getGroups } from "@/modules/user/actions/group.action";
 
 const Page = async () => {
   // 💡 1. 생성할 때도 권한 설정을 위해 그룹 목록은 필요합니다!

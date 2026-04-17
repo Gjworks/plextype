@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { verify } from "@/core/utils/auth/jwtAuth";
 
-import { findUserById } from "@modules/user/_actions/user.query";
+import { findUserById } from "@/modules/user/actions/user.query";
 import { hashedPassword, verifyPassword } from "@/core/utils/auth/password";
 
 const prisma = new PrismaClient();

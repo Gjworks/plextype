@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { setAllRead } from "@modules/notification/_actions/notification.action";
+import { setAllRead } from "@/modules/notification/actions/notification.action";
 import {getAuthenticatedUser} from "@/core/utils/auth/authHelper";
 
 export async function POST() {

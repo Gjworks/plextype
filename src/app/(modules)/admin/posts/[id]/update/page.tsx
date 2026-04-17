@@ -1,8 +1,8 @@
 // src/app/(extentions)/admin/posts/[id]/update/page.tsx
-import DashboardPostCreate from "@modules/posts/_admin/create";
-import PostCategory from "@modules/posts/_admin/components/postCategory";
-import { getPostsInfoById } from "@modules/posts/_actions/posts.action";
-import { getGroups } from "@modules/user/_actions/group.action";
+import DashboardPostCreate from "@/modules/posts/admin/create";
+import PostCategory from "@/modules/posts/admin/components/postCategory";
+import { getPostsInfoById } from "@/modules/posts/actions/posts.action";
+import { getGroups } from "@/modules/user/actions/group.action";
 
 const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;

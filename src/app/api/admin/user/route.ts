@@ -3,7 +3,7 @@ import { verify } from "@/core/utils/auth/jwtAuth";
 import { jsonResponse } from "@/core/utils/helper/jsonResponse";
 import {
   saveUserAction,
-} from "@modules/user/_actions/user.action";
+} from "@/modules/user/actions/user.action";
 
 /**
  * [GET] 관리자 권한 확인

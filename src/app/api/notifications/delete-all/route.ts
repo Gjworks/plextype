@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/core/utils/auth/authHelper";
-import { deleteAllNotifications } from "@modules/notification/_actions/notification.action";
+import { deleteAllNotifications } from "@/modules/notification/actions/notification.action";
 
 export async function POST() {
   try {
