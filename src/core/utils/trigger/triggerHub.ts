@@ -1,5 +1,5 @@
 // src/utils/trigger/triggerHub.ts
-import coreConfig from "@res/config/trigger.json";
+import coreConfig from "@/core/res/config/trigger.json";
 import * as coreHandlers from "./triggerHandler";
 
 // 🌟 전역 캐시
@@ -32,7 +32,7 @@ async function initializeRegistry() {
   // 1. 사용자 핸들러 로드 (index.ts가 안내 데스크 역할을 함)
   try {
 
-    const triggerModule = await import("@/extensions/trigger");
+    const triggerModule = await import("@extensions/trigger");
 
     userHandlers = triggerModule;
   } catch (e) {

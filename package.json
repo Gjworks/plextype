@@ -47,6 +47,7 @@
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.562.0",
     "mime-types": "^3.0.1",
+    "nanoid": "^5.1.9",
     "next": "^16.0.7",
     "prismjs": "^1.29.0",
     "react": "^19.2.1",

@@ -1,5 +1,5 @@
 // src/app/(extentions)/posts/_actions/category.query.ts
-import prisma from "@utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 import { TreeItem, CategoryParams } from "./_type";
 
 export async function findCategoriesByModuleId(

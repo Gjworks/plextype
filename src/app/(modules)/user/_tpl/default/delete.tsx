@@ -4,9 +4,9 @@ import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import Alert from "@components/message/Alert";
-import InputField from "@components/form/InputField";
-import Button from "@components/button/Button";
+import Alert from "@/core/components/message/Alert";
+import InputField from "@/core/components/form/InputField";
+import Button from "@/core/components/button/Button";
 import HeaderUser from "@modules/user/_tpl/default/header";
 
 // 🌟 비밀번호 확인 액션과, 탈퇴 액션을 모두 불러옵니다.

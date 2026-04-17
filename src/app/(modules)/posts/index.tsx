@@ -4,7 +4,7 @@ import { decodeJwt } from "jose";
 
 // Actions & Utils
 import { getPostsInfo } from "./_actions/posts.action";
-import { getDocumentList, getDocument, saveDocument, increaseViewCount } from "../document/_actions/document.action";
+import { getDocumentList, getDocument, saveDocument, increaseViewCount, getDocumentBySlugAction } from "../document/_actions/document.action";
 import { checkPermissions } from "./_actions/permission.action";
 import { getCommentsAction, getParticipantsAction, saveCommentAction, removeCommentAction } from "../comment/_actions/comment.action";
 
@@ -65,24 +65,25 @@ async function PostList({
  * 🧩 2. 상세 본문 블록 (Post.Read)
  */
 async function PostRead({
-                          mid, id,
+                          mid, slug,
                           Skin = DefaultReadSkin // 👈 스킨 주입
                         }: {
-  mid: string; id: number;
+  mid: string; slug: string;
   Skin?: React.ComponentType<any>;
 }) {
-  const [infoRes, docRes, user, participantsRes] = await Promise.all([
+  const [infoRes, docRes, user] = await Promise.all([
     getPostsInfo(mid),
-    getDocument(id),
+    getDocumentBySlugAction(slug),
     getServerUser(),
-    getParticipantsAction(id)
+
   ]);
 
   if (!infoRes.success || !docRes.success || !docRes.data) return null;
-
+  const numericId = docRes.data.id;
+  const participantsRes = await getParticipantsAction(numericId);
   const permissions = await checkPermissions(infoRes.data.permissions, user);
   const requestIp = (await headers()).get("x-forwarded-for") || '';
-  await increaseViewCount(id, user?.id, requestIp);
+  await increaseViewCount(numericId, user?.id, requestIp);
 
   return (
     <PostProvider value={{ postInfo: infoRes.data, currentUser: user, permissions }}>
@@ -95,12 +96,17 @@ async function PostRead({
  * 🧩 3. 댓글 블록 (Post.Comments)
  */
 async function PostComments({
-                              mid, id, page = 1,
+                              mid, slug, page = 1,
                               Skin = DefaultCommentsSkin // 👈 스킨 주입
                             }: {
-  mid: string; id: number; page?: number;
+  mid: string; slug: string; page?: number;
   Skin?: React.ComponentType<any>;
 }) {
+
+  const docRes = await getDocumentBySlugAction(slug);
+  if (!docRes.data) return null;
+  const id = docRes.data.id;
+
   const [infoRes, user, commentsRes] = await Promise.all([
     getPostsInfo(mid),
     getServerUser(),
@@ -113,7 +119,7 @@ async function PostComments({
 
   async function upsertCommentAction(data: any) {
     "use server";
-    const path = `/posts/${mid}/${id}`;
+    const path = `/posts/${mid}/${slug}`;
     if (data.commentId && (data.options?.remove || data.options?.deleted)) {
       return await removeCommentAction(id, data.commentId, path);
     }
@@ -141,10 +147,10 @@ async function PostComments({
  * 🧩 4. 쓰기/수정 블록 (Post.Write)
  */
 async function PostWrite({
-                           mid, id,
+                           mid, slug,
                            Skin = DefaultWriteSkin // 👈 스킨 주입
                          }: {
-  mid: string; id?: number;
+  mid: string; slug?: string;
   Skin?: React.ComponentType<any>;
 }) {
   const [infoRes, user] = await Promise.all([
@@ -159,8 +165,8 @@ async function PostWrite({
   const permissions = await checkPermissions(infoRes.data.permissions, user);
 
   let existingPost: any = null;
-  if (id) {
-    const docRes = await getDocument(id);
+  if (slug) {
+    const docRes = await getDocumentBySlugAction(slug);
     existingPost = docRes.data;
   }
 

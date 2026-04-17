@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import LeftPortal from '@/components/panel/LeftPortal'
+import LeftPortal from '@/core/components/panel/LeftPortal'
 
 const Left = ({ state, close, children, width }) => {
   const [panelState, setPanelState] = useState(false)

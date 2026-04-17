@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useMemo } from "react";
-import { useUser } from "@/hooks/auth/useAuth";
+import { useUser } from "@/core/hooks/auth/useAuth";
 
 interface UserContextValue {
   user: any | null;

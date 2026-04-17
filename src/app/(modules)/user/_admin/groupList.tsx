@@ -2,10 +2,10 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Alert from "@components/message/Alert";
-import Modal from "@components/modal/Modal";
+import Alert from "@/core/components/message/Alert";
+import Modal from "@/core/components/modal/Modal";
 // 💡 InputField 가져오기
-import InputField from "@components/form/InputField";
+import InputField from "@/core/components/form/InputField";
 
 import { GroupInfo } from "@modules/user/_actions/_type";
 import { upsertGroup, deleteGroup } from "@modules/user/_actions/group.action";

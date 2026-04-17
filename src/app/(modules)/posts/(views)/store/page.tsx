@@ -3,7 +3,7 @@ import Link from "next/link";
 
 
 import PostsCategories from "@modules/posts/_tpl/default/category";
-import PageNavigation from "@/components/nav/PageNavigation";
+import PageNavigation from "@/core/components/nav/PageNavigation";
 import { motion } from "framer-motion";
 import React from "react";
 

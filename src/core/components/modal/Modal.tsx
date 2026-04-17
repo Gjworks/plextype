@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import ModalPortal from "@/components/modal/ModalPortal";
+import ModalPortal from "@/core/components/modal/ModalPortal";
 
 interface ModalProps {
   state: boolean;

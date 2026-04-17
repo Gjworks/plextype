@@ -1,6 +1,6 @@
 'use client'
 import {useRouter} from 'next/navigation'
-import Accordion from "@components/accordion/Accordion";
+import Accordion from "@/core/components/accordion/Accordion";
 
 const Page = () => {
   const router = useRouter()

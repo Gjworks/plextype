@@ -3,11 +3,11 @@
 
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
-import { hashedPassword, verifyPassword } from "@utils/auth/password";
+import { hashedPassword, verifyPassword } from "@/core/utils/auth/password";
 import { saveUser, removeUser, getUserList, decodeUserToken, getUserSession } from "./user";
 import { ActionState, UserUpsertSchema, PasswordChangeSchema, UserListParams, UserListSchema, UserListResponseData, LoggedParams, UserInfo, UserParams, PasswordVerifySchema } from "./_type";
 import * as query from "./user.query"; // 분리된 쿼리 함수 임포트
-import { validateForm } from "@/utils/validation/formValidator";
+import { validateForm } from "@/core/utils/validation/formValidator";
 import { revalidatePath } from "next/cache";
 
 /**

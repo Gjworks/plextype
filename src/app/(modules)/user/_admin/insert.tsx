@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Alert from "@components/message/Alert";
+import Alert from "@/core/components/message/Alert";
 import {saveUserAction} from "@modules/user/_actions/user.action";
 import { ActionResponse } from "@modules/user/_actions/_type"
 

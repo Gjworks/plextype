@@ -1,6 +1,6 @@
 "use client";
 
-import DefaultNav from "@components/nav/DefaultNav";
+import DefaultNav from "@/core/components/nav/DefaultNav";
 
 export default function UserNavWrapper({ list }: { list: any[] }) {
   return (

@@ -4,7 +4,7 @@
 import path from "path";
 import { rename, mkdir, rmdir, unlink } from "fs/promises";
 import { cookies } from "next/headers";
-import { verify } from "@utils/auth/jwtAuth";
+import { verify } from "@/core/utils/auth/jwtAuth";
 import { decodeJwt } from "jose";
 import * as query from "./attachment.query";
 import {ActionState, Attachment} from "@modules/attachment/_actions/_type"; // 쿼리 함수들 임포트

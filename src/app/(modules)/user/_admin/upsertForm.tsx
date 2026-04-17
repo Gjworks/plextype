@@ -2,11 +2,11 @@
 
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Alert from "@components/message/Alert";
+import Alert from "@/core/components/message/Alert";
 
 import { saveUserAction } from "@modules/user/_actions/user.action";
-import InputField from "@components/form/InputField";
-import Button from "@components/button/Button";
+import InputField from "@/core/components/form/InputField";
+import Button from "@/core/components/button/Button";
 
 // 🎨 아이콘 정의
 const UserIcon = (

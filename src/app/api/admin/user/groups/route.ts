@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 
-import { verify } from "@/utils/auth/jwtAuth";
-import { jsonResponse } from "@/utils/helper/jsonResponse";
-import prisma, { PermissionSubject } from "@/utils/db/prisma";
+import { verify } from "@/core/utils/auth/jwtAuth";
+import { jsonResponse } from "@/core/utils/helper/jsonResponse";
+import prisma, { PermissionSubject } from "@/core/utils/db/prisma";
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {

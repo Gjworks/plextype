@@ -5,16 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 
-import Left from "@/components/panel/Left";
+import Left from "@/core/components/panel/Left";
 
 import AccountDropwdown from "src/widgets/forms/AccountDropwdown";
-import SideNav from "@/components/nav/SideNav";
-import nav from "@/res/config/navigation.json";
+import SideNav from "@/core/components/nav/SideNav";
+import nav from "@/core/res/config/navigation.json";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
-import Right from "@/components/panel/Right";
+import Right from "@/core/components/panel/Right";
 import MymenuTemplate from "src/widgets/forms/MymenuTemplate";
-import NotificationBell from "@components/bell/bell";
+import NotificationBell from "@/core/components/bell/bell";
 
 export type NavType = {
   name: string;

@@ -8,7 +8,7 @@
 // } from "@components/accordion/Accordion";
 // import SideNavSubTemplates from "@templates/nav/SideNavSubTemplates";
 //
-import Coming from '@/components/message/Coming'
+import Coming from '@/core/components/message/Coming'
 
 const Page = () => {
   return

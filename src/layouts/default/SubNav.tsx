@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import nav from "@/res/config/navigation.json";
+import nav from "@/core/res/config/navigation.json";
 import { usePathname } from "next/navigation";
-import DefaultNav from "@/components/nav/DefaultNav";
+import DefaultNav from "@/core/components/nav/DefaultNav";
 
 interface Inspage {
   name: string;

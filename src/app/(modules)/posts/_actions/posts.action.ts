@@ -7,7 +7,7 @@ import { decodeJwt } from "jose";
 import * as query from "./posts.query";
 
 import {ActionState, PostsUpsertSchema, DocumentInfo, ExtraFieldConfig} from "./_type";
-import { validateForm } from "@/utils/validation/formValidator";
+import { validateForm } from "@/core/utils/validation/formValidator";
 import {deletePosts, findPostsById, findPostsByPid, updateModuleFieldSchema} from "./posts.query";
 import {redirect} from "next/navigation";
 

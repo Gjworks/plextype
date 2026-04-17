@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import Codehighlighte from '@/components/codehighlight/Codehighlighter'
+import Codehighlighte from '@/core/components/codehighlight/Codehighlighter'
 
-import Modal from '@/components/modal/Modal'
+import Modal from '@/core/components/modal/Modal'
 
 const Page = () => {
   const [showModalTop, setShowModalTop] = useState(false)
@@ -73,7 +73,7 @@ const Page = () => {
   }
 
   const modalString = `import { useState } from 'react'
-import Modal from 'src/components/modal/Modal'
+import Modal from 'src/core/components/modal/Modal'
 
 const [showModal, setShowModal] = useState(false);
 const closeModal = (close) => {

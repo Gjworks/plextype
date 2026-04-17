@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { mkdir, writeFile, readdir, unlink, rmdir } from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
-import prisma from "@/utils/db/prisma";
+import prisma from "@/core/utils/db/prisma";
 import dayjs from "dayjs";
-import { verify } from "@/utils/auth/jwtAuth";
+import { verify } from "@/core/utils/auth/jwtAuth";
 
 export const runtime = "nodejs";
 

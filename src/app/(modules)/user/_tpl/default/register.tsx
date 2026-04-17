@@ -4,9 +4,9 @@ import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Alert from "@components/message/Alert";
-import InputField from "@components/form/InputField";
-import Button from "@components/button/Button";
+import Alert from "@/core/components/message/Alert";
+import InputField from "@/core/components/form/InputField";
+import Button from "@/core/components/button/Button";
 
 const Register = () => {
   const [loading, setLoading] = useState(false); // ✅ 로딩 상태 추가
