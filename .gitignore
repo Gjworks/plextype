@@ -60,3 +60,7 @@ package-lock.json
 
 Dockerfile
 .dockerignore
+
+src/app/**/*
+!src/app/layout.tsx
+!src/app/global.css
