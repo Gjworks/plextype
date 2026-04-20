@@ -60,11 +60,3 @@ package-lock.json
 
 Dockerfile
 .dockerignore
-
-src/app/**/*
-!src/app/layout.tsx
-!src/app/global.css
-
-# 🌟 테일윈드 스캐너를 위해 아래 내용을 추가하세요 (부정의 부정)
-!src/app/**/*.tsx
-!src/app/**/*.ts
