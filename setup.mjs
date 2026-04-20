@@ -66,6 +66,35 @@ DATABASE_URL="${dbUrl}"
     console.log("✅ .env 파일 생성 완료!");
   }
 
+  // 3-2. 초기 페이지(app/page.tsx) 생성
+  console.log("\n🏠 셋업: 초기 랜딩 페이지 설정 중...");
+  const appDirPath = path.join('src', 'app');
+  const pagePath = path.join(appDirPath, 'page.tsx');
+
+// 폴더가 없으면 생성 (src/app)
+  if (!fs.existsSync(appDirPath)) {
+    fs.mkdirSync(appDirPath, { recursive: true });
+  }
+
+// 파일이 없을 때만 생성 (기존 파일 보호)
+  if (!fs.existsSync(pagePath)) {
+    const defaultPageContent = `import MainIntro from "@/extensions/pages/MainIntro";
+
+/**
+ * 🚀 Plextype 초기 랜딩 페이지
+ * 이 파일은 설치 시 1회 생성되며, 이후 프레임워크 업데이트에 영향을 받지 않습니다.
+ * 마음껏 수정하여 당신만의 대문을 만드세요!
+ */
+export default function Page() {
+  return <MainIntro />;
+}
+`;
+    fs.writeFileSync(pagePath, defaultPageContent);
+    console.log("✅ src/app/page.tsx 생성 완료! (이제 당신의 구역입니다)");
+  } else {
+    console.log("ℹ️  src/app/page.tsx가 이미 존재하여 건너뜁니다.");
+  }
+
   // 4. 폴더 및 심볼릭 링크 설정
   console.log("\n📁 셋업: Storage 폴더 설정 중...");
   if (!fs.existsSync('storage')) fs.mkdirSync('storage');
