@@ -29,9 +29,9 @@ interface Pagination {
 }
 
 const PostsListClient = ({
-                           posts,
-                           pagination: initialPagination
-                         }: {
+  posts,
+  pagination: initialPagination,
+}: {
   posts: any[];
   pagination: Pagination;
 }) => {
@@ -40,6 +40,12 @@ const PostsListClient = ({
   const [pagination, setPagination] = useState(initialPagination);
   const [page, setPage] = useState(pagination.page); // 💡 currentPage 대신 page 사용
   const { postInfo, permissions } = usePostContext();
+
+  useEffect(() => {
+    setDocumentInfo(posts);
+    setPagination(initialPagination);
+    setPage(initialPagination.page);
+  }, [posts, initialPagination]);
 
   if (!permissions.doList) {
     return <PostNotPermission />;
@@ -61,7 +67,7 @@ const PostsListClient = ({
     router.replace(`/posts/${postInfo.pid}?page=${newPage}`, { scroll: false });
   };
 
-  console.log(posts)
+  console.log(posts);
 
   return (
     <>
@@ -84,30 +90,53 @@ const PostsListClient = ({
                   />
                 ) : (
                   <span className="text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                         stroke="currentColor" className="w-6 h-6">
-                      <path strokeLinecap="round" strokeLinejoin="round"
-                            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-6 h-6"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+                      />
                     </svg>
                   </span>
                 )}
               </div>
               <div className="flex items-center flex-1 flex-wrap gap-4">
-                <Link href={`/posts/${postInfo.mid}/${doc.slug}`} className="w-full lg:flex-1">
+                <Link
+                  href={`/posts/${postInfo.mid}/${doc.slug}`}
+                  className="w-full lg:flex-1"
+                >
                   <div>
                     <div className="flex items-center gap-2 text-sm lg:text-base font-semibold text-gray-950 dark:text-white line-clamp-2 mb-2">
                       {doc.title}
                       {doc.thumbnail && (
                         <span className="text-gray-500">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.25}
-                               stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round"
-                                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.25}
+                            stroke="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+                            />
                           </svg>
                         </span>
                       )}
                     </div>
-                    <div className={`mb-4 text-sm wrap-break-word break-keep text-gray-500 dark:text-gray-300 line-clamp-2`}>
+                    <div
+                      className={`mb-4 text-sm wrap-break-word break-keep text-gray-500 dark:text-gray-300 line-clamp-2`}
+                    >
                       {doc.content}
                     </div>
                     <div className="flex items-center gap-2">
@@ -124,11 +153,15 @@ const PostsListClient = ({
                       </div>
                       <div className="relative flex gap-2 before:bg-gray-300">
                         <div className="text-xs text-gray-400">댓글</div>
-                        <div className="text-xs text-gray-700">{doc.commentCount}</div>
+                        <div className="text-xs text-gray-700">
+                          {doc.commentCount}
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <div className="text-xs text-gray-400">조회수</div>
-                        <div className="text-xs text-gray-700">{doc.readCount}</div>
+                        <div className="text-xs text-gray-700">
+                          {doc.readCount}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -137,22 +170,35 @@ const PostsListClient = ({
                 {/* 우측 댓글 알림 영역 등 (기존 하드코딩된 부분 유지) */}
                 <div className="flex items-center w-full lg:w-1/4">
                   {doc.latestComment ? (
-                  <div className="flex-1 py-2 rounded-md ">
-                    <div className="flex items-center gap-4 lg:block pl-0 lg:px-4 lg:border-l border-gray-200 dark:border-dark-800">
-                      <div className="flex items-center gap-2 mb-0 lg:mb-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4 text-gray-400">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                        </svg>
-                        <div className="!text-[12px] lg:text-sm text-gray-600 dark:text-dark-100 line-clamp-1">
-                          {doc.latestComment?.user?.nickName || "익명"}
+                    <div className="flex-1 py-2 rounded-md ">
+                      <div className="flex items-center gap-4 lg:block pl-0 lg:px-4 lg:border-l border-gray-200 dark:border-dark-800">
+                        <div className="flex items-center gap-2 mb-0 lg:mb-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="size-4 text-gray-400"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+                            />
+                          </svg>
+                          <div className="!text-[12px] lg:text-sm text-gray-600 dark:text-dark-100 line-clamp-1">
+                            {doc.latestComment?.user?.nickName || "익명"}
+                          </div>
+                          <div className="text-gray-400 !text-[12px]">
+                            {dayjs(doc.latestComment?.createdAt).fromNow()}
+                          </div>
                         </div>
-                        <div className="text-gray-400 !text-[12px]">{dayjs(doc.latestComment?.createdAt).fromNow()}</div>
-                      </div>
-                      <div className="!text-[12px] text-gray-500 line-clamp-1">
-                        {doc.latestComment.content}
+                        <div className="!text-[12px] text-gray-500 line-clamp-1">
+                          {doc.latestComment.content}
+                        </div>
                       </div>
                     </div>
-                  </div>
                   ) : (
                     /* 댓글이 없을 때 보여줄 빈 상태 (선택 사항) */
                     <div className="hidden lg:flex flex-1 items-center justify-center py-2 px-4 border-l border-gray-100 italic text-[12px] text-gray-400">
@@ -169,10 +215,7 @@ const PostsListClient = ({
         <div className="">
           {/* 💡 Link로 감싸서 이동 기능을 주고, Button으로 디자인과 애니메이션을 담당합니다. */}
           <Link href={`/posts/${postInfo.mid}/create`}>
-            <Button
-              type="button"
-              className="px-8"
-            >
+            <Button type="button" className="px-8">
               글쓰기
             </Button>
           </Link>
