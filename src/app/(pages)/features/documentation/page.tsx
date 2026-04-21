@@ -33,7 +33,7 @@ const Page = () => {
         whileInView="onscreen"
         viewport={{ once: false, amount: 0.1 }}
         variants={parentVariants}
-        className=""
+        className="py-[200px]"
       >
         <div className="relative mx-auto px-3">
           <div className="grid grid-cols-12 gap-0 lg:gap-8 py-10">
