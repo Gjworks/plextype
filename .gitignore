@@ -55,8 +55,7 @@ package-lock.json
 
 /files
 /storage
-
-.opencode/
+/src/extensions/
 
 Dockerfile
 .dockerignore
