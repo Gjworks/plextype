@@ -443,7 +443,7 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
             <Button
               type="button"
               fullWidth={false}
-              onClick={() => router.push(`/posts/${postInfo.mid}/${document.id}/edit`)}
+              onClick={() => router.push(`/posts/${postInfo.mid}/${document.slug}/edit`)}
               className=" !bg-blue-50 !py-1.5 !px-6 !border-blue-100 !text-blue-600 hover:!bg-blue-600 hover:!text-white transition-all"
             >
               수정
