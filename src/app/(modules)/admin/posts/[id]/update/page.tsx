@@ -1,6 +1,6 @@
 // src/app/(extentions)/admin/posts/[id]/update/page.tsx
 import DashboardPostCreate from "@/modules/posts/admin/create";
-import { getPostsInfoById } from "@/modules/posts/actions/posts.action";
+import { getPostsInfoByIdAction } from "@/modules/posts/actions/posts.action";
 import { getGroups } from "@/modules/user/actions/group.action";
 
 const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
@@ -8,7 +8,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   // 💡 유저 페이지와 똑같이 서버에서 미리 데이터를 병렬로 땡겨옵니다!
   const [postRes, groupList] = await Promise.all([
-    getPostsInfoById(Number(id)),
+    getPostsInfoByIdAction(Number(id)),
     getGroups(),
   ]);
 

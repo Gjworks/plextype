@@ -1,4 +1,3 @@
-// src/app/(extentions)/posts/_actions/posts.action.ts
 "use server";
 
 import { cookies } from "next/headers";
@@ -6,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { decodeJwt } from "jose";
 import * as query from "./posts.query";
 import * as posts from "./posts";
+import { getAuthenticatedUser } from "@utils/auth/authHelper";
 
 import {
   ActionState,
@@ -14,26 +14,13 @@ import {
   ExtraFieldConfig,
 } from "./_type";
 import { validateForm } from "@utils/validation/formValidator";
-import {
-  deletePosts,
-  findPostsById,
-  findPostsByPid,
-  updateModuleFieldSchema,
-} from "./posts.query";
-import { redirect } from "next/navigation";
-
-// 내부 유틸: 로그인 유저 확인
-async function getLoggedInfo() {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-  if (!accessToken) return null;
-  return decodeJwt(accessToken) as { id: number; isAdmin: boolean };
-}
 
 // ==========================================
 // [ACTION - Modules] 모듈 설정(설계도/권한 포함) 조회
 // ==========================================
-export async function getModuleInfo(mid: string): Promise<ActionState<any>> {
+export async function getModuleInfoAction(
+  mid: string,
+): Promise<ActionState<any>> {
   try {
     const postInfo = await posts.getPostFullInfo(mid);
 
@@ -63,13 +50,13 @@ export async function getModuleInfo(mid: string): Promise<ActionState<any>> {
 // ==========================================
 // [ACTION - Posts] 게시판 자체(모듈) 설정 저장 (권한 동시 처리)
 // ==========================================
-export async function savePostsInfo(
+export async function savePostsAdminAction(
   formData: FormData,
   paths?: string,
 ): Promise<ActionState<number>> {
   try {
-    const loggedInfo = await getLoggedInfo();
-    if (!loggedInfo?.isAdmin)
+    const user = await getAuthenticatedUser();
+    if (!user?.isAdmin)
       return {
         success: false,
         type: "error",
@@ -145,7 +132,7 @@ export async function savePostsInfo(
   }
 }
 
-export async function getPostsList(
+export async function getPostsListAdminAction(
   page: number = 1,
   pageSize: number = 10,
   keyword?: string,
@@ -183,7 +170,9 @@ export async function getPostsList(
   }
 }
 
-export async function getPostsInfo(mid: string): Promise<ActionState<any>> {
+export async function getPostsInfoAction(
+  mid: string,
+): Promise<ActionState<any>> {
   try {
     const postInfo = await posts.getPostFullInfo(mid);
     if (!postInfo)
@@ -208,7 +197,9 @@ export async function getPostsInfo(mid: string): Promise<ActionState<any>> {
   }
 }
 
-export async function getPostsInfoById(id: number): Promise<ActionState<any>> {
+export async function getPostsInfoByIdAction(
+  id: number,
+): Promise<ActionState<any>> {
   try {
     const postInfo = await posts.getPostFullInfoById(id);
     if (!postInfo)
@@ -232,7 +223,7 @@ export async function getPostsInfoById(id: number): Promise<ActionState<any>> {
   }
 }
 
-export async function getModuleByIdAction(
+export async function getModuleByIdAdminAction(
   id: number,
 ): Promise<ActionState<any>> {
   try {
@@ -255,12 +246,12 @@ export async function getModuleByIdAction(
   }
 }
 
-export async function removePostsAction(
+export async function removePostsAdminAction(
   ids: number[],
   paths?: string,
 ): Promise<ActionState<null>> {
   try {
-    const loggedInfo = await getLoggedInfo();
+    const loggedInfo = await getAuthenticatedUser();
     if (!loggedInfo?.isAdmin)
       return { success: false, message: "권한이 없습니다." };
 
@@ -285,11 +276,16 @@ export async function removePostsAction(
   }
 }
 
-export async function savePostConfigAction(
+export async function savePostConfigAdminAction(
   mid: string,
   extraFields: ExtraFieldConfig[],
 ) {
   try {
+    const user = await getAuthenticatedUser();
+    if (!user?.isAdmin) {
+      return { success: false, error: "관리자 권한이 필요합니다." };
+    }
+
     await posts.savePostConfig(mid, extraFields);
 
     // 2. 변경된 데이터를 화면에 즉시 반영하기 위해 캐시를 갱신합니다.

@@ -1,7 +1,7 @@
 // src/app/(extentions)/admin/posts/[id]/extraField/page.tsx
 import {
-  getModuleByIdAction,
-  savePostConfigAction,
+  getModuleByIdAdminAction,
+  savePostConfigAdminAction,
 } from "@/modules/posts/actions/posts.action";
 import PostFieldBuilder from "@/modules/posts/admin/PostFieldBuilder";
 import { notFound } from "next/navigation";
@@ -17,7 +17,7 @@ export default async function ExtraFieldPage({
   const postId = parseInt(id);
 
   // 1. DB에서 게시판 정보 조회
-  const result = await getModuleByIdAction(postId);
+  const result = await getModuleByIdAdminAction(postId);
 
   if (!result.success || !result.data) {
     return notFound();
@@ -63,7 +63,7 @@ export default async function ExtraFieldPage({
             onSave={async (fields) => {
               "use server";
               // 💡 Server Action 호출
-              return await savePostConfigAction(post.mid, fields);
+              return await savePostConfigAdminAction(post.mid, fields);
             }}
           />
         </div>
