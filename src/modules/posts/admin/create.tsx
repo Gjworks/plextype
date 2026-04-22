@@ -3,7 +3,7 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { savePostsInfo } from "@/modules/posts/actions/posts.action";
+import { savePostsAdminAction } from "@/modules/posts/actions/posts.action";
 import type { PostInfoData } from "@/modules/posts/actions/_type";
 
 import PostInfo from "./components/postInfo";
@@ -11,7 +11,11 @@ import PostPermissions from "./components/postPermissions";
 import Button from "@components/button/Button";
 import Alert from "@components/message/Alert";
 
-const DashboardPostCreate = ({ initialData, groupList, mid }: {
+const DashboardPostCreate = ({
+  initialData,
+  groupList,
+  mid,
+}: {
   initialData: any;
   groupList: any[];
   mid: string;
@@ -29,8 +33,18 @@ const DashboardPostCreate = ({ initialData, groupList, mid }: {
   const [formData, setFormData] = useState<{ postInfo: PostInfoData }>({
     postInfo: {
       ...initialData,
-      config: initialData.config || { listCount: 20, pageCount: 10, documentLike: false, consultingState: false },
-      permissions: initialData.permissions || { listPermissions: [], readPermissions: [], writePermissions: [], commentPermissions: [] }
+      config: initialData.config || {
+        listCount: 20,
+        pageCount: 10,
+        documentLike: false,
+        consultingState: false,
+      },
+      permissions: initialData.permissions || {
+        listPermissions: [],
+        readPermissions: [],
+        writePermissions: [],
+        commentPermissions: [],
+      },
     },
   });
 
@@ -40,7 +54,12 @@ const DashboardPostCreate = ({ initialData, groupList, mid }: {
   const handlePostInfoChange = (val: Partial<PostInfoData> | any) => {
     setFormData((prev) => {
       const nextInfo = { ...prev.postInfo };
-      const configKeys = ["listCount", "pageCount", "documentLike", "consultingState"];
+      const configKeys = [
+        "listCount",
+        "pageCount",
+        "documentLike",
+        "consultingState",
+      ];
 
       Object.entries(val).forEach(([key, value]) => {
         if (configKeys.includes(key)) {
@@ -54,7 +73,10 @@ const DashboardPostCreate = ({ initialData, groupList, mid }: {
   };
 
   const handlePermissionsChange = (val: PostInfoData["permissions"]) => {
-    setFormData((prev) => ({ ...prev, postInfo: { ...prev.postInfo, permissions: val } }));
+    setFormData((prev) => ({
+      ...prev,
+      postInfo: { ...prev.postInfo, permissions: val },
+    }));
   };
 
   const handleSubmit = async () => {
@@ -71,14 +93,14 @@ const DashboardPostCreate = ({ initialData, groupList, mid }: {
     fd.append("permissions", JSON.stringify(info.permissions));
 
     try {
-      const res = await savePostsInfo(fd, "/admin/posts/list");
+      const res = await savePostsAdminAction(fd, "/admin/posts/list");
 
       if (!res.success) {
         // 1. 에러 상태 저장 (Alert 출력용)
         setError({
           type: res.type || "error",
           message: res.message,
-          fields: res.fieldErrors
+          fields: res.fieldErrors,
         });
 
         // 💡 2. 포커싱 로직 추가
@@ -102,7 +124,11 @@ const DashboardPostCreate = ({ initialData, groupList, mid }: {
       }
 
       // 💡 3. 성공 시: 로딩을 먼저 끄거나 알림창 직후에 조절
-      alert(isUpdateMode ? "게시판 설정이 수정되었습니다." : "게시판이 등록되었습니다.");
+      alert(
+        isUpdateMode
+          ? "게시판 설정이 수정되었습니다."
+          : "게시판이 등록되었습니다.",
+      );
 
       // 페이지 이동은 백그라운드에서 부드럽게 처리
       router.push("/admin/posts/list");
@@ -118,7 +144,11 @@ const DashboardPostCreate = ({ initialData, groupList, mid }: {
 
   return (
     <div className="w-full">
-      {error && <div className="mb-6"><Alert message={error.message} type={error.type} /></div>}
+      {error && (
+        <div className="mb-6">
+          <Alert message={error.message} type={error.type} />
+        </div>
+      )}
 
       <PostInfo
         id={mid}

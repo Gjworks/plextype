@@ -1,8 +1,12 @@
 import { Suspense } from "react";
 import DashboardPostsList from "@/modules/posts/admin/list";
-import { getPostsList } from "@/modules/posts/actions/posts.action";
+import { getPostsListAdminAction } from "@/modules/posts/actions/posts.action";
 
-const Page = async ({ searchParams }: { searchParams: Promise<{ page?: string }> }) => {
+const Page = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) => {
   const { page: pageParam } = (await searchParams) || {};
   const page = parseInt(pageParam ?? "1", 10);
 
@@ -10,14 +14,20 @@ const Page = async ({ searchParams }: { searchParams: Promise<{ page?: string }>
   // const { items, pagination } = await getPostsList(page, 10); ❌
 
   // 💡 2. 최신 ActionState 방식 (res 안에 success와 data가 들어있음) ✅
-  const res = await getPostsList(page, 10);
+  const res = await getPostsListAdminAction(page, 10);
 
   // 💡 3. 포장지(res.data)를 안전하게 뜯어서 변수에 담아줍니다.
   // 에러가 나더라도 기본값(totalCount: 0)을 줘서 화면이 뻗지 않게 막아줍니다!
   const items = res.success && res.data ? res.data.items : [];
-  const pagination = res.success && res.data ? res.data.pagination : {
-    totalCount: 0, totalPages: 1, page: 1, listCount: 0
-  };
+  const pagination =
+    res.success && res.data
+      ? res.data.pagination
+      : {
+          totalCount: 0,
+          totalPages: 1,
+          page: 1,
+          listCount: 0,
+        };
 
   return (
     <div className="">

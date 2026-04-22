@@ -6,7 +6,7 @@ import * as query from "./category.query";
 import * as category from "./category";
 import { ActionState, TreeItem } from "./_type";
 
-export async function getCategoriesAction(
+export async function getCategoriesAdminAction(
   moduleId: number,
   moduleType: string = "posts",
 ): Promise<ActionState<TreeItem[]>> {
@@ -34,7 +34,7 @@ export async function getCategoriesAction(
   }
 }
 
-export async function addCategoryAction(
+export async function addCategoryAdminAction(
   title: string,
   parentId: string | null = null,
   moduleId: number,
@@ -68,7 +68,7 @@ export async function addCategoryAction(
   }
 }
 
-export async function renameCategoryAction(
+export async function renameCategoryAdminAction(
   id: string,
   title: string,
 ): Promise<ActionState<any>> {
@@ -80,7 +80,7 @@ export async function renameCategoryAction(
   }
 }
 
-export async function removeCategoryAction(
+export async function removeCategoryAdminAction(
   id: string,
   path?: string,
 ): Promise<ActionState<null>> {
@@ -93,7 +93,7 @@ export async function removeCategoryAction(
   }
 }
 
-export async function saveCategoryTreeAction(
+export async function saveCategoryTreeAdminAction(
   items: TreeItem[],
   moduleType: string = "posts",
   path?: string,

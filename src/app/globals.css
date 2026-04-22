@@ -42,30 +42,37 @@
     --color-primary-900: #bf360c;
 }
 
+html,
+body {
+    @apply tracking-wider;
+}
 
-
-h1, .h1 {
+h1,
+.h1 {
     @apply text-3xl;
     @apply font-bold;
     @apply mt-10;
     @apply mb-8;
 }
 
-h2, .h2 {
+h2,
+.h2 {
     @apply text-2xl;
     @apply font-bold;
     @apply mt-8;
     @apply mb-6;
 }
 
-h3, .h3 {
+h3,
+.h3 {
     @apply text-xl;
     @apply font-bold;
     @apply mt-5;
     @apply mb-4;
 }
 
-h4, .h4 {
+h4,
+.h4 {
     @apply text-lg;
     @apply font-bold;
     @apply mt-4;

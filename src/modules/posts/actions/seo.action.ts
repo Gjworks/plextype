@@ -1,4 +1,4 @@
-import { getPostsInfo } from "./posts.action";
+import { getPostsInfoAction } from "./posts.action";
 import { getDocumentBySlugAction } from "@modules/document/actions/document.action";
 import { getSeoMetadata } from "@/core/utils/helper/matadata"; // 🌟 공통 헬퍼 임포트
 import { Metadata } from "next";
@@ -7,13 +7,14 @@ import { Metadata } from "next";
  * 📋 1. 게시판 목록용 SEO 헬퍼
  */
 export async function getPostListMetadata(mid: string): Promise<Metadata> {
-  const res = await getPostsInfo(mid);
+  const res = await getPostsInfoAction(mid);
   const info = res.data;
 
   // 🌟 공통 헬퍼에 데이터만 던져줍니다.
   return getSeoMetadata({
     title: info?.moduleName ?? "게시판",
-    description: info?.desc ?? `${info?.moduleName ?? "게시판"}의 게시글 목록입니다.`,
+    description:
+      info?.desc ?? `${info?.moduleName ?? "게시판"}의 게시글 목록입니다.`,
     url: `/posts/${mid}`, // 상대 경로만 전달
   });
 }
@@ -21,7 +22,10 @@ export async function getPostListMetadata(mid: string): Promise<Metadata> {
 /**
  * 📖 2. 게시글 상세용 SEO 헬퍼
  */
-export async function getPostReadMetadata(slug: string, mid: string): Promise<Metadata> {
+export async function getPostReadMetadata(
+  slug: string,
+  mid: string,
+): Promise<Metadata> {
   const res = await getDocumentBySlugAction(slug);
   const doc = res.data;
 
