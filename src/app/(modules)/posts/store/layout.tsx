@@ -1,12 +1,12 @@
 import React from "react";
 
-import {getPostsInfo} from "@/modules/posts/actions/posts.action";
+import { getPostsInfoAction } from "@/modules/posts/actions/posts.action";
 import PostProvider from "@/modules/posts/tpl/default/PostProvider";
 import PostNotFound from "@/modules/posts/tpl/default/notFound";
-import {checkPermissions} from "@/modules/posts/actions/permission.action";
+import { checkPermissionsAction } from "@/modules/posts/actions/permission.action";
 
-import {cookies} from "next/headers";
-import {decodeJwt} from "jose";
+import { cookies } from "next/headers";
+import { decodeJwt } from "jose";
 
 interface CurrentUser {
   id: number;
@@ -17,16 +17,16 @@ interface CurrentUser {
 }
 
 export default async function PageLayout({
-                                           children,
-                                           params,
-                                         }: {
+  children,
+  params,
+}: {
   children: React.ReactNode;
   params: Promise<{ pid: string; id: string }>;
 }) {
   const { pid, id } = await params;
 
   // 1. 서버 액션 호출 (ActionState 반환)
-  const result = await getPostsInfo(pid);
+  const result = await getPostsInfoAction(pid);
 
   // 2. 결과가 실패했거나 데이터가 없으면 404 처리
   if (!result.success || !result.data) {
@@ -52,10 +52,15 @@ export default async function PageLayout({
   }
 
   // 3. 권한 체크 (checkPermissions는 async이므로 반드시 await 필요!)
-  const permissionResult = await checkPermissions(postData.permissions, currentUser);
+  const permissionResult = await checkPermissionsAction(
+    postData.permissions,
+    currentUser,
+  );
 
   return (
-    <PostProvider value={{ postInfo: postData, currentUser, permissions: permissionResult }}>
+    <PostProvider
+      value={{ postInfo: postData, currentUser, permissions: permissionResult }}
+    >
       {children}
     </PostProvider>
   );

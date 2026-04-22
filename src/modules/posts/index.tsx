@@ -3,7 +3,7 @@ import { cookies, headers } from "next/headers";
 import { decodeJwt } from "jose";
 
 // Actions & Utils
-import { getPostsInfo } from "@/modules/posts/actions/posts.action";
+import { getPostsInfoAction } from "@/modules/posts/actions/posts.action";
 import {
   getDocumentList,
   getDocument,
@@ -11,7 +11,7 @@ import {
   increaseViewCount,
   getDocumentBySlugAction,
 } from "@/modules/document/actions/document.action";
-import { checkPermissions } from "@/modules/posts/actions/permission.action";
+import { checkPermissionsAction } from "@/modules/posts/actions/permission.action";
 import {
   getCommentsAction,
   getParticipantsAction,
@@ -72,14 +72,17 @@ async function PostList({
   Skin?: React.ComponentType<any>;
 }) {
   const [infoRes, listRes, user] = await Promise.all([
-    getPostsInfo(mid),
+    getPostsInfoAction(mid),
     getDocumentList(mid, page, limit, category),
     getServerUser(),
   ]);
 
   if (!infoRes.success || !infoRes.data) return <PostNotFound />;
 
-  const permissions = await checkPermissions(infoRes.data.permissions, user);
+  const permissions = await checkPermissionsAction(
+    infoRes.data.permissions,
+    user,
+  );
 
   return (
     <PostProvider
@@ -114,7 +117,7 @@ async function PostRead({
   Skin?: React.ComponentType<any>;
 }) {
   const [infoRes, docRes, user] = await Promise.all([
-    getPostsInfo(mid),
+    getPostsInfoAction(mid),
     getDocumentBySlugAction(slug),
     getServerUser(),
   ]);
@@ -122,7 +125,10 @@ async function PostRead({
   if (!infoRes.success || !docRes.success || !docRes.data) return null;
   const numericId = docRes.data.id;
   const participantsRes = await getParticipantsAction(numericId);
-  const permissions = await checkPermissions(infoRes.data.permissions, user);
+  const permissions = await checkPermissionsAction(
+    infoRes.data.permissions,
+    user,
+  );
   const requestIp = (await headers()).get("x-forwarded-for") || "";
   await increaseViewCount(numericId, user?.id, requestIp);
 
@@ -154,14 +160,17 @@ async function PostComments({
   const id = docRes.data.id;
 
   const [infoRes, user, commentsRes] = await Promise.all([
-    getPostsInfo(mid),
+    getPostsInfoAction(mid),
     getServerUser(),
     getCommentsAction(id, page, 10),
   ]);
 
   if (!infoRes.success || !infoRes.data) return null;
 
-  const permissions = await checkPermissions(infoRes.data.permissions, user);
+  const permissions = await checkPermissionsAction(
+    infoRes.data.permissions,
+    user,
+  );
 
   async function upsertCommentAction(data: any) {
     "use server";
@@ -217,7 +226,7 @@ async function PostWrite({
   Skin?: React.ComponentType<any>;
 }) {
   const [infoRes, user] = await Promise.all([
-    getPostsInfo(mid),
+    getPostsInfoAction(mid),
     getServerUser(),
   ]);
 
@@ -225,7 +234,10 @@ async function PostWrite({
 
   if (!infoRes.success || !infoRes.data) return null;
 
-  const permissions = await checkPermissions(infoRes.data.permissions, user);
+  const permissions = await checkPermissionsAction(
+    infoRes.data.permissions,
+    user,
+  );
 
   let existingPost: any = null;
   if (slug) {

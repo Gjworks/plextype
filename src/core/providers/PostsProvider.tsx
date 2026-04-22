@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
 
 // 기존 액션 및 프로바이더 임포트
-import { getPostsInfo } from "@/modules/posts/actions/posts.action";
-import { checkPermissions } from "@/modules/posts/actions/permission.action";
+import { getPostsInfoAction } from "@/modules/posts/actions/posts.action";
+import { checkPermissionsAction } from "@/modules/posts/actions/permission.action";
 import PostProvider from "@/modules/posts/tpl/default/PostProvider"; // 실제 컨텍스트 프로바이더
 import PostNotFound from "@/modules/posts/tpl/default/notFound";
 
@@ -34,14 +34,14 @@ async function getCurrentUser() {
 }
 
 export default async function PostsProvider({
-                                              pid,
-                                              children
-                                            }: {
+  pid,
+  children,
+}: {
   pid: string;
   children: React.ReactNode;
 }) {
   // A. 게시판 정보 요청
-  const res = await getPostsInfo(pid);
+  const res = await getPostsInfoAction(pid);
   const postInfo = res.success ? res.data : null;
 
   // 💡 [해결] postInfo가 없으면 아예 Provider를 렌더링하지 않고 404 처리
@@ -51,7 +51,10 @@ export default async function PostsProvider({
 
   // B. 유저 정보 및 권한 체크
   const currentUser = await getCurrentUser();
-  const permissionResult = await checkPermissions(postInfo.permissions, currentUser);
+  const permissionResult = await checkPermissionsAction(
+    postInfo.permissions,
+    currentUser,
+  );
 
   // 💡 [해결] permissions 타입 에러 해결: 결과가 null이면 기본값(false 객체)을 넘겨줌
   const permissions = permissionResult ?? DEFAULT_PERMISSIONS;

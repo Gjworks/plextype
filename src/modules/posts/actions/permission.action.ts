@@ -4,14 +4,14 @@
 import { Permission, Permissions, CurrentUser } from "./_type";
 import * as permission from "./permission";
 
-export const hasPermission = async (
+export const hasPermissionAction = async (
   permissions: Permission[],
   currentUser: CurrentUser | null,
 ): Promise<boolean> => {
   return await permission.hasPermission(permissions, currentUser);
 };
 
-export async function checkPermissions(
+export async function checkPermissionsAction(
   permissions: Permissions,
   currentUser: CurrentUser | null,
 ) {
