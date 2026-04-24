@@ -24,7 +24,7 @@
     "supports": {
       "name": "supports",
       "title": "Supports",
-      "route": "/posts/supports",
+      "route": "/posts/notice",
       "icon": "",
       "parent": "supports",
       "subMenu": [
@@ -34,6 +34,13 @@
             "icon": "",
             "parent": "supports",
             "route": "/posts/notice"
+        },
+        {
+          "title": "업데이트 내역",
+          "name": "changelog",
+          "icon": "",
+          "parent": "supports",
+          "route": "/posts/changelog"
         }
       ]
     }
