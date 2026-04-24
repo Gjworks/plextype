@@ -1,6 +1,6 @@
 "use client";
 
-import MainLayout from "src/layouts/default/Layout";
+import MainLayout from "@extensions/layouts/default/Layout";
 import MainIntro from "src/extensions/pages/MainIntro";
 
 export default function Page() {

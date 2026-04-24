@@ -29,13 +29,6 @@
       "parent": "supports",
       "subMenu": [
         {
-            "title": "기술지원",
-            "name": "supports",
-            "icon": "",
-            "parent": "supports",
-            "route": "/posts/supports"
-        },
-        {
             "title": "공지사항",
             "name": "notice",
             "icon": "",
