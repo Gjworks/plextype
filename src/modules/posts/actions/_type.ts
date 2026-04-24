@@ -101,6 +101,7 @@ export type DocumentListParsedParams = z.infer<typeof DocumentListSchema>;
 export const CategoryUpsertSchema = z.object({
   id: z.coerce.number().optional(),
   title: z.string().min(1, "카테고리명을 입력해주세요."),
+  slug: z.string().optional().nullable(),
   desc: z.string().optional().nullable(),
   color: z.string().optional().nullable(),
   order: z.coerce.number().default(0),
@@ -172,6 +173,7 @@ export interface CurrentUser {
 export interface TreeItem {
   id: string;
   title: string;
+  slug: string | null;
   moduleId: number;
   moduleType: string;
   parentId: string | null;

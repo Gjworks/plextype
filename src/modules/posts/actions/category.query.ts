@@ -2,6 +2,9 @@
 import prisma from "@utils/db/prisma";
 import { TreeItem, CategoryParams } from "./_type";
 
+const generateSlug = (text: string) =>
+  text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-가-힣]+/g, '') || Date.now().toString();
+
 export async function findCategoriesByModuleId(
   moduleType: string,
   moduleId: number
@@ -17,6 +20,7 @@ export async function findCategoriesByModuleId(
   return categories.map((c) => ({
     id: c.id.toString(),
     title: c.title,
+    slug: c.slug,
     parentId: c.parentId?.toString() ?? null,
     order: c.order,
     moduleType: c.moduleType,
@@ -35,6 +39,7 @@ export async function insertCategory(data: CategoryParams) {
   return prisma.category.create({
     data: {
       title: data.title,
+      slug: data.slug || generateSlug(data.title),
       parentId: data.parentId ? Number(data.parentId) : null,
       moduleId: Number(data.moduleId),
       moduleType: data.moduleType,
@@ -84,6 +89,7 @@ export async function syncCategoryTree(items: TreeItem[], moduleType: string) {
       await tx.category.create({
         data: {
           id: parseInt(item.id),
+          slug: item.slug || generateSlug(item.title),
           title: item.title,
           parentId: null,
           order: item.order,
