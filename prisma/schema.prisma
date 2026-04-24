@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id            Int             @id @default(autoincrement())
-  slug          String?         @unique
+  slug          String          @unique
   uuid          String          @unique @default(cuid())
   accountId     String          @unique
   email_address String          @unique
@@ -66,7 +66,7 @@ model UserGroupUser {
 
 model Document {
   id             Int         @id @default(autoincrement())
-  slug           String?     @unique
+  slug           String      @unique
   uuid           String?     @unique @default(cuid())
   categoryId     Int?
   createdAt      DateTime    @default(now())
@@ -100,7 +100,7 @@ model Document {
 
 model Category {
   id         Int        @id @default(autoincrement())
-  slug       String?    @unique
+  slug       String     @unique
   title      String     @db.VarChar(45)
   desc       String?
   color      String?    @db.VarChar(45)
