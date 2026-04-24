@@ -9,7 +9,7 @@ import { ActionState, UserUpsertSchema, PasswordChangeSchema, UserListParams, Us
 import * as query from "./user.query"; // 분리된 쿼리 함수 임포트
 import { validateForm } from "@utils/validation/formValidator";
 import { revalidatePath } from "next/cache";
-
+import { nanoid } from "nanoid";
 /**
  * 💡 공통 유틸: Prisma 결과물에서 민감한 정보(비밀번호 등) 제외하기
  */
@@ -28,6 +28,7 @@ export const saveUserAction = async (formData: FormData, paths?: string): Promis
   const formPayload = {
     id: formData.get("id") ? Number(formData.get("id")) : undefined,
     accountId: formData.get("accountId")?.toString() || "",
+    slug: formData.get("slug")?.toString() || nanoid(10),
     email_address: formData.get("email_address")?.toString() || "",
     nickName: formData.get("nickName")?.toString() || "",
     password: formData.get("password")?.toString() || "",
