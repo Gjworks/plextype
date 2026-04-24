@@ -2,6 +2,7 @@
 import { Prisma } from "@prisma/client";
 import prisma from "@utils/db/prisma";
 import { UserListParsedParams } from "./_type";
+import { nanoid } from "nanoid";
 
 // ==========================================
 // [READ] 단순 사용자 조회 (무조건 find 접두사 사용)
@@ -117,6 +118,7 @@ export async function findUser(accountId: string, email: string, nickName: strin
   });
 }
 
+
 export async function upsertUser(
   isUpdate: boolean,
   targetId: number | null,
@@ -125,11 +127,17 @@ export async function upsertUser(
 ) {
   return prisma.$transaction(async (tx) => {
     let finalId = targetId;
-    let userRecord; // 🌟 유저 정보를 담을 변수 선언
+    let userRecord;
 
     if (!isUpdate) {
       // [생성]
-      userRecord = await tx.user.create({ data: data as Prisma.UserCreateInput });
+      // 🌟 핵심: data에 slug가 없으면 여기서 nanoid를 강제로 주입합니다.
+      const createData = {
+        ...(data as Prisma.UserCreateInput),
+        slug: (data as Prisma.UserCreateInput).slug || nanoid(10),
+      };
+
+      userRecord = await tx.user.create({ data: createData });
       finalId = userRecord.id;
     } else {
       // [수정]
@@ -139,7 +147,7 @@ export async function upsertUser(
       });
     }
 
-    // 🌟 groups 처리 로직 (기존과 동일)
+    // groups 처리 로직 (기존과 동일 - 아주 좋습니다!)
     if (groups !== undefined) {
       await tx.userGroupUser.deleteMany({ where: { userId: finalId! } });
       if (groups.length > 0) {
@@ -149,7 +157,6 @@ export async function upsertUser(
       }
     }
 
-    // 🔥 가장 중요: 트랜잭션의 결과로 유저 객체를 리턴합니다!
     return userRecord;
   });
 }
