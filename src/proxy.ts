@@ -42,7 +42,6 @@ export async function proxy(request: NextRequest) {
       }
 
       // 3. 키가 살아있다면? 접속 시간만 연장해줍니다 (Pulse)
-      console.log("미들웨어가 세션 확인 및 갱신:", activeKey);
       await redisClient.expire(activeKey, 300);
     }
 
