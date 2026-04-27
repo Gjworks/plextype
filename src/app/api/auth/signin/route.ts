@@ -5,6 +5,7 @@ import { verifyPassword } from "@/core/utils/auth/password";
 import { sign, refresh } from "@/core/utils/auth/jwtAuth";
 import { PrismaClient } from "@prisma/client";
 import { timeToSeconds } from "@/core/utils/date/timeToSeconds";
+import redisClient from "@/core/utils/redis/redis";
 
 const prisma = new PrismaClient();
 
@@ -73,6 +74,7 @@ export async function POST(request: Request): Promise<Response> {
       id: userInfo.id,
       accountId: userInfo.accountId,
       isAdmin: userInfo.isAdmin,
+      nickName: userInfo.nickName,
       groups: groupIds,
     };
 
@@ -120,6 +122,33 @@ export async function POST(request: Request): Promise<Response> {
       ...cookieOptions,
       maxAge: refreshTokenExpire,
     });
+    
+    const forwarded = request.headers.get("x-forwarded-for");
+    const rawIp = forwarded 
+      ? forwarded.split(",")[0].trim() 
+      : (request as any).ip || request.headers.get("x-real-ip") || "unknown";
+
+    // 2. IP 세척 (::ffff: 제거)
+    const userIp = rawIp.replace(/^::ffff:/, "");
+
+    // 3. Redis에 실시간 접속 정보 저장 (미들웨어 검문 통과용)
+    await redisClient.set(
+      `active_user:${userInfo.id}:${userIp}`, 
+      "online", 
+      "EX", 
+      300
+    );
+
+    // 4. 기존 유저 프로필 캐시 저장 (있으시면 유지)
+    await redisClient.set(
+      `user:profile:${userInfo.id}`, 
+      JSON.stringify({ 
+        nickName: userInfo.nickName, 
+        accountId: userInfo.accountId 
+      }), 
+      "EX", 
+      86400
+    );
 
     return response;
 
