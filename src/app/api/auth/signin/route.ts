@@ -122,7 +122,7 @@ export async function POST(request: Request): Promise<Response> {
       ...cookieOptions,
       maxAge: refreshTokenExpire,
     });
-    
+
     const forwarded = request.headers.get("x-forwarded-for");
     const rawIp = forwarded 
       ? forwarded.split(",")[0].trim() 
@@ -130,11 +130,11 @@ export async function POST(request: Request): Promise<Response> {
 
     // 2. IP 세척 (::ffff: 제거)
     const userIp = rawIp.replace(/^::ffff:/, "");
-
+    const loginAt = new Date().toISOString();
     // 3. Redis에 실시간 접속 정보 저장 (미들웨어 검문 통과용)
     await redisClient.set(
       `active_user:${userInfo.id}:${userIp}`, 
-      "online", 
+      JSON.stringify({ loginAt }),
       "EX", 
       300
     );

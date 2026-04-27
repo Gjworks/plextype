@@ -3,41 +3,63 @@
 import redisClient from "@core/utils/redis/redis";
 import { saveNotification } from "@/modules/notification/actions/notification.action"; // 🌟 기존 액션 불러오기
 
-export async function getActiveUserList() {
+export async function getActiveUserList(limit?: number) {
   try {
     const activeKeys = await redisClient.keys("active_user:*");
     if (activeKeys.length === 0) return [];
 
-    // 1. Redis 키에서 ID와 IP를 미리 추출해둡니다.
-    const redisData = activeKeys.map(key => {
+    const [rawSessions, rawProfiles] = await Promise.all([
+      redisClient.mget(...activeKeys),
+      redisClient.mget(...activeKeys.map(key => `user:profile:${key.split(":")[1]}`))
+    ]);
+
+    const now = new Date().getTime();
+    let loginAtDate = now;
+
+    let result = activeKeys.map((key, index) => {
       const parts = key.split(":");
       const id = parts[1];
+      const rawIp = parts.slice(2).join(":").replace(/^::ffff:/, "");
       
-      // 🌟 1. 콜론이 섞인 IP를 합칩니다.
-      let rawIp = parts.slice(2).join(":"); 
-      
-      // 🌟 2. IPv4-mapped prefix(::ffff:)를 제거합니다.
-      const cleanIp = rawIp.replace(/^::ffff:/, ""); 
-      
-      return { id, ip: cleanIp };
-    });
+      // 🌟 1. 타입 명시: 이 변수들은 각각 Date와 any 타입이라고 못박아줍니다. ㅡㅡ+
+      const now: Date = new Date();
+      let loginAtDate: Date = now; 
+      let sessionInfo: any = null; 
 
-    const userIds = redisData.map(d => d.id);
-    const profileKeys = userIds.map(id => `user:profile:${id}`);
-    const rawProfiles = await redisClient.mget(...profileKeys);
+      const sessionData = rawSessions[index] as string;
 
-    // 2. 모든 정보를 합쳐서 리턴합니다.
-    return redisData.map((data, index) => {
+      if (sessionData && sessionData.startsWith('{')) {
+        try {
+          // 🌟 2. JSON 파싱 결과를 any로 받아 'never' 에러 방지
+          sessionInfo = JSON.parse(sessionData); 
+          if (sessionInfo && typeof sessionInfo === 'object' && sessionInfo.loginAt) {
+            loginAtDate = new Date(sessionInfo.loginAt);
+          }
+        } catch (e) {
+          console.error("JSON 파싱 에러:", e);
+        }
+      }
+      
+      // 🌟 3. 계산 시에는 .getTime()을 써서 숫자(ms)끼리 계산하게 합니다.
+      const diffMs = now.getTime() - loginAtDate.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      
       const profile = rawProfiles[index] ? JSON.parse(rawProfiles[index] as string) : {};
       
       return {
-        id: data.id,
-        ip: data.ip, // 🌟 IP 주소 배달 완료
-        nickName: profile.nickName || `User #${data.id}`,
-        accountId: profile.accountId || '-', // 🌟 계정 ID 배달 완료
+        id,
+        ip: rawIp,
+        nickName: profile.nickName || `User #${id}`,
+        accountId: profile.accountId || '-',
+        duration: diffMins,
+        // 🌟 4. 훅에서 쓸 수 있게 원본 시각 배달
+        loginAt: sessionInfo?.loginAt || now.toISOString(), 
         status: "online" as const,
       };
     });
+
+    const finalResult = result.reverse();
+    return limit ? finalResult.slice(0, limit) : finalResult;
   } catch (error) {
     console.error("데이터 수집 에러:", error);
     return [];
