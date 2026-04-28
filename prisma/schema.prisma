@@ -1,11 +1,10 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "darwin-arm64", "linux-arm64-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client"
+  output   = "../src/core/utils/db/generated"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -21,6 +20,7 @@ model User {
   updateAt      DateTime        @updatedAt
   isAdmin       Boolean?
   isManagers    Boolean?
+  status        String?         @db.VarChar(45)
   Comment       Comment[]
   documents     Document[]
   profile       Profile?
@@ -37,7 +37,9 @@ model Profile {
   phone        String  @unique
   userId       Int     @unique
   profileImage String?
+  status       String?         @db.VarChar(45)
   user         User    @relation(fields: [userId], references: [id])
+  
 }
 
 model UserGroup {
@@ -86,6 +88,7 @@ model Document {
   moduleType     String
   extraFieldData Json?       @default("{}")
   thumbnail      String?     @db.Text
+  status         String?     @db.VarChar(45)
   Comment        Comment[]
   category       Category?   @relation("DocumentCategory", fields: [categoryId], references: [id])
   user           User?       @relation(fields: [userId], references: [id])
@@ -108,6 +111,7 @@ model Category {
   parentId   Int?
   moduleId   Int?
   moduleType String     @default("modules")
+  status     String?    @db.VarChar(45)
   module     Modules?   @relation(fields: [moduleId], references: [id])
   parent     Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
   children   Category[] @relation("CategoryChildren")
@@ -139,6 +143,7 @@ model FieldGroup {
   id        Int        @id @default(autoincrement())
   name      String     @unique // 예: "basic_post_fields", "product_fields"
   fields    Json // [{"name": "price", "type": "number", ...}]
+  status    String?    @db.VarChar(45)
   documents Document[] // 이 설계를 사용하는 문서들
   modules   Modules[] // 이 설계를 사용하는 게시판들
 }
@@ -152,7 +157,7 @@ model Permission {
   updatedAt   DateTime          @updatedAt
   moduleId    Int               @default(0)
   moduleType  String            @default("unknown")
-
+  status      String?           @db.VarChar(45)
   @@index([moduleType, moduleId], map: "idx_permission_module")
   @@index([subjectType, subjectId], map: "idx_permission_subject")
 }
@@ -172,6 +177,7 @@ model Comment {
   isSecret       Boolean   @default(false)
   voteCount      Int       @default(0)
   depth          Int       @default(0)
+  status         String?   @db.VarChar(45)
   document       Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
   parent         Comment?  @relation("CommentChildren", fields: [parentId], references: [id])
   children       Comment[] @relation("CommentChildren")
@@ -203,6 +209,7 @@ model Attachment {
   path         String // 실제 저장 경로: /uploads/posts/... 등
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  status       String?   @db.VarChar(45)
   userId       Int? // 업로더 User ID
   uploadedBy   User?    @relation(fields: [userId], references: [id])
 
@@ -235,10 +242,9 @@ model Notification {
   // 🛠️ 상태 및 메타데이터
   isRead Boolean   @default(false)
   readAt DateTime?
-
+  status       String?   @db.VarChar(45)
   // 확장성을 위한 JSON (예: 어떤 게시물인지, 누가 보냈는지 상세 ID 저장)
   metadata Json? @default("{}")
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

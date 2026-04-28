@@ -97,14 +97,13 @@ export default function ActiveUsersPage() {
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">사용자</th>
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">계정 ID</th>
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">IP 주소</th>
-              <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">접속 시간</th> {/* 🌟 헤더 추가 */}
+              <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">접속 시간</th>
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">상태</th>
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider text-right">관리</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {users.map((user, i) => (
-              // 🌟 3. 커스텀 Row 컴포넌트 사용
               <UserRow key={user.id || i} user={user} onKick={handleKick} />
             ))}
           </tbody>
