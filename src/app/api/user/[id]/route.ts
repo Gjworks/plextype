@@ -1,9 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { verify } from "@/core/utils/auth/jwtAuth";
 import { findUserById } from "@/modules/user/actions/user.query";
 
-const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {
