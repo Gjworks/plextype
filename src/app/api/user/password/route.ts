@@ -1,12 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
-
-import { PrismaClient } from "@prisma/client";
 import { verify } from "@/core/utils/auth/jwtAuth";
-
 import { findUserById } from "@/modules/user/actions/user.query";
 import { hashedPassword, verifyPassword } from "@/core/utils/auth/password";
-
-const prisma = new PrismaClient();
+import prisma from "@/core/utils/db/prisma";
 
 export async function PUT(request: NextRequest): Promise<Response> {
   try {

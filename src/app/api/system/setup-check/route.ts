@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import prisma from "@/core/utils/db/prisma";
 
 /**
  * 🚀 Plextype System Diagnostic API
@@ -19,7 +19,7 @@ export async function GET() {
   };
 
   // 1. Database 연결 진단 (Prisma)
-  const prisma = new PrismaClient();
+
   try {
     // 가장 가벼운 쿼리로 DB 생존 여부 확인
     await prisma.$queryRaw`SELECT 1`;
