@@ -3,11 +3,11 @@ import { cookies } from "next/headers";
 import { z } from "zod"; // ✅ Zod 추가
 import { verifyPassword } from "@/core/utils/auth/password";
 import { sign, refresh } from "@/core/utils/auth/jwtAuth";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/core/utils/db/prisma";
 import { timeToSeconds } from "@/core/utils/date/timeToSeconds";
 import redisClient from "@/core/utils/redis/redis";
 
-const prisma = new PrismaClient();
+
 
 // ✅ 1. 로그인 유효성 검사 스키마
 const LoginSchema = z.object({

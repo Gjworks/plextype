@@ -8,7 +8,6 @@ import {
   refresh,
   refreshVerify,
 } from "@/core/utils/auth/jwtAuth";
-import { PrismaClient } from "@core/utils/db/generated/client"
 
 export async function POST(request: NextRequest): Promise<Response> {
   let newAccessToken: string;
