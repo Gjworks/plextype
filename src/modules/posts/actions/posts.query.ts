@@ -1,6 +1,6 @@
 // src/app/(extentions)/posts/_actions/posts.query.ts
 import prisma from "@utils/db/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@core/utils/db/generated/client";
 import { PostsParams, ExtraFieldConfig } from "./_type"; // 경로에 맞게 호출
 
 // ==========================================
