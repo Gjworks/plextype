@@ -2,7 +2,7 @@
 
 import prisma from "@utils/db/prisma";
 import { PermissionData } from "./_type";
-import { PermissionSubject } from "@prisma/client";
+import { PermissionSubject } from "@core/utils/db/generated/client";
 
 /**
  * 특정 리소스의 모든 권한 설정 조회

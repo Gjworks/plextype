@@ -1,5 +1,5 @@
 // src/app/(extentions)/users/_actions/user.query.ts
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@core/utils/db/generated/client";
 import prisma from "@utils/db/prisma";
 import { UserListParsedParams } from "./_type";
 import { nanoid } from "nanoid";

@@ -1,7 +1,7 @@
 // src/app/(extentions)/posts/_actions/document.query.ts
 
 import prisma from "@utils/db/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@core/utils/db/generated/client";
 import { nanoid } from "nanoid";
 
 export async function findDocumentBySlug(slug: string) {
