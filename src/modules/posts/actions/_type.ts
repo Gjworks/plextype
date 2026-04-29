@@ -1,4 +1,4 @@
-import { Prisma, PermissionSubject } from "@prisma/client";
+import { Prisma, PermissionSubject } from "@core/utils/db/generated/client";
 import { ActionResponse } from "@/core/types/actions";
 import { z } from "zod";
 
