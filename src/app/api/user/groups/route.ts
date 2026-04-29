@@ -1,7 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/core/utils/db/prisma";
 
 export async function GET(request: NextRequest): Promise<Response> {
   const groups = await prisma.userGroup.findMany();
