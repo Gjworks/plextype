@@ -140,7 +140,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <div className="flex h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden font-sans relative">
+      <div className="flex h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden  font-sans relative">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
@@ -250,7 +250,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
           <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-4 overflow-hidden relative">
             <main
-              className={`h-full w-full flex flex-col overflow-hidden ${
+              className={`h-full w-full flex flex-col overflow-hidden overflow-y-auto scrollbar-hide ${
                 isDashboardMain
                   ? 'bg-transparent border-none shadow-none' // 대시보드일 때 스타일
                   : 'bg-white/80 backdrop-blur-lg rounded-xl md:rounded-xl shadow-xl shadow-gray-100' // 일반 페이지 스타일
