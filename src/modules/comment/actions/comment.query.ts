@@ -50,7 +50,6 @@ export async function insertComment(data: any) {
       }
     }
   });
-
   // 🌟 2. 알림 수신자(targetUserId) 결정 로직
   // 부모 댓글(parentId)이 있으면 부모 댓글 작성자에게, 없으면 게시글 작성자에게 보냅니다.
   const targetUserId = result.parentId ? result.parent?.userId : result.document.userId;

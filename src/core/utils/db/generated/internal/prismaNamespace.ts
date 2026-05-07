@@ -1559,6 +1559,7 @@ export type PermissionScalarFieldEnum = (typeof PermissionScalarFieldEnum)[keyof
 export const CommentScalarFieldEnum = {
   id: 'id',
   uuid: 'uuid',
+  slug: 'slug',
   content: 'content',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',

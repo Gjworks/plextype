@@ -140,15 +140,15 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <div className="flex h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden  font-sans relative">
+      <div className="flex bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden  font-sans relative">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
 
         {/* 1. SIDENAV */}
-        <motion.aside initial={false} animate={{ width: isExpanded ? 240 : 72 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className="flex flex-col bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <motion.aside initial={false} animate={{ width: isExpanded ? 240 : 72 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className="fixed h-screen flex flex-col bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
           <div className="h-16 flex items-center justify-center shrink-0">
-            <div className="w-10 h-10 bg-black rounded-xl shadow-gray-400 flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg shadow-gray-950/25 cursor-pointer">G</div>
+            <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg shadow-gray-950/25 cursor-pointer">G</div>
             <AnimatePresence>
               {isExpanded && (
                 <motion.span initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 0 }} className="ml-3 text-[14px] font-bold tracking-tight truncate text-gray-800 whitespace-nowrap">
@@ -186,8 +186,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         </motion.aside>
 
         {/* 2. RIGHT WRAPPER */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 relative">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden ml-[72px]">
+          <header className="fixed h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 w-[calc(100vw-72px)]">
             {/* Left: Breadcrumbs */}
             <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
               <span className="uppercase tracking-widest text-[10px]">gjworks</span>
@@ -248,9 +248,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </header>
 
-          <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 pt-2 md:pt-4 overflow-hidden relative">
+          <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 mt-[64px] md:pt-4 overflow-hidden overflow-x-auto scrollbar-hide relative">
             <main
-              className={`h-full w-full flex flex-col overflow-hidden overflow-y-auto scrollbar-hide ${
+              className={`h-full w-full flex flex-col overflow-hidden ${
                 isDashboardMain
                   ? 'bg-transparent border-none shadow-none' // 대시보드일 때 스타일
                   : 'bg-white/80 backdrop-blur-lg rounded-xl md:rounded-xl shadow-xl shadow-gray-100' // 일반 페이지 스타일

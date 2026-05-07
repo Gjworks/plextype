@@ -55,7 +55,7 @@ export default function ActiveUserPulse() {
     <section className="space-y-8 bg-white/80 p-8 rounded-xl shadow-lg shadow-gray-100">
       <header className="flex justify-between items-center">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1">User Pulse</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.012em] text-gray-400 mb-1">Active</p>
           <div className="text-sm font-medium text-gray-500">Live session ({users.length})</div>
         </div>
         <Link href="/admin/user/active" className="hover:text-blue-500 transition-colors cursor-pointer">
