@@ -37,9 +37,8 @@ model Profile {
   phone        String  @unique
   userId       Int     @unique
   profileImage String?
-  status       String?         @db.VarChar(45)
+  status       String? @db.VarChar(45)
   user         User    @relation(fields: [userId], references: [id])
-  
 }
 
 model UserGroup {
@@ -158,6 +157,7 @@ model Permission {
   moduleId    Int               @default(0)
   moduleType  String            @default("unknown")
   status      String?           @db.VarChar(45)
+
   @@index([moduleType, moduleId], map: "idx_permission_module")
   @@index([subjectType, subjectId], map: "idx_permission_subject")
 }
@@ -165,6 +165,7 @@ model Permission {
 model Comment {
   id             Int       @id @default(autoincrement())
   uuid           String    @unique @default(cuid())
+  slug           String    @unique
   content        String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -209,7 +210,7 @@ model Attachment {
   path         String // 실제 저장 경로: /uploads/posts/... 등
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  status       String?   @db.VarChar(45)
+  status       String?  @db.VarChar(45)
   userId       Int? // 업로더 User ID
   uploadedBy   User?    @relation(fields: [userId], references: [id])
 
@@ -240,13 +241,13 @@ model Notification {
   linkUrl String? @db.Text // 예: "/board/free/123" 또는 "https://..."
 
   // 🛠️ 상태 및 메타데이터
-  isRead Boolean   @default(false)
-  readAt DateTime?
-  status       String?   @db.VarChar(45)
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  status    String?   @db.VarChar(45)
   // 확장성을 위한 JSON (예: 어떤 게시물인지, 누가 보냈는지 상세 ID 저장)
-  metadata Json? @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  metadata  Json?     @default("{}")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@index([userId], map: "idx_notification_user")
   @@index([isRead], map: "idx_notification_unread")

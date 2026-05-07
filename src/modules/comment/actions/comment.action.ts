@@ -7,6 +7,7 @@ import { ActionState, CommentWithChildren, CommentListResponse } from "./_type";
 import { withTrigger } from "@utils/trigger/triggerWrapper";
 import { cookies } from "next/headers";
 import { decodeJwt } from "jose";
+import {nanoid} from "nanoid";
 
 
 async function getLoggedInfo() {
@@ -74,8 +75,9 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
         finalParentId = parent?.parentId ?? parent?.id ?? null;
         depth = (parent?.depth ?? 0) + 1;
       }
-      result = await query.insertComment({ content, documentId, userId: loggedInfo.id, parentId: finalParentId, depth });
-
+      const slug =  nanoid(10);
+      result = await query.insertComment({ content, documentId, userId: loggedInfo.id, parentId: finalParentId, depth , slug});
+      console.log(result)
       console.log("🔥 DB 저장 직후 결과:", JSON.stringify(result, null, 2));
       // ✅ 여기서 원본의 addCommentAndIncrementCount 로직 실행
       await query.incrementDocumentCommentCount(documentId);
