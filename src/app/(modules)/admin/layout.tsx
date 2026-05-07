@@ -140,7 +140,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <div className="flex bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden  font-sans relative">
+      <motion.div className="flex bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden  font-sans relative">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
@@ -186,7 +186,18 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         </motion.aside>
 
         {/* 2. RIGHT WRAPPER */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden ml-[72px]">
+        <motion.div
+          initial={false}
+          animate={{
+            marginLeft: isMobile ? 0 : isExpanded ? 240 : 72,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30,
+          }}
+          className="flex-1 flex flex-col min-w-0 overflow-hidden"
+        >
           <header className="fixed h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 w-[calc(100vw-72px)]">
             {/* Left: Breadcrumbs */}
             <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
@@ -293,8 +304,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               </div>
             </main>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
       <Right state={showRight} close={closeRight}>
         <MymenuTemplate />
       </Right>
