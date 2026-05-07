@@ -451,7 +451,7 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
             <Button
               type="button"
               fullWidth={false}
-              onClick={() => router.push(`/posts/${postInfo.mid}/${document.id}/delete`)}
+              onClick={() => router.push(`/posts/${postInfo.mid}/${document.slug}/delete`)}
               className=" !bg-red-50 !py-1.5 !px-6 !border-red-100 !text-red-500 hover:!bg-red-600 hover:!text-white transition-all"
             >
               삭제

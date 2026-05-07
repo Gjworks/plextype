@@ -3,8 +3,8 @@ import { decodeJwt } from "jose";
 import prisma from "@utils/db/prisma";
 import DocumentDelete from "@/modules/posts/tpl/default/delete";
 
-const Page = async ({  params: rawParams  }: { params: Promise<{ mid: string; id?: string }> }) => {
-  const { mid, id } = await rawParams;
+const Page = async ({  params: rawParams  }: { params: Promise<{ mid: string; slug?: string }> }) => {
+  const { mid, slug } = await rawParams;
 
   // 1. 쿠키에서 accessToken 가져오기
   const cookieStore = await cookies();
@@ -19,7 +19,7 @@ const Page = async ({  params: rawParams  }: { params: Promise<{ mid: string; id
 
   // 3. 글 정보 조회
   const document = await prisma.document.findUnique({
-    where: { id: Number(id) },
+    where: { slug: slug },
     select: { id: true, userId: true, title: true },
   });
   if (!document) throw new Error("존재하지 않는 글입니다.");
