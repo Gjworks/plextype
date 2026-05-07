@@ -21,15 +21,20 @@ const run = (cmd) => {
 async function setup() {
   console.log("🚀 Plextype 맞춤형 설치를 시작합니다...");
 
-  // 1. 관리자 정보 입력
-  console.log("\n👤 [1/2] 관리자(Admin) 계정 설정");
+  // 1. 사이트 정보 입력
+  console.log("\n🏷️  [1/3] 사이트 정보 설정");
+  const appName = await rl.question('사이트 이름 - 영문 APP_NAME (plextype): ') || 'plextype';
+  const appTitle = await rl.question('사이트 이름 - 한글 APP_TITLE (plextype): ') || 'plextype';
+
+  // 2. 관리자 정보 입력
+  console.log("\n👤 [2/3] 관리자(Admin) 계정 설정");
   const adminId = await rl.question('관리자 ID (admin): ') || 'admin';
   const adminPw = await rl.question('관리자 비밀번호 (password123): ') || 'password123';
   const adminEmail = await rl.question('관리자 이메일 (admin@example.com): ') || 'admin@example.com';
   const adminNickname = await rl.question('관리자 닉네임 (관리자): ') || '관리자';
 
-  // 2. 데이터베이스 정보 분할 입력
-  console.log("\n🗄️  [2/2] 데이터베이스(PostgreSQL) 연결 설정");
+  // 3. 데이터베이스 정보 분할 입력
+  console.log("\n🗄️  [3/3] 데이터베이스(PostgreSQL) 연결 설정");
   const dbUser = await rl.question('DB 사용자명 (postgres): ') || 'postgres';
   const dbPw = await rl.question('DB 비밀번호 (password): ') || 'password';
   const dbHost = await rl.question('DB 호스트 주소 (localhost): ') || 'localhost';
@@ -45,6 +50,8 @@ async function setup() {
   if (!fs.existsSync('.env')) {
     const generateToken = () => crypto.randomBytes(32).toString('base64');
     const envContent = `PROJECT_NAME=Plextype
+APP_NAME=${appName}
+APP_TITLE=${appTitle}
 NEXT_PUBLIC_DEFAULT_URL=http://localhost:3000
 NEXT_PUBLIC_SECRET="${generateToken()}"
 
