@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -10,6 +10,9 @@ import Modal from "@components/modal/Modal";
 import Button from "@components/button/Button";
 import { usePostContext } from "@/modules/posts/tpl/default/PostProvider";
 import { CommentWithChildren } from "@/modules/comment/actions/_type";
+import TiptapEditor from "@components/editor/tiptap/tiptapEditor";
+import { Attachment } from "@/modules/attachment";
+import type { Attachment as IAttachment } from "@/modules/attachment/actions/_type";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -66,6 +69,7 @@ export default function CommentsList({
                                      }: CommentsListProps) {
   const router = useRouter();
   const { currentUser } = usePostContext();
+  const editorRef = useRef<any>(null);
   const [comments, setComments] = useState(commentsData);
   const [page, setPage] = useState(commentsData.pagination.currentPage);
   const [modalContent, setModalContent] = useState("");
@@ -76,12 +80,21 @@ export default function CommentsList({
   const [loading, setLoading] = useState(false);
   const [modalParent, setModalParent] = useState<ParentComment | null>(null);
   const [commentsState, setCommentsState] = useState(commentsData);
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
   const { permissions } = usePostContext();
 
   // props로 넘어온 데이터가 변경되면 내부 상태도 동기화
   useEffect(() => {
     setComments(commentsData);
   }, [commentsData]);
+
+  useEffect(() => {
+    if (!isComposerOpen) return;
+    const timer = window.setTimeout(() => {
+      editorRef.current?.commands?.focus?.();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [isComposerOpen]);
 
   if (!permissions.doRead) {
     return "";
@@ -138,11 +151,12 @@ export default function CommentsList({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newContent.trim()) return;
+    if (!editorRef.current || editorRef.current.isEmpty) return;
 
     setLoading(true);
     try {
-      const result = await upsertComment({ documentId, content: newContent });
+      const jsonContent = editorRef.current.getJSON();
+      const result = await upsertComment({ documentId, content: JSON.stringify(jsonContent) });
 
       // 🌟 result.item 혹은 (result as any).data 둘 다 확인하도록 수정
       const newComment = result.item || (result as any).data;
@@ -161,6 +175,8 @@ export default function CommentsList({
 
         // ✅ 여기서 확실하게 비워줍니다!
         setNewContent("");
+        setIsComposerOpen(false);
+        editorRef.current.commands.clearContent();
         router.refresh();
       } else {
         // 실패 시 에러 메시지라도 띄워보면 디버깅이 쉽습니다.
@@ -169,6 +185,30 @@ export default function CommentsList({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileDelete = (file: IAttachment) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.commands.command(({ tr, state }) => {
+      const { doc } = state;
+      const posToDelete: number[] = [];
+
+      doc.descendants((node, pos) => {
+        if (node.type.name === "image" && node.attrs.src === file.path) {
+          posToDelete.push(pos);
+        }
+      });
+
+      posToDelete.reverse().forEach((pos) => {
+        tr.delete(pos, pos + 1);
+      });
+
+      return true;
+    });
+
+    setNewContent(editor.getHTML());
   };
 
   /** ====== 답글/수정 ====== */
@@ -413,19 +453,67 @@ export default function CommentsList({
               </div>
 
               {/* 2. 메인 입력 영역 */}
-              <textarea
-                className="w-full p-5 text-sm bg-transparent outline-none resize-none min-h-[140px] text-gray-700 placeholder:text-gray-300 leading-relaxed transition-all"
-                placeholder="따뜻한 댓글은 작성자에게 큰 힘이 됩니다..."
-                value={newContent}
-                onChange={(e) => setNewContent(e.target.value)}
-              />
+              <div onClick={() => setIsComposerOpen(true)}>
+                {isComposerOpen ? (
+                  <>
+                    <div className="p-4">
+                      <TiptapEditor
+                        ref={editorRef}
+                        initialContent=""
+                        variant="compact"
+                        onChange={(html: string) => setNewContent(html)}
+                      />
+                    </div>
+
+                    <div className="px-4 pb-4">
+                      <Attachment.Box
+                        content={newContent}
+                        onFileClick={(file) => {
+                          const editor = editorRef.current;
+                          if (!editor) return;
+
+                          if (file.mimeType.startsWith("image/")) {
+                            editor.chain()
+                              .focus()
+                              .insertContent([
+                                {
+                                  type: "image",
+                                  attrs: {
+                                    src: file.path,
+                                    alt: file.name,
+                                  },
+                                },
+                                {
+                                  type: "paragraph",
+                                },
+                              ])
+                              .run();
+                          } else {
+                            editor.chain().focus().insertContent(
+                              `<a href="${file.path}" target="_blank" class="text-blue-600 underline">${file.name}</a> `
+                            ).run();
+                          }
+                        }}
+                        onFileDelete={handleFileDelete}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="w-full min-h-[140px] p-5 text-left text-sm text-gray-300 leading-relaxed"
+                  >
+                    따뜻한 댓글은 작성자에게 큰 힘이 됩니다...
+                  </button>
+                )}
+              </div>
 
               {/* 3. 하단 툴바 및 버튼 바 */}
               <div className="px-4 py-3 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center transition-colors group-focus-within:bg-white">
                 {/* 왼쪽: 도움말 또는 글자 수 */}
                 <div className="flex flex-col">
         <span className="text-[10px] text-gray-400 font-medium">
-          {newContent.length > 0 ? "정성껏 작성 중..." : "최소 2자 이상 입력"}
+          정성껏 작성 중...
         </span>
                   <span className="text-[10px] text-gray-300 font-mono tracking-tighter">
           {newContent.length} / 1000 characters

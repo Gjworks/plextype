@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@components/button/Button";
 import Modal from "@components/modal/Modal";
+import TiptapEditor from "@components/editor/tiptap/tiptapEditor";
+import { Attachment } from "@/modules/attachment";
 import { CommentWithChildren } from "@/modules/comment/actions/_type";
+import type { Attachment as IAttachment } from "@/modules/attachment/actions/_type";
 
 interface CommentItemActionsProps {
   documentId: number;
@@ -21,6 +24,27 @@ interface CommentItemActionsProps {
   }) => Promise<any>;
 }
 
+const getCommentPreview = (content: string) => {
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed?.type === "doc") {
+      const extractText = (nodes: any[] = []): string =>
+        nodes.map(node => {
+          if (node.type === "text") return node.text || "";
+          if (node.type === "image") return "[이미지]";
+          if (node.content) return extractText(node.content);
+          return "";
+        }).join(" ");
+
+      return extractText(parsed.content).replace(/\s+/g, " ").trim();
+    }
+  } catch {
+    return content;
+  }
+
+  return content;
+};
+
 const CommentItemActions = ({
   documentId,
   comment,
@@ -30,6 +54,7 @@ const CommentItemActions = ({
   upsertComment,
 }: CommentItemActionsProps) => {
   const router = useRouter();
+  const editorRef = useRef<any>(null);
   const [mode, setMode] = useState<"reply" | "edit" | null>(null);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,15 +74,16 @@ const CommentItemActions = ({
     setContent("");
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!mode || !content.trim() || loading) return;
+    if (!mode || !editorRef.current || editorRef.current.isEmpty || loading) return;
 
     setLoading(true);
     try {
+      const jsonContent = editorRef.current.getJSON();
       const result = await upsertComment({
         documentId,
-        content,
+        content: JSON.stringify(jsonContent),
         parentId: mode === "reply" ? comment.id : undefined,
         commentId: mode === "edit" ? comment.id : undefined,
       });
@@ -72,6 +98,30 @@ const CommentItemActions = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileDelete = (file: IAttachment) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.commands.command(({ tr, state }) => {
+      const { doc } = state;
+      const posToDelete: number[] = [];
+
+      doc.descendants((node, pos) => {
+        if (node.type.name === "image" && node.attrs.src === file.path) {
+          posToDelete.push(pos);
+        }
+      });
+
+      posToDelete.reverse().forEach((pos) => {
+        tr.delete(pos, pos + 1);
+      });
+
+      return true;
+    });
+
+    setContent(editor.getHTML());
   };
 
   const handleDelete = async () => {
@@ -98,7 +148,7 @@ const CommentItemActions = ({
 
   const modal = (
     <Modal state={!!mode} close={closeModal} position="center">
-      <form onSubmit={handleSubmit} className="p-6">
+      <form onSubmit={handleSubmit} className="max-h-[85vh] overflow-y-auto p-6">
         <div className="relative">
           {mode === "reply" && (
             <div className="relative flex gap-3 pb-2">
@@ -119,7 +169,7 @@ const CommentItemActions = ({
                 </div>
                 <div className="relative">
                   <p className="text-[13px] text-gray-500 leading-relaxed max-h-[80px] overflow-y-auto pr-2">
-                    {comment.content}
+                    {getCommentPreview(comment.content)}
                   </p>
                   <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-50/80 to-transparent pointer-events-none" />
                 </div>
@@ -143,13 +193,47 @@ const CommentItemActions = ({
                   {mode === "edit" ? "Edit Comment" : "New Reply"}
                 </span>
               </div>
-              <textarea
-                value={content}
-                onChange={(event) => setContent(event.target.value)}
-                placeholder={mode === "edit" ? "내용을 수정해주세요..." : "따뜻한 답변을 기다리고 있어요."}
-                className="w-full p-4 text-sm bg-transparent outline-none resize-none min-h-[140px] text-gray-700 placeholder:text-gray-300 leading-relaxed"
-                autoFocus
-              />
+              <div className="p-4">
+                <TiptapEditor
+                  key={`${mode}-${comment.id}`}
+                  ref={editorRef}
+                  initialContent={mode === "edit" ? comment.content : ""}
+                  variant="compact"
+                  onChange={(html: string) => setContent(html)}
+                />
+              </div>
+              <div className="px-4 pb-4">
+                <Attachment.Box
+                  content={content}
+                  onFileClick={(file) => {
+                    const editor = editorRef.current;
+                    if (!editor) return;
+
+                    if (file.mimeType.startsWith("image/")) {
+                      editor.chain()
+                        .focus()
+                        .insertContent([
+                          {
+                            type: "image",
+                            attrs: {
+                              src: file.path,
+                              alt: file.name,
+                            },
+                          },
+                          {
+                            type: "paragraph",
+                          },
+                        ])
+                        .run();
+                    } else {
+                      editor.chain().focus().insertContent(
+                        `<a href="${file.path}" target="_blank" class="text-blue-600 underline">${file.name}</a> `
+                      ).run();
+                    }
+                  }}
+                  onFileDelete={handleFileDelete}
+                />
+              </div>
               <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
                 <div className="flex gap-2">
                   <div className="w-2 h-2 rounded-full bg-gray-200" />

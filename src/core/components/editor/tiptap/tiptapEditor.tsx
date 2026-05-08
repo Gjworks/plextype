@@ -35,11 +35,13 @@ const HIGHLIGHT_COLORS = [
 export interface TiptapEditorProps {
   initialContent?: string;
   onChange?: (html: string) => void;
+  variant?: "default" | "compact";
 }
 const SHIKI_THEME = 'slack-ochin'; // 희정님 스타일
 
 const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
-  const { onChange, initialContent } = props;
+  const { onChange, initialContent, variant = "default" } = props;
+  const isCompact = variant === "compact";
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [linkUrl, setLinkUrl] = useState(""); // 입력창의 URL 상태
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -109,7 +111,9 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
     editorProps: {
       attributes: {
         // ✅ 2. Tailwind prose 커스텀: 앞뒤 따옴표(`) 제거 및 에디터 내부 스타일 강화
-        class: "prose prose-zinc prose-sm focus:outline-none max-w-none min-h-[400px] px-6 py-10 text-gray-800 " +
+        class: `prose prose-zinc prose-sm focus:outline-none max-w-none text-gray-800 ${
+          isCompact ? "min-h-[120px] px-4 py-4" : "min-h-[400px] px-6 py-10"
+        } ` +
           "prose-pre:p-0 prose-pre:bg-transparent " + // Shiki 자체 배경과 패딩을 쓰기 위해 prose 스타일 무력화
           "prose-code:before:content-none prose-code:after:content-none ",
       },
@@ -388,7 +392,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
         <ToolbarButton tooltip="표 삽입" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} icon={<TableIcon className="w-4 h-4" />} />
       </div>
 
-      <div className="min-h-[400px] max-h-[800px] overflow-y-auto overflow-x-hidden resize-y border-b border-gray-50 bg-white"
+      <div className={`${isCompact ? "min-h-[120px] max-h-[260px]" : "min-h-[400px] max-h-[800px] resize-y"} overflow-y-auto overflow-x-hidden border-b border-gray-50 bg-white`}
            style={{ direction: 'ltr' }}>
         <style dangerouslySetInnerHTML={{ __html: `
   /* 1. 이 클래스가 곧 <pre> 태그입니다! */
