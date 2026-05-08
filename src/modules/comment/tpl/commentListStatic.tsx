@@ -1,11 +1,80 @@
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
+import DOMPurify from "isomorphic-dompurify";
+import { generateHTML } from "@tiptap/html";
+import StarterKit from "@tiptap/starter-kit";
+import { Image } from "@tiptap/extension-image";
+import { Link as TiptapLink } from "@tiptap/extension-link";
+import { Underline } from "@tiptap/extension-underline";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { Highlight } from "@tiptap/extension-highlight";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
+import ListItem from "@tiptap/extension-list-item";
 import { CommentWithChildren } from "@/modules/comment/actions/_type";
 import CommentItemActions from "./commentItemActions";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
+
+const commentExtensions = [
+  StarterKit.configure({
+    code: {
+      HTMLAttributes: {
+        class: "bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded-md font-mono text-[0.9em] font-medium",
+      },
+    },
+    blockquote: {
+      HTMLAttributes: {
+        class: "border-l-4 border-gray-300 pl-4 italic text-gray-600",
+      },
+    },
+    bulletList: false,
+    orderedList: false,
+  }),
+  BulletList.configure({
+    HTMLAttributes: { class: "list-disc ml-6" },
+  }),
+  OrderedList.configure({
+    HTMLAttributes: { class: "list-decimal ml-6" },
+  }),
+  ListItem,
+  Underline,
+  Highlight.configure({ multicolor: true }),
+  TiptapLink.configure({
+    openOnClick: true,
+    HTMLAttributes: { class: "text-blue-600 underline cursor-pointer" },
+  }),
+  TextAlign.configure({ types: ["heading", "paragraph"] }),
+  Image,
+];
+
+const renderCommentContent = (content: string) => {
+  if (!content) return null;
+
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed?.type === "doc") {
+      const html = generateHTML(parsed, commentExtensions);
+      const cleanHtml = DOMPurify.sanitize(html, {
+        ADD_ATTR: ["style", "target", "class", "rel"],
+        ADD_TAGS: ["mark"],
+      });
+
+      return (
+        <div
+          className="prose prose-zinc prose-sm max-w-none dark:prose-invert prose-pre:bg-gray-50 prose-pre:text-gray-700 prose-img:rounded-xl prose-img:border prose-img:border-gray-100"
+          dangerouslySetInnerHTML={{ __html: cleanHtml }}
+        />
+      );
+    }
+  } catch {
+    return <>{content}</>;
+  }
+
+  return <>{content}</>;
+};
 
 interface CommentListStaticProps {
   documentId: number;
@@ -82,7 +151,7 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
                   {comment.depth > 1 && parentUserName && (
                     <span className="text-blue-500 font-bold mr-1.5 opacity-80">@{parentUserName}</span>
                   )}
-                  {comment.isDeleted ? <span className="text-gray-300 italic text-xs">삭제된 댓글입니다.</span> : comment.content}
+                  {comment.isDeleted ? <span className="text-gray-300 italic text-xs">삭제된 댓글입니다.</span> : renderCommentContent(comment.content)}
                 </div>
 
                 <CommentItemActions
