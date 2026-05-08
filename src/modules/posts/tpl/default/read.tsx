@@ -89,15 +89,6 @@ const tiptapExtensions = [
   }),
   CodeBlockShiki.configure({
     defaultTheme: SHIKI_THEME,
-    languages: [
-      'javascript', 'typescript', 'jsx', 'tsx',
-      'php',
-      'sql',
-      'css', 'scss',
-      'bash', 'shell',
-      'dart',
-      'html', 'json', 'yaml'
-    ],
     defaultLanguage: 'typescript',
     HTMLAttributes: {
       class: 'plextype-shiki-block',
