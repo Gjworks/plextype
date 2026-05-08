@@ -133,11 +133,13 @@ async function PostRead({
   await increaseViewCount(numericId, user?.id, requestIp);
 
   return (
-    <PostProvider
-      value={{ postInfo: infoRes.data, currentUser: user, permissions }}
-    >
-      <Skin document={docRes.data} participants={participantsRes.data || []} />
-    </PostProvider>
+    <Skin
+      document={docRes.data}
+      participants={participantsRes.data || []}
+      postInfo={infoRes.data}
+      permissions={permissions}
+      currentUser={user}
+    />
   );
 }
 
