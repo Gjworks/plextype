@@ -1,40 +1,22 @@
-import { cookies } from "next/headers";
-import { decodeJwt } from "jose";
-import prisma from "@utils/db/prisma";
+import { getDocumentDeleteInfoAction } from "@/modules/document/actions/document.action";
 import DocumentDelete from "@/modules/posts/tpl/default/delete";
+import { redirect } from "next/navigation";
 
 const Page = async ({  params: rawParams  }: { params: Promise<{ mid: string; slug?: string }> }) => {
   const { mid, slug } = await rawParams;
 
-  // 1. 쿠키에서 accessToken 가져오기
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-  if (!accessToken) throw new Error("로그인이 필요합니다.");
+  const result = await getDocumentDeleteInfoAction(slug);
 
-  // 2. JWT decode
-  const decoded = decodeJwt(accessToken) as { id: number; isAdmin: boolean } | null;
-  if (!decoded) throw new Error("유효하지 않은 토큰입니다.");
-  const userId = decoded.id;
-  const isAdmin = decoded.isAdmin;
-
-  // 3. 글 정보 조회
-  const document = await prisma.document.findUnique({
-    where: { slug: slug },
-    select: { id: true, userId: true, title: true },
-  });
-  if (!document) throw new Error("존재하지 않는 글입니다.");
-
-  // 4. 작성자 확인
-  if (document.userId !== userId && !isAdmin) {
-    throw new Error("본인이 작성한 글만 삭제할 수 있습니다.");
+  if (!result.success && !result.data && result.message === "존재하지 않는 글입니다.") {
+    redirect(`/posts/${mid}`);
   }
+
+  if (!result.success || !result.data) throw new Error(result.message);
 
   return(
     <>
       <div className="py-20">
-        {userId === document.userId && (
-          <DocumentDelete document={document} mid={mid} />
-        )}
+        <DocumentDelete document={result.data} mid={mid} />
       </div>
     </>
   )
