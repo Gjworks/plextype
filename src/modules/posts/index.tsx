@@ -28,6 +28,7 @@ import DefaultListSkin from "@/modules/posts/tpl/default/list";
 import DefaultReadSkin from "@/modules/posts/tpl/default/read";
 import DefaultCommentsSkin from "@/modules/comment/tpl/list";
 import DefaultWriteSkin from "@/modules/posts/tpl/default/write";
+import CommentListStatic from "@/modules/comment/tpl/commentListStatic";
 
 /** 💡 공통 서버 유저 헬퍼 */
 async function getServerUser() {
@@ -192,8 +193,16 @@ async function PostComments({
     <PostProvider
       value={{ postInfo: infoRes.data, currentUser: user, permissions }}
     >
+      <CommentListStatic
+        documentId={id}
+        comments={commentsRes.data?.items || []}
+        currentUser={user}
+        canReply={permissions.doComment}
+        upsertComment={upsertCommentAction as any}
+      />
       <Skin
         documentId={id}
+        renderList={false}
         commentsData={
           commentsRes.data || {
             items: [],

@@ -37,6 +37,7 @@ interface CommentsListProps {
     items: CommentWithChildren[];
     pagination: { totalPages: number; totalCount: number; currentPage: number; pageSize: number };
   };
+  renderList?: boolean;
   // Page.tsx에서 넘겨주는 함수의 모양과 똑같이 맞춤
   upsertComment: (args: {
     documentId: number;
@@ -59,6 +60,7 @@ interface ParentComment {
 export default function CommentsList({
                                        documentId,
                                        commentsData,
+                                       renderList = true,
                                        upsertComment,
                                        getCommentsPage,
                                      }: CommentsListProps) {
@@ -458,10 +460,10 @@ export default function CommentsList({
 
 
       {/* 댓글 목록 */}
-      {renderComments(comments.items)}
+      {renderList && renderComments(comments.items)}
 
       {/* 더보기 */}
-      {page < comments.pagination.totalPages && (
+      {renderList && page < comments.pagination.totalPages && (
         <div className="relative flex items-center justify-center my-12 px-4">
           {/* 🧶 배경을 가로지르는 은은한 구분선 */}
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
