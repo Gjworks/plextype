@@ -50,6 +50,31 @@ export async function getDocument(id: number): Promise<ActionState<DocumentInfo>
   }
 }
 
+export async function getDocumentDeleteInfoAction(slug?: string): Promise<ActionState<{ id: number; userId: number | null; title: string | null }>> {
+  try {
+    const loggedInfo = await getLoggedInfo();
+    if (!loggedInfo) return { success: false, type: "error", message: "로그인이 필요합니다." };
+    if (!slug) return { success: false, type: "error", message: "게시글 주소가 올바르지 않습니다." };
+
+    const document = await documentQuery.findDocumentDeleteInfoBySlug(slug);
+    if (!document) return { success: false, type: "error", message: "존재하지 않는 글입니다." };
+
+    if (document.userId !== loggedInfo.id && !loggedInfo.isAdmin) {
+      return { success: false, type: "error", message: "본인이 작성한 글만 삭제할 수 있습니다." };
+    }
+
+    return {
+      success: true,
+      type: "success",
+      message: "게시글 삭제 정보 조회 성공",
+      data: document,
+    };
+  } catch (error) {
+    console.error("getDocumentDeleteInfoAction 에러:", error);
+    return { success: false, type: "error", message: "삭제 정보를 불러오는 중 오류가 발생했습니다." };
+  }
+}
+
 // ==========================================
 // [ACTION - Document] 게시글 저장/수정
 // ==========================================
@@ -250,7 +275,7 @@ export async function getDocumentList(
 // ==========================================
 // [ACTION - Document] 게시글 삭제
 // ==========================================
-export const removeDocument = withTrigger("document.removed", async (id: number, mid: string): Promise<ActionState<any>> => {
+export const removeDocumentAction = withTrigger("document.removed", async (id: number, mid: string): Promise<ActionState<any>> => {
   try {
     const loggedInfo = await getLoggedInfo();
     if (!loggedInfo) return { success: false, type: "error", message: "로그인이 필요합니다." };
@@ -281,6 +306,8 @@ export const removeDocument = withTrigger("document.removed", async (id: number,
     return { success: false, type: "error", message: "삭제 중 오류가 발생했습니다." };
   }
 });
+
+export const removeDocument = removeDocumentAction;
 
 
 /**
@@ -319,5 +346,4 @@ export async function getDocumentBySlugAction(slug: string): Promise<ActionState
     return { success: false, type: "error", message: "조회 중 오류 발생" };
   }
 }
-
 

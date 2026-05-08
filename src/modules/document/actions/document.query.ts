@@ -20,6 +20,17 @@ export async function findDocumentBySlug(slug: string) {
   });
 }
 
+export async function findDocumentDeleteInfoBySlug(slug: string) {
+  return prisma.document.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      userId: true,
+      title: true,
+    },
+  });
+}
+
 export async function findDocument(id: number | string) {
   const numericId = Number(id);
 
@@ -159,5 +170,4 @@ export async function incrementReadCountWithLog(documentId: number, userId?: num
     }),
   ]);
 }
-
 
