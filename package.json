@@ -1,6 +1,6 @@
 {
   "name": "plextype",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "private": true,
   "scripts": {
     "setup": "node setup.mjs",
