@@ -1,17 +1,12 @@
-"use client";
-
-import React, { useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
 import DOMPurify from "isomorphic-dompurify";
-import { useEditor, EditorContent } from "@tiptap/react";
-import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { usePostContext } from "./PostProvider";
-import { useUser } from "@hooks/auth/useAuth";
 import PostNotPermission from "@/modules/posts/tpl/default/notPermission";
 import Button from "@components/button/Button";
 import CodeBlockShiki from 'tiptap-extension-code-block-shiki'
+import ReadActions from "./readActions";
+import { codeToHtml } from "shiki";
 
 // ✅ TipTap 변환 관련 임포트 추가
 import { generateHTML } from "@tiptap/html";
@@ -31,6 +26,50 @@ import ListItem from "@tiptap/extension-list-item";
 
 dayjs.extend(relativeTime);
 
+const SHIKI_THEME = 'slack-ochin';
+
+const decodeHtmlEntities = (value: string) =>
+  value
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+const highlightCodeBlocks = async (html: string) => {
+  const codeBlockRegex = /<pre\b[^>]*>\s*<code\b([^>]*)>([\s\S]*?)<\/code>\s*<\/pre>/g;
+  const matches = [...html.matchAll(codeBlockRegex)];
+
+  if (matches.length === 0) return html;
+
+  let highlightedHtml = html;
+
+  for (const match of matches) {
+    const codeAttrs = match[1] || "";
+    const language = codeAttrs.match(/language-([A-Za-z0-9_-]+)/)?.[1] || 'typescript';
+    const code = decodeHtmlEntities(match[2]);
+    let shikiHtml: string;
+
+    try {
+      shikiHtml = await codeToHtml(code, {
+        lang: language,
+        theme: SHIKI_THEME,
+      });
+    } catch {
+      shikiHtml = await codeToHtml(code, {
+        lang: 'typescript',
+        theme: SHIKI_THEME,
+      });
+    }
+
+    const styledHtml = shikiHtml.replace('<pre class="shiki slack-ochin"', '<pre class="shiki slack-ochin plextype-shiki-block"');
+
+    highlightedHtml = highlightedHtml.replace(match[0], styledHtml);
+  }
+
+  return highlightedHtml;
+};
+
 // ✅ 에디터와 동일한 익스텐션 구성 및 스타일 클래스 주입
 const tiptapExtensions = [
   StarterKit.configure({
@@ -49,7 +88,17 @@ const tiptapExtensions = [
     orderedList: false,
   }),
   CodeBlockShiki.configure({
-    defaultTheme: 'slack-ochin',
+    defaultTheme: SHIKI_THEME,
+    languages: [
+      'javascript', 'typescript', 'jsx', 'tsx',
+      'php',
+      'sql',
+      'css', 'scss',
+      'bash', 'shell',
+      'dart',
+      'html', 'json', 'yaml'
+    ],
+    defaultLanguage: 'typescript',
     HTMLAttributes: {
       class: 'plextype-shiki-block',
     },
@@ -85,6 +134,14 @@ interface Participant {
 interface PostsReadProps {
   document: any;
   participants?: Participant[];
+  postInfo: any;
+  permissions: {
+    doList: boolean;
+    doRead: boolean;
+    doWrite: boolean;
+    doComment: boolean;
+  };
+  currentUser: any;
 }
 
 const EditorJsRenderer = ({ block }: { block: any }) => {
@@ -118,51 +175,11 @@ const EditorJsRenderer = ({ block }: { block: any }) => {
   }
 };
 
-const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
-  const router = useRouter();
-  const { postInfo, permissions } = usePostContext();
-  const { data: user } = useUser();
-
+const PostsRead = async ({ document, participants = [], postInfo, permissions, currentUser }: PostsReadProps) => {
   const extraFields = postInfo?.extraFields || [];
   const extraData = document.extraFieldData || {};
 
-  const parseContent = (content?: string) => {
-    if (!content) return "";
-    let raw = content;
-
-    // 1. 혹시라도 문자열 양끝에 따옴표가 중복으로 감싸져 있다면 제거
-    if (typeof raw === 'string' && raw.startsWith('"') && raw.endsWith('"')) {
-      raw = raw.slice(1, -1);
-    }
-
-    try {
-      // 2. JSON 문자열을 객체로 파싱
-      const json = JSON.parse(raw);
-
-      // 3. TipTap 데이터 형식(type: "doc")이 맞는지 확인 후 리턴
-      if (json && json.type === "doc") return json;
-      return raw;
-    } catch (e) {
-      // 4. 파싱 실패 시 일반 텍스트나 HTML로 간주하고 그대로 리턴
-      return raw;
-    }
-  };
-
-  const readOnlyEditor = useEditor({
-    extensions: tiptapExtensions,
-    content: parseContent(document.content), // 초기 내용
-    editable: false, // 🌟 핵심: 읽기 전용으로 설정
-    immediatelyRender: false,
-  });
-
-  // ✅ 2. 문서 내용이 바뀌면 에디터 내용도 업데이트
-  useEffect(() => {
-    if (readOnlyEditor && document.content) {
-      readOnlyEditor.commands.setContent(parseContent(document.content));
-    }
-  }, [document.content, readOnlyEditor]);
-
-  const renderContent = useMemo(() => {
+  const renderContent = async () => {
     let rawContent = document.content || "";
 
     if (rawContent.startsWith('"') && rawContent.endsWith('"')) {
@@ -177,18 +194,20 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
       // A: TipTap 데이터인 경우
       if (jsonContent.type === "doc") {
         const html = generateHTML(jsonContent, tiptapExtensions);
+        const highlightedHtml = await highlightCodeBlocks(html);
 
         // 정렬 기능(style 속성)을 허용하도록 sanitize 설정
-        const cleanHtml = DOMPurify.sanitize(html, {
+        const cleanHtml = DOMPurify.sanitize(highlightedHtml, {
           ADD_ATTR: ['style', 'target', 'class', 'rel'],
           ADD_TAGS: ['mark']
         });
-        if (!readOnlyEditor) return <div className="animate-pulse h-40 bg-gray-50 rounded-xl" />;
+
         return (
-          <div className="prose prose-zinc max-w-none dark:prose-invert
-               prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0">
-            <EditorContent editor={readOnlyEditor} />
-          </div>
+          <div
+            className="prose prose-zinc max-w-none dark:prose-invert
+               prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0"
+            dangerouslySetInnerHTML={{ __html: cleanHtml }}
+          />
         );
       }
 
@@ -196,25 +215,36 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
       if (jsonContent.blocks) {
         return (
           <div className="post-blocks space-y-4">
-            {jsonContent.blocks.map((block: any) => (
-              <EditorJsRenderer key={block.id || Math.random()} block={block} />
+            {jsonContent.blocks.map((block: any, index: number) => (
+              <EditorJsRenderer key={block.id || index} block={block} />
             ))}
           </div>
         );
       }
     } catch (e) {
+      const cleanHtml = DOMPurify.sanitize(rawContent, {
+        ADD_ATTR: ['style', 'target', 'class', 'rel'],
+        ADD_TAGS: ['mark']
+      });
+
       return (
         <div
           className="prose prose-zinc max-w-none dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: rawContent }}
+          dangerouslySetInnerHTML={{ __html: cleanHtml }}
         />
       );
     }
 
-    return <div dangerouslySetInnerHTML={{ __html: rawContent }} />;
-  }, [document.content, readOnlyEditor]);
+    const cleanHtml = DOMPurify.sanitize(rawContent, {
+      ADD_ATTR: ['style', 'target', 'class', 'rel'],
+      ADD_TAGS: ['mark']
+    });
+
+    return <div dangerouslySetInnerHTML={{ __html: cleanHtml }} />;
+  };
 
   if (!permissions.doRead) return <PostNotPermission />;
+  const content = await renderContent();
 
   return (
     <>
@@ -424,41 +454,27 @@ const PostsRead = ({ document, participants = [] }: PostsReadProps) => {
         font-size: 14px !important;
         line-height: 1.8 !important;
         overflow-x: auto !important;
+        scrollbar-width: none;
+        white-space: pre !important;
+      }
+
+      .plextype-shiki-block code {
+        background: none !important;
+        padding: 0 !important;
+        color: inherit !important;
+        font-family: inherit !important;
+        font-size: inherit !important;
+        line-height: inherit !important;
+        white-space: inherit !important;
+      }
+
+      .plextype-shiki-block::-webkit-scrollbar {
+        display: none;
       }
     `}} />
-        {renderContent}
+        {content}
       </div>
-      <div className="flex justify-end gap-2 mx-auto max-w-screen-md py-8">
-        <Button
-          type="button"
-          fullWidth={false}
-          onClick={() => router.push(`/posts/${postInfo.mid}`)}
-          className=" !bg-gray-50 !py-1.5 !px-6 !border-gray-100 !text-gray-800 hover:!bg-gray-100"
-        >
-          목록
-        </Button>
-
-        {user?.id === document.userId && (
-          <>
-            <Button
-              type="button"
-              fullWidth={false}
-              onClick={() => router.push(`/posts/${postInfo.mid}/${document.slug}/edit`)}
-              className=" !bg-blue-50 !py-1.5 !px-6 !border-blue-100 !text-blue-600 hover:!bg-blue-600 hover:!text-white transition-all"
-            >
-              수정
-            </Button>
-            <Button
-              type="button"
-              fullWidth={false}
-              onClick={() => router.push(`/posts/${postInfo.mid}/${document.slug}/delete`)}
-              className=" !bg-red-50 !py-1.5 !px-6 !border-red-100 !text-red-500 hover:!bg-red-600 hover:!text-white transition-all"
-            >
-              삭제
-            </Button>
-          </>
-        )}
-      </div>
+      <ReadActions mid={postInfo.mid} slug={document.slug} canEdit={currentUser?.id === document.userId} />
       <div className="dark:bg-dark-900 border-t border-gray-100 dark:border-dark-800"></div>
 
     </>
