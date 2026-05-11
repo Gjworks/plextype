@@ -194,8 +194,19 @@ const PostsListClient = ({
                             {dayjs(doc.latestComment?.createdAt).fromNow()}
                           </div>
                         </div>
-                        <div className="!text-[12px] text-gray-500 line-clamp-1">
-                          {doc.latestComment.content}
+                        <div className="flex items-center gap-2 !text-[12px] text-gray-500">
+                          {doc.latestComment.image && (
+                            <Image
+                              src={doc.latestComment.image}
+                              alt="댓글 이미지"
+                              width={20}
+                              height={20}
+                              className="h-5 w-5 shrink-0 rounded object-cover"
+                            />
+                          )}
+                          <span className="line-clamp-1">
+                            {doc.latestComment.content}
+                          </span>
                         </div>
                       </div>
                     </div>

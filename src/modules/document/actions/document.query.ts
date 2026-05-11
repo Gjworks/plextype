@@ -90,6 +90,7 @@ export async function findDocumentList(postsId: number, page: number, pageSize: 
         readCount: true,
         commentCount: true,
         voteCount: true,
+        thumbnail: true,
         extraFieldData: true,
         category: { select: { id: true, title: true, parentId: true } },
         user: { select: { id: true, nickName: true } },
@@ -170,4 +171,3 @@ export async function incrementReadCountWithLog(documentId: number, userId?: num
     }),
   ]);
 }
-

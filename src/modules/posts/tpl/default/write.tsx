@@ -23,6 +23,7 @@ interface PostWriteProps {
     categoryId: number | null;
     title: string | null;
     content: string | null;
+    thumbnail?: string | null;
     extraFieldData?: any;
   } | null;
 }
@@ -37,6 +38,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState(existingPost?.title || "");
   const [content, setContent] = useState(existingPost?.content || "");
+  const [thumbnail, setThumbnail] = useState(existingPost?.thumbnail || "");
   const [extraData, setExtraData] = useState<any>(existingPost?.extraFieldData || {});
 
   // 🌟 1. tempId 상태를 추가합니다. (신규 글 작성용)
@@ -111,6 +113,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
 
     // 에디터 상태를 강제로 업데이트해서 usedFiles가 다시 계산되게 함
     setContent(editor.getHTML());
+    if (thumbnail === file.path) setThumbnail("");
   };
 
   const IconCategory = () => (
@@ -133,6 +136,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
     <form ref={formRef} className="space-y-6">
       {/* 4. 수정 모드일 때 ID 전송 */}
       {existingPost && <input type="hidden" name="id" value={existingPost.id} />}
+      <input type="hidden" name="thumbnail" value={thumbnail} />
 
       <div className="text-center text-2xl font-semibold py-8">{postInfo.moduleName}</div>
 
@@ -186,11 +190,14 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
 
         <Attachment.Box
           content={content}
+          selectedThumbnail={thumbnail}
           onFileClick={(file) => {
             const editor = editorRef.current;
             if (!editor) return;
 
             if (file.mimeType.startsWith("image/")) {
+              if (!thumbnail) setThumbnail(file.path);
+
               // 🌟 [수정] setImage 대신 insertContent를 사용합니다.
               editor.chain()
                 .focus() // 에디터에 다시 집중!
@@ -215,6 +222,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
             }
           }}
           onFileDelete={handleFileDelete}
+          onThumbnailSelect={(file) => setThumbnail(file.path)}
         />
       </div>
 
