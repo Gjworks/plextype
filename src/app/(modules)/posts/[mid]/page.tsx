@@ -13,10 +13,10 @@ export async function generateMetadata({params}: any) {
 // 📌 2. 페이지 컴포넌트 (세상에서 제일 깔끔!)
 const Page = async ({ params, searchParams }: {
   params: Promise<{ mid: string }>;
-  searchParams?: Promise<{ page?: string; category?: string }>;
+  searchParams?: Promise<{ page?: string; category?: string; status?: string }>;
 }) => {
   const { mid } = await params;
-  const { page, category } = (await searchParams) || {};
+  const { page, category, status } = (await searchParams) || {};
 
   return (
     <div className="max-w-screen-lg mx-auto px-3">
@@ -29,6 +29,7 @@ const Page = async ({ params, searchParams }: {
           page={Number(page || 1)}
           limit={10}
           category={category}
+          status={status}
         />
       </Suspense>
     </div>

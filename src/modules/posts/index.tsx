@@ -65,17 +65,19 @@ async function PostList({
   page = 1,
   limit = 10,
   category,
+  status,
   Skin, // 👈 스킨 주입
 }: {
   mid: string;
   page?: number;
   limit?: number;
   category?: string;
+  status?: string;
   Skin?: React.ComponentType<any>;
 }) {
   const [infoRes, listRes, user] = await Promise.all([
     getPostsInfoAction(mid),
-    getDocumentList(mid, page, limit, category),
+    getDocumentList(mid, page, limit, category, status),
     getServerUser(),
   ]);
 
@@ -96,6 +98,7 @@ async function PostList({
       <ResolvedSkin
         key={`${mid}-${page}-${category}`}
         posts={listRes.data?.documentList || []}
+        status={status || (configuredListSkin === "issuetracker" ? "open" : undefined)}
         pagination={
           listRes.data?.navigation || {
             page: 1,

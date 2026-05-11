@@ -116,6 +116,8 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
     if (!validation.isValid) return validation.errorResponse;
     const data = validation.data;
     const thumbnail = data.thumbnail || extractFirstImageFromContent(data.content) || null;
+    const postConfig = postInfo.config as any;
+    const isIssueTrackerBoard = postConfig?.skin === "issuetracker";
 
     let resultData: any;
 
@@ -151,6 +153,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
         categoryId: data.categoryId,
         isNotice: data.isNotice,
         isSecrets: data.isSecrets,
+        status: isIssueTrackerBoard ? "open" : undefined,
         extraFieldData: data.extraFieldData, // 추가
         slug: nanoid(10),
         authorName: "작성자",
@@ -284,7 +287,8 @@ export async function getDocumentList(
   mid: string,
   page: number = 1,
   pageSize: number = 10,
-  categoryId?: string
+  categoryId?: string,
+  status?: string
 ): Promise<ActionState<any>> {
   try {
     // 1. 게시판(모듈) 정보 확인
@@ -296,9 +300,13 @@ export async function getDocumentList(
     const ownerId = isOwnerOnlyBoard(postInfo.config) && !loggedInfo?.isAdmin
       ? (loggedInfo?.id || 0)
       : undefined;
+    const postConfig = postInfo.config as any;
+    const statusFilter = postConfig?.skin === "issuetracker"
+      ? (status || "open")
+      : status;
 
     // 🌟 [중요] documentQuery.findDocumentList에서 extraFieldData를 select/include 하고 있는지 확인해야 합니다.
-    const { items, totalCount } = await documentQuery.findDocumentList(postInfo.id, page, pageSize, parsedCategoryId, ownerId);
+    const { items, totalCount } = await documentQuery.findDocumentList(postInfo.id, page, pageSize, parsedCategoryId, ownerId, statusFilter);
 
     const formattedItems = items.map((doc: any) => {
       let previewContent = "";

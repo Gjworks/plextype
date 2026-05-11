@@ -73,13 +73,16 @@ export async function findDocumentList(
   page: number,
   pageSize: number,
   categoryId?: number,
-  ownerId?: number
+  ownerId?: number,
+  status?: string
 ) {
   const whereCondition: Prisma.DocumentWhereInput = {
     moduleType: "posts",
     moduleId: postsId,
     ...(categoryId && categoryId !== 0 ? { categoryId } : {}),
     ...(ownerId !== undefined ? { userId: ownerId } : {}),
+    ...(status === "open" ? { OR: [{ status: "open" }, { status: null }] } : {}),
+    ...(status && status !== "open" ? { status } : {}),
   };
 
   const [items, totalCount] = await Promise.all([
@@ -97,6 +100,7 @@ export async function findDocumentList(
         updatedAt: true,
         isNotice: true,
         isSecrets: true,
+        status: true,
         readCount: true,
         commentCount: true,
         voteCount: true,

@@ -1,6 +1,6 @@
 import type React from "react";
 
-import IssueTrackerListSkin from "@/modules/posts/tpl/issuetracker/list";
+import IssueTrackerListSkin from "@/extensions/posts/tpl/issuetracker/list";
 
 type PostSkinRegistry = {
   list: Record<string, React.ComponentType<any>>;
