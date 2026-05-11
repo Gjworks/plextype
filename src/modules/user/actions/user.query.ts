@@ -8,7 +8,10 @@ import { nanoid } from "nanoid";
 // [READ] 단순 사용자 조회 (무조건 find 접두사 사용)
 // ==========================================
 export function findUserById(userId: number) {
-  return prisma.user.findUnique({ where: { id: userId } });
+  return prisma.user.findUnique({
+    where: { id: userId },
+    include: { profile: true },
+  });
 }
 
 export function findUserByUUID(uuid: string) {
@@ -48,6 +51,7 @@ export function findUserSessionData(accountId: string) { // 💡 getUserSessionD
   return prisma.user.findUnique({
     where: { accountId },
     include: {
+      profile: true,
       userGroups: {
         include: {
           group: { include: { users: { include: { user: true } } } },
@@ -178,5 +182,43 @@ export async function updatePassword(userId: number, newPasswordHash: string) {
   return prisma.user.update({
     where: { id: userId },
     data: { password: newPasswordHash },
+  });
+}
+
+export async function findOwnedImageAttachmentByPath(userId: number, path: string) {
+  return prisma.attachment.findFirst({
+    where: {
+      userId,
+      path,
+      mimeType: {
+        startsWith: "image/",
+      },
+    },
+    select: {
+      id: true,
+      path: true,
+    },
+  });
+}
+
+export async function updateProfileImage(userId: number, profileImage: string | null) {
+  const existingProfile = await prisma.profile.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (existingProfile) {
+    return prisma.profile.update({
+      where: { userId },
+      data: { profileImage },
+    });
+  }
+
+  return prisma.profile.create({
+    data: {
+      userId,
+      phone: `profile-${userId}`,
+      profileImage,
+    },
   });
 }

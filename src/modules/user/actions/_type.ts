@@ -29,7 +29,10 @@ export type ActionState<T = any> = ActionResponse<T>;
 
 // 📌 [User] DB 원본 타입 (관계 포함)
 export type PrismaUserWithRelations = Prisma.UserGetPayload<{
-  include: { userGroups: { include: { group: true } } }
+  include: {
+    profile: true;
+    userGroups: { include: { group: true } };
+  }
 }>;
 
 // 📌 [User] 클라이언트에 전달할 안전한 유저 객체

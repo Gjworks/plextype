@@ -145,8 +145,19 @@ const PostsListClient = ({
                           {doc.category.title}
                         </div>
                       )}
-                      <div className="relative text-gray-900 dark:text-dark-100 text-xs before:bg-gray-300">
-                        {doc.user?.nickName || "작성자"}
+                      <div className="relative flex items-center gap-1.5 text-gray-900 dark:text-dark-100 text-xs before:bg-gray-300">
+                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400">
+                          {doc.user?.profile?.profileImage ? (
+                            <img
+                              src={doc.user.profile.profileImage}
+                              alt={doc.user?.nickName || "작성자"}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            doc.user?.nickName?.slice(0, 1).toUpperCase() || "작"
+                          )}
+                        </span>
+                        <span>{doc.user?.nickName || "작성자"}</span>
                       </div>
                       <div className="relative text-gray-400 text-xs before:bg-gray-300">
                         {dayjs(doc.createdAt).fromNow()}
@@ -188,7 +199,20 @@ const PostsListClient = ({
                             />
                           </svg>
                           <div className="!text-[12px] lg:text-sm text-gray-600 dark:text-dark-100 line-clamp-1">
-                            {doc.latestComment?.user?.nickName || "익명"}
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400">
+                                {doc.latestComment?.user?.profile?.profileImage ? (
+                                  <img
+                                    src={doc.latestComment.user.profile.profileImage}
+                                    alt={doc.latestComment?.user?.nickName || "익명"}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  doc.latestComment?.user?.nickName?.slice(0, 1).toUpperCase() || "익"
+                                )}
+                              </span>
+                              {doc.latestComment?.user?.nickName || "익명"}
+                            </span>
                           </div>
                           <div className="text-gray-400 !text-[12px]">
                             {dayjs(doc.latestComment?.createdAt).fromNow()}

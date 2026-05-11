@@ -166,7 +166,20 @@ const IssueTrackerList = ({
                         </p>
 
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-gray-400">
-                          <span>{doc.user?.nickName || "작성자"}</span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400">
+                              {doc.user?.profile?.profileImage ? (
+                                <img
+                                  src={doc.user.profile.profileImage}
+                                  alt={doc.user?.nickName || "작성자"}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                doc.user?.nickName?.slice(0, 1).toUpperCase() || "작"
+                              )}
+                            </span>
+                            {doc.user?.nickName || "작성자"}
+                          </span>
                           <span>{dayjs(doc.createdAt).fromNow()}</span>
                           <span>조회 {doc.readCount || 0}</span>
                           <span>댓글 {doc.commentCount || 0}</span>
@@ -192,7 +205,20 @@ const IssueTrackerList = ({
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="truncate font-medium text-gray-600">
-                              {doc.latestComment.user?.nickName || "익명"}
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400">
+                                  {doc.latestComment.user?.profile?.profileImage ? (
+                                    <img
+                                      src={doc.latestComment.user.profile.profileImage}
+                                      alt={doc.latestComment.user?.nickName || "익명"}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    doc.latestComment.user?.nickName?.slice(0, 1).toUpperCase() || "익"
+                                  )}
+                                </span>
+                                {doc.latestComment.user?.nickName || "익명"}
+                              </span>
                             </span>
                             <span className="shrink-0 text-gray-400">
                               {dayjs(doc.latestComment.createdAt).fromNow()}

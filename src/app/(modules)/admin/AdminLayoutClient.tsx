@@ -232,7 +232,12 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
                   <button onClick={() => setShowUserDropdown(!showUserDropdown)} className={`flex items-center gap-3 py-1.5  transition-all border border-transparent group cursor-pointer ${showUserDropdown ? '' : ''}`}>
                     {/* 상태 도트 */}
                     <div className="relative flex items-center justify-center">
-                      <Avator username={user?.nickName} isLoggedIn={!!user} tokenExpiryTime={user?.expiry || Date.now() + 3600000} />
+                      <Avator
+                        username={user?.nickName}
+                        isLoggedIn={!!user}
+                        tokenExpiryTime={user?.expiry || Date.now() + 3600000}
+                        profileImage={user?.profileImage || user?.profile?.profileImage}
+                      />
                     </div>
 
                     <ChevronDown size={14} className={`text-gray-400 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />

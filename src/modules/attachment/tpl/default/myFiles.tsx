@@ -8,6 +8,8 @@ import PageNavigation from "@components/nav/PageNavigation"; // 혹은 적절한
 
 interface Props {
   onFileSelect?: (file: Attachment) => void; // 부모에게 선택된 파일을 알리기 위한 prop
+  imagesOnly?: boolean;
+  selectedPath?: string | null;
 }
 
 interface PaginationMeta {
@@ -17,7 +19,7 @@ interface PaginationMeta {
   pageSize: number;
 }
 
-export default function MyFiles({ onFileSelect }: Props) {
+export default function MyFiles({ onFileSelect, imagesOnly = false, selectedPath }: Props) {
   // 2. 데이터를 저장할 State
   const [files, setFiles] = useState<any[]>([]); // 타입은 실제 데이터에 맞게 수정
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,7 @@ export default function MyFiles({ onFileSelect }: Props) {
         const data = await getMyFiles(page); // ✅ 현재 페이지 전달
         console.log("불러온 파일들:", data);
 
-        setFiles(data.items);
+        setFiles(imagesOnly ? data.items.filter((file: any) => file.mimeType?.startsWith("image/")) : data.items);
         setPagination(data.pagination); // ✅ 서버에서 받은 페이지네이션 정보 저장
 
       } catch (error) {
@@ -49,7 +51,7 @@ export default function MyFiles({ onFileSelect }: Props) {
     };
 
     fetchData();
-  }, [page]); // ✅ page가 바뀔 때마다 실행
+  }, [page, imagesOnly]); // ✅ page가 바뀔 때마다 실행
 
   // ✅ 3. 페이지 변경 핸들러
   const handlePageChange = (newPage: number) => {
@@ -109,7 +111,7 @@ export default function MyFiles({ onFileSelect }: Props) {
                 {file.mimeType?.startsWith("image/") ? (
                   <img
                     src={file.path}
-                    alt={file.name}
+                    alt={file.name || file.originalName}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
@@ -127,7 +129,7 @@ export default function MyFiles({ onFileSelect }: Props) {
               {/* 하단 다크 그라데이션 오버레이 */}
               <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-2 opacity-100 transition-opacity duration-200 pointer-events-none">
                 <span className="text-[12px] text-white font-medium truncate drop-shadow-sm">
-                  {file.name}
+                  {file.name || file.originalName}
                 </span>
                 <span className="text-[8px] text-white/70 font-light">
                   {(file.size / 1024).toFixed(1)} KB
@@ -144,6 +146,12 @@ export default function MyFiles({ onFileSelect }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+
+              {selectedPath === file.path && (
+                <div className="absolute top-1.5 left-1.5 rounded-md bg-blue-500 px-2 py-1 text-[10px] font-semibold text-white">
+                  선택됨
+                </div>
+              )}
             </div>
           ))}
         </div>

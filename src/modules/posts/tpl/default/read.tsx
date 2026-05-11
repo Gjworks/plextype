@@ -119,7 +119,9 @@ const tiptapExtensions = [
 interface Participant {
   id: number;
   nickName: string;
-  profileImage?: string;
+  profile?: {
+    profileImage?: string | null;
+  } | null;
 }
 
 interface PostsReadProps {
@@ -169,6 +171,8 @@ const EditorJsRenderer = ({ block }: { block: any }) => {
 const PostsRead = async ({ document, participants = [], postInfo, permissions, currentUser }: PostsReadProps) => {
   const extraFields = postInfo?.extraFields || [];
   const extraData = document.extraFieldData || {};
+  const visibleParticipants = participants.slice(0, 5);
+  const hiddenParticipantCount = Math.max(participants.length - visibleParticipants.length, 0);
 
   const renderContent = async () => {
     let rawContent = document.content || "";
@@ -351,27 +355,54 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
 
               <div className="flex gap-1">
                 <div className="flex items-center">
-                  <span className="w-5 h-5 bg-gray-500 dark:bg-dark-400 rounded-full inline"></span>
-                  <span className="w-5 h-5 bg-gray-400 dark:bg-dark-500 rounded-full inline -ml-2"></span>
-                  <span className="w-5 h-5 bg-gray-300 dark:bg-dark-600 rounded-full inline -ml-2"></span>
-                  <span className="w-5 h-5 bg-gray-200 dark:bg-dark-700 rounded-full inline -ml-2"></span>
-                  <span className="w-5 h-5 bg-gray-100 dark:bg-dark-800 rounded-full inline -ml-2"></span>
-                  <span className="-ml-2 text-gray-500 hover:text-primary-600 cursor-pointer">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1}
-                      stroke="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                      />
-                    </svg>
-                  </span>
+                  {visibleParticipants.length > 0 ? (
+                    <>
+                      {visibleParticipants.map((participant, index) => {
+                        const profileImage = participant.profile?.profileImage;
+                        const initial = participant.nickName?.slice(0, 1).toUpperCase() || "?";
+
+                        return (
+                          <span
+                            key={participant.id}
+                            title={participant.nickName}
+                            className={`relative inline-flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-gray-100 text-[10px] font-semibold text-gray-500 dark:border-dark-900 dark:bg-dark-700 dark:text-dark-200 ${index > 0 ? "-ml-2" : ""}`}
+                          >
+                            {profileImage ? (
+                              <img
+                                src={profileImage}
+                                alt={participant.nickName}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              initial
+                            )}
+                          </span>
+                        );
+                      })}
+                      {hiddenParticipantCount > 0 && (
+                        <span className="-ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-white bg-gray-900 px-1.5 text-[10px] font-semibold text-white dark:border-dark-900">
+                          +{hiddenParticipantCount}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-300 dark:border-dark-600 dark:text-dark-500">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1}
+                        stroke="currentColor"
+                        className="h-4 w-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                        />
+                      </svg>
+                    </span>
+                  )}
                 </div>
                 <div className="dark:text-dark-400 text-sm text-gray-500">
                   {participants.length}명의 사람들이 이 토론에 참여하였습니다.

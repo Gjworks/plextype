@@ -342,12 +342,20 @@ export default function CommentsList({
             {/* 1. 아바타 영역 */}
             <div className="relative shrink-0 z-10">
               <div className={`
-              flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-dark-900
+              flex items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-dark-900
               ${depth > 0 ? "w-7 h-7" : "w-10 h-10"}
             `}>
-              <span className={`font-bold text-gray-400 uppercase ${depth > 0 ? "text-[10px]" : "text-xs"}`}>
-                {c.userName?.slice(0, 1) || "익"}
-              </span>
+                {c.user?.profile?.profileImage ? (
+                  <img
+                    src={c.user.profile.profileImage}
+                    alt={c.userName || "익명"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className={`font-bold text-gray-400 uppercase ${depth > 0 ? "text-[10px]" : "text-xs"}`}>
+                    {c.userName?.slice(0, 1) || "익"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -357,6 +365,13 @@ export default function CommentsList({
                 {/* 상단: 작성자 및 시간 */}
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
+                    {c.user?.profile?.profileImage && (
+                      <img
+                        src={c.user.profile.profileImage}
+                        alt=""
+                        className="h-4 w-4 rounded-full object-cover"
+                      />
+                    )}
                     <span className="text-[13px] font-bold text-gray-900 dark:text-gray-100">{c.userName || "익명"}</span>
                     <span className="text-[10px] text-gray-400">{dayjs(c.createdAt).fromNow()}</span>
                   </div>

@@ -203,6 +203,37 @@ export const getUserFullById = async (id: number) => { // 💡 findUserFullById 
   }
 };
 
+export async function updateProfileImageAction(profileImage: string | null): Promise<ActionState<{ profileImage: string | null }>> {
+  try {
+    const loggedInfo = await getLoggedUserAction();
+    if (!loggedInfo?.id) {
+      return { success: false, type: "error", message: "로그인이 필요합니다." };
+    }
+
+    const normalizedProfileImage = profileImage?.trim() || null;
+
+    if (normalizedProfileImage) {
+      const attachment = await query.findOwnedImageAttachmentByPath(loggedInfo.id, normalizedProfileImage);
+      if (!attachment) {
+        return { success: false, type: "error", message: "본인이 업로드한 이미지만 프로필 이미지로 사용할 수 있습니다." };
+      }
+    }
+
+    await query.updateProfileImage(loggedInfo.id, normalizedProfileImage);
+    revalidatePath("/user/userUpdate");
+
+    return {
+      success: true,
+      type: "success",
+      message: normalizedProfileImage ? "프로필 이미지가 변경되었습니다." : "프로필 이미지가 삭제되었습니다.",
+      data: { profileImage: normalizedProfileImage },
+    };
+  } catch (error) {
+    console.error("updateProfileImageAction 에러:", error);
+    return { success: false, type: "error", message: "프로필 이미지 변경 중 오류가 발생했습니다." };
+  }
+}
+
 
 // ==========================================
 // [ACTION] 비밀번호 변경

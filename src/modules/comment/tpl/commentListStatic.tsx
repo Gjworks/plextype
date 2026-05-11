@@ -116,14 +116,22 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
 
             <div className="relative shrink-0 z-10">
               <div
-                className={`flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-dark-900 ${
+                className={`flex items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-dark-900 ${
                   depth > 0 ? "w-7 h-7" : "w-10 h-10"
                 }`}
                 aria-hidden="true"
               >
-                <span className={`font-bold text-gray-400 uppercase ${depth > 0 ? "text-[10px]" : "text-xs"}`}>
-                  {comment.userName?.slice(0, 1) || "익"}
-                </span>
+                {comment.user?.profile?.profileImage ? (
+                  <img
+                    src={comment.user.profile.profileImage}
+                    alt={comment.userName || "익명"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className={`font-bold text-gray-400 uppercase ${depth > 0 ? "text-[10px]" : "text-xs"}`}>
+                    {comment.userName?.slice(0, 1) || "익"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -131,6 +139,13 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
               <div className="group relative transition-all duration-200">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
+                    {comment.user?.profile?.profileImage && (
+                      <img
+                        src={comment.user.profile.profileImage}
+                        alt=""
+                        className="h-4 w-4 rounded-full object-cover"
+                      />
+                    )}
                     <span className="text-[13px] font-bold text-gray-900 dark:text-gray-100">{comment.userName || "익명"}</span>
                     <time className="text-[10px] text-gray-400" dateTime={String(comment.createdAt)}>
                       {dayjs(comment.createdAt).fromNow()}

@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useRef } from "react";
 
-const Avator = ({ username, isLoggedIn, tokenExpiryTime }) => {
+interface AvatorProps {
+  username?: string | null;
+  isLoggedIn?: boolean;
+  tokenExpiryTime?: number;
+  profileImage?: string | null;
+}
+
+const Avator = ({ username, isLoggedIn, tokenExpiryTime, profileImage }: AvatorProps) => {
   const [status, setStatus] = useState("online");
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -68,7 +75,16 @@ const Avator = ({ username, isLoggedIn, tokenExpiryTime }) => {
   return (
     <div className="flex gap-2 items-center">
       <div className="flex items-center">
-        <div className="relative h-6 w-6 rounded-full bg-gray-400/60 transition-colors">
+        <div className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gray-400/60 text-[10px] font-semibold text-white transition-colors">
+          {profileImage ? (
+            <img
+              src={profileImage}
+              alt={username || "프로필 이미지"}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            isLoggedIn && (username?.slice(0, 1).toUpperCase() || "?")
+          )}
           {isLoggedIn && (
             <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 transition-colors duration-500 ${statusColor[status]}`}></div>
           )}
