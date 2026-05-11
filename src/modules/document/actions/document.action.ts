@@ -276,6 +276,10 @@ function normalizeCommentPreview(content?: string | null): { content: string; im
   };
 }
 
+function isOwnerOnlyBoard(config: any) {
+  return Boolean(config?.consultingState);
+}
+
 export async function getDocumentList(
   mid: string,
   page: number = 1,
@@ -288,9 +292,13 @@ export async function getDocumentList(
     if (!postInfo) return { success: false, type: "error", message: "게시판을 찾을 수 없습니다." };
 
     const parsedCategoryId = categoryId ? Number(categoryId) : undefined;
+    const loggedInfo = await getLoggedInfo();
+    const ownerId = isOwnerOnlyBoard(postInfo.config) && !loggedInfo?.isAdmin
+      ? (loggedInfo?.id || 0)
+      : undefined;
 
     // 🌟 [중요] documentQuery.findDocumentList에서 extraFieldData를 select/include 하고 있는지 확인해야 합니다.
-    const { items, totalCount } = await documentQuery.findDocumentList(postInfo.id, page, pageSize, parsedCategoryId);
+    const { items, totalCount } = await documentQuery.findDocumentList(postInfo.id, page, pageSize, parsedCategoryId, ownerId);
 
     const formattedItems = items.map((doc: any) => {
       let previewContent = "";
@@ -450,6 +458,16 @@ export async function getDocumentBySlugAction(slug: string): Promise<ActionState
     if (!document) {
       return { success: false, type: "error", message: "존재하지 않는 게시글입니다." };
     }
+
+    const loggedInfo = await getLoggedInfo();
+    if (
+      isOwnerOnlyBoard(document.module?.config) &&
+      document.userId !== loggedInfo?.id &&
+      !loggedInfo?.isAdmin
+    ) {
+      return { success: false, type: "error", message: "게시글을 조회할 권한이 없습니다." };
+    }
+
     return {
       success: true,
       type: "success",
