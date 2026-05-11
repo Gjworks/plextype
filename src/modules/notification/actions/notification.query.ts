@@ -11,6 +11,7 @@ export const insertNotification = async (data: any) => {
       type: data.type || 'info',
       title: data.title || data.notificationTitle, // 넘어오는 키값에 맞춰 유연하게
       content: data.content,
+      imageUrl: data.imageUrl || null,
       linkUrl: data.linkUrl || `/posts/notice/${data.documentId}`,
 
       // 3. 메타데이터 (JSON 형태만 쏙)
@@ -94,4 +95,3 @@ export const deleteAllByUserId = async (userId: number) => {
     },
   });
 };
-
