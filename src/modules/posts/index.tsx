@@ -99,6 +99,7 @@ async function PostList({
         key={`${mid}-${page}-${category}`}
         posts={listRes.data?.documentList || []}
         status={status || (configuredListSkin === "issuetracker" ? "open" : undefined)}
+        statusCounts={listRes.data?.statusCounts}
         pagination={
           listRes.data?.navigation || {
             page: 1,

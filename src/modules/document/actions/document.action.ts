@@ -307,6 +307,9 @@ export async function getDocumentList(
 
     // 🌟 [중요] documentQuery.findDocumentList에서 extraFieldData를 select/include 하고 있는지 확인해야 합니다.
     const { items, totalCount } = await documentQuery.findDocumentList(postInfo.id, page, pageSize, parsedCategoryId, ownerId, statusFilter);
+    const statusCounts = postConfig?.skin === "issuetracker"
+      ? await documentQuery.countIssueStatuses(postInfo.id, parsedCategoryId, ownerId)
+      : undefined;
 
     const formattedItems = items.map((doc: any) => {
       let previewContent = "";
@@ -393,7 +396,8 @@ export async function getDocumentList(
           totalPages: Math.ceil(totalCount / pageSize),
           page,
           listCount: formattedItems.length
-        }
+        },
+        statusCounts,
       }
     };
   } catch (error) {
