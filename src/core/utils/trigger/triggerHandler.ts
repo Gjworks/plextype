@@ -28,10 +28,10 @@ export const sendNotification = async (data: any, context: any) => {
 
   try {
     // 🌟 이미 data 안에 userId, title, content, metadata(appId 포함)가 다 들어있음!
-    await saveNotification({ ...data });
+    const notification = await saveNotification({ ...data });
 
     // 실시간 신호 쏴주기
-    notificationEvents.emit("new-notification", data);
+    notificationEvents.emit("new-notification", notification);
 
     console.log(`✅ [Success] ${targetId}님에게 알림 저장 성공! (App: ${data.metadata?.appId})`);
   } catch (error) {

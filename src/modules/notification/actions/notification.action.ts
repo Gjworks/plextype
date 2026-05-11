@@ -3,10 +3,91 @@
 import { revalidatePath } from "next/cache";
 import * as query from "./notification.query";
 
+function extractTiptapText(nodes: any[]): string {
+  return nodes
+    .map((node) => {
+      if (node.type === "text" && node.text) return node.text;
+      if (Array.isArray(node.content)) return extractTiptapText(node.content);
+      return "";
+    })
+    .filter(Boolean)
+    .join(" ");
+}
+
+function findTiptapImage(nodes: any[]): string | null {
+  for (const node of nodes) {
+    if (node.type === "image" && node.attrs?.src) return node.attrs.src;
+    if (Array.isArray(node.content)) {
+      const nested = findTiptapImage(node.content);
+      if (nested) return nested;
+    }
+  }
+
+  return null;
+}
+
+function normalizeNotificationContent(content?: string | null): { content: string; imageUrl: string | null } {
+  if (!content) return { content: "", imageUrl: null };
+
+  const cleanText = (text: string) => text
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  try {
+    let parsed = JSON.parse(content);
+    if (typeof parsed === "string") parsed = JSON.parse(parsed);
+
+    if (parsed?.type === "doc" && Array.isArray(parsed.content)) {
+      const imageUrl = findTiptapImage(parsed.content);
+      const text = cleanText(extractTiptapText(parsed.content));
+
+      return {
+        content: text || (imageUrl ? "이미지 댓글입니다." : ""),
+        imageUrl,
+      };
+    }
+
+    if (Array.isArray(parsed?.blocks)) {
+      const imageBlock = parsed.blocks.find((block: any) => block?.type === "image");
+      const imageUrl = imageBlock?.data?.file?.url || null;
+      const text = cleanText(
+        parsed.blocks
+          .map((block: any) => block?.data?.text || block?.data?.caption || "")
+          .join(" ")
+      );
+
+      return {
+        content: text || (imageUrl ? "이미지 댓글입니다." : ""),
+        imageUrl,
+      };
+    }
+  } catch (e) {
+    const imageUrl = content.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || null;
+    const text = cleanText(content);
+
+    return {
+      content: text || (imageUrl ? "이미지 댓글입니다." : ""),
+      imageUrl,
+    };
+  }
+
+  return {
+    content: cleanText(content),
+    imageUrl: null,
+  };
+}
+
 /** 🌟 [SAVE] */
 export const saveNotification = async (data: any) => {
   // data 안에 userId, type, title, content, metadata 등이 다 들어있어야 합니다.
-  const result = await query.insertNotification({ ...data, isRead: false });
+  const normalized = normalizeNotificationContent(data.content);
+  const result = await query.insertNotification({
+    ...data,
+    content: normalized.content,
+    imageUrl: data.imageUrl || normalized.imageUrl,
+    isRead: false,
+  });
   return result;
 };
 
