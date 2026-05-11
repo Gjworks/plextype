@@ -34,6 +34,7 @@ const DashboardPostCreate = ({
     postInfo: {
       ...initialData,
       config: initialData.config || {
+        skin: "default",
         listCount: 20,
         pageCount: 10,
         documentLike: false,
@@ -55,6 +56,7 @@ const DashboardPostCreate = ({
     setFormData((prev) => {
       const nextInfo = { ...prev.postInfo };
       const configKeys = [
+        "skin",
         "listCount",
         "pageCount",
         "documentLike",
