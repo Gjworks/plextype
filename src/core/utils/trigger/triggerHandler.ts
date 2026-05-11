@@ -5,7 +5,7 @@ import { notificationEvents } from "./notificationEvents";
 
 export const sendNotification = async (data: any, context: any) => {
   // 1. 행위자(Actor): 현재 로그인해서 댓글 쓴 사람 (크롬 유저 1 혹은 사파리 유저 2)
-  const actorId = context?.user?.id;
+  const actorId = context?.user?.id ?? data?.actorId;
 
   // 2. 수신자(Target): trigger.json에서 "userId"로 매핑된 값 (게시글 주인)
   const targetId = data?.userId;

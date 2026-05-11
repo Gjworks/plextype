@@ -127,6 +127,32 @@ export async function findDocumentList(
   return { items, totalCount };
 }
 
+export async function countIssueStatuses(postsId: number, categoryId?: number, ownerId?: number) {
+  const baseWhere: Prisma.DocumentWhereInput = {
+    moduleType: "posts",
+    moduleId: postsId,
+    ...(categoryId && categoryId !== 0 ? { categoryId } : {}),
+    ...(ownerId !== undefined ? { userId: ownerId } : {}),
+  };
+
+  const [open, closed] = await Promise.all([
+    prisma.document.count({
+      where: {
+        ...baseWhere,
+        OR: [{ status: "open" }, { status: null }],
+      },
+    }),
+    prisma.document.count({
+      where: {
+        ...baseWhere,
+        status: "closed",
+      },
+    }),
+  ]);
+
+  return { open, closed };
+}
+
 export async function insertDocument(data: any) {
   return prisma.document.create({
     data: data as Prisma.DocumentUncheckedCreateInput
