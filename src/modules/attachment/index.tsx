@@ -22,10 +22,12 @@ interface AttachmentBoxProps {
   content: string;
   onFileClick: (file: IAttachment) => void;
   onFileDelete: (file: IAttachment) => void;
+  selectedThumbnail?: string | null;
+  onThumbnailSelect?: (file: IAttachment) => void;
 }
 
 export const Attachment = {
-  Box: ({ content, onFileClick, onFileDelete }: AttachmentBoxProps) => {
+  Box: ({ content, onFileClick, onFileDelete, selectedThumbnail, onThumbnailSelect }: AttachmentBoxProps) => {
     // ✅ 🌟 가져온 타입을 IAttachment로 사용합니다.
     const [allMyFiles, setAllMyFiles] = useState<IAttachment[]>([]);
     const [showPopup, setShowPopup] = useState(false);
@@ -68,6 +70,8 @@ export const Attachment = {
           attachments={usedFiles}
           onFileClick={onFileClick}
           onDeleteRequest={onFileDelete}
+          selectedThumbnail={selectedThumbnail}
+          onThumbnailSelect={onThumbnailSelect}
         />
 
         <UploadFileManager

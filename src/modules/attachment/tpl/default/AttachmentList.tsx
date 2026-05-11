@@ -8,9 +8,17 @@ interface Props {
   attachments: Attachment[]; // 🌟 이제 부모가 필터링해서 줍니다.
   onFileClick?: (file: Attachment) => void;
   onDeleteRequest?: (file: Attachment) => void;
+  selectedThumbnail?: string | null;
+  onThumbnailSelect?: (file: Attachment) => void;
 }
 
-const AttachmentList = ({ attachments, onFileClick, onDeleteRequest }: Props) => {
+const AttachmentList = ({
+  attachments,
+  onFileClick,
+  onDeleteRequest,
+  selectedThumbnail,
+  onThumbnailSelect,
+}: Props) => {
   if (attachments.length === 0) return null;
 
   const handleDelete = (file: Attachment) => {
@@ -65,6 +73,43 @@ const AttachmentList = ({ attachments, onFileClick, onDeleteRequest }: Props) =>
             </div>
 
             {/* 3. 상단 삭제 버튼 (호버 시에만 나타남) */}
+            {onThumbnailSelect && file.mimeType.startsWith("image/") && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onThumbnailSelect(file);
+                }}
+                className={`absolute top-1 left-1 inline-flex cursor-pointer items-center gap-1 px-2 py-1 rounded-md backdrop-blur-sm text-[10px] font-semibold transition-all duration-200 ${
+                  selectedThumbnail === file.path
+                    ? "bg-sky-500 text-white opacity-100"
+                    : "bg-black/20 hover:bg-sky-500 text-white opacity-0 group-hover:opacity-100"
+                }`}
+              >
+                <span
+                  className={`flex h-3 w-3 items-center justify-center rounded-[3px] border ${
+                    selectedThumbnail === file.path
+                      ? "border-white bg-white text-sky-500"
+                      : "border-white/80 bg-white/10 text-transparent"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-2.5 w-2.5"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.31a1 1 0 0 1-1.42 0L3.29 9.22a1 1 0 1 1 1.42-1.408l4.04 4.074 6.54-6.59a1 1 0 0 1 1.414-.006Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                썸네일
+              </button>
+            )}
+
             <button
               type="button"
               onClick={(e) => {

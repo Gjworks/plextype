@@ -101,6 +101,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
       categoryId: formData.get("categoryId"),
       title: formData.get("title"),
       content: formData.get("content"),
+      thumbnail: formData.get("thumbnail"),
       isNotice: formData.get("isNotice"),
       isSecrets: formData.get("isSecrets"),
       moduleId: postInfo.id,
@@ -114,6 +115,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
     const validation = validateForm(DocumentUpsertSchema, formPayload);
     if (!validation.isValid) return validation.errorResponse;
     const data = validation.data;
+    const thumbnail = data.thumbnail || extractFirstImageFromContent(data.content) || null;
 
     let resultData: any;
 
@@ -128,6 +130,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
       const updated = await documentQuery.updateDocument(data.id, {
         title: data.title,
         content: data.content,
+        thumbnail,
         categoryId: data.categoryId,
         isNotice: data.isNotice,
         isSecrets: data.isSecrets,
@@ -143,6 +146,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
         moduleId: data.moduleId,
         title: data.title,
         content: data.content,
+        thumbnail,
         userId: loggedInfo.id,
         categoryId: data.categoryId,
         isNotice: data.isNotice,
@@ -170,6 +174,108 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
 // ==========================================
 // [ACTION - Document] 게시글 목록 조회 (썸네일 파싱 포함)
 // ==========================================
+function extractTiptapText(nodes: any[]): string {
+  return nodes
+    .map((node) => {
+      if (node.type === "text" && node.text) return node.text;
+      if (Array.isArray(node.content)) return extractTiptapText(node.content);
+      return "";
+    })
+    .filter(Boolean)
+    .join(" ");
+}
+
+function findTiptapImage(nodes: any[]): string | null {
+  for (const node of nodes) {
+    if (node.type === "image" && node.attrs?.src) return node.attrs.src;
+    if (Array.isArray(node.content)) {
+      const nested = findTiptapImage(node.content);
+      if (nested) return nested;
+    }
+  }
+
+  return null;
+}
+
+function extractFirstImageFromContent(content?: string | null): string | null {
+  if (!content) return null;
+
+  try {
+    let parsed = JSON.parse(content);
+    if (typeof parsed === "string") parsed = JSON.parse(parsed);
+
+    if (parsed?.type === "doc" && Array.isArray(parsed.content)) {
+      return findTiptapImage(parsed.content);
+    }
+
+    if (Array.isArray(parsed?.blocks)) {
+      const imageBlock = parsed.blocks.find((block: any) => block?.type === "image");
+      return imageBlock?.data?.file?.url || null;
+    }
+  } catch (e) {
+    return content.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || null;
+  }
+
+  return null;
+}
+
+function normalizeCommentPreview(content?: string | null): { content: string; image: string | null } {
+  if (!content) return { content: "", image: null };
+
+  const cleanText = (text: string) => text
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const toPreview = (text: string) => {
+    const normalized = cleanText(text);
+    return normalized.length > 120 ? `${normalized.slice(0, 120).trim()}...` : normalized;
+  };
+
+  try {
+    let parsed = JSON.parse(content);
+    if (typeof parsed === "string") parsed = JSON.parse(parsed);
+
+    if (parsed?.type === "doc" && Array.isArray(parsed.content)) {
+      const image = findTiptapImage(parsed.content);
+      const preview = toPreview(extractTiptapText(parsed.content));
+
+      return {
+        content: preview || (image ? "이미지" : ""),
+        image,
+      };
+    }
+
+    if (Array.isArray(parsed?.blocks)) {
+      const imageBlock = parsed.blocks.find((block: any) => block?.type === "image");
+      const image = imageBlock?.data?.file?.url || null;
+      const preview = toPreview(
+        parsed.blocks
+          .map((block: any) => block?.data?.text || block?.data?.caption || "")
+          .join(" ")
+      );
+
+      return {
+        content: preview || (image ? "이미지" : ""),
+        image,
+      };
+    }
+  } catch (e) {
+    const image = content.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || null;
+    const preview = toPreview(content);
+
+    return {
+      content: preview || (image ? "이미지" : ""),
+      image,
+    };
+  }
+
+  return {
+    content: toPreview(content),
+    image: null,
+  };
+}
+
 export async function getDocumentList(
   mid: string,
   page: number = 1,
@@ -188,7 +294,7 @@ export async function getDocumentList(
 
     const formattedItems = items.map((doc: any) => {
       let previewContent = "";
-      let thumbnail: string | null = null;
+      let thumbnail: string | null = doc.thumbnail || null;
 
       // --- 기존 컨텐츠 파싱 로직 (유지) ---
       if (doc.content) {
@@ -208,7 +314,7 @@ export async function getDocumentList(
               }
               return null;
             };
-            thumbnail = findFirstImage(parsed.content) || "";
+            thumbnail = thumbnail || findFirstImage(parsed.content) || "";
 
             const extractText = (nodes: any[]): string => {
               let text = "";
@@ -222,7 +328,7 @@ export async function getDocumentList(
             previewContent = fullText.length > 150 ? fullText.slice(0, 150).trim() + "..." : fullText.trim();
           } else if (parsed.blocks) {
             const imageBlock = parsed.blocks.find((b: any) => b.type === 'image');
-            if (imageBlock?.data?.file?.url) thumbnail = imageBlock.data.file.url;
+            if (!thumbnail && imageBlock?.data?.file?.url) thumbnail = imageBlock.data.file.url;
             previewContent = parsed.blocks.slice(0, 3).map((b: any) => (b.data?.text || "").replace(/<[^>]+>/g, "")).join(" ");
           }
         } catch (e) {
@@ -240,8 +346,16 @@ export async function getDocumentList(
         }
       }
 
-      const latestComment = doc.Comment && doc.Comment.length > 0
-        ? doc.Comment[0]
+      const latestCommentPreview = doc.Comment && doc.Comment.length > 0
+        ? normalizeCommentPreview(doc.Comment[0].content)
+        : null;
+
+      const latestComment = latestCommentPreview
+        ? {
+          ...doc.Comment[0],
+          content: latestCommentPreview.content,
+          image: latestCommentPreview.image,
+        }
         : null;
 
       return {
@@ -346,4 +460,3 @@ export async function getDocumentBySlugAction(slug: string): Promise<ActionState
     return { success: false, type: "error", message: "조회 중 오류 발생" };
   }
 }
-

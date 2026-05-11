@@ -193,8 +193,12 @@ const NotificationPage = () => {
                         exit={{ opacity: 0, x: 20 }} // 삭제 시 오른쪽으로 슥 밀려나는 효과
                         className="group flex items-center gap-4 p-4 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg transition-all relative"
                       >
-                        <div className="w-10 h-10 rounded-[12px] bg-gray-50 dark:bg-white/10 flex items-center justify-center shrink-0">
-                          <StatusIcon type={noti.type} />
+                        <div className="w-10 h-10 rounded-[12px] bg-gray-50 dark:bg-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                          {noti.imageUrl ? (
+                            <img src={noti.imageUrl} className="w-full h-full object-cover" alt="" />
+                          ) : (
+                            <StatusIcon type={noti.type} />
+                          )}
                         </div>
 
                         <div className="flex-1 min-w-0">
