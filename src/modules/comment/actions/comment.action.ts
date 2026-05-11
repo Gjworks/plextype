@@ -17,9 +17,32 @@ async function getLoggedInfo() {
   return decodeJwt(accessToken) as { id: number; isAdmin: boolean };
 }
 
+function isOwnerOnlyBoard(config: any) {
+  return Boolean(config?.consultingState);
+}
+
+async function canAccessDocumentComments(documentId: number) {
+  const document = await query.findDocumentCommentAccessInfo(documentId);
+  if (!document) return { allowed: false, message: "존재하지 않는 게시글입니다." };
+
+  if (!isOwnerOnlyBoard(document.module?.config)) {
+    return { allowed: true, document };
+  }
+
+  const loggedInfo = await getLoggedInfo();
+  if (document.userId === loggedInfo?.id || loggedInfo?.isAdmin) {
+    return { allowed: true, document };
+  }
+
+  return { allowed: false, message: "댓글을 조회할 권한이 없습니다." };
+}
+
 // [GET] 댓글 목록 조회
 export async function getCommentsAction(documentId: number, page: number = 1, pageSize: number = 10): Promise<ActionState<CommentListResponse>> {
   try {
+    const access = await canAccessDocumentComments(documentId);
+    if (!access.allowed) return { success: false, type: "error", message: access.message || "댓글을 조회할 권한이 없습니다." };
+
     const totalCount = await query.countRootComments(documentId);
     const rootComments = await query.findRootComments(documentId, page, pageSize);
     const rootIds = rootComments.map(rc => rc.id);
@@ -61,6 +84,9 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
     const documentId = Number(formData.get("documentId"));
     const content = formData.get("content") as string;
     const parentId = formData.get("parentId") ? Number(formData.get("parentId")) : null;
+
+    const access = await canAccessDocumentComments(documentId);
+    if (!access.allowed) return { success: false, type: "error", message: "댓글을 작성할 권한이 없습니다." };
 
     let result;
     if (id) {
@@ -118,6 +144,9 @@ export async function removeCommentAction(documentId: number, commentId: number,
 // 참여자 조회 액션
 export async function getParticipantsAction(documentId: number): Promise<ActionState<any[]>> {
   try {
+    const access = await canAccessDocumentComments(documentId);
+    if (!access.allowed) return { success: false, type: "error", message: access.message || "댓글 참여자를 조회할 권한이 없습니다.", data: [] };
+
     const members = await query.findParticipants(documentId);
     return { success: true, message: "조회 성공", data: members.map(m => m.user).filter(Boolean) };
   } catch (error) {

@@ -9,6 +9,21 @@ export async function findCommentById(id: number) {
   });
 }
 
+export async function findDocumentCommentAccessInfo(documentId: number) {
+  return prisma.document.findUnique({
+    where: { id: documentId },
+    select: {
+      id: true,
+      userId: true,
+      module: {
+        select: {
+          config: true,
+        },
+      },
+    },
+  });
+}
+
 export async function countRootComments(documentId: number) {
   return prisma.comment.count({ where: { documentId, parentId: null } });
 }
