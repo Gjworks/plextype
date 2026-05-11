@@ -29,6 +29,7 @@ import DefaultReadSkin from "@/modules/posts/tpl/default/read";
 import DefaultCommentsSkin from "@/modules/comment/tpl/list";
 import DefaultWriteSkin from "@/modules/posts/tpl/default/write";
 import CommentListStatic from "@/modules/comment/tpl/commentListStatic";
+import { normalizeSkinName, postSkinRegistry } from "@/modules/posts/tpl/skinRegistry";
 
 /** 💡 공통 서버 유저 헬퍼 */
 async function getServerUser() {
@@ -64,7 +65,7 @@ async function PostList({
   page = 1,
   limit = 10,
   category,
-  Skin = DefaultListSkin, // 👈 스킨 주입
+  Skin, // 👈 스킨 주입
 }: {
   mid: string;
   page?: number;
@@ -85,11 +86,14 @@ async function PostList({
     user,
   );
 
+  const configuredListSkin = normalizeSkinName(infoRes.data.config?.skin);
+  const ResolvedSkin = Skin || postSkinRegistry.list[configuredListSkin] || DefaultListSkin;
+
   return (
     <PostProvider
       value={{ postInfo: infoRes.data, currentUser: user, permissions }}
     >
-      <Skin
+      <ResolvedSkin
         key={`${mid}-${page}-${category}`}
         posts={listRes.data?.documentList || []}
         pagination={

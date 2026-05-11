@@ -123,6 +123,7 @@ export interface PostInfoData {
   moduleDesc: string | null;
   // 💡 데이터 구조를 config 주머니가 있는 모양으로 바꿉니다!
   config: {
+    skin?: string;
     listCount: number;
     pageCount: number;
     documentLike: boolean;

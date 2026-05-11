@@ -25,6 +25,10 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange }) => {
     onChange({ [name]: finalValue } as any);
   };
 
+  const handleSkinChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange({ skin: e.target.value } as any);
+  };
+
   return (
     <>
       {id && <input type="hidden" name="postId" value={id} />}
@@ -74,6 +78,28 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange }) => {
               {/* 🌟 3. 목록 수 */}
               <div className="col-span-2 grid grid-cols-3 gap-6 hover:bg-gray-50 p-5">
                 <div className="col-span-3 sm:col-span-2">
+                  <label htmlFor="skin">
+                    <div className="text-sm text-black mb-3">목록 스킨</div>
+                  </label>
+                  <select
+                    id="skin"
+                    name="skin"
+                    value={value.config.skin || "default"}
+                    onChange={handleSkinChange}
+                    className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+                  >
+                    <option value="default">Default</option>
+                    <option value="issuetracker">Issue Tracker</option>
+                  </select>
+                  <div className="text-sm text-dark-400 pt-2 font-light">
+                    게시판 목록 화면에서 사용할 스킨을 선택합니다.
+                  </div>
+                </div>
+              </div>
+
+              {/* 🌟 4. 목록 수 */}
+              <div className="col-span-2 grid grid-cols-3 gap-6 hover:bg-gray-50 p-5">
+                <div className="col-span-3 sm:col-span-2">
                   <InputField
                     inputTitle="목록 수"
                     name="listCount"
@@ -84,7 +110,7 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange }) => {
                 </div>
               </div>
 
-              {/* 🌟 4. 페이지 수 */}
+              {/* 🌟 5. 페이지 수 */}
               <div className="col-span-2 grid grid-cols-3 gap-6 hover:bg-gray-50 p-5">
                 <div className="col-span-3 sm:col-span-2">
                   <InputField
