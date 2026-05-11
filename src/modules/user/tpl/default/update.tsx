@@ -12,9 +12,12 @@ import HeaderUser from "@/modules/user/tpl/default/header";
 import Button from "@components/button/Button"; // 💡 공용 버튼
 // 💡 1. InputField 임포트 추가! (경로가 다르면 수정해주세요)
 import InputField from "@components/form/InputField";
+import UploadFileManager from "@components/editor/UploadFileManager";
+import MyFiles from "@/modules/attachment/tpl/default/myFiles";
 
-import { saveUserAction } from "@/modules/user/actions/user.action";
+import { saveUserAction, updateProfileImageAction } from "@/modules/user/actions/user.action";
 import { UserInfo } from "@/modules/user/actions/_type";
+import type { Attachment } from "@/modules/attachment/actions/_type";
 
 type Props = {
   initialUser: UserInfo; // 💡 page.tsx에서 받은 데이터
@@ -25,6 +28,8 @@ const UpdateUser = ({ initialUser }: Props) => {
   const queryClient = useQueryClient();
 
   const [showPopup, setShowPopup] = useState(false);
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [profileImage, setProfileImage] = useState(initialUser.profile?.profileImage || "");
   const [error, setError] = useState<{ type: string; message: string } | null>(null);
 
   const closePopup = (close: boolean) => {
@@ -66,11 +71,46 @@ const UpdateUser = ({ initialUser }: Props) => {
     },
   });
 
+  const profileMutation = useMutation({
+    mutationFn: async (nextProfileImage: string | null) => {
+      return await updateProfileImageAction(nextProfileImage);
+    },
+    onSuccess: async (res) => {
+      if (!res.success) {
+        setError({ type: res.type || "error", message: res.message });
+        return;
+      }
+
+      setProfileImage(res.data?.profileImage || "");
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      router.refresh();
+      setShowProfilePopup(false);
+    },
+    onError: () => {
+      setError({ type: "error", message: "프로필 이미지 변경 중 오류가 발생했습니다." });
+    },
+  });
+
   const handleUserInfoSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     const formData = new FormData(e.currentTarget);
     mutation.mutate(formData);
+  };
+
+  const handleProfileImageSelect = (file: Attachment) => {
+    if (!file.mimeType?.startsWith("image/")) {
+      alert("이미지 파일만 프로필 이미지로 사용할 수 있습니다.");
+      return;
+    }
+
+    profileMutation.mutate(file.path);
+  };
+
+  const handleProfileImageDelete = () => {
+    if (!profileImage) return;
+    if (!confirm("프로필 이미지를 삭제하시겠습니까?")) return;
+    profileMutation.mutate(null);
   };
 
   return (
@@ -108,15 +148,29 @@ const UpdateUser = ({ initialUser }: Props) => {
                 <div className="col-span-2">
                   <div className="flex items-center gap-8">
                     <div
-                      className="relative text-gray-300 rounded-full w-20 h-20 bg-gray-200 hover:bg-gray-300 dark:bg-dark-800 dark:hover:bg-dark-700"></div>
+                      className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-2xl font-semibold text-gray-400 hover:bg-gray-300 dark:bg-dark-800 dark:hover:bg-dark-700"
+                    >
+                      {profileImage ? (
+                        <img
+                          src={profileImage}
+                          alt="프로필 이미지"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        initialUser.nickName?.slice(0, 1).toUpperCase()
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <button
                         type="button"
+                        onClick={() => setShowProfilePopup(true)}
                         className="text-xs border-green-500 border py-1 px-3 rounded-lg hover:bg-green-500 hover:text-white text-green-500">
                         변경하기
                       </button>
                       <button
                         type="button"
+                        onClick={handleProfileImageDelete}
+                        disabled={!profileImage || profileMutation.isPending}
                         className="text-xs border-rose-500 border py-1 px-3 rounded-lg hover:bg-rose-500 hover:text-white text-rose-500">
                         삭제
                       </button>
@@ -181,6 +235,33 @@ const UpdateUser = ({ initialUser }: Props) => {
 
       <Popup id="change-password-popup" state={showPopup} title="비밀번호 변경" close={closePopup}>
         <ChangePassword close={closePopup} />
+      </Popup>
+
+      <Popup
+        id="profile-image-popup"
+        state={showProfilePopup}
+        title="프로필 이미지 변경"
+        close={setShowProfilePopup}
+        showFooter={false}
+      >
+        <div className="space-y-6">
+          {profileMutation.isPending && (
+            <div className="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-500">
+              프로필 이미지를 저장하고 있습니다.
+            </div>
+          )}
+
+          <UploadFileManager
+            onUploadSuccess={() => {}}
+            onFileClick={handleProfileImageSelect}
+          />
+
+          <MyFiles
+            imagesOnly
+            selectedPath={profileImage}
+            onFileSelect={handleProfileImageSelect}
+          />
+        </div>
       </Popup>
     </>
   );

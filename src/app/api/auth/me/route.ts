@@ -88,5 +88,7 @@ function formatUserResponse(user: any) {
     nickName: user.nickName,
     email_address: user.email_address,
     isAdmin: user.isAdmin,
+    profile: user.profile,
+    profileImage: user.profile?.profileImage || null,
   };
 }

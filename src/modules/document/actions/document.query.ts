@@ -93,7 +93,7 @@ export async function findDocumentList(postsId: number, page: number, pageSize: 
         thumbnail: true,
         extraFieldData: true,
         category: { select: { id: true, title: true, parentId: true } },
-        user: { select: { id: true, nickName: true } },
+        user: { select: { id: true, nickName: true, profile: true } },
         Comment: {
           take: 1,
           orderBy: { createdAt: 'desc' },
@@ -101,7 +101,7 @@ export async function findDocumentList(postsId: number, page: number, pageSize: 
             content: true,
             createdAt: true,
             user: {
-              select: { nickName: true }
+              select: { nickName: true, profile: true }
             }
           }
         }
