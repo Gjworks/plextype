@@ -15,7 +15,10 @@ export async function findDocumentBySlug(slug: string) {
       },
       category: {
         select: { id: true, title: true, desc: true, color: true, parentId: true }
-      }
+      },
+      module: {
+        select: { id: true, mid: true, config: true }
+      },
     }
   });
 }
@@ -65,11 +68,18 @@ export async function findDocument(id: number | string) {
   });
 }
 
-export async function findDocumentList(postsId: number, page: number, pageSize: number, categoryId?: number) {
+export async function findDocumentList(
+  postsId: number,
+  page: number,
+  pageSize: number,
+  categoryId?: number,
+  ownerId?: number
+) {
   const whereCondition: Prisma.DocumentWhereInput = {
     moduleType: "posts",
     moduleId: postsId,
     ...(categoryId && categoryId !== 0 ? { categoryId } : {}),
+    ...(ownerId !== undefined ? { userId: ownerId } : {}),
   };
 
   const [items, totalCount] = await Promise.all([

@@ -56,7 +56,7 @@ const PostsListClient = ({
     setPage(newPage);
 
     // 새 매니저(Action)에게 요청! (한 페이지에 몇 개씩 보여줄지 10개로 고정하거나 기존 상태 사용)
-    const res = await getDocumentList(postInfo.pid, newPage, 10);
+    const res = await getDocumentList(postInfo.mid, newPage, 10);
     // 포장지 뜯고 상태 업데이트
     if (res.success && res.data) {
       setDocumentInfo(res.data.documentList);
