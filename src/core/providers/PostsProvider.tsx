@@ -1,6 +1,6 @@
 import React from "react";
 import { cookies } from "next/headers";
-import { decodeJwt } from "jose";
+import { verify } from "@utils/auth/jwtAuth";
 
 // 기존 액션 및 프로바이더 임포트
 import { getPostsInfoAction } from "@/modules/posts/actions/posts.action";
@@ -24,9 +24,16 @@ async function getCurrentUser() {
   if (!accessToken) return null;
 
   try {
-    const decoded = decodeJwt(accessToken) as any;
+    const decoded = await verify(accessToken);
     // decoded 객체의 구조가 PostProvider에서 기대하는 유저 타입과 맞아야 합니다.
-    if (decoded) return { ...decoded, loggedIn: true };
+    if (decoded?.id) {
+      return {
+        ...decoded,
+        isAdmin: Boolean(decoded.isAdmin),
+        groups: decoded.groups || [],
+        loggedIn: true,
+      };
+    }
   } catch (err) {
     console.log("JWT decode 실패");
   }

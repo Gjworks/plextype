@@ -2,7 +2,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { decodeJwt } from "jose";
 import { hashedPassword, verifyPassword } from "@utils/auth/password";
 import { saveUser, removeUser, getUserList, decodeUserToken, getUserSession } from "./user";
 import { ActionState, UserUpsertSchema, PasswordChangeSchema, UserListParams, UserListSchema, UserListResponseData, LoggedParams, UserInfo, UserParams, PasswordVerifySchema } from "./_type";
@@ -24,16 +23,32 @@ function excludeSensitiveData(user: any): UserInfo {
 export const saveUserAction = async (formData: FormData, paths?: string): Promise<ActionState<any>> => {
   // 1. 웹 전용 데이터(isProfileUpdate) 추출
   const isProfileUpdate = formData.get("isProfileUpdate") === "true";
+  const loggedInfo = await getLoggedUserAction();
+  const targetId = formData.get("id") ? Number(formData.get("id")) : undefined;
+  const isAdminRequest = loggedInfo.isAdmin === true;
+
+  if (targetId && !isAdminRequest && loggedInfo.id !== targetId) {
+    return { success: false, type: "error", message: "회원 정보를 수정할 권한이 없습니다." };
+  }
+
+  let safeIsAdmin = false;
+  if (isAdminRequest) {
+    safeIsAdmin = formData.get("isAdmin") === "true";
+  } else if (targetId) {
+    const existingUser = await query.findUserById(targetId);
+    if (!existingUser) return { success: false, type: "error", message: "회원정보가 없습니다." };
+    safeIsAdmin = Boolean(existingUser.isAdmin);
+  }
 
   const formPayload = {
-    id: formData.get("id") ? Number(formData.get("id")) : undefined,
+    id: targetId,
     accountId: formData.get("accountId")?.toString() || "",
     slug: formData.get("slug")?.toString() || nanoid(10),
     email_address: formData.get("email_address")?.toString() || "",
     nickName: formData.get("nickName")?.toString() || "",
     password: formData.get("password")?.toString() || "",
-    isAdmin: formData.get("isAdmin") === "true",
-    group: formData.getAll("groups[]").map(g => ({ groupId: g })),
+    isAdmin: safeIsAdmin,
+    group: isAdminRequest ? formData.getAll("groups[]").map(g => ({ groupId: g })) : undefined,
   };
 
   // 2. Zod 유효성 검사

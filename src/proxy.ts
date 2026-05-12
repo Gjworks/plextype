@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decodeJwt } from "jose";
 import redisClient from "@/core/utils/redis/redis";
+import { verify } from "@/core/utils/auth/jwtAuth";
 
 export async function proxy(request: NextRequest) {
   try {
@@ -20,7 +20,10 @@ export async function proxy(request: NextRequest) {
     let decodeToken: { id: string; isAdmin: boolean } | null = null;
     if (accessToken?.value) {
       try {
-        decodeToken = decodeJwt(accessToken.value) as any;
+        const verified = await verify(accessToken.value);
+        decodeToken = verified
+          ? { id: String(verified.id), isAdmin: Boolean(verified.isAdmin) }
+          : null;
       } catch (e) {
         // 토큰 에러 시 무시 (아래 권한 체크에서 걸러짐)
       }

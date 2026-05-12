@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { cookies, headers } from "next/headers";
 
-import { decodeJwt } from "jose";
 import {
   sign,
   verify,
@@ -49,13 +48,12 @@ export async function POST(request: NextRequest): Promise<Response> {
 
       let refreshVerifyToken = await refreshVerify(refreshToken!);
       if (refreshVerifyToken) {
-        const decodeToken = await decodeJwt(accessToken!);
-        if (decodeToken && decodeToken.id) {
+        if (refreshVerifyToken.id) {
           const tokenParams = {
-            id: decodeToken.id,
-            accountId: decodeToken.accountId,
-            isAdmin: decodeToken.isAdmin,
-            groups: decodeToken.groupIds, // 그룹 ID 배열 추가
+            id: refreshVerifyToken.id,
+            accountId: refreshVerifyToken.accountId,
+            isAdmin: refreshVerifyToken.isAdmin,
+            groups: refreshVerifyToken.groups || [],
           };
           newAccessToken = await sign(tokenParams);
           cookieStore.delete("accessToken");

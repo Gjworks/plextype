@@ -1,10 +1,11 @@
-import { SignJWT, jwtVerify, decodeJwt } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 interface TokenPayload {
   id: number;
   accountId: string;
   isAdmin: boolean | null;
+  groups?: number[];
   exp: number;
 }
 
@@ -42,7 +43,7 @@ const refresh = async (payload: object) => {
 
 const refreshVerify = async (
   token: string,
-): Promise<{ id: number; accountId: string; isAdmin: boolean } | null> => {
+): Promise<{ id: number; accountId: string; isAdmin: boolean; groups?: number[] } | null> => {
   try {
     const refresh = await jwtVerify(token, Buffer.from(secret));
     return refresh.payload as {

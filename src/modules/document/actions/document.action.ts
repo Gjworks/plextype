@@ -2,7 +2,7 @@
 'use server'
 
 import { cookies } from "next/headers";
-import { decodeJwt } from "jose";
+import { verify } from "@utils/auth/jwtAuth";
 import dayjs from "dayjs";
 import * as query from "./document.query";
 import { revalidatePath } from "next/cache";
@@ -19,7 +19,9 @@ async function getLoggedInfo() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
   if (!accessToken) return null;
-  return decodeJwt(accessToken) as { id: number; isAdmin: boolean };
+  const verified = await verify(accessToken);
+  if (!verified?.id) return null;
+  return { id: verified.id, isAdmin: Boolean(verified.isAdmin) };
 }
 
 export async function getDocument(id: number): Promise<ActionState<DocumentInfo>> {

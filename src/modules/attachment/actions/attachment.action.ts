@@ -5,7 +5,6 @@ import path from "path";
 import { rename, mkdir, rmdir, unlink } from "fs/promises";
 import { cookies } from "next/headers";
 import { verify } from "@utils/auth/jwtAuth";
-import { decodeJwt } from "jose";
 import * as query from "./attachment.query";
 import {ActionState, Attachment} from "@/modules/attachment/actions/_type"; // 쿼리 함수들 임포트
 
@@ -52,8 +51,8 @@ export async function getMyFiles(page: number = 1) {
   const accessToken = cookieStore.get("accessToken")?.value;
   if (!accessToken) throw new Error("로그인 필요");
 
-  const decoded = decodeJwt(accessToken) as { id: number } | null;
-  if (!decoded) throw new Error("잘못된 토큰");
+  const decoded = await verify(accessToken);
+  if (!decoded?.id) throw new Error("잘못된 토큰");
 
   const pageSize = 10;
   const { items, totalCount } = await query.getUserAttachments(decoded.id, page, pageSize);
@@ -74,7 +73,7 @@ export async function deleteAttachmentAction(fileId: number): Promise<ActionStat
     // 1. 로그인 및 권한 체크 (기존과 동일)
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("accessToken")?.value;
-    const decoded = accessToken ? (decodeJwt(accessToken) as { id: number; isAdmin: boolean }) : null;
+    const decoded = accessToken ? await verify(accessToken) : null;
 
     if (!decoded) return { success: false, type: "error", message: "권한이 없습니다." };
 
@@ -82,7 +81,7 @@ export async function deleteAttachmentAction(fileId: number): Promise<ActionStat
     const attachment = await query.findAttachmentForAuth(fileId);
     if (!attachment) return { success: false, type: "error", message: "파일을 찾을 수 없습니다." };
 
-    if (attachment.userId !== decoded.id && !decoded.isAdmin) {
+    if (attachment.userId !== decoded.id && !Boolean(decoded.isAdmin)) {
       return { success: false, type: "error", message: "삭제 권한이 없습니다." };
     }
 
@@ -111,7 +110,7 @@ export async function getAttachmentsAction(): Promise<ActionState<Attachment[]>>
       return { success: false, type: "error", message: "로그인이 필요합니다.", data: [] };
     }
 
-    const decoded = decodeJwt(accessToken) as { id: number };
+    const decoded = await verify(accessToken);
     const userId = decoded?.id;
 
     if (!userId) {
@@ -139,4 +138,3 @@ export async function getAttachmentsAction(): Promise<ActionState<Attachment[]>>
     return { success: false, type: "error", message: "목록 조회 실패", data: [] };
   }
 }
-

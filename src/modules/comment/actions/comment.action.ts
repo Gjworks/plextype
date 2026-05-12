@@ -6,7 +6,7 @@ import * as query from "./comment.query";
 import { ActionState, CommentWithChildren, CommentListResponse } from "./_type";
 import { withTrigger } from "@utils/trigger/triggerWrapper";
 import { cookies } from "next/headers";
-import { decodeJwt } from "jose";
+import { verify } from "@utils/auth/jwtAuth";
 import {nanoid} from "nanoid";
 
 
@@ -14,7 +14,9 @@ async function getLoggedInfo() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
   if (!accessToken) return null;
-  return decodeJwt(accessToken) as { id: number; isAdmin: boolean };
+  const verified = await verify(accessToken);
+  if (!verified?.id) return null;
+  return { id: verified.id, isAdmin: Boolean(verified.isAdmin) };
 }
 
 function isOwnerOnlyBoard(config: any) {
@@ -90,6 +92,13 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
 
     let result;
     if (id) {
+      const comment = await query.findCommentById(id);
+      if (!comment) return { success: false, type: "error", message: "댓글이 없습니다." };
+      if (comment.documentId !== documentId) return { success: false, type: "error", message: "댓글 정보가 올바르지 않습니다." };
+      if (comment.userId !== loggedInfo.id && !loggedInfo.isAdmin) {
+        return { success: false, type: "error", message: "댓글을 수정할 권한이 없습니다." };
+      }
+
       // 수정 (원본 updateComment 로직)
       result = await query.updateComment(id, { content });
     } else {
@@ -119,8 +128,15 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
 // [REMOVE] 원본의 deleteComment + deleteCommentAndDecrementCount 통합
 export async function removeCommentAction(documentId: number, commentId: number, paths?: string): Promise<ActionState<null>> {
   try {
+    const loggedInfo = await getLoggedInfo();
+    if (!loggedInfo) return { success: false, type: "error", message: "로그인이 필요합니다." };
+
     const comment = await query.findCommentById(commentId);
     if (!comment) return { success: false, message: "댓글 없음" };
+    if (comment.documentId !== documentId) return { success: false, type: "error", message: "댓글 정보가 올바르지 않습니다." };
+    if (comment.userId !== loggedInfo.id && !loggedInfo.isAdmin) {
+      return { success: false, type: "error", message: "댓글을 삭제할 권한이 없습니다." };
+    }
 
     const childCount = comment._count?.children ?? 0;
     if (childCount > 0) {
