@@ -2,7 +2,6 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { decodeJwt } from "jose";
 import * as query from "./posts.query";
 import * as posts from "./posts";
 import { getAuthenticatedUser } from "@utils/auth/authHelper";

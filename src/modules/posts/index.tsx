@@ -1,6 +1,6 @@
 import React from "react";
 import { cookies, headers } from "next/headers";
-import { decodeJwt } from "jose";
+import { verify } from "@utils/auth/jwtAuth";
 
 // Actions & Utils
 import { getPostsInfoAction } from "@/modules/posts/actions/posts.action";
@@ -44,8 +44,14 @@ async function getServerUser() {
       loggedIn: false,
     };
   try {
-    const decoded = decodeJwt(token) as any;
-    return { ...decoded, loggedIn: true };
+    const verified = await verify(token);
+    if (!verified?.id) throw new Error("Invalid token");
+    return {
+      ...verified,
+      isAdmin: Boolean(verified.isAdmin),
+      groups: verified.groups || [],
+      loggedIn: true,
+    };
   } catch {
     return {
       id: 0,

@@ -1,6 +1,6 @@
 // src/app/(extentions)/users/_actions/user.ts
 import { hashedPassword, verifyPassword } from "@utils/auth/password";
-import { decodeJwt } from "jose";
+import { verify } from "@utils/auth/jwtAuth";
 import * as query from "./user.query";
 import { dispatchTrigger } from "@utils/trigger/triggerHub";
 import { ActionState, UserUpsertSchema, PasswordChangeSchema, UserListParams, UserListSchema, UserListResponseData, LoggedParams, UserInfo, UserParams, PasswordVerifySchema } from "./_type";
@@ -21,11 +21,13 @@ export const getUserById = async (id: number) => {
  */
 export const decodeUserToken = async (token: string): Promise<LoggedParams> => {
   try {
-    const decodeToken: any = await decodeJwt(token);
+    const verifiedToken = await verify(token);
+    if (!verifiedToken) return { id: 0, accountId: "", isAdmin: false };
+
     return {
-      id: decodeToken.id,
-      accountId: decodeToken.accountId,
-      isAdmin: decodeToken.isAdmin,
+      id: verifiedToken.id,
+      accountId: verifiedToken.accountId,
+      isAdmin: Boolean(verifiedToken.isAdmin),
     };
   } catch (e) {
     return { id: 0, accountId: "", isAdmin: false };
@@ -122,9 +124,9 @@ export const saveUser = async (data: any, isProfileUpdate: boolean) => {
     }
 
     // 🌟 프로필 업데이트 여부에 따른 그룹 처리 로직 유지
-    const groupsToUpdate = isProfileUpdate
+    const groupsToUpdate = isProfileUpdate || data.group === undefined
       ? undefined
-      : (data.group?.map((g: any) => Number(g.groupId)) || []);
+      : data.group.map((g: any) => Number(g.groupId));
 
     const updated = await query.upsertUser(true, data.id, updateData, groupsToUpdate);
     resultUser = { ...updated, _isNew: false };

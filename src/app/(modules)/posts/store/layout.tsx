@@ -6,7 +6,7 @@ import PostNotFound from "@/modules/posts/tpl/default/notFound";
 import { checkPermissionsAction } from "@/modules/posts/actions/permission.action";
 
 import { cookies } from "next/headers";
-import { decodeJwt } from "jose";
+import { verify } from "@utils/auth/jwtAuth";
 
 interface CurrentUser {
   id: number;
@@ -42,9 +42,14 @@ export default async function PageLayout({
 
   if (accessToken) {
     try {
-      const decoded = decodeJwt(accessToken) as any; // 타입 단언
+      const decoded = await verify(accessToken);
       if (decoded) {
-        currentUser = { ...decoded, loggedIn: true };
+        currentUser = {
+          ...decoded,
+          isAdmin: Boolean(decoded.isAdmin),
+          groups: decoded.groups || [],
+          loggedIn: true,
+        };
       }
     } catch (err) {
       console.log("JWT decode 실패", err);
