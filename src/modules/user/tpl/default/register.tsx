@@ -4,15 +4,13 @@ import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Alert from "@components/message/Alert";
 import InputField from "@components/form/InputField";
 import Button from "@components/button/Button";
 
 const Register = () => {
   const [loading, setLoading] = useState(false); // ✅ 로딩 상태 추가
-  const [error, setError] = useState<{ type: string; message: string } | null>(
-    null,
-  );
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const router = useRouter();
 
   const refAccountId = useRef<HTMLInputElement>(null);
@@ -20,9 +18,10 @@ const Register = () => {
   const refPassword = useRef<HTMLInputElement>(null);
   const refNickName = useRef<HTMLInputElement>(null);
 
-  const submitHandler = async (e) => {
+  const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
+    setFormMessage(null);
+    setFieldErrors(null);
     setLoading(true); // ✅ 통신 시작 시 true
 
     const formData = new FormData(e.currentTarget);
@@ -35,33 +34,24 @@ const Register = () => {
         credentials: "include", // 쿠키 포함
       });
       const res = await response.json();
-      console.log(res)
       if (res.type === "error") {
-        setError({ type: res.type, message: res.message });
-        // 에러 위치에 따른 포커스 처리 예시
+        const errors = res.fieldErrors || res.data || null;
 
-        switch (res.element) {
-          case "accountId":
-            refAccountId.current?.focus();
-            break;
-          case "email": // 서버에서 email_address를 email로 매핑해서 보내주기로 했었죠?
-            refEmail.current?.focus();
-            break;
-          case "password":
-            refPassword.current?.focus();
-            break;
-          case "nickName":
-            refNickName.current?.focus();
-            break;
-          default:
-            // 알 수 없는 에러거나 필드가 지정되지 않았을 때의 처리 (선택)
-            break;
+        if (errors && typeof errors === "object") {
+          setFieldErrors(errors);
+
+          if (errors.accountId) refAccountId.current?.focus();
+          else if (errors.email || errors.email_address) refEmail.current?.focus();
+          else if (errors.password) refPassword.current?.focus();
+          else if (errors.nickName) refNickName.current?.focus();
+        } else {
+          setFormMessage(res.message || "회원가입에 실패했습니다.");
         }
       } else if (res.type === "success") {
         router.replace("/auth/signin");
       }
     } catch (err) {
-      setError({ type: "error", message: "서버 오류가 발생했습니다." });
+      setFormMessage("서버 오류가 발생했습니다.");
     } finally {
       setLoading(false); // ✅ 통신 종료(성공/실패 모두) 시 false
     }
@@ -156,7 +146,11 @@ const Register = () => {
           </div>
         </div>
       </motion.div>
-      {error && <Alert message={error.message} type={error.type} />}
+      {formMessage && (
+        <div className="mb-5 rounded-md bg-red-50 px-3 py-2 text-sm leading-6 text-red-500">
+          {formMessage}
+        </div>
+      )}
       <form onSubmit={submitHandler}>
         {/* Account ID Input */}
         <div className="mb-5">
@@ -166,7 +160,7 @@ const Register = () => {
             placeholder="사용하실 아이디를 입력하세요"
             icon={UserIcon}
             ref={refAccountId}
-            required
+            error={fieldErrors?.accountId}
           />
 
         </div>
@@ -179,7 +173,7 @@ const Register = () => {
             placeholder="example@mail.com"
             icon={MailIcon}
             ref={refEmail}
-            required
+            error={fieldErrors?.email || fieldErrors?.email_address}
           />
         </div>
 
@@ -192,7 +186,7 @@ const Register = () => {
             placeholder="비밀번호를 입력하세요"
             icon={LockIcon}
             ref={refPassword}
-            required
+            error={fieldErrors?.password}
           />
           <p className="text-xs text-gray-500 dark:text-dark-400 mt-2 ml-1">
             * 비밀번호는 영문, 숫자, 특수문자 1개 이상(@, $, !, %, *, #, ?, &)을 모두 포함해야 합니다.
@@ -207,7 +201,7 @@ const Register = () => {
             placeholder="사용하실 닉네임을 입력하세요"
             icon={NicknameIcon}
             ref={refNickName}
-            required
+            error={fieldErrors?.nickName}
           />
           <p className="text-xs text-gray-500 dark:text-dark-400 mt-2 ml-1">
             * 닉네임은 최소 2~12자까지 가능하며 특수문자는 사용할 수 없습니다.

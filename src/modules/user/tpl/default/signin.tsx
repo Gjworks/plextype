@@ -9,7 +9,6 @@ import { motion } from 'framer-motion'
 
 import InputField from '@components/form/InputField'
 import Button from '@components/button/Button'
-import Alert from '@components/message/Alert'
 
 interface SignData {
   type: string
@@ -33,7 +32,8 @@ const Signin = () => {
   // const dispatch = store.dispatch;
 
   const [user, setUser] = useState<SignData>()
-  const [error, setError] = useState<{ type: string; message: string } | null>(null)
+  const [formMessage, setFormMessage] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null)
 
   useEffect(() => {
     // 🌟 [세척 로직] 이 페이지에 들어오는 순간 모든 캐시를 파괴합니다. ㅡㅡ+
@@ -55,8 +55,6 @@ const Signin = () => {
     })
     const resData = await response.json()
     if (!response.ok) {
-      setError({ type: resData.type, message: resData.message })
-
       // TanStack Query가 실패를 인식하도록 에러를 던집니다.
       throw resData
       // throw new Error(errorData.message || "로그인 실패");
@@ -72,7 +70,14 @@ const Signin = () => {
       const { type, data, element } = res
 
       if (type === 'error') {
-        setError({ type, message: res.message })
+        const errors = (res as any).fieldErrors || (element ? { [element]: res.message } : null)
+
+        if (errors) {
+          setFieldErrors(errors)
+        } else {
+          setFormMessage(res.message)
+        }
+
         if (element === 'accountId' && refInputUserId.current) {
           refInputUserId.current.focus()
         }
@@ -90,19 +95,24 @@ const Signin = () => {
       router.replace('/')
     },
     onError: error => {
-      setError({
-        type: error.type || 'error',
-        message: error.message || '서버 통신 중 오류가 발생했습니다.',
-      })
+      const errors = (error as any).fieldErrors || ((error as any).element ? { [(error as any).element]: error.message } : null)
+
+      if (errors) {
+        setFieldErrors(errors)
+        if (errors.accountId) refInputUserId.current?.focus()
+        else if (errors.password) refInputPassword.current?.focus()
+        return
+      }
+
+      setFormMessage(error.message || '서버 통신 중 오류가 발생했습니다.')
     },
   })
 
-  const submitHandler = async e => {
+  const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const formData = new FormData()
-
-    formData.append('accountId', e.target.accountId.value)
-    formData.append('password', e.target.password.value)
+    setFormMessage(null)
+    setFieldErrors(null)
+    const formData = new FormData(e.currentTarget)
 
     mutation.mutate(formData)
   }
@@ -155,7 +165,11 @@ const Signin = () => {
               소셜로그인은 추후에 지원 됩니다. <br></br>일반 회원가입을 이용하셔도 모든 서비스를 이용 할 수 있습니다.
             </div>
           </motion.div>
-          {error && <Alert message={error.message} type={error.type} />}
+          {formMessage && (
+            <div className="mb-5 rounded-md bg-red-50 px-3 py-2 text-sm leading-6 text-red-500">
+              {formMessage}
+            </div>
+          )}
           <motion.div variants={parentVariants}>
             {/* Account ID Input */}
             <div className="mb-5">
@@ -166,12 +180,21 @@ const Signin = () => {
                 placeholder="아이디를 입력하세요"
                 icon={UserIcon}
                 ref={refInputUserId} // 이제 이 ref가 정상적으로 작동합니다.
+                error={fieldErrors?.accountId}
               />
             </div>
 
             {/* 💡 비밀번호 입력 필드 */}
             <div className="mb-5">
-              <InputField inputTitle="Password" name="password" type="password" placeholder="비밀번호를 입력하세요" icon={LockIcon} ref={refInputPassword} />
+              <InputField
+                inputTitle="Password"
+                name="password"
+                type="password"
+                placeholder="비밀번호를 입력하세요"
+                icon={LockIcon}
+                ref={refInputPassword}
+                error={fieldErrors?.password}
+              />
             </div>
 
             {/* Submit Button */}
