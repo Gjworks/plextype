@@ -35,7 +35,11 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
   // 2. 필수 상태 및 Ref 선언
   const formRef = useRef<HTMLFormElement | null>(null);
   const editorRef = useRef<any>(null);
+  const titleRef = useRef<HTMLInputElement | null>(null);
+  const categoryRef = useRef<HTMLSelectElement | null>(null);
   const [loading, setLoading] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const [title, setTitle] = useState(existingPost?.title || "");
   const [content, setContent] = useState(existingPost?.content || "");
   const [thumbnail, setThumbnail] = useState(existingPost?.thumbnail || "");
@@ -52,6 +56,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
     if (!form || loading || !editorRef.current) return;
 
     setLoading(true);
+    setFormMessage(null);
+    setFieldErrors(null);
     try {
       const formData = new FormData(form);
 
@@ -73,15 +79,22 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
       const res = await savePost(formData);
 
       if (res.success) {
-        alert(res.message || "저장되었습니다.");
         router.push(`/posts/${postInfo.mid}`);
         router.refresh(); // 목록 갱신
       } else {
-        alert(res.message || "저장에 실패했습니다.");
+        if (res.fieldErrors) {
+          setFieldErrors(res.fieldErrors);
+
+          if (res.fieldErrors.title) titleRef.current?.focus();
+          else if (res.fieldErrors.categoryId) categoryRef.current?.focus();
+          else if (res.fieldErrors.content) editorRef.current?.commands?.focus?.();
+        } else {
+          setFormMessage(res.message || "저장에 실패했습니다.");
+        }
       }
     } catch (error) {
       console.error("저장 오류:", error);
-      alert("시스템 오류가 발생했습니다.");
+      setFormMessage("시스템 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -140,17 +153,26 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
 
       <div className="text-center text-2xl font-semibold py-8">{postInfo.moduleName}</div>
 
+      {formMessage && (
+        <div className="rounded-md bg-red-50 px-3 py-2 text-sm leading-6 text-red-500">
+          {formMessage}
+        </div>
+      )}
+
       {postInfo.categories && postInfo.categories.length > 0 && (
         <SelectField
+          ref={categoryRef}
           inputTitle="카테고리"
           name="categoryId"
           defaultValue={existingPost?.categoryId ?? ""}
           options={postInfo.categories}
           icon={<IconCategory />} // 필요하다면 아이콘 추가
+          error={fieldErrors?.categoryId}
         />
       )}
 
       <InputField
+        ref={titleRef}
         inputTitle="제목"
         type="text"
         name="title"
@@ -158,6 +180,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
         onChange={(e) => setTitle(e.target.value)}
         placeholder="제목을 입력해주세요."
         className="w-full border-b-2 py-3 text-xl outline-none focus:border-blue-500 font-semibold"
+        error={fieldErrors?.title}
         // 혹시 label이 필요한 구조라면 아래 주석을 해제하세요.
         // label="제목"
       />
@@ -183,6 +206,11 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
             setContent(html);
           }}
         />
+        {fieldErrors?.content && (
+          <div className="mt-1.5 text-xs leading-5 text-red-500">
+            {fieldErrors.content}
+          </div>
+        )}
       </div>
 
       {/* 🌟 [핵심 조립] 첨부파일 엔진 */}

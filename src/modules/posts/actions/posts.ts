@@ -13,8 +13,9 @@ export const getPostsList = async (
   page: number = 1,
   pageSize: number = 10,
   keyword?: string,
+  target: "mid" | "moduleName" = "moduleName",
 ) => {
-  return await query.findPostsList(page, pageSize, keyword);
+  return await query.findPostsList(page, pageSize, keyword, target);
 };
 
 export const getPostFullInfo = async (mid: string) => {

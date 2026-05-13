@@ -17,9 +17,14 @@ export async function findModuleByMid(mid: string) {
   });
 }
 
-export async function findPostsList(page: number = 1, pageSize: number = 10, keyword?: string) {
+export async function findPostsList(
+  page: number = 1,
+  pageSize: number = 10,
+  keyword?: string,
+  target: "mid" | "moduleName" = "moduleName",
+) {
   const whereCondition: Prisma.ModulesWhereInput = keyword
-    ? { OR: [{ mid: { contains: keyword } }, { moduleName: { contains: keyword } }] }
+    ? { [target]: { contains: keyword } }
     : {};
 
   const [items, totalCount] = await Promise.all([

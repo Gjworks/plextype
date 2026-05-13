@@ -135,12 +135,14 @@ export async function getPostsListAdminAction(
   page: number = 1,
   pageSize: number = 10,
   keyword?: string,
+  target: "mid" | "moduleName" = "moduleName",
 ): Promise<ActionState<any>> {
   try {
     const { items, totalCount } = await posts.getPostsList(
       page,
       pageSize,
       keyword,
+      target,
     );
 
     const pagination = {
