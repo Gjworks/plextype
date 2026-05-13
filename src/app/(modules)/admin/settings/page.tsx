@@ -1,7 +1,7 @@
-'use client'
+import Admin from "@/modules/admin";
 
 const Page = () => {
-  return <>Settings</>
-}
+  return <Admin.Settings section="site" />;
+};
 
-export default Page
+export default Page;

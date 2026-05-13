@@ -1,45 +1,101 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { IdCard, LockKeyhole, Mail, ShieldCheck, UserRound, UsersRound } from "lucide-react";
+
 import Alert from "@components/message/Alert";
-
-import { saveUserAction } from "@/modules/user/actions/user.action";
-import InputField from "@components/form/InputField";
 import Button from "@components/button/Button";
-
-// 🎨 아이콘 정의
-const UserIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-  </svg>
-);
-
-const NicknameIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
-  </svg>
-);
-
-const LockIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-  </svg>
-);
+import InputField from "@components/form/InputField";
+import { saveUserAction } from "@/modules/user/actions/user.action";
 
 type UpsertFormProps = {
-  user?: any; // 👉 핵심: 물음표(?)를 달아서 "없어도 됨"을 알림
+  user?: any;
   groupList: any[];
 };
 
-// 💡 user를 선택적(Optional)으로 받습니다. 안 넘기면 '생성 모드'가 됩니다.
-const UpsertForm = ({ user, groupList }:UpsertFormProps) => {
-  const router = useRouter();
-  const [error, setError] = useState<{ type: string; message: string; fieldErrors?: any } | null>(null);
+const textareaClass =
+  "w-full resize-y rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm leading-6 text-gray-700 outline-none transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:placeholder:text-dark-500";
 
-  // 💡 user가 없으면(생성) 빈 배열/false로 초기화
-  const initialGroups = user?.userGroups?.map((ug) => ug.group.id) ?? [];
-  const [selectedGroups, setSelectedGroups] = useState(initialGroups);
+const SectionShell = ({
+  icon,
+  title,
+  description,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) => {
+  return (
+    <section className="grid grid-cols-4 gap-8 border-t border-gray-200 py-10 first:border-t-0 dark:border-dark-800">
+      <div className="col-span-4 lg:col-span-1">
+        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+          {icon}
+          User
+        </div>
+        <div className="mt-3 text-lg font-semibold text-gray-600 dark:text-dark-100">{title}</div>
+        {description && <div className="mt-2 text-sm leading-6 text-gray-400">{description}</div>}
+      </div>
+      <div className="col-span-4 lg:col-span-3">
+        <div className="grid gap-2">{children}</div>
+      </div>
+    </section>
+  );
+};
+
+const FieldRow = ({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description?: string;
+  children: React.ReactNode;
+}) => {
+  return (
+    <div className="rounded-md p-5 transition-colors hover:bg-gray-50 dark:hover:bg-dark-900">
+      <div className="mb-4">
+        <div className="text-sm font-medium text-black dark:text-dark-100">{label}</div>
+        {description && <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>}
+      </div>
+      <div className="w-full">{children}</div>
+    </div>
+  );
+};
+
+const Toggle = ({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500"
+      data-checked={checked}
+      aria-pressed={checked}
+    >
+      <span
+        className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
+          checked ? "translate-x-5" : "translate-x-0"
+        }`}
+      />
+    </button>
+  );
+};
+
+const UpsertForm = ({ user, groupList }: UpsertFormProps) => {
+  const router = useRouter();
+  const [formMessage, setFormMessage] = useState<{ type: string; message: string } | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
+
+  const initialGroups = user?.userGroups?.map((ug: any) => ug.group.id) ?? [];
+  const [selectedGroups, setSelectedGroups] = useState<number[]>(initialGroups);
   const [isAdmin, setIsAdmin] = useState(user?.isAdmin ?? false);
   const [isPending, startTransition] = useTransition();
 
@@ -48,159 +104,187 @@ const UpsertForm = ({ user, groupList }:UpsertFormProps) => {
   const refPassword = useRef<HTMLInputElement>(null);
   const refEmail = useRef<HTMLInputElement>(null);
 
-  const handleGroupChange = (groupId) => {
+  const isUpdateMode = !!user;
+
+  const handleGroupChange = (groupId: number) => {
     setSelectedGroups((prev) =>
       prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId],
     );
   };
 
-  const submitHandler = async (e) => {
+  const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
+    setFormMessage(null);
+    setFieldErrors(null);
 
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.currentTarget);
     formData.append("isAdmin", isAdmin.toString());
-    selectedGroups.forEach((id) => formData.append("groups[]", id));
+    selectedGroups.forEach((id) => formData.append("groups[]", String(id)));
 
     startTransition(async () => {
       const res = await saveUserAction(formData);
 
       if (!res.success) {
-        setError({ type: res.type || "error", message: res.message, fieldErrors: res.fieldErrors });
+        if (res.fieldErrors) {
+          setFieldErrors(res.fieldErrors);
+        } else {
+          setFormMessage({ type: res.type || "error", message: res.message });
+        }
+
         if (res.fieldErrors) {
           if (res.fieldErrors.accountId) refAccountId.current?.focus();
           else if (res.fieldErrors.email_address) refEmail.current?.focus();
           else if (res.fieldErrors.nickName) refNickName.current?.focus();
           else if (res.fieldErrors.password) refPassword.current?.focus();
         }
+        return;
+      }
+
+      alert(isUpdateMode ? "성공적으로 수정되었습니다." : "성공적으로 등록되었습니다.");
+      if (isUpdateMode) {
+        router.refresh();
       } else {
-        alert(user ? "성공적으로 수정되었습니다." : "성공적으로 등록되었습니다.");
-        if (user) {
-          router.refresh();
-        } else {
-          router.push("/admin/user/list"); // 생성 후 목록으로 이동
-        }
+        router.push("/admin/user/list");
       }
     });
   };
 
-  const isUpdateMode = !!user; // user 데이터가 있으면 수정 모드
-
   return (
     <form onSubmit={submitHandler}>
-      {error && <Alert type={error.type} message={error.message} />}
+      {formMessage && (
+        <div className="mb-6">
+          <Alert type={formMessage.type} message={formMessage.message} />
+        </div>
+      )}
 
-      {/* 💡 수정 모드일 때만 id 값을 전송합니다. 없으면 빈 값이 가서 서버가 CREATE로 인식합니다. */}
       <input type="hidden" name="id" value={user?.id || ""} />
 
-      <div className="grid grid-cols-4 gap-8 py-10">
-        <div className="col-span-1">
-          <div className="text-lg font-semibold text-gray-600 mb-3">회원 기본설정</div>
-        </div>
-        <div className="col-span-3">
-          <div className="flex flex-col gap-2">
-            <InputField
-              inputTitle="아이디"
-              name="accountId"
-              type="text"
-              defaultValue={user?.accountId || ""} // 💡 user가 없으면 빈 칸
-              icon={UserIcon}
-              ref={refAccountId}
-              readOnly={isUpdateMode} // 생성할 땐 입력 가능, 수정할 땐 읽기 전용
-            />
-
-            <InputField
-              inputTitle="이메일"
-              name="email_address"
-              type="email"
-              defaultValue={user?.email_address || ""}
-              icon={UserIcon}
-              ref={refEmail}
-            />
-
-            <InputField
-              inputTitle="닉네임"
-              name="nickName"
-              type="text"
-              defaultValue={user?.nickName || ""}
-              icon={NicknameIcon}
-              ref={refNickName}
-            />
-
-            <InputField
-              inputTitle="비밀번호"
-              name="password"
-              type="password"
-              placeholder={isUpdateMode ? "변경 시에만 입력하세요" : "비밀번호를 입력하세요"}
-              icon={LockIcon}
-              ref={refPassword}
-            />
+      <div className="mb-8 flex flex-wrap items-end gap-4">
+        <div>
+          <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
+            User Control / {isUpdateMode ? "Update" : "Create"}
+          </div>
+          <div className="mt-2 text-lg font-semibold text-gray-700">
+            {isUpdateMode ? "회원 수정" : "회원 추가"}
+          </div>
+          <div className="mt-1 text-sm text-gray-400">
+            {isUpdateMode ? "회원의 기본 정보와 권한을 수정합니다." : "관리자가 새 회원 계정을 생성합니다."}
           </div>
         </div>
+        <div className="flex-1" />
+        <div className="flex items-center gap-2">
+          <Button type="button" onClick={() => router.back()} fullWidth={false} className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800">
+            뒤로가기
+          </Button>
+          <Button
+            isLoading={isPending}
+            fullWidth={false}
+            type="submit"
+            className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white"
+          >
+            {isUpdateMode ? "수정하기" : "등록하기"}
+          </Button>
+        </div>
       </div>
 
-      {/* 추가설정 (체크박스, 텍스트에어리어 등) */}
-      <div className="grid grid-cols-4 gap-8 py-10 border-t border-gray-200">
-        <div className="col-span-1">
-          <div className="text-lg font-semibold text-gray-600 mb-3">추가설정</div>
-        </div>
-        <div className="col-span-3">
-          <div className="grid gap-8">
-            <div>
-              <label className="block mb-3 text-sm text-black">관리자 설정</label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={isAdmin}
-                  onChange={(e) => setIsAdmin(e.target.checked)}
-                />
-                <span>관리자 권한</span>
-              </label>
-            </div>
+      <SectionShell icon={<UserRound size={13} />} title="회원 기본설정" description="로그인과 식별에 사용하는 핵심 정보입니다.">
+        <FieldRow label="아이디" description="기본 로그인 계정으로 사용됩니다.">
+          <InputField
+            inputTitle="아이디"
+            name="accountId"
+            type="text"
+            defaultValue={user?.accountId || ""}
+            icon={<IdCard size={18} />}
+            ref={refAccountId}
+            readOnly={isUpdateMode}
+            error={fieldErrors?.accountId}
+            hideLabel
+          />
+        </FieldRow>
 
-            <div>
-              <label className="block mb-3 text-sm text-black">그룹 설정</label>
-              <div className="flex flex-wrap gap-4">
-                {groupList.map((group) => (
-                  <label key={group.id} className="flex gap-2 items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedGroups.includes(group.id)}
-                      onChange={() => handleGroupChange(group.id)}
-                    />
-                    <span className="text-sm">{group.groupTitle}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+        <FieldRow label="이메일" description="계정 안내와 찾기 기능에 사용할 수 있습니다.">
+          <InputField
+            inputTitle="이메일"
+            name="email_address"
+            type="email"
+            defaultValue={user?.email_address || ""}
+            icon={<Mail size={18} />}
+            ref={refEmail}
+            error={fieldErrors?.email_address}
+            hideLabel
+          />
+        </FieldRow>
 
-            <div>
-              <label className="block mb-3 text-sm text-black">메모</label>
-              <textarea
-                name="memo"
-                defaultValue={user?.memo || ""}
-                className="w-full border rounded-md py-2 px-4 text-sm outline-none focus:border-gray-400"
-                rows={4}
-              />
-            </div>
+        <FieldRow label="닉네임" description="게시글과 댓글 작성자명으로 노출됩니다.">
+          <InputField
+            inputTitle="닉네임"
+            name="nickName"
+            type="text"
+            defaultValue={user?.nickName || ""}
+            icon={<UserRound size={18} />}
+            ref={refNickName}
+            error={fieldErrors?.nickName}
+            hideLabel
+          />
+        </FieldRow>
+
+        <FieldRow label="비밀번호" description={isUpdateMode ? "변경할 때만 입력합니다." : "신규 계정 생성 시 필수입니다."}>
+          <InputField
+            inputTitle="비밀번호"
+            name="password"
+            type="password"
+            placeholder={isUpdateMode ? "변경 시에만 입력하세요" : "비밀번호를 입력하세요"}
+            icon={<LockKeyhole size={18} />}
+            ref={refPassword}
+            error={fieldErrors?.password}
+            hideLabel
+          />
+        </FieldRow>
+      </SectionShell>
+
+      <SectionShell icon={<ShieldCheck size={13} />} title="권한 설정" description="관리자 권한과 회원 그룹을 지정합니다.">
+        <FieldRow label="관리자 설정" description="관리자 페이지 접근 권한을 부여합니다.">
+          <div className="flex items-center gap-3">
+            <Toggle checked={isAdmin} onChange={setIsAdmin} />
+            <span className="text-sm text-gray-600">관리자 권한</span>
           </div>
-        </div>
-      </div>
+        </FieldRow>
 
-      {/* 버튼 */}
-      <div className="flex gap-4 justify-center pt-5 pb-10 border-t border-gray-100">
-        <button type="button" onClick={() => router.back()} className="px-5 py-2 text-xs text-gray-600 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300">
-          뒤로가기
-        </button>
-        <Button
-          isLoading={isPending}
-          fullWidth={false}
-          type="submit"
-          className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white"
-        >
-          {isUpdateMode ? "수정하기" : "등록하기"}
-        </Button>
-      </div>
+        <FieldRow label="그룹 설정" description="회원은 여러 그룹에 동시에 속할 수 있습니다.">
+          <div className="flex flex-wrap gap-3">
+            {groupList.map((group) => {
+              const checked = selectedGroups.includes(group.id);
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => handleGroupChange(group.id)}
+                  className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                    checked
+                      ? "border-blue-200 bg-blue-50 text-blue-600"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900"
+                  }`}
+                >
+                  <span className={`h-3 w-3 rounded-sm border ${checked ? "border-blue-500 bg-blue-500" : "border-gray-300"}`} />
+                  {group.groupTitle}
+                </button>
+              );
+            })}
+          </div>
+        </FieldRow>
+      </SectionShell>
+
+      <SectionShell icon={<UsersRound size={13} />} title="운영 메모" description="관리자만 참고하는 내부 기록입니다.">
+        <FieldRow label="메모">
+          <textarea
+            name="memo"
+            defaultValue={user?.memo || ""}
+            className={textareaClass}
+            rows={4}
+            placeholder="회원 관리에 필요한 메모"
+          />
+        </FieldRow>
+      </SectionShell>
     </form>
   );
 };

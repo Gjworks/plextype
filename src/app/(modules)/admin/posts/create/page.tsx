@@ -29,7 +29,7 @@ const Page = async () => {
   };
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-3 py-6">
+    <div className="max-w-screen-2xl mx-auto px-3 py-10">
 
       {/* 💡 3. 필수 프롭들을 채워서 던져줍니다. pid는 "create"로! */}
       <DashboardPostCreate

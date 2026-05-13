@@ -9,6 +9,45 @@ import 'dayjs/locale/ko'
 dayjs.extend(relativeTime)
 dayjs.locale('ko')
 
+const extractCommentPreview = (content?: string | null) => {
+  if (!content) return ''
+
+  try {
+    const parsed = JSON.parse(content)
+
+    if (parsed?.type !== 'doc') return content
+
+    const textParts: string[] = []
+    let imageCount = 0
+
+    const walk = (node: any) => {
+      if (!node) return
+
+      if (node.type === 'text' && node.text) {
+        textParts.push(node.text)
+      }
+
+      if (node.type === 'image') {
+        imageCount += 1
+      }
+
+      if (Array.isArray(node.content)) {
+        node.content.forEach(walk)
+      }
+    }
+
+    walk(parsed)
+
+    const text = textParts.join(' ').replace(/\s+/g, ' ').trim()
+    if (text) return text
+    if (imageCount > 0) return imageCount > 1 ? `이미지 ${imageCount}개` : '이미지'
+
+    return ''
+  } catch {
+    return content
+  }
+}
+
 const CommentList = ({ mid, count = 5 }: any) => {
   const [mounted, setMounted] = useState(false)
   const [items, setItems] = useState<any[]>([])
@@ -62,6 +101,7 @@ const CommentList = ({ mid, count = 5 }: any) => {
       {items.map((item) => {
         const document = item.document
         const module = document?.module
+        const preview = extractCommentPreview(item.content)
 
         if (!document || !module) {
           return null
@@ -80,7 +120,7 @@ const CommentList = ({ mid, count = 5 }: any) => {
                 </div>
 
                 <div className="mt-1 text-[11px] text-gray-400 line-clamp-1">
-                  {item.content}
+                  {preview || '내용 없음'}
                 </div>
               </div>
 

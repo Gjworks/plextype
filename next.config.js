@@ -17,13 +17,6 @@ const nextConfig = {
     ],
   },
   // output: "standalone", // PM2 실행 시 필요
-  experimental: {
-    turbopack: {
-      // 🌟 터보팩이 프로젝트 루트를 정확히 찾게 도와줍니다.
-      root: '.',
-    },
-    // nodeMiddleware: true, // 미들웨어 사용 활성화
-  },
   typescript: {
     tsconfigPath: "./tsconfig.json",
   },

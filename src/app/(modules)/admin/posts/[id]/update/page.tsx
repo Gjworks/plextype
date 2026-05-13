@@ -15,7 +15,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   if (!postRes.success) return <div>게시판을 찾을 수 없습니다.</div>;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-3 py-6">
+    <div className="max-w-screen-2xl mx-auto px-3 py-10">
       <DashboardPostCreate
         initialData={postRes.data}
         groupList={groupList}

@@ -35,6 +35,9 @@ export async function POST(request: Request): Promise<Response> {
         type: "error",
         element: firstError.path[0], // 어떤 필드에서 에러났는지 (accountId 등)
         message: firstError.message,
+        fieldErrors: {
+          [firstError.path[0] as string]: firstError.message,
+        },
       }, { status: 400 });
     }
 
@@ -50,6 +53,9 @@ export async function POST(request: Request): Promise<Response> {
       success: false,
       type: "error",
       message: "아이디 혹은 비밀번호가 일치하지 않습니다.",
+      fieldErrors: {
+        accountId: "아이디 혹은 비밀번호가 일치하지 않습니다.",
+      },
     };
 
     if (!userInfo) {

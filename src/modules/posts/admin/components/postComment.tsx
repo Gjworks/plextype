@@ -28,7 +28,7 @@ const PostComment = () => {
                       className="peer hidden"
                     />
 
-                    <div className="block relative rounded-full cursor-pointer bg-gray-200 w-12 h-6 after:content-[''] after:absolute top-[1px] after:rounded-full after:h-6 after:w-6 after:shadow-md after:bg-white dark:after:bg-white after:transition-all peer-checked:bg-cyan-500 after:peer-checked:translate-x-6"></div>
+                    <div className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-md after:transition-transform after:content-[''] peer-checked:bg-cyan-500 peer-checked:after:translate-x-5 dark:after:bg-white"></div>
                   </label>
 
                   <div className="text-sm text-dark-400 pt-2 font-light">
