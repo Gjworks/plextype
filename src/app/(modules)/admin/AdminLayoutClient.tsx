@@ -41,6 +41,18 @@ const MENU_CONFIG = [
     ],
   },
   {
+    id: 'settings',
+    icon: <Settings size={18} />,
+    label: 'Settings',
+    items: [
+      { label: '사이트 기본정보', href: '/admin/settings' },
+      { label: 'SEO 기본설정', href: '/admin/settings/seo' },
+      { label: '회원/인증 설정', href: '/admin/settings/auth' },
+      { label: '업로드 설정', href: '/admin/settings/upload' },
+      { label: '알림 설정', href: '/admin/settings/notification' },
+    ],
+  },
+  {
     id: 'infra',
     href: '/infra',
     icon: <Globe size={18} />,
@@ -166,7 +178,6 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
             <div className="py-6 px-4">
               <div className="h-[1px] bg-black/5" />
             </div>
-            <SideItem href="/settings" icon={<Settings size={18} />} label="Settings" isExpanded={isExpanded} />
           </div>
 
           <div className="p-5 mt-auto">
@@ -190,7 +201,7 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
         <motion.div
           initial={false}
           animate={{
-            marginLeft: isMobile ? 0 : isExpanded ? 240 : 72,
+            marginLeft: isMobile ? 72 : isExpanded ? 240 : 72,
           }}
           transition={{
             type: 'spring',
@@ -199,7 +210,19 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
           }}
           className="flex-1 flex flex-col min-w-0 overflow-hidden"
         >
-          <header className="fixed h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 w-[calc(100vw-72px)]">
+          <motion.header
+            initial={false}
+            animate={{
+              left: isMobile ? 72 : isExpanded ? 240 : 72,
+              width: isMobile ? 'calc(100vw - 72px)' : isExpanded ? 'calc(100vw - 240px)' : 'calc(100vw - 72px)',
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+            }}
+            className="fixed h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40"
+          >
             {/* Left: Breadcrumbs */}
             <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
               <span className="uppercase tracking-widest text-[10px]">gjworks</span>
@@ -263,7 +286,7 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
                 </AnimatePresence>
               </div>
             </div>
-          </header>
+          </motion.header>
 
           <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 mt-[64px] md:pt-4 overflow-hidden overflow-x-auto scrollbar-hide relative">
             <main
@@ -280,7 +303,7 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
                     <div className="flex items-center gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
                       {activeSubMenus.map(sub => {
                         const subHref = cleanPath(sub.href)
-                        const isSubActive = normalizedPathname.includes(subHref.split('/').pop() || '')
+                        const isSubActive = normalizedPathname === subHref || normalizedPathname.startsWith(`${subHref}/`)
 
                         return (
                           <Link key={sub.href} href={sub.href} className="relative py-4 shrink-0">
@@ -366,6 +389,8 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
 
     // 🌟 1. 정확히 일치하면 당연히 True
     if (normalizedPathname === cleanedSub) return true
+
+    if (cleanedSub === '/admin/settings') return false
 
     // 🌟 2. 동적 경로(/2/categories 등) 대응 로직
     const subSegments = cleanedSub.split('/') // ["", "admin", "user", "list"]

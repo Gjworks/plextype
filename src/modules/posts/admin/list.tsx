@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dayjs from "dayjs";
-import { removePostsAdminAction } from "@/modules/posts/actions/posts.action";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { Edit3, MessageSquareText, Plus, Search, Trash2 } from "lucide-react";
 
+import { removePostsAdminAction } from "@/modules/posts/actions/posts.action";
 import PageNavigation from "@components/nav/PageNavigation";
 import Alert from "@components/message/Alert";
 import Button from "@components/button/Button";
@@ -16,10 +17,13 @@ interface PostListInfo {
   mid: string;
   moduleName: string;
   moduleDesc: string;
-  config: object;
+  config: {
+    skin?: string;
+  } | null;
   status: string;
   createdAt: string;
 }
+
 interface PageNavigationInfo {
   totalCount: number;
   totalPages: number;
@@ -30,28 +34,31 @@ interface PageNavigationInfo {
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
 
-const AdminPostsList = ({ initialData, pagination }) => {
-  const params = useSearchParams();
-  const pathname = usePathname();
-  const [postList, setPostList] = useState<PostListInfo[]>([]);
-  const [page, setPage] = useState<number>(Number(params.get("page")) || 1);
+const checkboxClass =
+  "h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500";
+
+const AdminPostsList = ({
+  initialData,
+  pagination,
+}: {
+  initialData: PostListInfo[];
+  pagination: PageNavigationInfo;
+}) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<{
     type: string | null;
     message: string | null;
   } | null>(null);
-  const [pageNavigation, setPageNavigation] =
-    useState<PageNavigationInfo>(pagination);
+  const [pageNavigation, setPageNavigation] = useState<PageNavigationInfo>(pagination);
+
+  const allChecked = initialData.length > 0 && selectedIds.length === initialData.length;
 
   useEffect(() => {
-    const newPage = Number(params.get("page")) || 1;
-    setPage(newPage);
-  }, [pathname, params]);
-
-  const getRelativeTime = (date: string) => {
-    return dayjs(date).fromNow();
-  };
+    if (pagination) setPageNavigation(pagination);
+  }, [pagination]);
 
   const handleCheck = (id: number) => {
     setSelectedIds((prev) =>
@@ -59,22 +66,20 @@ const AdminPostsList = ({ initialData, pagination }) => {
     );
   };
 
-  useEffect(() => {
-    if (pagination) {
-      setPageNavigation(pagination);
-    }
-  }, [pagination]);
-
-  const handleAllCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      const allIds = initialData.map((item: any) => item.id);
-      setSelectedIds(allIds);
-    } else {
-      setSelectedIds([]);
-    }
+  const handleAllCheck = (checked: boolean) => {
+    setSelectedIds(checked ? initialData.map((item) => item.id) : []);
   };
 
-  // 삭제 실행 핸들러
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const target = formData.get("target") as string;
+    const keyword = formData.get("keyword") as string;
+
+    router.push(`?page=1&target=${target}&keyword=${encodeURIComponent(keyword)}`);
+  };
+
   const handleDelete = async () => {
     if (selectedIds.length === 0) return;
 
@@ -90,18 +95,15 @@ const AdminPostsList = ({ initialData, pagination }) => {
     setError(null);
 
     try {
-      const res = await removePostsAdminAction(
-        selectedIds,
-        "/admin/posts/list",
-      );
+      const res = await removePostsAdminAction(selectedIds, "/admin/posts/list");
 
       if (res.success) {
         alert(res.message);
-        setSelectedIds([]); // 선택 초기화
+        setSelectedIds([]);
       } else {
         setError({ type: "error", message: res.message });
       }
-    } catch (err) {
+    } catch {
       setError({ type: "error", message: "시스템 오류가 발생했습니다." });
     } finally {
       setLoading(false);
@@ -109,162 +111,141 @@ const AdminPostsList = ({ initialData, pagination }) => {
   };
 
   return (
-    <>
-      {error && <Alert message={error.message} type={error.type} />}
-      <div className="flex flex-wrap items-center gap-4 mb-5">
-        <div className="text-gray-700 text-lg font-semibold">
-          모듈 목록 ({pageNavigation.totalCount})
+    <div>
+      {error && (
+        <div className="mb-6">
+          <Alert message={error.message} type={error.type} />
         </div>
-        <div className="flex-1"></div>
-        <div className="flex items-center w-full lg:w-auto">
-          <div className="flex items-center bg-gray-100 rounded-md overflow-hidden w-full lg:w-auto px-3">
-            <select className="bg-transparent py-2 text-slate-600 px-3 outline-none text-sm rounded-md">
-              <option value="">이메일</option>
-              <option value="">닉네임</option>
-            </select>
-            <input
-              type="text"
-              className="bg-transparent py-2 text-gray-200 px-3 outline-none text-sm w-full lg:w-44"
-            ></input>
-            <button className="hover:text-white text-gray-200 rounded-md">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                />
-              </svg>
-            </button>
+      )}
+
+      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+            <MessageSquareText size={13} />
+            Board Control
+          </div>
+          <div className="mt-2 text-lg font-semibold text-gray-700">게시판 목록</div>
+          <div className="mt-1 text-sm text-gray-400">
+            전체 {pageNavigation.totalCount}개 중 {initialData.length}개를 표시하고 있습니다.
           </div>
         </div>
+
+        <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
+          <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-md border border-gray-200 bg-white px-3 shadow-sm shadow-gray-100 xl:w-[420px] xl:flex-none">
+            <select
+              name="target"
+              defaultValue={searchParams.get("target") || "moduleName"}
+              className="shrink-0 bg-transparent py-2.5 pr-3 text-sm text-gray-500 outline-none"
+            >
+              <option value="moduleName">게시판 이름</option>
+              <option value="mid">게시판 ID</option>
+            </select>
+            <div className="h-4 w-px bg-gray-200" />
+            <input
+              type="text"
+              name="keyword"
+              defaultValue={searchParams.get("keyword") || ""}
+              className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-gray-700 outline-none placeholder:text-gray-300"
+              placeholder="검색어 입력"
+            />
+            <button type="submit" className="cursor-pointer text-gray-400 transition-colors hover:text-gray-900" aria-label="검색">
+              <Search size={17} />
+            </button>
+          </form>
+
+          <Link href="/admin/posts/create" className="inline-flex w-auto items-center justify-center gap-2 rounded bg-blue-100 px-5 py-2 text-xs font-medium text-blue-500 transition-colors duration-200 hover:bg-blue-600 hover:text-white">
+            <Plus size={15} />
+            게시판 추가
+          </Link>
+          <Button
+            type="button"
+            onClick={handleDelete}
+            isLoading={loading}
+            disabled={selectedIds.length === 0 || loading}
+            fullWidth={false}
+            icon={<Trash2 size={14} />}
+          >
+            선택 삭제
+          </Button>
+        </div>
       </div>
-      <div className="">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-slate-200 bg-opacity-50 backdrop-blur-lg">
-              <th
-                scope="col"
-                className="text-xs text-gray-600 uppercase py-2 px-3"
-              >
-                No
-              </th>
-              <th
-                scope="col"
-                className="text-xs text-gray-600 uppercase py-2 px-3 text-left"
-              >
-                모듈ID
-              </th>
-              <th
-                scope="col"
-                className="text-xs text-gray-600 uppercase py-2 px-3"
-              >
-                게시판이름
-              </th>
-              <th
-                scope="col"
-                className="text-xs text-gray-600 uppercase py-2 px-3"
-              >
-                등록일
-              </th>
-              <th
-                scope="col"
-                className="text-xs text-gray-600 uppercase py-2 px-3"
-              >
-                편집
-              </th>
-              <th className="py-2 px-3 w-12">
-                <input
-                  type="checkbox"
-                  onChange={handleAllCheck}
-                  checked={
-                    selectedIds.length === initialData?.length &&
-                    initialData?.length > 0
-                  }
-                  className="checked:bg-lime-400"
-                ></input>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {initialData &&
-              initialData?.map((item, index) => {
-                const timeAgo = getRelativeTime(item.createdAt);
-                return (
-                  <tr
-                    key={index}
-                    className="border-b border-slate-200 hover:bg-slate-200 hover:bg-opacity-50 odd:bg-white even:bg-gray-50"
-                  >
-                    <td className="text-gray-500 text-sm py-3 px-3 text-center">
-                      {item.id - 1}
+
+      <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px]">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/80">
+                <th className="w-16 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">ID</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Module</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Name</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Skin</th>
+                <th className="w-32 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Created</th>
+                <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Edit</th>
+                <th className="w-14 px-4 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    onChange={(e) => handleAllCheck(e.target.checked)}
+                    checked={allChecked}
+                    className={checkboxClass}
+                    aria-label="전체 선택"
+                  />
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {initialData.length > 0 ? (
+                initialData.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40">
+                    <td className="px-4 py-4 text-sm font-medium text-gray-400">{item.id}</td>
+                    <td className="px-4 py-4">
+                      <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600">
+                        {item.mid}
+                      </div>
                     </td>
-                    <td className="text-gray-500 text-sm py-3 px-3">
-                      {item.mid}
-                    </td>
-                    <td className="text-gray-500 text-sm py-3 px-3 text-center">
-                      {item.moduleName}
-                    </td>
-                    <td className="text-gray-500 text-sm py-3 px-3 text-center">
-                      {timeAgo}
-                    </td>
-                    <td className="text-gray-500 text-sm py-3 px-3 text-center">
+                    <td className="px-4 py-4">
                       <Link
-                        href={`/admin/posts/${item.id}/update`}
-                        className="text-cyan-500 underline"
+                        href={`/posts/${item.mid}`}
+                        className="text-sm font-semibold text-gray-800 transition-colors hover:text-blue-600"
                       >
-                        조회/수정
+                        {item.moduleName}
+                      </Link>
+                      {item.moduleDesc && <div className="mt-1 text-xs text-gray-400">{item.moduleDesc}</div>}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-500">{item.config?.skin || "default"}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500">{dayjs(item.createdAt).fromNow()}</td>
+                    <td className="px-4 py-4 text-center">
+                      <Link href={`/admin/posts/${item.id}/update`} className="inline-flex items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white">
+                        <Edit3 size={13} />
+                        수정
                       </Link>
                     </td>
-                    <td className="px-3 py-3 text-center">
+                    <td className="px-4 py-4 text-center">
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(item.id)}
                         onChange={() => handleCheck(item.id)}
-                        className="checked:bg-lime-400"
-                      ></input>
+                        className={checkboxClass}
+                        aria-label={`${item.moduleName} 선택`}
+                      />
                     </td>
                   </tr>
-                );
-              })}
-          </tbody>
-        </table>
-      </div>
-      <div className="grid grid-cols-2 gap-8 py-5">
-        <div className="col-span-2 xl:col-span-1 flex items-center justify-center xl:justify-start"></div>
-        <div className="col-span-2 xl:col-span-1 flex items-center justify-end">
-          <div className="flex items-center justify-end gap-2">
-            {/* 1. 게시판 추가 (Link 연동) */}
-            <Link href="/admin/posts/create">
-              <Button
-                type="button"
-                className="!text-blue-500 hover:!text-white !bg-blue-100 hover:!bg-blue-600"
-              >
-                추가
-              </Button>
-            </Link>
-
-            {/* 2. 선택 삭제 (공통 컴포넌트 활용) */}
-            <Button
-              type="button"
-              onClick={handleDelete}
-              isLoading={loading} // 💡 로딩 상태를 컴포넌트가 직접 관리
-              disabled={selectedIds.length === 0}
-            >
-              선택 삭제
-            </Button>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-16 text-center text-sm text-gray-400">등록된 게시판이 없습니다.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-      <div className="flex justify-center">
-        <PageNavigation {...pageNavigation} />
-      </div>
-    </>
+
+      {pageNavigation.totalPages > 0 && (
+        <div className="mt-6 flex justify-center">
+          <PageNavigation {...pageNavigation} />
+        </div>
+      )}
+    </div>
   );
 };
 

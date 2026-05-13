@@ -1,7 +1,7 @@
 // DashboardPostCreate.tsx (Client Component)
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { savePostsAdminAction } from "@/modules/posts/actions/posts.action";
 import type { PostInfoData } from "@/modules/posts/actions/_type";
@@ -22,12 +22,11 @@ const DashboardPostCreate = ({
 }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<{
+  const [formMessage, setFormMessage] = useState<{
     type: string;
     message: string;
-    fields?: Record<string, string>; // 👈 필드별 에러 저장용
   } | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
 
   // 💡 유저 UpsertForm처럼 서버에서 받은 데이터로 즉시 상태 초기화!
   const [formData, setFormData] = useState<{ postInfo: PostInfoData }>({
@@ -82,7 +81,8 @@ const DashboardPostCreate = ({
   };
 
   const handleSubmit = async () => {
-    setError(null);
+    setFormMessage(null);
+    setFieldErrors(null);
     setLoading(true);
     const info = formData.postInfo;
     const fd = new FormData();
@@ -98,24 +98,22 @@ const DashboardPostCreate = ({
       const res = await savePostsAdminAction(fd, "/admin/posts/list");
 
       if (!res.success) {
-        // 1. 에러 상태 저장 (Alert 출력용)
-        setError({
-          type: res.type || "error",
-          message: res.message,
-          fields: res.fieldErrors,
-        });
-
-        // 💡 2. 포커싱 로직 추가
         if (res.fieldErrors) {
-          // 첫 번째 에러가 발생한 필드명을 가져옵니다 (예: "mid")
+          setFieldErrors(res.fieldErrors);
+        } else {
+          setFormMessage({
+            type: res.type || "error",
+            message: res.message,
+          });
+        }
+
+        if (res.fieldErrors) {
           const firstErrorField = Object.keys(res.fieldErrors)[0];
 
-          // 렌더링 타이밍을 위해 setTimeout을 살짝 주어 요소가 확실히 존재할 때 실행합니다.
           setTimeout(() => {
             const element = document.getElementById(firstErrorField);
             if (element) {
               element.focus();
-              // 필요하다면 해당 위치로 스크롤
               element.scrollIntoView({ behavior: "smooth", block: "center" });
             }
           }, 100);
@@ -125,40 +123,69 @@ const DashboardPostCreate = ({
         return;
       }
 
-      // 💡 3. 성공 시: 로딩을 먼저 끄거나 알림창 직후에 조절
       alert(
         isUpdateMode
           ? "게시판 설정이 수정되었습니다."
           : "게시판이 등록되었습니다.",
       );
 
-      // 페이지 이동은 백그라운드에서 부드럽게 처리
       router.push("/admin/posts/list");
-      // router.refresh();
 
-      // 이동을 시작했으므로 로딩을 꺼줍니다.
       setLoading(false);
-    } catch (err) {
-      setError({ type: "error", message: "시스템 오류가 발생했습니다." });
+    } catch {
+      setFormMessage({ type: "error", message: "시스템 오류가 발생했습니다." });
       setLoading(false);
     }
   };
 
   return (
     <div className="w-full">
-      {error && (
+      {formMessage && (
         <div className="mb-6">
-          <Alert message={error.message} type={error.type} />
+          <Alert message={formMessage.message} type={formMessage.type} />
         </div>
       )}
+
+      <div className="mb-8 flex flex-wrap items-end gap-4">
+        <div>
+          <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
+            Board Control / {isUpdateMode ? "Update" : "Create"}
+          </div>
+          <div className="mt-2 text-lg font-semibold text-gray-700">
+            {isUpdateMode ? "게시판 수정" : "게시판 생성"}
+          </div>
+          <div className="mt-1 text-sm text-gray-400">
+            게시판의 기본 정보, 기능, 접근 권한을 설정합니다.
+          </div>
+        </div>
+        <div className="flex-1" />
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            onClick={() => router.back()}
+            fullWidth={false}
+            className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+          >
+            뒤로가기
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            isLoading={loading}
+            fullWidth={false}
+            className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white"
+          >
+            {isUpdateMode ? "저장하기" : "생성하기"}
+          </Button>
+        </div>
+      </div>
 
       <PostInfo
         id={mid}
         value={formData.postInfo}
         onChange={handlePostInfoChange}
+        fieldErrors={fieldErrors}
       />
-
-      <div className="w-full h-px border-b border-gray-100 my-8"></div>
 
       <PostPermissions
         id={mid}
@@ -166,18 +193,6 @@ const DashboardPostCreate = ({
         onChange={handlePermissionsChange}
         groups={groupList}
       />
-
-      <div className="flex gap-4 justify-center pt-10 pb-20 border-t border-slate-200 mt-10">
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          isLoading={loading}
-          fullWidth={false}
-          className="px-12 py-3 text-white bg-orange-500 hover:bg-orange-600 rounded-md"
-        >
-          {isUpdateMode ? "저장하기" : "생성하기"}
-        </Button>
-      </div>
     </div>
   );
 };

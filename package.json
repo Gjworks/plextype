@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "setup": "node setup.mjs",
-    "dev": "dotenv -e .env.development next dev --turbo --port 3000",
+    "dev": "dotenv -e .env.development next dev --hostname 0.0.0.0 --port 3000",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "next lint",

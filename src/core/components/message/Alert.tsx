@@ -1,7 +1,11 @@
 import { motion } from 'framer-motion'
 
-const Alert = ({ message, type }) => {
-  console.log(type)
+type AlertProps = {
+  message?: string | null
+  type?: 'success' | 'info' | 'warning' | 'error' | string | null
+}
+
+const Alert = ({ message, type }: AlertProps) => {
   let bgColor
   switch (type) {
     case 'success':
@@ -42,11 +46,11 @@ const Alert = ({ message, type }) => {
   }
   return (
     <>
-      <div className="py-5">
+      <div className="py-2">
         <motion.div
           variants={parentVariants}
           viewport={{ once: false, amount: 0.3 }}
-          className={`flex gap-2 items-center  py-4 px-3 rounded-lg text-sm ${bgColor}`}
+          className={`flex gap-2 items-center py-3 px-3 rounded-md text-sm ${bgColor}`}
         >
           <motion.div>
             <svg
