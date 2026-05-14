@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { z } from "zod"; // ✅ Zod 추가
 import { verifyPassword } from "@/core/utils/auth/password";
 import { sign, refresh } from "@/core/utils/auth/jwtAuth";
 import prisma from "@/core/utils/db/prisma";
-import { timeToSeconds } from "@/core/utils/date/timeToSeconds";
 import redisClient from "@/core/utils/redis/redis";
+import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
+import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 
 
 
@@ -17,7 +17,6 @@ const LoginSchema = z.object({
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    const cookieStore = await cookies();
     const formData = await request.formData();
 
     // FormData를 객체로 변환
@@ -89,10 +88,12 @@ export async function POST(request: Request): Promise<Response> {
       refresh(tokenParams),
     ]);
 
-    // ✅ 7. 쿠키 설정 및 응답
-    const accessTokenExpire = timeToSeconds(process.env.ACCESSTOKEN_EXPIRES_IN || "1h");
-    const refreshTokenExpire = timeToSeconds(process.env.REFRESHTOKEN_EXPIRES_IN || "4h");
+    await prisma.user.update({
+      where: { id: userInfo.id },
+      data: { refreshToken: hashRefreshToken(refreshToken) },
+    });
 
+    // ✅ 7. 쿠키 설정 및 응답
     const response = NextResponse.json({
       success: true,
       type: "success",
@@ -107,26 +108,16 @@ export async function POST(request: Request): Promise<Response> {
       },
     });
 
-    // 쿠키 설정 옵션 공통화
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax" as const,
-      path: "/",
-    };
-
     response.cookies.set({
       name: "accessToken",
       value: accessToken,
-      ...cookieOptions,
-      maxAge: accessTokenExpire,
+      ...getAccessTokenCookieOptions(),
     });
 
     response.cookies.set({
       name: "refreshToken",
       value: refreshToken,
-      ...cookieOptions,
-      maxAge: refreshTokenExpire,
+      ...getRefreshTokenCookieOptions(),
     });
 
     const forwarded = request.headers.get("x-forwarded-for");
@@ -137,24 +128,28 @@ export async function POST(request: Request): Promise<Response> {
     // 2. IP 세척 (::ffff: 제거)
     const userIp = rawIp.replace(/^::ffff:/, "");
     const loginAt = new Date().toISOString();
-    // 3. Redis에 실시간 접속 정보 저장 (미들웨어 검문 통과용)
-    await redisClient.set(
-      `active_user:${userInfo.id}:${userIp}`, 
-      JSON.stringify({ loginAt }),
-      "EX", 
-      300
-    );
+    try {
+      // 3. Redis에 실시간 접속 정보 저장 (미들웨어 검문 통과용)
+      await redisClient.set(
+        `active_user:${userInfo.id}:${userIp}`, 
+        JSON.stringify({ loginAt }),
+        "EX", 
+        300
+      );
 
-    // 4. 기존 유저 프로필 캐시 저장 (있으시면 유지)
-    await redisClient.set(
-      `user:profile:${userInfo.id}`, 
-      JSON.stringify({ 
-        nickName: userInfo.nickName, 
-        accountId: userInfo.accountId 
-      }), 
-      "EX", 
-      86400
-    );
+      // 4. 기존 유저 프로필 캐시 저장 (있으시면 유지)
+      await redisClient.set(
+        `user:profile:${userInfo.id}`, 
+        JSON.stringify({ 
+          nickName: userInfo.nickName, 
+          accountId: userInfo.accountId 
+        }), 
+        "EX", 
+        86400
+      );
+    } catch (redisError) {
+      console.error("Login Redis Cache Error:", redisError);
+    }
 
     return response;
 

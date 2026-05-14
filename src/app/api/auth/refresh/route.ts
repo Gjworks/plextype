@@ -1,100 +1,97 @@
-import { NextResponse, NextRequest } from "next/server";
-import { cookies, headers } from "next/headers";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 import {
   sign,
-  verify,
   refresh,
   refreshVerify,
 } from "@/core/utils/auth/jwtAuth";
+import prisma from "@/core/utils/db/prisma";
+import { getAccessTokenCookieOptions, getExpiredAuthCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
+import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 
-export async function POST(request: NextRequest): Promise<Response> {
-  let newAccessToken: string;
-  let verifyToken: any;
+export async function POST(): Promise<Response> {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get("refreshToken")?.value;
 
-  // const authorization = headers().get('authorization')
-  const authorization = request.headers.get("Authorization");
-  const accessToken = authorization && authorization.split(" ")[1];
-
-  if (!accessToken && !refreshToken) {
-    const response = {
-      success: true,
-      code: "token_error",
-      type: "error",
-      message: "token값이 존재 하지 않습니다.",
-      data: {},
-      accessToken: null,
-    };
-    return NextResponse.json(response);
-  }
-
   try {
-    verifyToken = await verify(accessToken!);
-    if (verifyToken.ok === false) {
-      // cookies().delete('refreshToken');
-      // cookies().delete('accessToken');
-      // const response =
-      //   {
-      //     success: false,
-      //     code : 'user info not found',
-      //     type : 'error',
-      //     message: "회원정보를 찾을 수 없습니다.",
-      //     data : {},
-      //     accessToken: null,
-      //   }
-      //   return NextResponse.json(response);
-
-      let refreshVerifyToken = await refreshVerify(refreshToken!);
-      if (refreshVerifyToken) {
-        if (refreshVerifyToken.id) {
-          const tokenParams = {
-            id: refreshVerifyToken.id,
-            accountId: refreshVerifyToken.accountId,
-            isAdmin: refreshVerifyToken.isAdmin,
-            groups: refreshVerifyToken.groups || [],
-          };
-          newAccessToken = await sign(tokenParams);
-          cookieStore.delete("accessToken");
-          cookieStore.set({
-            name: "accessToken",
-            value: newAccessToken,
-            httpOnly: true,
-            sameSite: "strict",
-          });
-          const response = {
-            success: true,
-            code: "new_accessToken",
-            type: "success",
-            message: "New accessToken",
-            data: {},
-            accessToken: newAccessToken,
-          };
-          return NextResponse.json(response);
-        }
-      } else {
-        cookieStore.delete("refreshToken");
-        cookieStore.delete("accessToken");
-        const response = {
-          success: false,
-          code: "refreshToken_expires",
-          type: "error",
-          message: "token이 만료되었습니다. 로그인을 새로 해주세요.",
-          data: {},
-          accessToken: null,
-        };
-        return NextResponse.json(response);
-      }
+    if (!refreshToken) {
+      const response = NextResponse.json({
+        success: false,
+        code: "token_error",
+        type: "error",
+        message: "refreshToken이 존재하지 않습니다.",
+        data: {},
+      }, { status: 401 });
+      response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
+      response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
+      return response;
     }
-    const response = {
-      success: true,
-      code: "success",
-      message: "",
-      data: {},
-      accessToken: accessToken,
+
+    const refreshVerifyToken = await refreshVerify(refreshToken);
+    if (!refreshVerifyToken?.id) {
+      const response = NextResponse.json({
+        success: false,
+        code: "refreshToken_expires",
+        type: "error",
+        message: "token이 만료되었습니다. 로그인을 새로 해주세요.",
+        data: {},
+      }, { status: 401 });
+      response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
+      response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
+      return response;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: refreshVerifyToken.id },
+      include: {
+        userGroups: {
+          select: { groupId: true },
+        },
+      },
+    });
+
+    if (!user || user.refreshToken !== hashRefreshToken(refreshToken)) {
+      const response = NextResponse.json({
+        success: false,
+        code: "invalid_refreshToken",
+        type: "error",
+        message: "유효하지 않은 토큰입니다. 다시 로그인해주세요.",
+        data: {},
+      }, { status: 401 });
+      response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
+      response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
+      return response;
+    }
+
+    const tokenParams = {
+      id: user.id,
+      accountId: user.accountId,
+      isAdmin: user.isAdmin,
+      nickName: user.nickName,
+      groups: user.userGroups.map((group) => group.groupId),
     };
-    return NextResponse.json(response);
+    const [newAccessToken, newRefreshToken] = await Promise.all([
+      sign(tokenParams),
+      refresh(tokenParams),
+    ]);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: hashRefreshToken(newRefreshToken) },
+    });
+
+    const response = NextResponse.json({
+      success: true,
+      code: "new_accessToken",
+      type: "success",
+      message: "토큰이 갱신되었습니다.",
+      data: {},
+    });
+    response.cookies.set("accessToken", newAccessToken, getAccessTokenCookieOptions());
+    response.cookies.set("refreshToken", newRefreshToken, getRefreshTokenCookieOptions());
+
+    return response;
   } catch (err) {
     return NextResponse.json(
       {
@@ -103,7 +100,6 @@ export async function POST(request: NextRequest): Promise<Response> {
         type: "error",
         message: "서버 오류가 발생했습니다.",
         data: {},
-        accessToken: null,
       },
       { status: 500 },
     );
