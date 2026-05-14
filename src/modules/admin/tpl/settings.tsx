@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState, useTransition } from "react";
 import {
   Bell,
   Globe2,
@@ -12,6 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { SiteSettingsData } from "@/modules/admin/actions/_type";
+import { updateSiteSettingsAdminAction } from "@/modules/admin/actions/settings.action";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 
@@ -19,6 +21,7 @@ type SettingsSection = "site" | "seo" | "auth" | "upload" | "notification";
 
 type SettingsProps = {
   section?: SettingsSection;
+  initialSiteSettings?: SiteSettingsData;
 };
 
 const sectionMeta: Record<SettingsSection, {
@@ -81,7 +84,7 @@ const SectionShell = ({
         {description && <div className="mt-2 text-sm leading-6 text-gray-400">{description}</div>}
       </div>
       <div className="col-span-4 lg:col-span-3">
-        <div className="grid gap-2">{children}</div>
+        <div className="grid gap-4">{children}</div>
       </div>
     </section>
   );
@@ -107,6 +110,33 @@ const FieldRow = ({
   );
 };
 
+const InlineField = ({
+  title,
+  description,
+  settingKey,
+  children,
+}: {
+  title: string;
+  description: string;
+  settingKey?: string;
+  children: React.ReactNode;
+}) => {
+  return (
+    <div className="rounded-md p-5 transition-colors hover:bg-gray-50 dark:hover:bg-dark-900">
+      <div className="mb-3 min-h-[58px]">
+        <div className="text-xs font-semibold text-gray-700 dark:text-dark-100">{title}</div>
+        <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
+        {settingKey && (
+          <div className="mt-2 inline-flex rounded bg-gray-100 px-2 py-0.5 font-mono text-[10px] font-medium text-gray-400 dark:bg-dark-800">
+            {settingKey}
+          </div>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+};
+
 const Toggle = ({ defaultChecked = false }: { defaultChecked?: boolean }) => {
   const [checked, setChecked] = useState(defaultChecked);
 
@@ -127,12 +157,72 @@ const Toggle = ({ defaultChecked = false }: { defaultChecked?: boolean }) => {
   );
 };
 
-const Settings = ({ section = "site" }: SettingsProps) => {
+const defaultSiteSettings: SiteSettingsData = {
+  appName: "plextype",
+  projectName: "plextype",
+  projectTitle: "plextype",
+  siteUrl: "http://localhost:3000",
+  apiBaseUrl: "",
+};
+
+const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings }: SettingsProps) => {
   const activeSection = sectionMeta[section] ? section : "site";
   const meta = useMemo(() => sectionMeta[activeSection], [activeSection]);
+  const [isPending, startTransition] = useTransition();
+  const [siteSettings, setSiteSettings] = useState<SiteSettingsData>(initialSiteSettings);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
+  const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const appNameRef = useRef<HTMLInputElement>(null);
+  const projectNameRef = useRef<HTMLInputElement>(null);
+  const projectTitleRef = useRef<HTMLInputElement>(null);
+  const siteUrlRef = useRef<HTMLInputElement>(null);
+  const apiBaseUrlRef = useRef<HTMLInputElement>(null);
+
+  const handleSiteChange = (field: keyof SiteSettingsData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSiteSettings((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+  };
+
+  const resetSiteSettings = () => {
+    setFieldErrors(null);
+    setFormMessage(null);
+    setSiteSettings(initialSiteSettings);
+  };
+
+  const handleSiteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFieldErrors(null);
+    setFormMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const result = await updateSiteSettingsAdminAction(formData);
+
+      if (!result.success) {
+        if (result.fieldErrors) {
+          setFieldErrors(result.fieldErrors);
+
+          if (result.fieldErrors.appName) appNameRef.current?.focus();
+          else if (result.fieldErrors.projectName) projectNameRef.current?.focus();
+          else if (result.fieldErrors.projectTitle) projectTitleRef.current?.focus();
+          else if (result.fieldErrors.siteUrl) siteUrlRef.current?.focus();
+          else if (result.fieldErrors.apiBaseUrl) apiBaseUrlRef.current?.focus();
+        } else {
+          setFormMessage({ type: "error", message: result.message });
+        }
+        return;
+      }
+
+      if (result.data) setSiteSettings(result.data);
+      setFormMessage({ type: "success", message: result.message });
+    });
+  };
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-3 py-10">
+    <form className="max-w-screen-2xl mx-auto px-3 py-10" onSubmit={activeSection === "site" ? handleSiteSubmit : undefined}>
       <div className="mb-8 flex flex-wrap items-end gap-4">
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">System Control / {meta.eyebrow}</div>
@@ -141,27 +231,100 @@ const Settings = ({ section = "site" }: SettingsProps) => {
         </div>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
-          <Button type="button" disabled className="border border-gray-200 bg-white text-gray-400 hover:bg-white hover:text-gray-400">
+          <Button
+            type="button"
+            disabled={activeSection !== "site" || isPending}
+            onClick={resetSiteSettings}
+            className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:bg-white disabled:text-gray-400"
+          >
             초기화
           </Button>
-          <Button type="button" disabled className="!bg-blue-100 !text-blue-400 hover:!bg-blue-100 hover:!text-blue-400">
+          <Button
+            type="submit"
+            isLoading={isPending}
+            disabled={activeSection !== "site"}
+            className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white disabled:!bg-blue-100 disabled:!text-blue-300"
+          >
             저장하기
           </Button>
         </div>
       </div>
 
+      {formMessage && (
+        <div className={`mb-6 rounded-md px-3 py-2 text-sm leading-6 ${
+          formMessage.type === "success" ? "bg-cyan-50 text-cyan-600" : "bg-red-50 text-red-500"
+        }`}>
+          {formMessage.message}
+        </div>
+      )}
+
       {activeSection === "site" && (
         <>
           <SectionShell icon={<Globe2 size={13} />} title="브랜드 정보" description="사이트가 외부에 표시되는 기본 정보입니다.">
-            <FieldRow label="사이트 이름" description="영문 시스템 이름과 한글 표시명을 분리합니다.">
-              <div className="grid gap-4 md:grid-cols-2">
-                <InputField inputTitle="APP_NAME" name="appName" placeholder="APP_NAME  Gjworks" hideLabel />
-                <InputField inputTitle="APP_TITLE" name="appTitle" placeholder="APP_TITLE  지제이웍스" hideLabel />
-              </div>
-            </FieldRow>
-            <FieldRow label="사이트 설명" description="검색 결과와 공유 화면에서 기본 설명으로 사용할 수 있습니다.">
-              <textarea className={textareaClass} name="siteDescription" rows={4} placeholder="사이트를 대표하는 짧은 설명" />
-            </FieldRow>
+            <div className="grid gap-4 md:grid-cols-2">
+              <InlineField title="사이트 이름(영문)" description="관리자와 시스템 화면에서 사용하는 영문 이름입니다." settingKey="APP_NAME">
+                <InputField
+                  ref={appNameRef}
+                  inputTitle="APP_NAME"
+                  name="appName"
+                  value={siteSettings.appName}
+                  onChange={handleSiteChange("appName")}
+                  error={fieldErrors?.appName}
+                  placeholder="Gjworks"
+                  hideLabel
+                />
+              </InlineField>
+              <InlineField title="사이트 이름(한글)" description="사용자에게 보여줄 한글 사이트 이름입니다." settingKey="PROJECT_TITLE">
+                <InputField
+                  ref={projectTitleRef}
+                  inputTitle="PROJECT_TITLE"
+                  name="projectTitle"
+                  value={siteSettings.projectTitle}
+                  onChange={handleSiteChange("projectTitle")}
+                  error={fieldErrors?.projectTitle}
+                  placeholder="지제이웍스"
+                  hideLabel
+                />
+              </InlineField>
+            </div>
+            <InlineField title="프로젝트 이름" description="내부 식별과 시스템 표시에 사용할 이름입니다." settingKey="PROJECT_NAME">
+              <InputField
+                ref={projectNameRef}
+                inputTitle="PROJECT_NAME"
+                name="projectName"
+                value={siteSettings.projectName}
+                onChange={handleSiteChange("projectName")}
+                error={fieldErrors?.projectName}
+                placeholder="gjworks"
+                hideLabel
+              />
+            </InlineField>
+            <div className="grid gap-4 md:grid-cols-2">
+              <InlineField title="사이트 대표 URL" description="외부에서 접근하는 대표 주소입니다." settingKey="NEXT_PUBLIC_DEFAULT_URL">
+                <InputField
+                  ref={siteUrlRef}
+                  inputTitle="NEXT_PUBLIC_DEFAULT_URL"
+                  name="siteUrl"
+                  value={siteSettings.siteUrl}
+                  onChange={handleSiteChange("siteUrl")}
+                  error={fieldErrors?.siteUrl}
+                  placeholder="https://gjworks.dev"
+                  hideLabel
+                />
+              </InlineField>
+              <InlineField title="API 기본 URL" description="클라이언트나 외부 연동에서 사용할 API 주소입니다." settingKey="NEXT_PUBLIC_API_BASE_URL">
+                <InputField
+                  ref={apiBaseUrlRef}
+                  inputTitle="NEXT_PUBLIC_API_BASE_URL"
+                  name="apiBaseUrl"
+                  value={siteSettings.apiBaseUrl || ""}
+                  onChange={handleSiteChange("apiBaseUrl")}
+                  error={fieldErrors?.apiBaseUrl}
+                  placeholder="http://host.docker.internal:3000"
+                  hideLabel
+                />
+              </InlineField>
+            </div>
           </SectionShell>
 
           <SectionShell icon={<Image size={13} />} title="대표 이미지" description="로고, 파비콘, 공유 이미지를 지정합니다.">
@@ -322,7 +485,7 @@ const Settings = ({ section = "site" }: SettingsProps) => {
           </SectionShell>
         </>
       )}
-    </div>
+    </form>
   );
 };
 

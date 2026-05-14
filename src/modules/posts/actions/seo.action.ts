@@ -11,7 +11,7 @@ export async function getPostListMetadata(mid: string): Promise<Metadata> {
   const info = res.data;
 
   // 🌟 공통 헬퍼에 데이터만 던져줍니다.
-  return getSeoMetadata({
+  return await getSeoMetadata({
     title: info?.moduleName ?? "게시판",
     description:
       info?.desc ?? `${info?.moduleName ?? "게시판"}의 게시글 목록입니다.`,
@@ -30,7 +30,7 @@ export async function getPostReadMetadata(
   const doc = res.data;
 
   if (!doc) {
-    return getSeoMetadata({ title: "존재하지 않는 게시글입니다." });
+    return await getSeoMetadata({ title: "존재하지 않는 게시글입니다." });
   }
 
   const postTitle = doc.title ?? "제목 없음";
@@ -38,7 +38,7 @@ export async function getPostReadMetadata(
   const author = doc.user?.nickName || "작성자";
 
   // 🌟 상세 페이지도 공통 헬퍼로 포장!
-  return getSeoMetadata({
+  return await getSeoMetadata({
     title: postTitle,
     description: `${author}님의 글: ${description}`,
     image: doc.thumbnail || undefined, // 썸네일 있으면 전달

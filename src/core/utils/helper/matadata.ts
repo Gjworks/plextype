@@ -1,5 +1,6 @@
 
 import type { Metadata } from "next";
+import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 
 interface SeoOptions {
   title: string;
@@ -8,16 +9,16 @@ interface SeoOptions {
   url?: string;
 }
 
-export function getSeoMetadata({
+export async function getSeoMetadata({
                                  title,
                                  description = "Plextype으로 만든 멋진 사이트입니다.", // 기본 설명
                                  image = "/default-og.png", // 기본 OG 이미지
                                  url, // 이제 호출 시 없으면 환경변수에서 가져옵니다.
-                               }: SeoOptions): Metadata {
+                               }: SeoOptions): Promise<Metadata> {
 
-  // 🌟 환경변수에서 사이트 기본 설정 가져오기
-  const siteTitle = process.env.PROJECT_TITLE || "Plextype";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const settings = await getPublicSiteSettingsAction();
+  const siteTitle = settings.data?.projectTitle || "Plextype";
+  const siteUrl = settings.data?.siteUrl || "http://localhost:3000";
 
   // 최종 타이틀 구성 (예: "공지사항 | Plextype")
   const fullTitle = `${title} - ${siteTitle}`;
