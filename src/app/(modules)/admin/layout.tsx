@@ -1,7 +1,9 @@
 import AdminLayoutClient from './AdminLayoutClient'
+import { getPublicSiteSettingsAction } from '@/modules/admin/actions/settings.action'
 
-const AdminLayout = ({ children }: { children: React.ReactNode }) => {
-  const appName = process.env.APP_NAME || 'Gjworks'
+const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
+  const settings = await getPublicSiteSettingsAction()
+  const appName = settings.data?.appName || 'Gjworks'
 
   return <AdminLayoutClient appName={appName}>{children}</AdminLayoutClient>
 }

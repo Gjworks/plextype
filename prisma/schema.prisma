@@ -254,6 +254,22 @@ model Notification {
   @@index([createdAt], map: "idx_notification_created")
 }
 
+model AppSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String?  @db.Text
+  group       String   @default("general") @db.VarChar(45)
+  label       String?  @db.VarChar(100)
+  description String?  @db.Text
+  isPublic    Boolean  @default(false)
+  status      String?  @db.VarChar(45)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([group], map: "idx_app_setting_group")
+  @@index([isPublic], map: "idx_app_setting_public")
+}
+
 enum NotificationType {
   info
   success

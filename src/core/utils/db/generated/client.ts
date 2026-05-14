@@ -106,3 +106,8 @@ export type Attachment = Prisma.AttachmentModel
  * 
  */
 export type Notification = Prisma.NotificationModel
+/**
+ * Model AppSetting
+ * 
+ */
+export type AppSetting = Prisma.AppSettingModel
