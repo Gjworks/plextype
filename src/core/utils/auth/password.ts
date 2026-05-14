@@ -10,7 +10,6 @@ export async function hashedPassword(password: string): Promise<string> {
     const saltRounds = 10;
     const hash = await bcrypt.hash(password, saltRounds);
 
-    console.log("🔐 Hashed Password created.");
     return hash;
   } catch (error) {
     console.error("Hashing Error:", error);
@@ -29,7 +28,6 @@ export async function verifyPassword(
     // bcrypt.compare가 내부적으로 Salt를 추출하여 비교해줍니다.
     const isMatch = await bcrypt.compare(plainPassword, hashedPassword);
 
-    console.log("🔓 Password verification result:", isMatch);
     return isMatch;
   } catch (error) {
     console.error("Verification Error:", error);

@@ -1,4 +1,4 @@
-const timeToSeconds = (timeStr) => {
+const timeToSeconds = (timeStr: string) => {
   const regex = /(\d+)([a-zA-Z]+)/;
   const match = timeStr.match(regex);
   if (!match) {
@@ -10,13 +10,13 @@ const timeToSeconds = (timeStr) => {
 
   switch (unit) {
     case "s": // 초
-      return value * 1000;
+      return value;
     case "m": // 분
-      return value * 1000 * 60;
+      return value * 60;
     case "h": // 시간
-      return value * 1000 * 60 * 60;
+      return value * 60 * 60;
     case "d": // 일
-      return value * 1000 * 60 * 60 * 24;
+      return value * 60 * 60 * 24;
     default:
       throw new Error(`Unknown time unit: ${unit}`);
   }

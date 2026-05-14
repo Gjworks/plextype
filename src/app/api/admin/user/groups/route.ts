@@ -7,7 +7,6 @@ import prisma, { PermissionSubject } from "@/core/utils/db/prisma";
 export async function GET(request: NextRequest): Promise<Response> {
   try {
     const accessToken = request.cookies.get("accessToken")?.value;
-    console.log(accessToken);
     if (!accessToken)
       return jsonResponse(
         403,
@@ -24,7 +23,6 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     try {
       const groupList = await prisma.userGroup.findMany({});
-      console.log(groupList);
       return NextResponse.json(
         {
           success: true,

@@ -1,9 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 
-import { sign, verify, refreshVerify } from "@/core/utils/auth/jwtAuth";
+import { refresh, refreshVerify, sign, verify } from "@/core/utils/auth/jwtAuth";
 
 import { findUserById } from "@/modules/user/actions/user.query";
-import { timeToSeconds } from "@/core/utils/date/timeToSeconds";
+import prisma from "@/core/utils/db/prisma";
+import { getAccessTokenCookieOptions, getExpiredAuthCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
+import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {
@@ -25,17 +27,34 @@ export async function GET(request: NextRequest): Promise<Response> {
     // 2. 토큰 갱신이 필요한 경우 Refresh Token 확인
     if (needsNewToken && refreshToken) {
       const refreshDecoded = await refreshVerify(refreshToken);
-      if (refreshDecoded) {
+      const refreshTokenHash = hashRefreshToken(refreshToken);
+      const refreshUser = refreshDecoded?.id
+        ? await prisma.user.findUnique({
+          where: { id: refreshDecoded.id },
+          include: { userGroups: { select: { groupId: true } } },
+        })
+        : null;
+
+      if (refreshDecoded && refreshUser?.refreshToken === refreshTokenHash) {
         userId = refreshDecoded.id;
 
         // 새로운 Access Token 발급 및 쿠키 설정 로직 진행
         const tokenParams = {
-          id: refreshDecoded.id,
-          accountId: refreshDecoded.accountId,
-          isAdmin: refreshDecoded.isAdmin
+          id: refreshUser.id,
+          accountId: refreshUser.accountId,
+          isAdmin: refreshUser.isAdmin,
+          nickName: refreshUser.nickName,
+          groups: refreshUser.userGroups.map((group) => group.groupId),
         };
-        const newAccessToken = await sign(tokenParams);
-        const accessTokenExpire = timeToSeconds(process.env.ACCESSTOKEN_EXPIRES_IN || "1h");
+        const [newAccessToken, newRefreshToken] = await Promise.all([
+          sign(tokenParams),
+          refresh(tokenParams),
+        ]);
+
+        await prisma.user.update({
+          where: { id: refreshUser.id },
+          data: { refreshToken: hashRefreshToken(newRefreshToken) },
+        });
 
         // 유저 정보 가져오기 (공통 로직으로 통합)
         const user = await findUserById(userId!);
@@ -48,9 +67,12 @@ export async function GET(request: NextRequest): Promise<Response> {
           response.cookies.set({
             name: "accessToken",
             value: newAccessToken,
-            httpOnly: true,
-            sameSite: "strict",
-            maxAge: accessTokenExpire,
+            ...getAccessTokenCookieOptions(),
+          });
+          response.cookies.set({
+            name: "refreshToken",
+            value: newRefreshToken,
+            ...getRefreshTokenCookieOptions(),
           });
           return response;
         }
@@ -60,7 +82,6 @@ export async function GET(request: NextRequest): Promise<Response> {
     // 3. 유저 정보 반환 (정상 로그인 상태)
     if (userId) {
       const user = await findUserById(userId);
-      console.log(user)
       if (user) {
         return NextResponse.json({
           isLoggedIn: true,
@@ -71,8 +92,8 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     // 4. 모든 검증 실패 시 쿠키 삭제 및 비로그인 반환
     const response = NextResponse.json({ isLoggedIn: false });
-    response.cookies.set("accessToken", "", { maxAge: 0 });
-    response.cookies.set("refreshToken", "", { maxAge: 0 });
+    response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
+    response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
     return response;
 
   } catch (error) {
