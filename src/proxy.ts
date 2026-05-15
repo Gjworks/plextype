@@ -7,6 +7,13 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get("accessToken");
 
+  if (isStateChangingRequest(request) && !isSameOriginRequest(request)) {
+    return NextResponse.json(
+      { error: "Invalid request origin" },
+      { status: 403 },
+    );
+  }
+
   // 1. [ 무조건 통과 ] 로그인, API, 정적 파일
   if (
     pathname.startsWith("/auth") || 
@@ -68,4 +75,45 @@ const getClientIp = (request: NextRequest) => {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
   return (request as any).ip || request.headers.get("x-real-ip") || "unknown";
+};
+
+const CSRF_PROTECTED_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+const isStateChangingRequest = (request: NextRequest) => {
+  return CSRF_PROTECTED_METHODS.has(request.method.toUpperCase());
+};
+
+const isSameOriginRequest = (request: NextRequest) => {
+  const sourceOrigin = getHeaderOrigin(request.headers.get("origin"))
+    ?? getHeaderOrigin(request.headers.get("referer"));
+
+  if (!sourceOrigin) return false;
+
+  return getAllowedOrigins(request).has(sourceOrigin);
+};
+
+const getAllowedOrigins = (request: NextRequest) => {
+  const origins = new Set<string>([request.nextUrl.origin]);
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = forwardedHost || request.headers.get("host");
+
+  if (host) {
+    origins.add(`${forwardedProto || request.nextUrl.protocol.replace(":", "")}://${host}`);
+  }
+
+  const defaultUrlOrigin = getHeaderOrigin(process.env.NEXT_PUBLIC_DEFAULT_URL ?? null);
+  if (defaultUrlOrigin) origins.add(defaultUrlOrigin);
+
+  return origins;
+};
+
+const getHeaderOrigin = (value: string | null) => {
+  if (!value || value === "null") return null;
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
 };
