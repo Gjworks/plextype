@@ -39,11 +39,14 @@ async function setup() {
   console.log("\n🗄️  [3/3] 데이터베이스(PostgreSQL) 연결 설정");
   const dbUser = await rl.question('DB 사용자명 (postgres): ') || 'postgres';
   const dbPw = await rl.question('DB 비밀번호 (password): ') || 'password';
-  const dbHost = await rl.question('DB 호스트 주소 (localhost): ') || 'localhost';
+  const dbHost = await rl.question('DB 호스트 주소 (postgres): ') || 'postgres';
   const dbPort = await rl.question('DB 포트 번호 (5432): ') || '5432';
   const dbName = await rl.question('데이터베이스 이름 (plextype): ') || 'plextype';
+  const redisHost = await rl.question('Redis 호스트 주소 (redis): ') || 'redis';
+  const redisPort = await rl.question('Redis 포트 번호 (6379): ') || '6379';
 
   const dbUrl = `postgresql://${encodeURIComponent(dbUser)}:${encodeURIComponent(dbPw)}@${dbHost}:${dbPort}/${dbName}?schema=public`;
+  const redisUrl = `redis://${redisHost}:${redisPort}`;
 
   rl.close();
 
@@ -69,7 +72,7 @@ ADMIN_EMAIL=${envValue(adminEmail)}
 ADMIN_NICKNAME=${envValue(adminNickname)}
 
 DATABASE_URL=${envValue(dbUrl)}
-REDIS_URL=${envValue('redis://localhost:6379')}
+REDIS_URL=${envValue(redisUrl)}
 `;
     fs.writeFileSync('.env', envContent);
     console.log("✅ .env 파일 생성 완료!");
