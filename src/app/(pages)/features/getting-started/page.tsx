@@ -285,7 +285,92 @@ docker compose logs -f node`}</CodeBlock>
           />
         </DocSection>
 
-        <DocSection title="9. 빌드 확인">
+        <DocSection title="9. AGENTS.md 작성">
+          <p>
+            Plextype를 받아간 프로젝트에서 AI 도구나 코딩 에이전트를 함께 쓴다면, 프로젝트 루트에 `AGENTS.md`를 두는 것을
+            권장합니다. 이 파일은 에이전트에게 “어디를 수정해야 하고, 어디는 건드리면 안 되는지” 알려주는 작업 규칙입니다.
+          </p>
+          <p>
+            가장 중요한 원칙은 코어 파일을 직접 고치지 않고 `src/extensions`와 `src/app/(extensions)`에서 커스텀하는 것입니다.
+            그래야 나중에 Plextype 코어 패치본을 받아도 프로젝트별 기능과 충돌할 가능성이 줄어듭니다.
+          </p>
+          <CodeBlock>{`# AGENTS.md
+
+# Plextype Project Rules
+
+이 프로젝트는 Plextype 기반 프로젝트입니다.
+AI 에이전트는 코어 업데이트를 계속 받을 수 있도록 아래 규칙을 반드시 지켜야 합니다.
+
+## 핵심 원칙
+
+- 프로젝트별 기능 추가와 화면 커스텀은 기본적으로 \`src/extensions\`에서 처리합니다.
+- 프로젝트별 라우트 추가는 \`src/app/(extensions)\`에서 처리합니다.
+- \`src/app/(modules)\`, \`src/modules\`, \`src/core\`는 Plextype 코어 영역입니다.
+- 코어 영역은 모든 프로젝트에 공통으로 필요한 버그 수정이나 확장 포인트 추가가 아니라면 직접 수정하지 않습니다.
+- 코어 파일을 수정해야 할 것 같다면 먼저 \`extensions\`, trigger, registry, capability로 해결 가능한지 확인합니다.
+
+## 기능 추가 위치
+
+- 새 페이지: \`src/app/(extensions)/[route]/page.tsx\`
+- 새 레이아웃: \`src/extensions/layouts/[name]/Layout.tsx\`
+- 홈 페이지 교체: \`src/extensions/pages/home.tsx\`
+- 게시판 스킨: \`src/extensions/posts/tpl/[skin]/list.tsx\`
+- 게시판 스킨 등록: \`src/extensions/index.tsx\`
+- 스킨별 기능 선언: \`src/extensions/postCapabilities.ts\`
+- 프로젝트별 proxy 확장: \`src/extensions/proxy.ts\`
+- Prisma 모델 확장: \`src/extensions/prisma/schema/*.prisma\`
+- Prisma seed 확장: \`src/extensions/prisma/seed.js\`
+
+## Action Layer 규칙
+
+- React 페이지와 컴포넌트에서 Prisma query를 직접 호출하지 않습니다.
+- 데이터 흐름은 \`Component/Page -> Action -> Query\` 순서를 따릅니다.
+- 서버 액션 함수 이름은 \`Action\`으로 끝냅니다.
+- 관리자 전용 액션은 이름 중간에 \`Admin\`을 포함합니다.
+- \`*.tsx\` 파일에서 \`*.query.ts\`를 직접 import하지 않습니다.
+
+## Prisma 규칙
+
+- \`prisma/schema.prisma\`는 sync 결과물이므로 직접 수정하지 않습니다.
+- 코어 모델은 \`src/core/prisma/schema.prisma\`에 있습니다.
+- 프로젝트별 모델은 \`src/extensions/prisma/schema/*.prisma\`에 조각 파일로 추가합니다.
+- 모델을 추가하거나 수정한 뒤에는 \`npm run prisma:sync\`를 실행합니다.
+- migration이 필요하면 \`npm run migrate:dev\`를 사용합니다.
+
+## UI 규칙
+
+- 기존 컴포넌트와 디자인 규칙을 우선 사용합니다.
+- 버튼, 입력 필드, 모달, Alert는 코어 공통 컴포넌트를 먼저 확인합니다.
+- 기존 화면의 Tailwind 클래스와 레이아웃은 요청 없이 크게 바꾸지 않습니다.
+- 임의의 마케팅 페이지보다 실제 사용 가능한 화면을 우선 구현합니다.
+
+## 보안과 설정
+
+- \`.env\`, \`.env.production\`, \`.env.development\`는 요청 없이 읽거나 수정하지 않습니다.
+- JWT secret, DB password, API key 같은 민감값을 코드에 하드코딩하지 않습니다.
+- Docker, Caddy, 배포 설정은 수정 전에 변경 이유를 먼저 설명합니다.
+- 상태 변경 요청을 추가할 때는 기존 인증, 권한, CSRF/Origin 검증 흐름을 확인합니다.
+
+## 금지 또는 주의
+
+- \`node_modules\`, \`.next\`, \`dist\`, \`.git\`, \`public\`, \`storage\`는 분석하거나 수정하지 않습니다.
+- 사용자의 기존 변경사항을 임의로 되돌리지 않습니다.
+- \`git commit\`, \`git push\`, \`git reset --hard\`는 사용자가 명시적으로 요청하지 않으면 실행하지 않습니다.
+- 새 npm 패키지는 꼭 필요한 경우에만 추가하고, 먼저 기존 라이브러리로 가능한지 확인합니다.
+
+## 작업 후 확인
+
+- TypeScript 오류가 없는지 확인합니다.
+- 변경 범위가 작아도 가능한 경우 \`npm run build\`로 검증합니다.
+- Prisma schema를 바꿨다면 \`npm run prisma:sync\`와 필요한 migration 상태를 확인합니다.
+- 최종 보고에는 수정한 파일과 검증 결과를 간단히 남깁니다.`}</CodeBlock>
+          <p>
+            이 템플릿은 프로젝트 루트의 `AGENTS.md`에 넣어두면 됩니다. 프로젝트마다 더 엄격한 규칙이 필요하면 아래쪽에
+            추가해도 되지만, “커스텀은 extensions에서 한다”는 원칙은 유지하는 편이 좋습니다.
+          </p>
+        </DocSection>
+
+        <DocSection title="10. 빌드 확인">
           <p>
             배포 전에는 반드시 빌드를 확인합니다. 이 단계는 TypeScript 타입, Next.js 라우트 구성, 서버 컴포넌트 import,
             generated Prisma client import가 함께 검증되는 가장 기본적인 안전장치입니다.
