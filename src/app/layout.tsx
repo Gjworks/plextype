@@ -1,5 +1,5 @@
 import "./globals.css";
-import "@extensions/styles/style.css";
+import "@project/extensions/style.css";
 import ReactQueryProvider from "@/core/providers/ReactQueryProvider";
 import { UserProvider } from "@/core/providers/UserProvider";
 import Log from "@/core/utils/debug/Log";
