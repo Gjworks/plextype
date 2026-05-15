@@ -74,7 +74,7 @@ const Page = () => {
     <div className="relative flex min-h-[calc(100vh-228px)] items-center justify-center py-10">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="flex h-full items-center justify-center">
-          <div className="rotate-90 text-[7rem] font-bold uppercase tracking-normal text-black/5 sm:rotate-0 lg:text-[13rem] xl:text-[16rem] 2xl:text-[18rem] dark:text-white/5">
+          <div className="rotate-90 text-[7rem] font-bold uppercase tracking-normal text-black sm:rotate-0 lg:text-[13rem] xl:text-[16rem] 2xl:text-[18rem]">
             Features
           </div>
         </div>
@@ -102,7 +102,7 @@ const Page = () => {
               <motion.div key={item.href} variants={cardVariants}>
                 <Link
                   href={item.href}
-                  className="group flex h-[240px] flex-col rounded-2xl bg-gray-200/80 p-5 backdrop-blur-lg transition duration-500 hover:scale-[1.02] hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-900/30 dark:bg-dark-800 hover:dark:bg-primary-500"
+                  className="group flex h-[300px] w-full flex-col rounded-2xl bg-gray-200/80 p-5 backdrop-blur-lg transition duration-500 hover:scale-105 hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-900/40 dark:bg-dark-800 hover:dark:bg-primary-500"
                 >
                   <div className="mb-8 flex items-center justify-between text-black transition-colors group-hover:text-white dark:text-white">
                     <Icon size={20} strokeWidth={1.4} />

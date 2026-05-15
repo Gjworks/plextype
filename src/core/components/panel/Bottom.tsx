@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomPortal from "@/core/components/panel/BottomPortal";
 
-const Bottom = ({ children }) => {
+const Bottom = ({ children, closeHref }: { children: React.ReactNode; closeHref?: string }) => {
   const router = useRouter();
   const [panelState, setPanelState] = useState(false);
-  const [state, setState] = useState(false);
   useEffect(() => {
     setPanelState(true);
   }, []);
@@ -63,6 +62,11 @@ const Bottom = ({ children }) => {
     // close(false)
     setPanelState(false);
     setTimeout(() => {
+      if (closeHref) {
+        router.push(closeHref);
+        return;
+      }
+
       router.back();
     }, 500);
   };
@@ -72,6 +76,11 @@ const Bottom = ({ children }) => {
         // ESC 키를 눌렀을 때 실행할 함수 호출
         setPanelState(false);
         setTimeout(() => {
+          if (closeHref) {
+            router.push(closeHref);
+            return;
+          }
+
           router.back();
         }, 500);
       }
@@ -83,7 +92,7 @@ const Bottom = ({ children }) => {
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
     };
-  }, []); // useEffect가 처음에 한 번만 호출되도록 빈 배열을 전달
+  }, [closeHref, router]); // useEffect가 처음에 한 번만 호출되도록 빈 배열을 전달
 
   return (
     <>
