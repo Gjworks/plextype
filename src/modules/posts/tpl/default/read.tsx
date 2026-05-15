@@ -137,37 +137,6 @@ interface PostsReadProps {
   currentUser: any;
 }
 
-const EditorJsRenderer = ({ block }: { block: any }) => {
-  switch (block.type) {
-    case "header": {
-      const Tag: any = `h${block.data.level ?? 2}`;
-      return <Tag className="font-bold text-gray-900 mt-6 mb-2" dangerouslySetInnerHTML={{ __html: block.data.text }} />;
-    }
-    case "paragraph":
-      return <p className="leading-7 mb-4 text-zinc-800" dangerouslySetInnerHTML={{ __html: block.data.text }} />;
-    case "list": {
-      const ListTag = block.data.style === "ordered" ? "ol" : "ul";
-      const listClass = block.data.style === "ordered" ? "list-decimal pl-5 space-y-2" : "list-disc pl-5 space-y-2";
-      return (
-        <ListTag className={listClass}>
-          {block.data.items.map((item: string, i: number) => (
-            <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
-          ))}
-        </ListTag>
-      );
-    }
-    case "image":
-      return (
-        <figure className="my-8">
-          <img src={block.data.file?.url || block.data.url} alt="" className="rounded-2xl mx-auto shadow-sm border border-zinc-100" />
-          {block.data.caption && <figcaption className="text-center text-sm text-zinc-400 mt-3">{block.data.caption}</figcaption>}
-        </figure>
-      );
-    default:
-      return null;
-  }
-};
-
 const PostsRead = async ({ document, participants = [], postInfo, permissions, currentUser }: PostsReadProps) => {
   const extraFields = postInfo?.extraFields || [];
   const extraData = document.extraFieldData || {};
@@ -206,16 +175,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
         );
       }
 
-      // B: 기존 EditorJS 데이터인 경우
-      if (jsonContent.blocks) {
-        return (
-          <div className="post-blocks space-y-4">
-            {jsonContent.blocks.map((block: any, index: number) => (
-              <EditorJsRenderer key={block.id || index} block={block} />
-            ))}
-          </div>
-        );
-      }
+      if (jsonContent.blocks) return null;
     } catch (e) {
       const cleanHtml = DOMPurify.sanitize(rawContent, {
         ADD_ATTR: ['style', 'target', 'class', 'rel'],
