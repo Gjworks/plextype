@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import type React from "react";
-import { ArrowRight, FileText } from "lucide-react";
+import { ArrowRight, Check, Copy, FileText } from "lucide-react";
 
 import Bottom from "@/core/components/panel/Bottom";
 
@@ -71,10 +74,40 @@ export const DocSection = ({
 };
 
 export const CodeBlock = ({ children }: { children: React.ReactNode }) => {
+  const [copied, setCopied] = useState(false);
+  const codeText = useMemo(() => {
+    if (typeof children === "string") return children;
+    if (typeof children === "number") return String(children);
+    return "";
+  }, [children]);
+
+  const handleCopy = async () => {
+    if (!codeText) return;
+
+    try {
+      await navigator.clipboard.writeText(codeText);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
-    <pre className="max-w-3xl overflow-x-auto rounded-md border border-gray-900 bg-gray-950 p-5 text-xs leading-6 text-gray-100 shadow-sm dark:border-dark-800">
-      <code>{children}</code>
-    </pre>
+    <div className="group relative max-w-3xl">
+      <button
+        type="button"
+        onClick={handleCopy}
+        disabled={!codeText}
+        className="absolute right-3 top-3 z-10 inline-flex h-8 items-center gap-1.5 rounded border border-white/10 bg-white/10 px-2.5 text-[11px] font-medium text-gray-200 opacity-100 backdrop-blur transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40 sm:opacity-0 sm:group-hover:opacity-100"
+      >
+        {copied ? <Check size={13} /> : <Copy size={13} />}
+        {copied ? "Copied" : "Copy"}
+      </button>
+      <pre className="overflow-x-auto rounded-md border border-gray-900 bg-gray-950 p-5 pr-24 text-xs leading-6 text-gray-100 shadow-sm dark:border-dark-800">
+        <code>{children}</code>
+      </pre>
+    </div>
   );
 };
 
