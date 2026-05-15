@@ -309,6 +309,7 @@ export default function RootLayout({ children }) {
 
   console.log("\n📦 셋업: 패키지 설치 및 DB 초기화 중...");
   run('npm install');
+  run('npm run prisma:sync');
   run('npx prisma migrate dev --name init');
   run('npx prisma generate');
   run('npx prisma db seed');
