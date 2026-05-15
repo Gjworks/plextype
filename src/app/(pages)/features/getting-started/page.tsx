@@ -2,16 +2,16 @@ import { CodeBlock, DocSection, DocsShell, FeatureDocPanel, PathTable } from "..
 
 const requirementItems = [
   { path: "Git", desc: "GitHub 저장소를 내려받을 때 사용합니다. SSH clone을 쓰려면 GitHub SSH key가 등록되어 있어야 합니다." },
-  { path: "Node.js 22", desc: "Next.js 16과 React 19 기반 프로젝트입니다. 로컬 실행을 권장한다면 Node 22를 사용합니다." },
-  { path: "Docker Desktop", desc: "PostgreSQL과 Redis를 로컬에 직접 설치하지 않고 Docker Compose로 띄울 때 사용합니다." },
-  { path: "PostgreSQL", desc: "게시글, 회원, 설정, 알림 같은 영구 데이터를 저장합니다. Docker Compose로 실행할 수 있습니다." },
-  { path: "Redis", desc: "세션, 알림, 캐시성 데이터에 사용합니다. Docker Compose로 실행할 수 있습니다." },
+  { path: "Docker Desktop", desc: "Node.js, PostgreSQL, Redis를 모두 Docker Compose로 실행하기 위해 필요합니다." },
+  { path: "Node.js 22", desc: "Docker를 쓰지 않고 로컬에서 직접 실행할 때만 필요합니다. 기본 설치 흐름은 Docker Compose 기준입니다." },
+  { path: "PostgreSQL", desc: "게시글, 회원, 설정, 알림 같은 영구 데이터를 저장합니다. 기본 설치에서는 compose의 postgres 서비스가 담당합니다." },
+  { path: "Redis", desc: "세션, 알림, 캐시성 데이터에 사용합니다. 기본 설치에서는 compose의 redis 서비스가 담당합니다." },
 ];
 
 const composeItems = [
   { path: "postgres", desc: "예시 비밀번호는 반드시 프로젝트에 맞게 바꿔 사용합니다. 운영 환경에서는 더 긴 비밀번호를 권장합니다." },
-  { path: "redis", desc: "기본 compose 기준 포트 `6379`로 실행됩니다. 로컬 Node 실행에서는 `redis://localhost:6379`를 사용합니다." },
-  { path: "node", desc: "Node 22 컨테이너에서 `npm run dev`를 실행하는 서비스입니다. 처음 설치자는 DB/Redis만 먼저 쓰는 흐름이 더 쉽습니다." },
+  { path: "redis", desc: "컨테이너 내부에서는 `redis://redis:6379`, 호스트 컴퓨터에서는 `redis://localhost:6379`로 접근합니다." },
+  { path: "node", desc: "Node 22 컨테이너에서 setup과 개발 서버를 실행합니다. 기본 설치 흐름의 실제 앱 서비스입니다." },
 ];
 
 const GettingStartedPage = () => {
@@ -23,24 +23,25 @@ const GettingStartedPage = () => {
       >
         <DocSection title="설치 흐름">
           <p>
-            가장 쉬운 설치 방식은 소스코드는 로컬에서 실행하고, PostgreSQL과 Redis만 Docker Compose로 띄우는 방식입니다.
-            이렇게 하면 Next.js 개발 서버는 내 컴퓨터의 Node.js에서 실행되고, DB와 Redis는 컨테이너가 담당합니다.
+            기본 설치 방식은 `node`, `postgres`, `redis`를 모두 Docker Compose로 실행하는 방식입니다.
+            사용자는 로컬에 Node.js, PostgreSQL, Redis를 따로 설치하지 않아도 되고, compose 파일 하나로 개발 서버와
+            의존 서비스를 함께 관리할 수 있습니다.
           </p>
           <p>
-            처음 설치하는 사람은 아래 순서만 따라오면 됩니다. `npm run setup`은 내부에서 `npm install`까지 실행하므로
-            clone 직후에 `npm install`을 먼저 실행하지 않아도 됩니다.
+            처음 설치하는 사람은 아래 순서만 따라오면 됩니다. setup도 node 컨테이너 안에서 실행하므로 `npm install`을
+            호스트 컴퓨터에서 먼저 실행하지 않습니다.
           </p>
           <CodeBlock>{`git clone git@github.com:Gjworks/plextype.git
 cd plextype
-docker compose up -d postgres redis
-npm run setup
-npm run dev`}</CodeBlock>
+docker compose run --rm node npm run setup
+docker compose up -d
+docker compose logs -f node`}</CodeBlock>
         </DocSection>
 
         <DocSection title="준비물">
           <p>
-            설치 전에 아래 항목이 준비되어 있어야 합니다. Docker를 사용하면 PostgreSQL과 Redis를 직접 설치하지 않아도 되므로
-            처음 프로젝트를 받는 사람에게는 Docker Compose 방식을 권장합니다.
+            설치 전에 아래 항목이 준비되어 있어야 합니다. 기본 설치 흐름은 Docker Compose 기준이므로 Docker Desktop만
+            정상적으로 실행되고 있으면 Node.js, PostgreSQL, Redis를 로컬에 따로 설치하지 않아도 됩니다.
           </p>
           <PathTable items={requirementItems} />
         </DocSection>
@@ -58,11 +59,10 @@ cd plextype`}</CodeBlock>
           </p>
         </DocSection>
 
-        <DocSection title="2. Docker Compose로 DB 준비">
+        <DocSection title="2. Docker Compose 준비">
           <p>
-            로컬 컴퓨터에 PostgreSQL과 Redis를 직접 설치하지 않았다면 Docker Compose로 필요한 서비스만 먼저 띄웁니다.
-            처음 설치자는 전체 app 컨테이너까지 한 번에 실행하기보다 `postgres`, `redis`만 먼저 띄우는 흐름이 훨씬
-            단순합니다.
+            Plextype는 `node`, `postgres`, `redis` 세 서비스를 compose로 실행합니다. `node`는 Next.js 개발 서버와 setup을
+            실행하고, `postgres`는 데이터베이스, `redis`는 세션과 알림 관련 저장소를 담당합니다.
           </p>
           <p>
             프로젝트 루트에 `docker-compose.yml`이 없다면 아래 내용을 그대로 만들어 사용할 수 있습니다. Plextype 배포판에는
@@ -87,11 +87,11 @@ cd plextype`}</CodeBlock>
     networks:
       - web-network
     command: sh -lc "npm run dev"
-    env_file:
-      - ./.env.development
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     stdin_open: true
     tty: true
     environment:
@@ -111,6 +111,11 @@ cd plextype`}</CodeBlock>
       - postgres_data:/var/lib/postgresql/data
     networks:
       - web-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plextype -d plextype"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -122,6 +127,11 @@ cd plextype`}</CodeBlock>
     networks:
       - web-network
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:
@@ -132,10 +142,10 @@ networks:
   web-network:
     driver: bridge`}</CodeBlock>
           <p>
-            처음 설치할 때는 아래처럼 DB와 Redis만 먼저 올리는 것을 권장합니다. 이렇게 하면 `npm run setup`과
-            `npm run dev`는 내 컴퓨터의 Node.js에서 실행되고, DB/Redis만 Docker가 담당합니다.
+            compose 파일을 준비했다면 setup을 먼저 실행합니다. 이 명령은 `node` 컨테이너를 임시로 띄워 `npm run setup`을
+            실행하고, setup이 끝나면 해당 임시 컨테이너를 제거합니다. `postgres`와 `redis`는 의존 서비스로 함께 준비됩니다.
           </p>
-          <CodeBlock>{`docker compose up -d postgres redis`}</CodeBlock>
+          <CodeBlock>{`docker compose run --rm node npm run setup`}</CodeBlock>
           <PathTable items={composeItems} />
           <p>
             `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`는 PostgreSQL 컨테이너가 처음 초기화될 때 기본 계정과
@@ -143,26 +153,33 @@ networks:
             비밀번호는 `POSTGRES_PASSWORD`에 적은 값이 됩니다.
           </p>
           <p>
+            `POSTGRES_USER`나 `POSTGRES_DB`를 `plextype`가 아닌 다른 값으로 바꾼다면, compose 파일 안의 PostgreSQL
+            `healthcheck`에 있는 `pg_isready -U plextype -d plextype` 값도 같이 바꿔야 합니다.
+          </p>
+          <p>
             중요한 점은 이 값들이 매번 다시 적용되는 설정이 아니라는 것입니다. `postgres_data` Docker volume이 이미 만들어진
             뒤에는 compose 파일의 `POSTGRES_PASSWORD`나 `POSTGRES_DB`를 바꿔도 기존 DB 계정과 데이터베이스가 자동으로
             바뀌지 않습니다. PostgreSQL 공식 이미지가 빈 데이터 디렉토리를 처음 발견했을 때만 이 초기화 값을 사용하기 때문입니다.
           </p>
           <p>
-            위 명령이 성공하면 PostgreSQL은 `localhost:5432`, Redis는 `localhost:6379`로 접근할 수 있습니다.
-            `npm run setup`에서 DB 정보를 물어볼 때 compose 파일에 적은 값과 같은 값을 입력합니다.
+            setup에서 DB 정보를 물어볼 때는 compose 네트워크 안에서 접근하는 기준으로 입력합니다. 즉 DB 호스트는
+            `localhost`가 아니라 compose 서비스 이름인 `postgres`입니다. Redis도 `redis`를 사용합니다.
           </p>
           <CodeBlock>{`DB 사용자명: plextype
 DB 비밀번호: compose 파일의 POSTGRES_PASSWORD 값
-DB 호스트 주소: localhost
+DB 호스트 주소: postgres
 DB 포트 번호: 5432
-데이터베이스 이름: plextype`}</CodeBlock>
+데이터베이스 이름: plextype
+Redis 호스트 주소: redis
+Redis 포트 번호: 6379`}</CodeBlock>
           <p>
             설치 직후 비밀번호를 잘못 적었다면 volume을 유지한 채 compose 파일만 수정해도 해결되지 않을 수 있습니다.
             데이터를 아직 만들지 않은 초기 설치 단계라면 아래 명령으로 컨테이너와 volume을 지운 뒤 다시 올릴 수 있습니다.
             이 명령은 PostgreSQL 데이터도 함께 삭제하므로, 이미 운영 데이터가 들어간 환경에서는 사용하면 안 됩니다.
           </p>
           <CodeBlock>{`docker compose down -v
-docker compose up -d postgres redis`}</CodeBlock>
+docker compose run --rm node npm run setup
+docker compose up -d`}</CodeBlock>
           <p>
             이미 데이터가 들어간 뒤 비밀번호를 바꾸고 싶다면 volume을 삭제하지 말고 PostgreSQL 안에서 `ALTER USER` 같은
             DB 명령으로 계정 비밀번호를 변경해야 합니다. 설치 문서의 초기화 명령은 “처음 설치를 다시 시작할 때”만 사용합니다.
@@ -171,15 +188,14 @@ docker compose up -d postgres redis`}</CodeBlock>
 
         <DocSection title="3. setup 실행">
           <p>
-            배포판을 처음 받은 사람은 프로젝트 루트에서 `npm run setup`을 실행합니다. 이 명령은 단순히 `.env`만 만드는
-            스크립트가 아니라 사이트 기본정보, 관리자 계정, DB 연결 정보, storage 폴더, 패키지 설치, Prisma migration,
-            Prisma generate, seed까지 이어서 처리합니다.
+            배포판을 처음 받은 사람은 프로젝트 루트에서 setup을 한 번 실행합니다. Docker Compose 기준에서는 호스트에서
+            `npm run setup`을 직접 실행하지 않고, 아래처럼 node 컨테이너 안에서 실행합니다.
           </p>
-          <CodeBlock>{`npm run setup`}</CodeBlock>
+          <CodeBlock>{`docker compose run --rm node npm run setup`}</CodeBlock>
           <p>
-            setup은 이미 `npm install`을 내부에서 실행합니다. 따라서 설치 직후에 `npm install`을 먼저 실행할 필요는
-            없습니다. DB가 아직 준비되지 않았다면 compose 파일의 `POSTGRES_PASSWORD`를 먼저 바꾼 뒤
-            `docker compose up -d postgres redis`를 실행하고 setup을 다시 실행합니다.
+            이 명령은 단순히 `.env`만 만드는 스크립트가 아니라 사이트 기본정보, 관리자 계정, DB 연결 정보, storage 폴더,
+            패키지 설치, Prisma migration, Prisma generate, seed까지 이어서 처리합니다. setup은 내부에서 `npm install`을
+            실행하므로 별도로 `npm install`을 먼저 실행하지 않습니다.
           </p>
         </DocSection>
 
@@ -197,15 +213,15 @@ docker compose up -d postgres redis`}</CodeBlock>
 관리자 닉네임: 관리자`}</CodeBlock>
           <p>
             Docker Compose의 PostgreSQL을 그대로 쓴다면 DB 입력값은 compose 파일에 적은 `POSTGRES_USER`,
-            `POSTGRES_PASSWORD`, `POSTGRES_DB`를 기준으로 입력합니다. 이미 별도 DB를 운영 중이라면 그 DB의 접속 정보를
-            입력합니다.
+            `POSTGRES_PASSWORD`, `POSTGRES_DB`를 기준으로 입력합니다. Docker Compose 전체 실행 기준에서는 DB 호스트를
+            `postgres`, Redis 호스트를 `redis`로 입력합니다.
           </p>
           <CodeBlock>{`APP_NAME=plextype
 APP_TITLE=plextype
 PROJECT_TITLE=plextype
 NEXT_PUBLIC_DEFAULT_URL=http://localhost:3000
-DATABASE_URL=postgresql://plextype:your-password@localhost:5432/plextype?schema=public
-REDIS_URL=redis://localhost:6379`}</CodeBlock>
+DATABASE_URL=postgresql://plextype:your-password@postgres:5432/plextype?schema=public
+REDIS_URL=redis://redis:6379`}</CodeBlock>
           <p>
             관리자 계정 정보는 seed 단계에서 사용됩니다. JWT secret, secret key, public secret은 setup이 랜덤 문자열로
             생성합니다. `.env`가 이미 존재하면 덮어쓰지 않으므로, 값을 다시 만들고 싶다면 기존 `.env`를 백업하거나
@@ -232,33 +248,28 @@ npx prisma db seed`}</CodeBlock>
 
         <DocSection title="6. 개발 서버 실행">
           <p>
-            setup이 끝나면 개발 서버를 실행합니다. 기본 포트는 3000입니다. 현재 `dev` 스크립트는 `.env`와
-            `.env.development`를 함께 읽습니다. 일반 설치자는 setup으로 생성된 `.env`만 있어도 바로 실행할 수 있습니다.
+            setup이 끝나면 전체 서비스를 백그라운드로 실행합니다. 이때 `node`, `postgres`, `redis`가 모두 compose로
+            실행됩니다. 기본 포트는 3000입니다.
           </p>
-          <CodeBlock>{`npm run dev`}</CodeBlock>
-          <p>
-            실행 후 브라우저에서 `http://localhost:3000`으로 접속합니다. 3000 포트가 이미 사용 중이면 Next.js가 다른
-            포트를 안내할 수 있으므로, 터미널에 표시되는 주소를 따릅니다.
-          </p>
-        </DocSection>
-
-        <DocSection title="7. 전체 Docker 실행">
-          <p>
-            `docker-compose.yml`에는 `node` 서비스도 포함되어 있습니다. 다만 처음 설치자는 로컬 Node 실행 방식이 더 쉽습니다.
-            전체 Docker 실행은 컨테이너 네트워크 기준으로 DB host가 `postgres`, Redis host가 `redis`가 되어야 하므로
-            로컬 실행과 환경값이 달라질 수 있습니다.
-          </p>
-          <p>
-            전체 Docker 방식으로 실행하려면 setup 이후 `.env`의 DB/Redis 주소가 컨테이너 기준인지 확인합니다.
-            Node 컨테이너 안에서 실행할 때는 아래처럼 서비스 이름을 host로 사용합니다.
-          </p>
-          <CodeBlock>{`DATABASE_URL=postgresql://plextype:your-password@postgres:5432/plextype?schema=public
-REDIS_URL=redis://redis:6379`}</CodeBlock>
           <CodeBlock>{`docker compose up -d
 docker compose logs -f node`}</CodeBlock>
           <p>
-            반대로 Node를 로컬에서 실행한다면 DB/Redis는 `localhost`를 사용합니다. 설치가 어렵지 않아야 하므로,
-            처음에는 “DB와 Redis만 Docker, Next.js는 로컬 Node” 흐름을 권장합니다.
+            실행 후 브라우저에서 `http://localhost:3000`으로 접속합니다. 3000 포트가 이미 사용 중이면 Next.js가 다른
+            포트를 자동으로 열지 못할 수 있으니 compose의 포트 매핑을 바꿔야 합니다.
+          </p>
+        </DocSection>
+
+        <DocSection title="7. 로컬 Node로 실행할 때">
+          <p>
+            특별한 이유로 로컬 Node.js에서 직접 실행하고 싶다면 그때만 DB와 Redis를 compose로 올리고, setup과 dev를
+            호스트에서 실행할 수 있습니다. 이 경우 DB/Redis host는 compose 내부 이름이 아니라 `localhost`입니다.
+          </p>
+          <CodeBlock>{`docker compose up -d postgres redis
+npm run setup
+npm run dev`}</CodeBlock>
+          <p>
+            로컬 Node 방식으로 setup을 실행한다면 DB 호스트는 `localhost`, Redis 호스트도 `localhost`로 입력합니다.
+            기본 설치 문서는 Docker Compose 전체 실행을 기준으로 작성되어 있으므로, 이 방식은 선택 사항입니다.
           </p>
         </DocSection>
 
