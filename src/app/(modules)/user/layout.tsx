@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import DefaultLayout from "@extensions/layouts/default/Layout";
+import { DefaultLayout } from "@project/extensions";
 import { cookies } from "next/headers";
 import { verify } from "@utils/auth/jwtAuth";
 import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";

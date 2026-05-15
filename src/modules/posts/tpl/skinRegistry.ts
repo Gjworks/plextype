@@ -1,15 +1,13 @@
 import type React from "react";
 
-import IssueTrackerListSkin from "@/extensions/posts/tpl/issuetracker/list";
+import { postSkins } from "@project/extensions";
 
 type PostSkinRegistry = {
   list: Record<string, React.ComponentType<any>>;
 };
 
 export const postSkinRegistry: PostSkinRegistry = {
-  list: {
-    issuetracker: IssueTrackerListSkin,
-  },
+  list: postSkins || {},
 };
 
 export function normalizeSkinName(value: unknown) {

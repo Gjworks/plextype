@@ -64,7 +64,7 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
   const pathname = usePathname()
   // 1️⃣ 공통 유틸: 경로 끝의 슬래시 제거
   const cleanPath = (p: string) => p.replace(/\/$/, '')
-  const normalizedPathname = cleanPath(pathname)
+  const normalizedPathname = cleanPath(pathname ?? '')
   const [isHovered, setIsHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showRight, setShowRight] = useState(false)
@@ -227,7 +227,7 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
             <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
               <span className="uppercase tracking-widest text-[10px]">gjworks</span>
               <ChevronRight size={14} className="text-gray-200" />
-              <span className="text-black font-bold uppercase tracking-widest text-[10px]">{pathname === '/admin' ? 'Overview' : pathname.split('/').pop()}</span>
+              <span className="text-black font-bold uppercase tracking-widest text-[10px]">{normalizedPathname === '/admin' ? 'Overview' : normalizedPathname.split('/').pop()}</span>
             </div>
 
             <div className="flex items-center gap-0 md:gap-3">
@@ -349,7 +349,7 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
   const pathname = usePathname()
   const router = useRouter()
   const cleanPath = (p: string) => p.replace(/\/$/, '')
-  const normalizedPathname = cleanPath(pathname)
+  const normalizedPathname = cleanPath(pathname ?? '')
 
   // 🌟 1. 활성화 판별 로직 고도화
   const isActive = useMemo(() => {
@@ -462,7 +462,7 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
 
 const SideItem = ({ href, icon, label, isExpanded, active }: any) => {
   const pathname = usePathname()
-  const isActive = active !== undefined ? active : pathname.replace(/\/$/, '') === href.replace(/\/$/, '')
+  const isActive = active !== undefined ? active : (pathname ?? '').replace(/\/$/, '') === href.replace(/\/$/, '')
 
   return (
     <Link href={href}>

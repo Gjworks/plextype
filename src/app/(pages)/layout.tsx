@@ -1,6 +1,6 @@
 import "../globals.css";
 
-import DefaultLayout from '@extensions/layouts/default/Layout'
+import { DefaultLayout } from "@project/extensions";
 import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 
 const PageLayout = async ({ children }) => {

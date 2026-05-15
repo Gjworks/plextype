@@ -30,6 +30,7 @@ import DefaultCommentsSkin from "@/modules/comment/tpl/list";
 import DefaultWriteSkin from "@/modules/posts/tpl/default/write";
 import CommentListStatic from "@/modules/comment/tpl/commentListStatic";
 import { normalizeSkinName, postSkinRegistry } from "@/modules/posts/tpl/skinRegistry";
+import { getPostSkinCapability } from "@/modules/posts/actions/skinCapability";
 
 /** 💡 공통 서버 유저 헬퍼 */
 async function getServerUser() {
@@ -95,6 +96,8 @@ async function PostList({
   );
 
   const configuredListSkin = normalizeSkinName(infoRes.data.config?.skin);
+  const postSkinCapability = getPostSkinCapability(infoRes.data.config);
+  const defaultDocumentStatus = postSkinCapability.documentStatus?.defaultStatus;
   const ResolvedSkin = Skin || postSkinRegistry.list[configuredListSkin] || DefaultListSkin;
 
   return (
@@ -104,7 +107,7 @@ async function PostList({
       <ResolvedSkin
         key={`${mid}-${page}-${category}`}
         posts={listRes.data?.documentList || []}
-        status={status || (configuredListSkin === "issuetracker" ? "open" : undefined)}
+        status={status || defaultDocumentStatus}
         statusCounts={listRes.data?.statusCounts}
         pagination={
           listRes.data?.navigation || {

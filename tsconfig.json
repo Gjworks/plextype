@@ -39,6 +39,22 @@
       ],
       "@extensions/*": ["./src/extensions/*"],
       "@extensions/trigger": ["./src/extensions/trigger/index.ts"],
+      "@project/extensions": [
+        "./src/extensions/index.tsx",
+        "./src/registry/defaultRegistry.tsx"
+      ],
+      "@project/extensions/style.css": [
+        "./src/extensions/styles/style.css",
+        "./src/registry/empty.css"
+      ],
+      "@project/triggers": [
+        "./src/extensions/triggerRegistry.ts",
+        "./src/registry/defaultTriggerRegistry.ts"
+      ],
+      "@project/post-capabilities": [
+        "./src/extensions/postCapabilities.ts",
+        "./src/registry/defaultPostCapabilities.ts"
+      ],
       "@components/*": [
         "./src/core/components/*"
       ],

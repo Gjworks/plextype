@@ -19,7 +19,7 @@ const PostsCategories = () => {
   console.log(Category)
 
   // URL의 category 파라미터 값 가져오기
-  const currentCategory = searchParams.get("category");
+  const currentCategory = searchParams?.get("category");
 
   // 1. URL이 변경되면(카테고리 클릭 시) activeTabIndex를 업데이트
   useEffect(() => {
@@ -59,7 +59,7 @@ const PostsCategories = () => {
         {/* '전체' 링크: 카테고리 쿼리를 제거하여 원래 경로로 이동 */}
         <Link
           key={0}
-          href={pathname}
+          href={pathname || "/"}
           ref={(el) => {
             tabsRef.current[0] = el;
           }}

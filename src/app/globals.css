@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source "../extensions";
+@source "./(extensions)";
 
 @theme {
     --z-10: 10;
