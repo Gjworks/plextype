@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "setup": "node setup.mjs",
-    "dev": "dotenv -e .env.development next dev --hostname 0.0.0.0 --port 3000",
+    "dev": "dotenv -e .env -e .env.development next dev --hostname 0.0.0.0 --port 3000",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "next lint",
@@ -12,10 +12,13 @@
     "deploy": "npm version patch && git push origin main --follow-tags",
     "prisma:sync": "node scripts/sync-prisma.mjs",
     "prisma:generate": "npm run prisma:sync && npx prisma generate",
-    "migrate:dev": "npm run prisma:sync && dotenv -e .env.development -- npx prisma migrate dev",
-    "migrate:reset": "npm run prisma:sync && dotenv -e .env.development -- npx prisma migrate reset",
-    "migrate:init": "npm run prisma:sync && dotenv -e .env.development -- npx prisma migrate dev --name init",
-    "dbpush:push": "npm run prisma:sync && dotenv -e .env.development -- npx prisma db push"
+    "migrate:dev": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate dev",
+    "migrate:reset": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate reset",
+    "migrate:init": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate dev --name init",
+    "dbpush:push": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma db push"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
