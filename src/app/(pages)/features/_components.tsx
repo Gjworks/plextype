@@ -67,7 +67,7 @@ export const DocSection = ({
         <h2 className="text-[13px] font-semibold tracking-normal text-gray-800 dark:text-dark-100">{title}</h2>
       </div>
       <div>
-        <div className="grid max-w-3xl gap-5 text-sm leading-7 text-gray-500 dark:text-dark-300">{children}</div>
+        <div className="grid max-w-3xl gap-5 text-base leading-7 tracking-tight text-gray-500 dark:text-dark-300">{children}</div>
       </div>
     </section>
   );

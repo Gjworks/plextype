@@ -208,7 +208,7 @@ docker compose up -d`}</CodeBlock>
           <CodeBlock>{`사이트 이름 - 영문 APP_NAME: plextype
 사이트 이름 - 한글 APP_TITLE: plextype
 관리자 ID: admin
-관리자 비밀번호: password123
+관리자 비밀번호: password1234
 관리자 이메일: admin@example.com
 관리자 닉네임: 관리자`}</CodeBlock>
           <p>
