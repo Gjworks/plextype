@@ -424,7 +424,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
         </div>
       </div>
 
-      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-400">
+      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-400 tracking-tight">
         <style dangerouslySetInnerHTML={{ __html: `
       .plextype-shiki-block {
         display: block !important;

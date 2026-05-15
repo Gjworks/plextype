@@ -31,7 +31,7 @@ async function setup() {
   // 2. 관리자 정보 입력
   console.log("\n👤 [2/3] 관리자(Admin) 계정 설정");
   const adminId = await rl.question('관리자 ID (admin): ') || 'admin';
-  const adminPw = await rl.question('관리자 비밀번호 (password123): ') || 'password123';
+  const adminPw = await rl.question('관리자 비밀번호 (password1234): ') || 'password1234';
   const adminEmail = await rl.question('관리자 이메일 (admin@example.com): ') || 'admin@example.com';
   const adminNickname = await rl.question('관리자 닉네임 (관리자): ') || '관리자';
 
