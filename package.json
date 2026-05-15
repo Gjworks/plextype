@@ -10,10 +10,12 @@
     "lint": "next lint",
     "release": "release-it",
     "deploy": "npm version patch && git push origin main --follow-tags",
-    "migrate:dev": "dotenv -e .env.development -- npx prisma migrate dev",
-    "migrate:reset": "dotenv -e .env.development -- npx prisma migrate reset",
-    "migrate:init": "dotenv -e .env.development -- npx prisma migrate dev --name init",
-    "dbpush:push": "dotenv -e .env.development -- npx prisma db push"
+    "prisma:sync": "node scripts/sync-prisma.mjs",
+    "prisma:generate": "npm run prisma:sync && npx prisma generate",
+    "migrate:dev": "npm run prisma:sync && dotenv -e .env.development -- npx prisma migrate dev",
+    "migrate:reset": "npm run prisma:sync && dotenv -e .env.development -- npx prisma migrate reset",
+    "migrate:init": "npm run prisma:sync && dotenv -e .env.development -- npx prisma migrate dev --name init",
+    "dbpush:push": "npm run prisma:sync && dotenv -e .env.development -- npx prisma db push"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

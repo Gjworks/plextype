@@ -9,6 +9,7 @@ export const docsNav = [
   { href: "/features/architecture", title: "프로젝트 구조", desc: "코어와 개인 확장 영역" },
   { href: "/features/extensions", title: "Extensions", desc: "index.tsx, trigger, capability 등록" },
   { href: "/features/layouts", title: "Layouts & Page", desc: "기본 레이아웃과 홈 페이지 교체" },
+  { href: "/features/project-api", title: "Project API", desc: "proxy, Prisma, 배포판 확장 규칙" },
   { href: "/features/posts", title: "Posts", desc: "게시판 스킨과 issuetracker 구조" },
   { href: "/features/previews", title: "Previews", desc: "기본 제공 화면 확인" },
   { href: "/features/operations", title: "운영 규칙", desc: "업데이트와 커스텀 충돌 방지" },

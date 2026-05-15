@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowUpRight, BookOpen, Boxes, GitBranch, Layers, Play, Terminal } from "lucide-react";
+import { ArrowUpRight, BookOpen, Boxes, Database, GitBranch, Layers, Play, Terminal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { docsNav } from "./_components";
@@ -12,6 +12,7 @@ const iconMap: Record<string, LucideIcon> = {
   "프로젝트 구조": Boxes,
   Extensions: GitBranch,
   "Layouts & Page": Layers,
+  "Project API": Database,
   Posts: BookOpen,
   Previews: Play,
   "운영 규칙": BookOpen,
@@ -61,7 +62,6 @@ const Page = () => {
       opacity: 1,
       transition: {
         duration: 0.36,
-        ease: "easeOut",
       },
     },
     offscreen: {

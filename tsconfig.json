@@ -55,6 +55,10 @@
         "./src/extensions/postCapabilities.ts",
         "./src/core/registry/defaultPostCapabilities.ts"
       ],
+      "@project/proxy": [
+        "./src/extensions/proxy.ts",
+        "./src/core/proxy/defaultProxy.ts"
+      ],
       "@components/*": [
         "./src/core/components/*"
       ],
