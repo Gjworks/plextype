@@ -10,8 +10,7 @@ export function useRealtimeNotification(userId: string | number | undefined) {
   useEffect(() => {
     if (!userId) return; // 로그인 안 했으면 연결 안 함
 
-    // 🌟 URL 뒤에 userId를 쿼리 스트링으로 붙입니다.
-    const eventSource = new EventSource(`/api/notifications/stream?userId=${userId}`);
+    const eventSource = new EventSource(`/api/notifications/stream`);
 
     eventSource.onmessage = (event) => {
       try {

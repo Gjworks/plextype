@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import DefaultLayout from "@extensions/layouts/default/Layout";
 import { cookies } from "next/headers";
 import { verify } from "@utils/auth/jwtAuth";
+import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 
 interface CurrentUser {
   id: number;
@@ -14,6 +15,7 @@ interface CurrentUser {
 export default async function PageLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const accessToken = await cookieStore.get("accessToken")?.value;
+  const settings = await getPublicSiteSettingsAction();
 
   let currentUser: CurrentUser | null = null;
   if (accessToken) {
@@ -33,7 +35,10 @@ export default async function PageLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <DefaultLayout>
+    <DefaultLayout
+      siteUrl={settings.data?.siteUrl}
+      siteTitle={settings.data?.projectTitle}
+    >
         {children}
     </DefaultLayout>
   );

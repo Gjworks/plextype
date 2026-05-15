@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import DashboardPostsList from "@/modules/posts/admin/list";
 import { getPostsListAdminAction } from "@/modules/posts/actions/posts.action";
+import Loading from "@/app/loading";
 
 const Page = async ({
   searchParams,
@@ -36,7 +37,7 @@ const Page = async ({
   return (
     <div className="">
       <div className="max-w-screen-2xl mx-auto px-3 pt-6 pb-12">
-        <Suspense fallback={<div>목록 로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <DashboardPostsList initialData={items} pagination={pagination} />
         </Suspense>
       </div>

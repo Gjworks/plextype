@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import { constants } from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import prisma from "@/core/utils/db/prisma";
+import { cookies } from "next/headers";
+import { verify } from "@/core/utils/auth/jwtAuth";
 
 /**
  * 🚀 Plextype System Diagnostic API
@@ -12,6 +15,14 @@ import prisma from "@/core/utils/db/prisma";
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+  const verified = accessToken ? await verify(accessToken) : null;
+
+  if (!verified?.isAdmin) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const status = {
     db: false,
     storage: false,
@@ -27,9 +38,6 @@ export async function GET() {
   } catch (error) {
     console.error("[Diagnostic] DB Connection Failed:", error);
     status.db = false;
-  } finally {
-    // 85원 정신: 리소스 누수 방지를 위해 반드시 연결 종료
-    await prisma.$disconnect();
   }
 
   // 2. Storage 폴더 쓰기 권한 진단
@@ -37,12 +45,8 @@ export async function GET() {
     const storagePath = path.join(process.cwd(), 'storage');
 
     // 폴더 존재 여부 및 쓰기 권한(W_OK) 확인
-    if (fs.existsSync(storagePath)) {
-      fs.accessSync(storagePath, fs.constants.W_OK);
-      status.storage = true;
-    } else {
-      status.storage = false;
-    }
+    await fs.access(storagePath, constants.W_OK);
+    status.storage = true;
   } catch (error) {
     console.error("[Diagnostic] Storage Access Denied:", error);
     status.storage = false;
@@ -51,11 +55,16 @@ export async function GET() {
   // 3. .env 환경 변수 파일 존재 여부 진단
   try {
     const envPath = path.join(process.cwd(), '.env');
-    status.env = fs.existsSync(envPath);
+    await fs.access(envPath, constants.R_OK);
+    status.env = true;
   } catch (error) {
     status.env = false;
   }
 
   // 최종 상태 반환
-  return NextResponse.json(status);
+  return NextResponse.json(status, {
+    headers: {
+      "Cache-Control": "no-store",
+    },
+  });
 }

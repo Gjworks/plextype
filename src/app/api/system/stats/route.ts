@@ -1,10 +1,18 @@
 // app/api/system/stats/route.ts
 import { NextRequest } from "next/server";
 import si from 'systeminformation';
+import { verify } from "@/core/utils/auth/jwtAuth";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  const accessToken = req.cookies.get("accessToken")?.value;
+  const verified = accessToken ? await verify(accessToken) : null;
+
+  if (!verified?.isAdmin) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -52,8 +60,9 @@ export async function GET(req: NextRequest) {
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-store, no-cache',
       'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
     },
   });
 }

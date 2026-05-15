@@ -3,6 +3,7 @@ import React, { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { Post } from "@/modules/posts"; // 🌟 스마트 블록
 import { getPostReadMetadata } from "@/modules/posts/actions/seo.action";
+import Loading from "@/app/loading";
 
 interface PageProps {
   params: Promise<{ mid: string; slug: string }>;
@@ -26,11 +27,11 @@ const Page = async ({ params, searchParams }: PageProps) => {
 
   return (
     <div className="max-w-screen-xl mx-auto">
-      <Suspense fallback={<div className="py-20 text-center text-gray-400">본문을 불러오는 중...</div>}>
+      <Suspense fallback={<Loading />}>
         <Post.Read mid={mid} slug={docId} />
       </Suspense>
 
-      <Suspense fallback={<div className="py-10 text-center text-gray-400">댓글을 불러오는 중...</div>}>
+      <Suspense fallback={<Loading />}>
         <Post.Comments
           mid={mid}
           slug={docId}
