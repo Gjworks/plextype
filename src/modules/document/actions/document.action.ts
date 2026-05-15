@@ -13,6 +13,7 @@ import * as documentQuery from "@/modules/document/actions/document.query";
 import {withTrigger} from "@utils/trigger/triggerWrapper";
 import {CommentWithChildren} from "@/modules/comment/actions/_type";
 import { nanoid } from "nanoid";
+import { getPostSkinCapability } from "@/modules/posts/actions/skinCapability";
 
 // 내부 유틸: 로그인 유저 확인
 async function getLoggedInfo() {
@@ -118,8 +119,8 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
     if (!validation.isValid) return validation.errorResponse;
     const data = validation.data;
     const thumbnail = data.thumbnail || extractFirstImageFromContent(data.content) || null;
-    const postConfig = postInfo.config as any;
-    const isIssueTrackerBoard = postConfig?.skin === "issuetracker";
+    const postSkinCapability = getPostSkinCapability(postInfo.config);
+    const defaultDocumentStatus = postSkinCapability.documentStatus?.defaultStatus;
 
     let resultData: any;
 
@@ -155,7 +156,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
         categoryId: data.categoryId,
         isNotice: data.isNotice,
         isSecrets: data.isSecrets,
-        status: isIssueTrackerBoard ? "open" : undefined,
+        status: defaultDocumentStatus,
         extraFieldData: data.extraFieldData, // 추가
         slug: nanoid(10),
         authorName: "작성자",
@@ -302,14 +303,15 @@ export async function getDocumentList(
     const ownerId = isOwnerOnlyBoard(postInfo.config) && !loggedInfo?.isAdmin
       ? (loggedInfo?.id || 0)
       : undefined;
-    const postConfig = postInfo.config as any;
-    const statusFilter = postConfig?.skin === "issuetracker"
-      ? (status || "open")
+    const postSkinCapability = getPostSkinCapability(postInfo.config);
+    const defaultDocumentStatus = postSkinCapability.documentStatus?.defaultStatus;
+    const statusFilter = defaultDocumentStatus
+      ? (status || defaultDocumentStatus)
       : status;
 
     // 🌟 [중요] documentQuery.findDocumentList에서 extraFieldData를 select/include 하고 있는지 확인해야 합니다.
     const { items, totalCount } = await documentQuery.findDocumentList(postInfo.id, page, pageSize, parsedCategoryId, ownerId, statusFilter);
-    const statusCounts = postConfig?.skin === "issuetracker"
+    const statusCounts = postSkinCapability.documentStatus?.useStatusCounts
       ? await documentQuery.countIssueStatuses(postInfo.id, parsedCategoryId, ownerId)
       : undefined;
 

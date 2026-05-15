@@ -13,9 +13,6 @@ type PostInfoProps = {
   fieldErrors?: Record<string, string> | null;
 };
 
-const selectClass =
-  "w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 outline-none transition-colors hover:border-gray-300 focus:border-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100";
-
 const SectionShell = ({
   icon,
   title,
@@ -94,8 +91,8 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors })
     onChange({ [name]: type === "number" ? Number(inputValue) : inputValue } as any);
   };
 
-  const handleSkinChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onChange({ skin: e.target.value });
+  const handleSkinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange({ skin: e.target.value.trim() || "default" });
   };
 
   return (
@@ -145,17 +142,16 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors })
       </SectionShell>
 
       <SectionShell icon={<Layers size={13} />} title="목록 설정" description="목록 화면의 스킨과 페이지 표시 기준입니다.">
-        <FieldRow label="목록 스킨" description="게시판 목록 화면에서 사용할 스킨입니다.">
-          <select
-            id="skin"
+        <FieldRow label="목록 스킨" description="default 또는 extensions에서 등록한 스킨 이름을 입력합니다.">
+          <InputField
+            inputTitle="목록 스킨"
             name="skin"
+            type="text"
+            placeholder="default"
             value={value.config.skin || "default"}
             onChange={handleSkinChange}
-            className={selectClass}
-          >
-            <option value="default">Default</option>
-            <option value="issuetracker">Issue Tracker</option>
-          </select>
+            hideLabel
+          />
         </FieldRow>
 
         <FieldRow label="목록/페이지 수" description="한 페이지의 게시글 수와 페이지 네비게이션 개수입니다.">

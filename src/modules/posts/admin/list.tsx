@@ -46,6 +46,8 @@ const AdminPostsList = ({
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchTarget = searchParams?.get("target") || "moduleName";
+  const searchKeyword = searchParams?.get("keyword") || "";
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<{
@@ -134,7 +136,7 @@ const AdminPostsList = ({
           <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-md border border-gray-200 bg-white px-3 shadow-sm shadow-gray-100 xl:w-[420px] xl:flex-none">
             <select
               name="target"
-              defaultValue={searchParams.get("target") || "moduleName"}
+              defaultValue={searchTarget}
               className="shrink-0 bg-transparent py-2.5 pr-3 text-sm text-gray-500 outline-none"
             >
               <option value="moduleName">게시판 이름</option>
@@ -144,7 +146,7 @@ const AdminPostsList = ({
             <input
               type="text"
               name="keyword"
-              defaultValue={searchParams.get("keyword") || ""}
+              defaultValue={searchKeyword}
               className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-gray-700 outline-none placeholder:text-gray-300"
               placeholder="검색어 입력"
             />

@@ -55,6 +55,8 @@ package-lock.json
 
 /files
 /storage
+/src/extensions/
+/src/app/(extensions)/
 
 Dockerfile
 .dockerignore

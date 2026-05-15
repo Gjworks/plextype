@@ -1,6 +1,7 @@
 // src/utils/trigger/triggerHub.ts
 import coreConfig from "@/core/res/config/trigger.json";
 import * as coreHandlers from "./triggerHandler";
+import { triggerConfig, triggerHandlers } from "@project/triggers";
 
 // 🌟 전역 캐시
 let cachedHandlers: any = null;
@@ -26,28 +27,8 @@ const mergeConfigs = (core: any, user: any) => {
 async function initializeRegistry() {
   if (cachedHandlers && cachedConfig) return { handlers: cachedHandlers, config: cachedConfig };
 
-  let userHandlers: any = {};
-  let userConfig: any = {};
-
-  // 1. 사용자 핸들러 로드 (index.ts가 안내 데스크 역할을 함)
-  try {
-
-    const triggerModule = await import("@extensions/trigger");
-
-    userHandlers = triggerModule;
-  } catch (e) {
-    userHandlers = {};
-  }
-
-  // 2. 사용자 설정 JSON 로드
-  try {
-    userConfig = require("@extensions/trigger/trigger.json");
-  } catch (e) {
-    userConfig = {};
-  }
-
-  cachedHandlers = { ...coreHandlers, ...userHandlers };
-  cachedConfig = mergeConfigs(coreConfig, userConfig);
+  cachedHandlers = { ...coreHandlers, ...triggerHandlers };
+  cachedConfig = mergeConfigs(coreConfig, triggerConfig);
 
   return { handlers: cachedHandlers, config: cachedConfig };
 }
