@@ -388,9 +388,8 @@ AI 에이전트는 코어 업데이트를 계속 받을 수 있도록 아래 규
           </p>
           <CodeBlock>{`npm run build`}</CodeBlock>
           <p>
-            로컬에서 Redis 컨테이너가 떠 있지 않으면 `getaddrinfo ENOTFOUND redis` 경고가 나올 수 있습니다. 빌드 자체가
-            성공한다면 코드 타입/번들 단계는 통과한 것입니다. 운영 환경에서는 `REDIS_URL`이 실제 Redis 주소를 가리키는지
-            별도로 확인해야 합니다.
+            빌드 단계에서는 Redis 연결을 실제로 열지 않도록 처리되어 있습니다. 배포 후 런타임에서 알림, 세션, 캐시 기능을
+            사용하려면 운영 환경의 `REDIS_URL`이 실제 Redis 주소를 가리키는지 별도로 확인합니다.
           </p>
         </DocSection>
       </DocsShell>

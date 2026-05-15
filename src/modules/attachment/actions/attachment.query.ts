@@ -77,7 +77,10 @@ export async function deleteAttachmentPhysical(id: number) {
   if (!attachment) return null;
 
 
-  const filePath = path.join(process.cwd(), attachment.path.substring(1));
+  const filePath = path.join(
+    /* turbopackIgnore: true */ process.cwd(),
+    attachment.path.substring(1)
+  );
 
   try {
     // 3. 실제 파일 삭제
