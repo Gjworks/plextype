@@ -37,8 +37,8 @@ async function setup() {
 
   // 3. 데이터베이스 정보 분할 입력
   console.log("\n🗄️  [3/3] 데이터베이스(PostgreSQL) 연결 설정");
-  const dbUser = await rl.question('DB 사용자명 (postgres): ') || 'postgres';
-  const dbPw = await rl.question('DB 비밀번호 (password): ') || 'password';
+  const dbUser = await rl.question('DB 사용자명 (plextype): ') || 'plextype';
+  const dbPw = await rl.question('DB 비밀번호 (change-this-to-a-long-random-password): ') || 'change-this-to-a-long-random-password';
   const dbHost = await rl.question('DB 호스트 주소 (postgres): ') || 'postgres';
   const dbPort = await rl.question('DB 포트 번호 (5432): ') || '5432';
   const dbName = await rl.question('데이터베이스 이름 (plextype): ') || 'plextype';
@@ -103,7 +103,12 @@ REDIS_URL=${envValue(redisUrl)}
 
   console.log("\n" + "=".repeat(50));
   console.log("🎉 Plextype 시스템 설치가 모두 끝났습니다!");
-  console.log("이제 'npm run dev'를 입력하여 개발을 시작하세요.");
+  if (dbHost === 'postgres' || redisHost === 'redis') {
+    console.log("이제 'docker compose up -d'를 입력하여 개발 서버를 실행하세요.");
+    console.log("로그 확인은 'docker compose logs -f node'를 사용하세요.");
+  } else {
+    console.log("이제 'npm run dev'를 입력하여 개발을 시작하세요.");
+  }
   console.log("=".repeat(50));
 }
 
