@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../project";
 @source "../extensions";
 @source "./(extensions)";
 
