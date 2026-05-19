@@ -7,6 +7,10 @@ const extensionSchemaPath = path.join(rootDir, "src", "extensions", "prisma", "s
 const extensionSchemaDir = path.join(rootDir, "src", "extensions", "prisma", "schema");
 const outputDir = path.join(rootDir, "prisma");
 const outputPath = path.join(outputDir, "schema.prisma");
+const coreSeedPath = path.join(rootDir, "src", "core", "prisma", "seed.js");
+const outputSeedPath = path.join(outputDir, "seed.js");
+const coreMigrationsPath = path.join(rootDir, "src", "core", "prisma", "migrations");
+const outputMigrationsPath = path.join(outputDir, "migrations");
 
 const readIfExists = (filePath) => {
   if (!fs.existsSync(filePath)) return null;
@@ -70,7 +74,22 @@ const generatedSchema = [
 fs.mkdirSync(outputDir, { recursive: true });
 fs.writeFileSync(outputPath, generatedSchema);
 
+if (fs.existsSync(coreSeedPath)) {
+  fs.copyFileSync(coreSeedPath, outputSeedPath);
+}
+
+if (fs.existsSync(coreMigrationsPath)) {
+  fs.rmSync(outputMigrationsPath, { recursive: true, force: true });
+  fs.cpSync(coreMigrationsPath, outputMigrationsPath, { recursive: true });
+}
+
 console.log(`Synced Prisma schema to ${path.relative(rootDir, outputPath)}`);
+if (fs.existsSync(outputSeedPath)) {
+  console.log(`Synced Prisma seed to ${path.relative(rootDir, outputSeedPath)}`);
+}
+if (fs.existsSync(outputMigrationsPath)) {
+  console.log(`Synced Prisma migrations to ${path.relative(rootDir, outputMigrationsPath)}`);
+}
 if (extensionFragments.length > 0) {
   console.log(`Included ${extensionFragments.length} extension schema fragment(s).`);
 }
