@@ -107,7 +107,7 @@ const Modal: React.FC<ModalProps> = ({
       {state && (
         <ModalPortal>
           <div
-            className={`fixed inset-0 z-[100] flex justify-center px-4 ${POSITION_MAP[position]}`}
+            className={`fixed inset-0 z-[120] flex justify-center px-4 ${POSITION_MAP[position]}`}
             role="dialog"
             aria-modal="true"
           >
@@ -128,7 +128,7 @@ const Modal: React.FC<ModalProps> = ({
               animate={isDenied ? "denied" : (state ? "open" : "close")}
               exit="close"
               variants={contentVariants}
-              className={`relative z-[101] w-full ${SIZE_MAP[size]} bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800`}
+              className={`relative z-[121] w-full ${SIZE_MAP[size]} bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800`}
             >
               <ModalContext.Provider value={{ close: () => close(false) }}>
                 {children}
