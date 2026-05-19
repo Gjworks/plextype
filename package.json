@@ -15,10 +15,11 @@
     "migrate:dev": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate dev",
     "migrate:reset": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate reset",
     "migrate:init": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate dev --name init",
-    "dbpush:push": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma db push"
+    "dbpush:push": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma db push",
+    "db:seed": "dotenv -e .env -e .env.development -- npx prisma db seed"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "dotenv -e .env -e .env.development -- node prisma/seed.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
