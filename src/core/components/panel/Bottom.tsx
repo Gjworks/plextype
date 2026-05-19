@@ -1,152 +1,141 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
+import { X } from "lucide-react";
 import BottomPortal from "@/core/components/panel/BottomPortal";
 
 const Bottom = ({ children, closeHref }: { children: React.ReactNode; closeHref?: string }) => {
   const router = useRouter();
   const [panelState, setPanelState] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeDelay = 280;
+
   useEffect(() => {
     setPanelState(true);
   }, []);
-  // useEffect(() => {
-  //   if (panelState === true) {
-  //     const $body = document.querySelector('body')
-  //     const overflow = $body.style.overflow
-  //     $body.style.overflow = 'hidden'
-  //     return () => {
-  //       $body.style.overflow = overflow
-  //     }
-  //   }
-  // }, [panelState])
+
   useEffect(() => {
     if (panelState === true) {
+      const previousOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
-        document.body.style.overflow = "unset";
+        document.body.style.overflow = previousOverflow;
       };
     }
   }, [panelState]);
 
-  const variants = {
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  const variants: Variants = {
     openPanel: {
-      bottom: "0%",
-      transition: { duration: 0.3 },
+      y: "0%",
+      transition: { duration: 0.26, ease: "easeOut" },
     },
     closePanel: {
-      bottom: "-100%",
-      transition: { duration: 0.3 },
+      y: "100%",
+      transition: { duration: 0.22, ease: "easeIn" },
     },
   };
-  const variants2 = {
+  const variants2: Variants = {
     openPanel: {
       opacity: 1,
-      transition: { duration: 0.5 },
+      transition: { duration: 0.18 },
     },
     closePanel: {
       opacity: 0,
-      transition: { duration: 0.5 },
+      transition: { duration: 0.18 },
     },
   };
-  const exit = {
-    bottom: "-100%",
-    transition: { duration: 0.5 },
+  const exit: Variants[string] = {
+    y: "100%",
+    transition: { duration: 0.22, ease: "easeIn" },
   };
-  const exit2 = {
+  const exit2: Variants[string] = {
     opacity: 0,
-    transition: { duration: 0.5 },
+    transition: { duration: 0.18 },
   };
-  const handleClosePanel = () => {
-    // close(false)
+
+  const goBack = useCallback(() => {
+    if (closeHref) {
+      router.push(closeHref);
+      return;
+    }
+
+    router.back();
+  }, [closeHref, router]);
+
+  const handleClosePanel = useCallback(() => {
     setPanelState(false);
-    setTimeout(() => {
-      if (closeHref) {
-        router.push(closeHref);
-        return;
-      }
 
-      router.back();
-    }, 500);
-  };
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(goBack, closeDelay);
+  }, [goBack]);
+
   useEffect(() => {
-    const handleKeyPress = (event) => {
+    const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        // ESC 키를 눌렀을 때 실행할 함수 호출
-        setPanelState(false);
-        setTimeout(() => {
-          if (closeHref) {
-            router.push(closeHref);
-            return;
-          }
-
-          router.back();
-        }, 500);
+        handleClosePanel();
       }
     };
 
     document.addEventListener("keydown", handleKeyPress);
 
-    // 컴포넌트가 언마운트될 때 이벤트 리스너를 정리
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
     };
-  }, [closeHref, router]); // useEffect가 처음에 한 번만 호출되도록 빈 배열을 전달
+  }, [handleClosePanel]);
 
   return (
     <>
       <AnimatePresence>
         {panelState && (
           <BottomPortal>
-            {/* <motion.div
-              onClick={handleClosePanel}
-              className="fixed w-screen h-screen transform overflow-auto z-100 flex justify-center items-end px-1"
-            > */}
-            <motion.div
-              initial={{ bottom: "-100%" }}
-              animate={panelState === true ? "openPanel" : "closePanel"}
-              variants={variants}
-              exit={exit}
-              className="bootom-1 z-101 fixed left-1/2 h-full w-full -translate-x-1/2"
-            >
-              <div className="relative flex h-10 w-full">
-                <button
-                  onClick={handleClosePanel}
-                  className="z-101 absolute right-3 top-1 rounded-full p-2"
-                >
-                  <span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="h-6 w-6 text-gray-100 dark:text-white "
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </span>
-                </button>
-              </div>
-              <div className=" dark:bg-dark-950 dark:border-dark-800/75 dark:border-t-dark-600/50 mx-auto h-full w-full overflow-y-auto overflow-x-hidden rounded-t-xl bg-white shadow-md backdrop-blur-lg dark:border">
-                {children}
-              </div>
-            </motion.div>
-            {/* </motion.div> */}
-
             <motion.div
               initial={{ opacity: 0 }}
               animate={panelState === true ? "openPanel" : "closePanel"}
               variants={variants2}
               exit={exit2}
               onClick={handleClosePanel}
-              className="dark:bg-dark-800/70 z-90 fixed inset-0 bg-gray-950/70 backdrop-blur-sm"
-            ></motion.div>
+              className="dark:bg-dark-800/70 z-90 fixed inset-0 bg-gray-950/70"
+            />
+
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={panelState === true ? "openPanel" : "closePanel"}
+              variants={variants}
+              exit={exit}
+              drag="y"
+              dragDirectionLock
+              dragElastic={0.08}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 120 || info.velocity.y > 700) {
+                  handleClosePanel();
+                }
+              }}
+              className="z-101 fixed bottom-0 left-0 h-full w-full transform-gpu touch-pan-y will-change-transform"
+            >
+              <div className="relative flex h-10 w-full">
+                <button
+                  onClick={handleClosePanel}
+                  className="z-101 absolute right-3 top-1 rounded-full p-2 text-gray-100 transition-colors hover:text-white dark:text-white"
+                  aria-label="닫기"
+                >
+                  <X size={24} strokeWidth={1.5} />
+                </button>
+              </div>
+              <div className="dark:bg-dark-950 dark:border-dark-800/75 dark:border-t-dark-600/50 mx-auto h-full w-full overflow-y-auto overflow-x-hidden overscroll-contain rounded-t-xl bg-white pt-5 shadow-md dark:border">
+                <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-gray-300/90 dark:bg-dark-700" />
+                {children}
+              </div>
+            </motion.div>
           </BottomPortal>
         )}
       </AnimatePresence>

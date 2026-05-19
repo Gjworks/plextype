@@ -55,14 +55,16 @@ export const DocsShell = ({
 };
 
 export const DocSection = ({
+  id,
   title,
   children,
 }: {
+  id?: string;
   title: string;
   children: React.ReactNode;
 }) => {
   return (
-    <section className="grid gap-5 py-9 lg:grid-cols-[210px_1fr]">
+    <section id={id} className="scroll-mt-8 grid gap-5 py-9 lg:grid-cols-[210px_1fr]">
       <div>
         <h2 className="text-[13px] font-semibold tracking-normal text-gray-800 dark:text-dark-100">{title}</h2>
       </div>
