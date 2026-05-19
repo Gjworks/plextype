@@ -19,7 +19,7 @@
     "db:seed": "dotenv -e .env -e .env.development -- npx prisma db seed"
   },
   "prisma": {
-    "seed": "dotenv -e .env -e .env.development -- node prisma/seed.js"
+    "seed": "dotenv -e .env -e .env.development -- node src/core/prisma/seed.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
