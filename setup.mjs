@@ -96,10 +96,9 @@ REDIS_URL=${envValue(redisUrl)}
 
   console.log("\n📦 셋업: 패키지 설치 및 DB 초기화 중...");
   run('npm install');
-  run('npm run prisma:sync');
-  run('npx prisma migrate dev --name init');
-  run('npx prisma generate');
-  run('npx prisma db seed');
+  run('npm run migrate:init');
+  run('npm run prisma:generate');
+  run('npm run db:seed');
 
   console.log("\n" + "=".repeat(50));
   console.log("🎉 Plextype 시스템 설치가 모두 끝났습니다!");
