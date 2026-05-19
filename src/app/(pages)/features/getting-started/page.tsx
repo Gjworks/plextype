@@ -28,12 +28,13 @@ const GettingStartedPage = () => {
             의존 서비스를 함께 관리할 수 있습니다.
           </p>
           <p>
-            처음 설치하는 사람은 아래 순서만 따라오면 됩니다. setup도 node 컨테이너 안에서 실행하므로 `npm install`을
-            호스트 컴퓨터에서 먼저 실행하지 않습니다.
+            처음 설치하는 사람은 아래 순서만 따라오면 됩니다. `node` 개발 서버는 setup이 끝난 뒤에 올리고, setup은
+            일회성 node 컨테이너에서 실행합니다. 따라서 호스트 컴퓨터에서 `npm install`을 먼저 실행하지 않습니다.
           </p>
           <CodeBlock>{`git clone git@github.com:Gjworks/plextype.git
 cd plextype
-docker compose run --rm node npm run setup
+docker compose up -d postgres redis
+docker compose run --rm --no-deps node npm run setup
 docker compose up -d
 docker compose logs -f node`}</CodeBlock>
         </DocSection>
@@ -99,7 +100,7 @@ cd plextype`}</CodeBlock>
       WATCHPACK_POLLING: "true"
 
   postgres:
-    image: postgres:latest
+    image: postgres:18.4
     container_name: postgres
     environment:
       POSTGRES_USER: plextype
@@ -108,7 +109,7 @@ cd plextype`}</CodeBlock>
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     networks:
       - web-network
     healthcheck:
@@ -142,10 +143,10 @@ networks:
   web-network:
     driver: bridge`}</CodeBlock>
           <p>
-            compose 파일을 준비했다면 setup을 먼저 실행합니다. 이 명령은 `node` 컨테이너를 임시로 띄워 `npm run setup`을
-            실행하고, setup이 끝나면 해당 임시 컨테이너를 제거합니다. `postgres`와 `redis`는 의존 서비스로 함께 준비됩니다.
+            compose 파일을 준비했다면 PostgreSQL과 Redis부터 백그라운드로 실행합니다. setup은 migration과 seed를 실행하므로
+            DB가 먼저 떠 있어야 흐름을 이해하기 쉽고, 실패했을 때도 원인을 찾기 쉽습니다.
           </p>
-          <CodeBlock>{`docker compose run --rm node npm run setup`}</CodeBlock>
+          <CodeBlock>{`docker compose up -d postgres redis`}</CodeBlock>
           <PathTable items={composeItems} />
           <p>
             `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`는 PostgreSQL 컨테이너가 처음 초기화될 때 기본 계정과
@@ -160,6 +161,11 @@ networks:
             중요한 점은 이 값들이 매번 다시 적용되는 설정이 아니라는 것입니다. `postgres_data` Docker volume이 이미 만들어진
             뒤에는 compose 파일의 `POSTGRES_PASSWORD`나 `POSTGRES_DB`를 바꿔도 기존 DB 계정과 데이터베이스가 자동으로
             바뀌지 않습니다. PostgreSQL 공식 이미지가 빈 데이터 디렉토리를 처음 발견했을 때만 이 초기화 값을 사용하기 때문입니다.
+          </p>
+          <p>
+            기본 compose는 PostgreSQL `18.4`를 사용합니다. 이미 예전 PostgreSQL 버전으로 만든 `postgres_data` volume이
+            있다면 새 이미지로 바로 재사용하지 말고 백업 후 마이그레이션하거나, 초기 설치 단계라면 아래 초기화 명령으로 volume을
+            지운 뒤 다시 시작합니다.
           </p>
           <p>
             setup에서 DB 정보를 물어볼 때는 compose 네트워크 안에서 접근하는 기준으로 입력합니다. 즉 DB 호스트는
@@ -178,7 +184,8 @@ Redis 포트 번호: 6379`}</CodeBlock>
             이 명령은 PostgreSQL 데이터도 함께 삭제하므로, 이미 운영 데이터가 들어간 환경에서는 사용하면 안 됩니다.
           </p>
           <CodeBlock>{`docker compose down -v
-docker compose run --rm node npm run setup
+docker compose up -d postgres redis
+docker compose run --rm --no-deps node npm run setup
 docker compose up -d`}</CodeBlock>
           <p>
             이미 데이터가 들어간 뒤 비밀번호를 바꾸고 싶다면 volume을 삭제하지 말고 PostgreSQL 안에서 `ALTER USER` 같은
@@ -189,9 +196,12 @@ docker compose up -d`}</CodeBlock>
         <DocSection title="3. setup 실행">
           <p>
             배포판을 처음 받은 사람은 프로젝트 루트에서 setup을 한 번 실행합니다. Docker Compose 기준에서는 호스트에서
-            `npm run setup`을 직접 실행하지 않고, 아래처럼 node 컨테이너 안에서 실행합니다.
+            `npm run setup`을 직접 실행하지 않고, PostgreSQL과 Redis를 먼저 올린 뒤 일회성 node 컨테이너 안에서 실행합니다.
+            여기서 `node` 서비스를 `docker compose up -d`로 먼저 올리면 `npm run dev`가 setup보다 먼저 실행되므로 순서가
+            꼬일 수 있습니다.
           </p>
-          <CodeBlock>{`docker compose run --rm node npm run setup`}</CodeBlock>
+          <CodeBlock>{`docker compose up -d postgres redis
+docker compose run --rm --no-deps node npm run setup`}</CodeBlock>
           <p>
             이 명령은 단순히 `.env`만 만드는 스크립트가 아니라 사이트 기본정보, 관리자 계정, DB 연결 정보, storage 폴더,
             패키지 설치, Prisma migration, Prisma generate, seed까지 이어서 처리합니다. setup은 내부에서 `npm install`을

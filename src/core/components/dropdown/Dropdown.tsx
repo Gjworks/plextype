@@ -9,7 +9,7 @@ interface DropdownProps {
   className?: string; // 🌟 외부에서 위치(top, right 등)를 미세조정할 수 있게 추가
 }
 
-const Dropdown = ({ state, close, children, className = "right-0 top-[calc(100%+8px)]" }: DropdownProps) => {
+const Dropdown = ({ state, close, children, className = "left-0 top-full mt-2" }: DropdownProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const Dropdown = ({ state, close, children, className = "right-0 top-[calc(100%+
           exit="close"
           variants={variants}
           // 🌟 스타일을 최소화했습니다. 'absolute'와 'z-index'만 유지합니다.
-          className={`absolute z-[101] ${className}`}
+          className={`absolute z-[110] ${className}`}
         >
           {/* 이제 여기서 children이 모든 스타일(배경색, 테두리, 그림자 등)을 가집니다. */}
           {children}
