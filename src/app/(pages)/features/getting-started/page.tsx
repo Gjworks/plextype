@@ -236,10 +236,9 @@ REDIS_URL=redis://redis:6379`}</CodeBlock>
             실패했을 때 어느 단계에서 멈췄는지 알면 문제를 찾기 쉽습니다.
           </p>
           <CodeBlock>{`npm install
-npm run prisma:sync
-npx prisma migrate dev --name init
-npx prisma generate
-npx prisma db seed`}</CodeBlock>
+npm run migrate:init
+npm run prisma:generate
+npm run db:seed`}</CodeBlock>
           <p>
             `migrate dev`에서 실패하면 대부분 DB 접속 정보가 틀렸거나 PostgreSQL 컨테이너가 아직 준비되지 않은 경우입니다.
             `seed`에서 실패하면 관리자 계정 중복값, 필수 컬럼, extension seed SQL을 확인합니다.
