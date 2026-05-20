@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const currentUser = accessToken ? await verify(accessToken) : null;
 
   if (!currentUser?.id) {
-    return Response.json({ error: "인증이 필요합니다." }, { status: 401 });
+    return new Response(null, { status: 204 });
   }
 
   const encoder = new TextEncoder();

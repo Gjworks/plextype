@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { removeNotification } from "@/modules/notification/actions/notification.action";
 import {getAuthenticatedUser} from "@/core/utils/auth/authHelper";
+import { isNotificationAuthError, notificationGuestResponse, notificationServerErrorResponse } from "../_utils";
 
 export async function DELETE(
   request: Request,
@@ -13,7 +14,7 @@ export async function DELETE(
     // 2. 유저 인증 확인
     const user = await getAuthenticatedUser();
     if (!user) {
-      return NextResponse.json({ error: "인증 실패" }, { status: 401 });
+      return notificationGuestResponse({ success: false, latestUnread: [], newCount: 0 });
     }
 
     // 3. 알림 삭제 액션 호출 (이미 보안 처리가 되어 있을 거예요)
@@ -21,7 +22,8 @@ export async function DELETE(
 
     return NextResponse.json(result);
   } catch (error) {
+    if (isNotificationAuthError(error)) return notificationGuestResponse({ success: false, latestUnread: [], newCount: 0 });
     console.error("❌ [API] 삭제 처리 에러:", error);
-    return NextResponse.json({ error: "삭제 실패" }, { status: 500 });
+    return notificationServerErrorResponse("삭제 실패");
   }
 }

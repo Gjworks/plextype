@@ -1,33 +1,61 @@
 // src/hooks/notification/useRealtimeNotification.ts
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToastStore } from "@/core/store/useToastStore";
+import { hasClientSession } from "@/core/utils/auth/clientAuth";
 
 // src/hooks/notification/useRealtimeNotification.ts
 
 export function useRealtimeNotification(userId: string | number | undefined) {
   const addToast = useToastStore((state) => state.addToast);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     if (!userId) return; // 로그인 안 했으면 연결 안 함
 
-    const eventSource = new EventSource(`/api/notifications/stream`);
+    let active = true;
+    let eventSource: EventSource | null = null;
+    let retryTimer: number | undefined;
 
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        // 여기서도 한 번 더 체크하면 좋지만, 서버에서 걸러주는 게 정석!
-        addToast(data.content, "info", {
-          title: data.title,
-          imageUrl: data.imageUrl,
-          linkUrl: data.linkUrl,
-        });
+    const connect = async () => {
+      const hasSession = await hasClientSession();
+      if (!active || !hasSession) return;
 
-        window.dispatchEvent(new Event('refresh-unread'));
-      } catch (err) {
-        console.error("SSE 파싱 에러:", err);
-      }
+      eventSource = new EventSource(`/api/notifications/stream`);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          addToast(data.content, "info", {
+            title: data.title,
+            imageUrl: data.imageUrl,
+            linkUrl: data.linkUrl,
+          });
+
+          window.dispatchEvent(new Event('refresh-unread'));
+        } catch (err) {
+          console.error("SSE 파싱 에러:", err);
+        }
+      };
+
+      eventSource.onerror = async () => {
+        eventSource?.close();
+        eventSource = null;
+
+        const canRetry = await hasClientSession();
+        if (active && canRetry) {
+          retryTimer = window.setTimeout(() => {
+            setRetryKey((prev) => prev + 1);
+          }, 5000);
+        }
+      };
     };
 
-    return () => eventSource.close();
-  }, [userId, addToast]);
+    connect();
+
+    return () => {
+      active = false;
+      eventSource?.close();
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
+  }, [userId, addToast, retryKey]);
 }
