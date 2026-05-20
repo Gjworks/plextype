@@ -1,12 +1,19 @@
-
 "use server";
 
-import path from "path";
-import { rename, mkdir, rmdir, unlink } from "fs/promises";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { verify } from "@utils/auth/jwtAuth";
 import * as query from "./attachment.query";
 import {ActionState, Attachment} from "@/modules/attachment/actions/_type"; // 쿼리 함수들 임포트
+
+const revalidateAttachmentReferences = (documents: Awaited<ReturnType<typeof query.findDocumentsByThumbnailPath>>) => {
+  documents.forEach((document) => {
+    revalidatePath(`/posts/${document.module.mid}`);
+    revalidatePath(`/posts/${document.module.mid}/${document.slug}`);
+  });
+
+  revalidatePath("/user/userUpdate");
+};
 
 /**
  * 파일 삭제 액션
@@ -24,19 +31,11 @@ export async function deleteAttachment(fileId: number) {
     if (!attachment) return { success: false, error: "파일을 찾을 수 없습니다." };
     if (attachment.userId !== verified.id) return { success: false, error: "삭제 권한이 없습니다." };
 
-    // 물리 파일 삭제
-    let relativePath = attachment.path.startsWith("/") ? attachment.path.substring(1) : attachment.path;
-    const filePath = path.join(
-      /* turbopackIgnore: true */ process.cwd(),
-      relativePath
-    );
+    const thumbnailDocuments = await query.findDocumentsByThumbnailPath(attachment.path);
 
-    try { await unlink(filePath); } catch (err: any) {
-      if (err.code !== "ENOENT") console.error("FS Unlink Error:", err);
-    }
+    await query.deleteAttachmentPhysical(fileId);
+    revalidateAttachmentReferences(thumbnailDocuments);
 
-    // DB 삭제
-    await query.deleteAttachmentFromDb(fileId);
     return { success: true };
   } catch (error) {
     return { success: false, error: "삭제 실패" };
@@ -85,9 +84,12 @@ export async function deleteAttachmentAction(fileId: number): Promise<ActionStat
       return { success: false, type: "error", message: "삭제 권한이 없습니다." };
     }
 
+    const thumbnailDocuments = await query.findDocumentsByThumbnailPath(attachment.path);
+
     // 3. 🌟 [변경] 연결 해제가 아니라 '진짜 삭제'를 호출합니다.
     // 이전에 만들어둔 물리 파일 삭제 + DB 삭제 로직이 담긴 쿼리를 호출하세요.
     await query.deleteAttachmentPhysical(fileId);
+    revalidateAttachmentReferences(thumbnailDocuments);
 
     return {
       success: true,

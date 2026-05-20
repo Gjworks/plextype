@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation' // ✅ useRouter 추가
 import { motion, AnimatePresence } from 'framer-motion'
 import pkg from '../../../../package.json'
-import { LayoutGrid, Settings, MessageSquareText, Users, Search, Bell, ChevronRight, Globe, ChevronDown, LogOut, UserCircle, Zap } from 'lucide-react'
+import { LayoutGrid, Settings, MessageSquareText, Users, Search, Bell, ChevronRight, Globe, ChevronDown, LogOut, UserCircle, Zap, FileText } from 'lucide-react'
 import Link from 'next/link'
 import Dropdown from '@/core/components/dropdown/Dropdown'
 import DefaultList from '@/core/components/nav/DefaultList'
@@ -38,6 +38,17 @@ const MENU_CONFIG = [
     items: [
       { label: '게시판 목록', href: '/admin/posts/list' },
       { label: '게시판 생성', href: '/admin/posts/create' },
+    ],
+  },
+  {
+    id: 'content',
+    icon: <FileText size={18} />,
+    label: '콘텐츠 관리',
+    items: [
+      { label: '전체 게시글', href: '/admin/content/documents' },
+      { label: '댓글 관리', href: '/admin/content/comments' },
+      { label: '첨부파일 관리', href: '/admin/content/attachments' },
+      { label: '신고 관리', href: '/admin/content/reports' },
     ],
   },
   {
