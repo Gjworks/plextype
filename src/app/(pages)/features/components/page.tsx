@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, KeyRound, Mail, PanelBottom, Search, Settings, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { Bell, ChevronDown, KeyRound, Mail, PanelBottom, Search, Settings, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
 
 import Accordion from "@components/accordion/Accordion";
 import Button from "@components/button/Button";
@@ -10,6 +10,7 @@ import InputField from "@components/form/InputField";
 import SelectField from "@components/form/SelectField";
 import Alert from "@components/message/Alert";
 import Modal, { useModal } from "@components/modal/Modal";
+import Tab from "@components/tab/Tab";
 
 import { CodeBlock, DocLinkList, DocSection, DocsShell, FeatureDocPanel, PathTable } from "../_components";
 
@@ -25,6 +26,12 @@ const componentItems = [
     label: "InputField / SelectField",
     desc: "관리자 설정, 회원 등록, 게시글 작성에서 같은 입력 규칙과 fieldErrors 표시를 공유합니다.",
     meta: "@components/form",
+  },
+  {
+    href: "/features/components#tabs",
+    label: "Tab",
+    desc: "목록/등록/설정처럼 같은 화면 안에서 관련 뷰를 전환할 때 사용합니다.",
+    meta: "@components/tab/Tab",
   },
   {
     href: "/features/components/modal",
@@ -56,6 +63,7 @@ const componentPaths = [
   { path: "src/core/components/button/Button.tsx", desc: "공통 버튼입니다. `isLoading`, `icon`, `fullWidth`를 지원합니다." },
   { path: "src/core/components/form/InputField.tsx", desc: "label, icon, disabled, error 표시를 포함한 기본 input입니다." },
   { path: "src/core/components/form/SelectField.tsx", desc: "InputField와 같은 톤의 select 입력입니다." },
+  { path: "src/core/components/tab/Tab.tsx", desc: "controlled/uncontrolled, 링크형 탭, 패널 렌더링, 키보드 이동을 지원합니다." },
   { path: "src/core/components/modal/Modal.tsx", desc: "Portal 기반 modal입니다. 위치, 크기, overlay, ESC 정책을 제어합니다." },
   { path: "src/core/components/panel/Bottom.tsx", desc: "아래에서 올라오는 패널입니다. features 문서와 보조 작업 화면에서 사용합니다." },
   { path: "src/core/components/accordion/Accordion.tsx", desc: "FAQ, 설정 그룹, 문서 요약처럼 접을 수 있는 콘텐츠에 사용합니다." },
@@ -81,6 +89,14 @@ const bottomRules = [
   { path: "closeHref", desc: "닫을 때 특정 주소로 이동해야 하면 지정합니다. 없으면 `router.back()`을 사용합니다." },
   { path: "drag down", desc: "아래로 120px 이상 끌거나 빠르게 아래로 튕기면 닫힙니다." },
   { path: "animation", desc: "`bottom` 위치값 대신 `translateY` 기반으로 움직여 Windows와 큰 화면에서 부하를 줄입니다." },
+];
+
+const tabProps = [
+  { path: "items", desc: "`value`, `label`, `content`를 기본으로 받고 `icon`, `badge`, `href`, `disabled`를 선택적으로 지원합니다." },
+  { path: "value / defaultValue", desc: "`value`를 넘기면 controlled, `defaultValue`만 넘기면 uncontrolled로 동작합니다." },
+  { path: "variant", desc: "`line`, `pill`, `boxed`를 지원합니다. 기본값은 `line`입니다." },
+  { path: "renderPanel", desc: "링크형 탭처럼 패널이 필요 없으면 `false`로 둡니다." },
+  { path: "keepMounted", desc: "탭 전환 후에도 각 패널의 내부 상태를 유지해야 할 때 사용합니다." },
 ];
 
 const accordionItems = [
@@ -123,6 +139,7 @@ const ModalContent = () => {
 const ComponentsPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [manualTab, setManualTab] = useState("list");
 
   return (
     <FeatureDocPanel>
@@ -157,6 +174,84 @@ const ComponentsPage = () => {
 <Button icon={<Settings size={14} />}>기본 버튼</Button>
 <Button isLoading>저장 중</Button>
 <Button fullWidth>전체 너비</Button>`}</CodeBlock>
+        </DocSection>
+
+        <DocSection title="Tab" id="tabs">
+          <p>
+            `Tab`은 서로 관련된 화면을 같은 맥락 안에서 전환할 때 사용합니다. 회원 목록/회원 추가/그룹 관리,
+            설정 카테고리, 알림 필터처럼 현재 페이지 안에서 뷰만 바뀌는 구조에 적합합니다.
+          </p>
+          <div className="grid gap-6">
+            <Tab
+              variant="line"
+              defaultValue="members"
+              items={[
+                {
+                  value: "members",
+                  label: "회원 목록",
+                  icon: <Users size={14} />,
+                  badge: 24,
+                  content: <div className="rounded-md border border-gray-200 p-4 text-sm dark:border-dark-800">회원 목록 패널</div>,
+                },
+                {
+                  value: "notifications",
+                  label: "알림 설정",
+                  icon: <Bell size={14} />,
+                  content: <div className="rounded-md border border-gray-200 p-4 text-sm dark:border-dark-800">알림 설정 패널</div>,
+                },
+                {
+                  value: "disabled",
+                  label: "비활성 탭",
+                  disabled: true,
+                  content: <div>비활성</div>,
+                },
+              ]}
+              panelClassName="pt-4"
+            />
+            <Tab
+              variant="pill"
+              value={manualTab}
+              onChange={setManualTab}
+              items={[
+                {
+                  value: "list",
+                  label: "회원 목록",
+                  content: <div className="pt-3 text-sm text-gray-500 dark:text-dark-300">목록 탭 예시입니다.</div>,
+                },
+                {
+                  value: "create",
+                  label: "회원 추가",
+                  content: <div className="pt-3 text-sm text-gray-500 dark:text-dark-300">등록 탭 예시입니다.</div>,
+                },
+                {
+                  value: "group",
+                  label: "그룹 관리",
+                  content: <div className="pt-3 text-sm text-gray-500 dark:text-dark-300">그룹 탭 예시입니다.</div>,
+                },
+              ]}
+            />
+          </div>
+          <PathTable items={tabProps} />
+          <CodeBlock>{`import Tab from "@components/tab/Tab";
+
+<Tab
+  defaultValue="members"
+  variant="line"
+  items={[
+    { value: "members", label: "회원 목록", content: <MemberList /> },
+    { value: "create", label: "회원 추가", content: <MemberCreate /> },
+  ]}
+/>
+
+<Tab
+  value="list"
+  variant="pill"
+  renderPanel={false}
+  items={[
+    { value: "list", label: "회원 목록", href: "/admin/user/list" },
+    { value: "group", label: "그룹 관리", href: "/admin/user/groupList" },
+  ]}
+/>`}</CodeBlock>
         </DocSection>
 
         <DocSection title="Form Fields" id="forms">
