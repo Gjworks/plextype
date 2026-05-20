@@ -4,21 +4,27 @@ import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { hasClientSession } from '@/core/utils/auth/clientAuth';
+
 export default function NotificationBell() {
   const [hasUnread, setHasUnread] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const checkNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications/unread');
-      if (res.status === 401) {
+      const hasSession = await hasClientSession();
+      if (!hasSession) {
         setHasUnread(false);
         return;
       }
+
+      const res = await fetch('/api/notifications/unread');
+      if (!res.ok) throw new Error("알림 확인 실패");
+
       const data = await res.json();
       setHasUnread(Array.isArray(data) && data.length > 0);
     } catch (err) {
-      console.error("알림 확인 실패");
+      setHasUnread(false);
     }
   };
 

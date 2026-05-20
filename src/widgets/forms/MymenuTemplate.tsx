@@ -8,6 +8,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
 
+import { hasClientSession } from "@/core/utils/auth/clientAuth";
+
 // dayjs 설정
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -32,12 +34,18 @@ const MymenuTemplate = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
+      const hasSession = await hasClientSession();
+      if (!hasSession) {
+        setNotifications([]);
+        return;
+      }
+
       const res = await fetch('/api/notifications/unread');
       if (!res.ok) throw new Error("데이터 로드 실패");
       const data = await res.json();
       setNotifications(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(error);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -51,9 +59,14 @@ const MymenuTemplate = () => {
 
     notifications.forEach((noti) => {
       // JSON 문자열로 들어올 경우를 대비해 파싱 로직 추가
-      const meta = typeof noti.metadata === 'string'
-        ? JSON.parse(noti.metadata)
-        : noti.metadata;
+      let meta = noti.metadata;
+      if (typeof meta === 'string') {
+        try {
+          meta = JSON.parse(meta);
+        } catch {
+          meta = null;
+        }
+      }
 
       // 메타데이터의 groupKey가 있으면 그걸 쓰고, 없으면 제목을 기준으로 뭉칩니다.
       const groupKey = meta?.groupKey || noti.title || "기타";
@@ -74,6 +87,8 @@ const MymenuTemplate = () => {
 
   // 개별 읽음/삭제 및 전체 처리 함수들 (기존 로직 유지)
   const handleRead = async (uuid: string) => {
+    if (!(await hasClientSession())) return;
+
     setNotifications(prev => prev.filter(n => n.uuid !== uuid));
     await fetch(`/api/notifications/${uuid}/read`, { method: 'PATCH' });
 
@@ -81,6 +96,8 @@ const MymenuTemplate = () => {
   };
 
   const handleDelete = async (uuid: string) => {
+    if (!(await hasClientSession())) return;
+
     setNotifications(prev => prev.filter(n => n.uuid !== uuid));
     await fetch(`/api/notifications/${uuid}`, { method: 'DELETE' });
 
@@ -88,6 +105,8 @@ const MymenuTemplate = () => {
   };
 
   const handleReadAll = async () => {
+    if (!(await hasClientSession())) return;
+
     setNotifications([]);
     await fetch('/api/notifications/read-all', { method: 'POST' });
 
@@ -95,6 +114,8 @@ const MymenuTemplate = () => {
   };
 
   const handleDeleteAll = async () => {
+    if (!(await hasClientSession())) return;
+
     setNotifications([]);
     await fetch('/api/notifications/delete-all', { method: 'POST' });
 

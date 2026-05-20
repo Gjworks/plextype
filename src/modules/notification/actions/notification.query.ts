@@ -40,9 +40,7 @@ export const findUnreadList = async (userId: number, limit = 20) => {
 };
 
 export const findHistoryPage = async (userId: number, skip: number, take: number) => {
-  console.log(`[Query Check] userId: ${userId}, skip: ${skip}, take: ${take}`);
-
-  const result = await prisma.notification.findMany({
+  return prisma.notification.findMany({
     where: {
       userId: Number(userId) // 여기서 한 번 더 숫자로 강제 변환
     },
@@ -50,9 +48,6 @@ export const findHistoryPage = async (userId: number, skip: number, take: number
     skip: skip || 0,
     take: take || 20,
   });
-
-  console.log(`[Query Result] DB에서 찾은 개수: ${result.length}`);
-  return result;
 };
 
 /** 🌟 [UPDATE] */

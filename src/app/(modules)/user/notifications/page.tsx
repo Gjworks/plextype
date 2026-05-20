@@ -7,6 +7,8 @@ import dayjs from "dayjs";
 import isToday from "dayjs/plugin/isToday";
 import isYesterday from "dayjs/plugin/isYesterday";
 
+import { hasClientSession } from "@/core/utils/auth/clientAuth";
+
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 
@@ -25,7 +27,16 @@ const NotificationPage = () => {
     try {
       targetPage === 1 ? setLoading(true) : setFetchingMore(true);
 
+      const hasSession = await hasClientSession();
+      if (!hasSession) {
+        setNotifications([]);
+        setHasMore(false);
+        return;
+      }
+
       const res = await fetch(`/api/notifications/history?page=${targetPage}&limit=${LIMIT}`);
+      if (!res.ok) throw new Error("데이터 로드 실패");
+
       const newData = await res.json();
 
       if (Array.isArray(newData)) {
@@ -65,7 +76,10 @@ const NotificationPage = () => {
 
     // 2. 서버 DB 업데이트 (POST /api/notifications/read-all)
     try {
-      await fetch('/api/notifications/read-all', { method: 'POST' });
+      if (!(await hasClientSession())) return;
+
+      const res = await fetch('/api/notifications/read-all', { method: 'POST' });
+      if (!res.ok) throw new Error("전체 읽음 처리 실패");
 
       window.dispatchEvent(new Event('refresh-unread'));
     } catch (error) {
@@ -76,8 +90,11 @@ const NotificationPage = () => {
 
   // 🌟 [추가] 개별 삭제 로직
   const handleDelete = async (uuid: string) => {
+    if (!(await hasClientSession())) return;
+
     setNotifications(prev => prev.filter(n => n.uuid !== uuid)); // 낙관적 업데이트
-    await fetch(`/api/notifications/${uuid}`, { method: 'DELETE' });
+    const res = await fetch(`/api/notifications/${uuid}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error("삭제 실패");
 
     window.dispatchEvent(new Event('refresh-unread'));
   };
@@ -85,16 +102,22 @@ const NotificationPage = () => {
   // 🌟 [추가] 전체 삭제 로직
   const handleDeleteAll = async () => {
     if (!confirm("모든 알림 기록을 영구적으로 삭제하시겠습니까?")) return;
+    if (!(await hasClientSession())) return;
+
     setNotifications([]);
-    await fetch('/api/notifications/delete-all', { method: 'POST' });
+    const res = await fetch('/api/notifications/delete-all', { method: 'POST' });
+    if (!res.ok) throw new Error("전체 삭제 실패");
 
     window.dispatchEvent(new Event('refresh-unread'));
   };
 
   // 🌟 [추가] 개별 읽음 처리 (히스토리 페이지에서도 읽음 처리가 필요할 경우)
   const handleRead = async (uuid: string) => {
+    if (!(await hasClientSession())) return;
+
     setNotifications(prev => prev.map(n => n.uuid === uuid ? { ...n, isRead: true } : n));
-    await fetch(`/api/notifications/${uuid}/read`, { method: 'PATCH' });
+    const res = await fetch(`/api/notifications/${uuid}/read`, { method: 'PATCH' });
+    if (!res.ok) throw new Error("읽음 처리 실패");
 
     window.dispatchEvent(new Event('refresh-unread'));
   };
