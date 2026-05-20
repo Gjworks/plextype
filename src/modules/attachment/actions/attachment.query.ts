@@ -42,6 +42,20 @@ export async function deleteAttachmentFromDb(id: number) {
   });
 }
 
+export async function findDocumentsByThumbnailPath(thumbnail: string) {
+  return prisma.document.findMany({
+    where: { thumbnail },
+    select: {
+      slug: true,
+      module: {
+        select: {
+          mid: true,
+        },
+      },
+    },
+  });
+}
+
 // 6. 내 파일 목록 조회 (페이징 포함)
 export async function getUserAttachments(userId: number, page: number, pageSize: number) {
   const skip = (page - 1) * pageSize;
@@ -97,10 +111,22 @@ export async function deleteAttachmentPhysical(id: number) {
     if (err.code !== "ENOENT") console.error("물리 파일 삭제 중 오류:", err);
   }
 
-  // 5. DB 레코드 최종 삭제
-  return prisma.attachment.delete({
-    where: { id },
-  });
+  // 5. DB 레코드 최종 삭제 + 삭제된 파일을 바라보는 대표 이미지 참조 정리
+  const [, , deletedAttachment] = await prisma.$transaction([
+    prisma.document.updateMany({
+      where: { thumbnail: attachment.path },
+      data: { thumbnail: null },
+    }),
+    prisma.profile.updateMany({
+      where: { profileImage: attachment.path },
+      data: { profileImage: null },
+    }),
+    prisma.attachment.delete({
+      where: { id },
+    }),
+  ]);
+
+  return deletedAttachment;
 }
 
 
@@ -108,7 +134,7 @@ export async function deleteAttachmentPhysical(id: number) {
 export async function findAttachmentForAuth(id: number) {
   return prisma.attachment.findUnique({
     where: { id },
-    select: { id: true, userId: true },
+    select: { id: true, userId: true, path: true },
   });
 }
 
