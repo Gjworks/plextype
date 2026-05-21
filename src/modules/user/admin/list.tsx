@@ -1,14 +1,22 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Edit3, Plus, Search, Trash2, UsersRound } from "lucide-react";
+import { Activity, Bell, Clock3, Edit3, FileText, Loader2, MessageSquareText, Paperclip, Plus, Search, Trash2, UsersRound } from "lucide-react";
 
 import { UserInfo, UserListResponseData } from "@/modules/user/actions/_type";
 import { removeUserAction } from "@/modules/user/actions/user.action";
+import {
+  getUserTimelineAdminAction,
+  UserTimelineData,
+  UserTimelineFilter,
+  UserTimelineItem,
+  UserTimelineKind,
+} from "@/modules/user/actions/timeline.action";
 import PageNavigation from "@components/nav/PageNavigation";
 import Button from "@components/button/Button";
+import Bottom from "@components/panel/Bottom";
 
 type Props = {
   initialUserList: UserInfo[];
@@ -18,15 +26,222 @@ type Props = {
 const checkboxClass =
   "h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500";
 
+const timelineKindMeta: Record<UserTimelineKind, {
+  label: string;
+  color: string;
+  icon: React.ReactNode;
+}> = {
+  document: {
+    label: "게시글",
+    color: "bg-cyan-50 text-cyan-600 ring-cyan-100",
+    icon: <FileText size={14} />,
+  },
+  comment: {
+    label: "댓글",
+    color: "bg-violet-50 text-violet-600 ring-violet-100",
+    icon: <MessageSquareText size={14} />,
+  },
+  attachment: {
+    label: "파일",
+    color: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+    icon: <Paperclip size={14} />,
+  },
+  notification: {
+    label: "알림",
+    color: "bg-amber-50 text-amber-600 ring-amber-100",
+    icon: <Bell size={14} />,
+  },
+};
+
+const formatTimelineDate = (date: Date | string) => {
+  return new Intl.DateTimeFormat("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(date));
+};
+
+const TimelinePreviewItem = ({ item }: { item: UserTimelineItem }) => {
+  const meta = timelineKindMeta[item.kind];
+  const content = (
+    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-100 transition-colors hover:border-gray-200 hover:bg-gray-50">
+      <div className="mb-2 flex items-center gap-2">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${meta.color}`}>
+          {meta.icon}
+          {meta.label}
+        </span>
+        <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400">
+          <Clock3 size={12} />
+          {formatTimelineDate(item.createdAt)}
+        </span>
+      </div>
+      <div className="line-clamp-1 text-sm font-bold text-gray-900">{item.title}</div>
+      <p className="mt-1 line-clamp-2 text-sm leading-6 text-gray-500">{item.description}</p>
+      {item.imageUrl && (
+        <div className="mt-3 overflow-hidden rounded-lg bg-gray-100 ring-1 ring-gray-100">
+          <img src={item.imageUrl} alt={item.title} className="max-h-56 w-full object-cover" loading="lazy" />
+        </div>
+      )}
+      <div className="mt-3 text-xs font-semibold text-gray-400">{item.meta}</div>
+    </div>
+  );
+
+  if (!item.href) return content;
+
+  return (
+    <Link href={item.href} className="block">
+      {content}
+    </Link>
+  );
+};
+
+const AdminUserTimelinePanel = ({ userId }: { userId: number }) => {
+  const [data, setData] = useState<UserTimelineData | null>(null);
+  const [items, setItems] = useState<UserTimelineItem[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<UserTimelineFilter>("all");
+  const [isPending, startTransition] = useTransition();
+
+  const totalActivity = data
+    ? data.summary.documentCount + data.summary.commentCount + data.summary.attachmentCount + data.summary.notificationCount
+    : 0;
+
+  const filterTabs = useMemo(() => {
+    return [
+      { key: "all" as const, label: "전체", count: totalActivity },
+      { key: "document" as const, label: "게시글", count: data?.summary.documentCount || 0 },
+      { key: "comment" as const, label: "댓글", count: data?.summary.commentCount || 0 },
+      { key: "attachment" as const, label: "파일", count: data?.summary.attachmentCount || 0 },
+      { key: "notification" as const, label: "알림", count: data?.summary.notificationCount || 0 },
+    ];
+  }, [data, totalActivity]);
+
+  const fetchTimeline = (filter: UserTimelineFilter, cursor?: string | null, append = false) => {
+    startTransition(async () => {
+      const result = await getUserTimelineAdminAction(userId, cursor, 15, filter);
+      if (!result.success || !result.data) {
+        setData(null);
+        setItems([]);
+        setNextCursor(null);
+        setHasMore(false);
+        return;
+      }
+
+      const nextData = result.data;
+      setData(nextData);
+      setItems((prev) => append ? [...prev, ...nextData.items.filter((item) => !prev.some((prevItem) => prevItem.id === item.id))] : nextData.items);
+      setNextCursor(nextData.nextCursor);
+      setHasMore(nextData.hasMore);
+    });
+  };
+
+  useEffect(() => {
+    setActiveFilter("all");
+    fetchTimeline("all");
+  }, [userId]);
+
+  const changeFilter = (filter: UserTimelineFilter) => {
+    if (filter === activeFilter || isPending) return;
+    setActiveFilter(filter);
+    fetchTimeline(filter);
+  };
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 pb-16">
+      <div className="mb-5 border-b border-gray-100 pb-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-sm font-bold text-gray-500 ring-1 ring-gray-200">
+            {data?.user.profileImage ? (
+              <img src={data.user.profileImage} alt={data.user.nickName} className="h-full w-full object-cover" />
+            ) : (
+              data?.user.nickName?.slice(0, 1) || "U"
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="line-clamp-1 text-lg font-black text-gray-950">{data?.user.nickName || "회원 타임라인"}</div>
+            <div className="mt-0.5 line-clamp-1 text-sm font-semibold text-gray-400">
+              {data ? `@${data.user.accountId} · ${data.user.email}` : "활동 기록을 불러오는 중입니다."}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex gap-2 overflow-x-auto">
+          {filterTabs.map((tab) => {
+            const active = activeFilter === tab.key;
+
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => changeFilter(tab.key)}
+                className={`flex min-w-20 cursor-pointer items-center justify-between gap-2 rounded-full px-3 py-2 text-xs font-bold transition-colors ${active ? "bg-gray-950 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"}`}
+              >
+                <span>{tab.label}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] ${active ? "bg-white/20" : "bg-white text-gray-400"}`}>{tab.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {isPending && items.length === 0 ? (
+        <div className="flex items-center justify-center py-16 text-sm font-semibold text-gray-400">
+          <Loader2 size={18} className="mr-2 animate-spin" />
+          타임라인을 불러오는 중
+        </div>
+      ) : items.length > 0 ? (
+        <div className="space-y-3">
+          {items.map((item) => (
+            <TimelinePreviewItem key={item.id} item={item} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm font-semibold text-gray-400">
+          표시할 활동이 없습니다.
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <div className="mt-5 flex justify-center">
+          {hasMore ? (
+            <button
+              type="button"
+              onClick={() => fetchTimeline(activeFilter, nextCursor, true)}
+              disabled={isPending}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending && <Loader2 size={14} className="animate-spin" />}
+              더 보기
+            </button>
+          ) : (
+            <div className="rounded-full bg-gray-100 px-4 py-2 text-xs font-bold text-gray-400">
+              모든 활동을 확인했습니다.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchTarget = searchParams?.get("target") || "accountId";
   const searchKeyword = searchParams?.get("keyword") || "";
+  const timelineUserId = Number(searchParams?.get("timelineUserId")) || null;
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const allChecked = initialUserList.length > 0 && selectedIds.length === initialUserList.length;
+  const timelineCloseHref = (() => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.delete("timelineUserId");
+    const query = params.toString();
+    return query ? `/admin/user/list?${query}` : "/admin/user/list";
+  })();
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -67,6 +282,12 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
         alert("서버 통신 중 오류가 발생했습니다.");
       }
     });
+  };
+
+  const handleOpenTimeline = (id: number) => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.set("timelineUserId", id.toString());
+    router.push(`/admin/user/list?${params.toString()}`);
   };
 
   return (
@@ -133,6 +354,7 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Account</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Email</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Nickname</th>
+                <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Timeline</th>
                 <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Edit</th>
                 <th className="w-14 px-4 py-3 text-center">
                   <input
@@ -156,6 +378,16 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
                     <td className="px-4 py-4 text-sm text-gray-500">{item.email_address}</td>
                     <td className="px-4 py-4 text-sm text-gray-600">{item.nickName}</td>
                     <td className="px-4 py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenTimeline(item.id)}
+                        className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-cyan-500 hover:text-white"
+                      >
+                        <Activity size={13} />
+                        보기
+                      </button>
+                    </td>
+                    <td className="px-4 py-4 text-center">
                       <Link href={`/admin/user/update/${item.id}`} className="inline-flex items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white">
                         <Edit3 size={13} />
                         수정
@@ -174,7 +406,7 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-sm text-gray-400">조회된 회원이 없습니다.</td>
+                  <td colSpan={7} className="py-16 text-center text-sm text-gray-400">조회된 회원이 없습니다.</td>
                 </tr>
               )}
             </tbody>
@@ -186,6 +418,12 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
         <div className="mt-6 flex justify-center">
           <PageNavigation page={initialNavigation.page} totalPages={initialNavigation.totalPages} />
         </div>
+      )}
+
+      {timelineUserId && (
+        <Bottom closeHref={timelineCloseHref}>
+          <AdminUserTimelinePanel userId={timelineUserId} />
+        </Bottom>
       )}
     </div>
   );

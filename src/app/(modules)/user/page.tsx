@@ -1,13 +1,16 @@
+import { redirect } from "next/navigation";
 
-import IndexUser from "@/modules/user/tpl/default";
+import Timeline from "@/modules/user/tpl/default/timeline";
+import { getUserTimelineAction } from "@/modules/user/actions/timeline.action";
 
-const Page = () => {
+const Page = async () => {
+  const result = await getUserTimelineAction();
 
-  return (
-    <>
-      <IndexUser />
-    </>
-  );
+  if (!result.success || !result.data) {
+    redirect("/auth/signin");
+  }
+
+  return <Timeline initialData={result.data} />;
 };
 
 export default Page;
