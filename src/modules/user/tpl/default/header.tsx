@@ -6,10 +6,9 @@ import UserNavWrapper from "@/modules/user/tpl/default/UserNavWrapper";
 const HeaderUser = (props: any) => {
 
   const userNav = [
-    { title: "대시보드", route: "/user" },
+    { title: "타임라인", route: "/user" },
     { title: "계정 프로필 설정", route: "/user/userUpdate" },
     { title: "API 설정", route: "/user/apiSettings" },
-    { title: "타임라인", route: "/user/timeline" },
     { title: "1:1문의", route: "/user/1n1contact" },
     { title: "회원탈퇴", route: "/user/userDelete" },
   ];

@@ -71,6 +71,57 @@ const MENU_CONFIG = [
   },
 ]
 
+const ADMIN_BREADCRUMB_LABELS: Record<string, Record<string, string>> = {
+  user: {
+    list: 'LIST',
+    create: 'CREATE',
+    groupList: 'GROUPS',
+    update: 'UPDATE',
+    active: 'ACTIVE',
+  },
+  posts: {
+    list: 'LIST',
+    create: 'CREATE',
+    update: 'INFO',
+    categories: 'CATEGORIES',
+    extraField: 'EXTRA FIELD',
+  },
+  content: {
+    documents: 'DOCUMENTS',
+    comments: 'COMMENTS',
+    attachments: 'ATTACHMENTS',
+    reports: 'REPORTS',
+  },
+  settings: {
+    index: 'GENERAL',
+    seo: 'SEO',
+    auth: 'AUTH',
+    upload: 'UPLOAD',
+    notification: 'NOTIFICATION',
+    advanced: 'ADVANCED',
+  },
+}
+
+const getAdminBreadcrumbs = (pathname: string) => {
+  const segments = pathname.split('/').filter(Boolean)
+  const section = segments[1]
+
+  if (!section) return ['ADMIN', 'OVERVIEW']
+
+  const sectionLabel = section === 'user' ? 'USER' : section.toUpperCase()
+  const lastSegment = segments[segments.length - 1]
+  const candidate = !lastSegment || !Number.isNaN(Number(lastSegment)) ? 'index' : lastSegment
+  const mapped = ADMIN_BREADCRUMB_LABELS[section]?.[candidate]
+
+  if (mapped) return [sectionLabel, mapped]
+
+  if (segments[2] && !Number.isNaN(Number(segments[2]))) {
+    return [sectionLabel, 'UPDATE']
+  }
+
+  return [sectionLabel, (candidate || 'OVERVIEW').replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase()]
+}
+
 const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; appName: string }) => {
   const pathname = usePathname()
   // 1️⃣ 공통 유틸: 경로 끝의 슬래시 제거
@@ -83,6 +134,7 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
   const { user, isLoading } = useUserContext()
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const isDashboardMain = normalizedPathname === '/admin'
+  const breadcrumbs = useMemo(() => getAdminBreadcrumbs(normalizedPathname), [normalizedPathname])
   const appInitial = appName.trim().charAt(0).toUpperCase() || 'G'
   const closeRight = close => {
     setShowRight(close)
@@ -236,9 +288,14 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
           >
             {/* Left: Breadcrumbs */}
             <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
-              <span className="uppercase tracking-widest text-[10px]">gjworks</span>
-              <ChevronRight size={14} className="text-gray-200" />
-              <span className="text-black font-bold uppercase tracking-widest text-[10px]">{normalizedPathname === '/admin' ? 'Overview' : normalizedPathname.split('/').pop()}</span>
+              {breadcrumbs.map((item, index) => (
+                <React.Fragment key={`${item}-${index}`}>
+                  {index > 0 && <ChevronRight size={14} className="text-gray-200" />}
+                  <span className={`${index === breadcrumbs.length - 1 ? 'text-black' : 'text-gray-400'} font-bold uppercase tracking-widest text-[10px]`}>
+                    {item}
+                  </span>
+                </React.Fragment>
+              ))}
             </div>
 
             <div className="flex items-center gap-0 md:gap-3">
