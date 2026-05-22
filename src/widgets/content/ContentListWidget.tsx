@@ -55,7 +55,7 @@ export default function ContentListWidget({ mid, count }: ContentListWidgetProps
             {items.map((item) => (
               <Link
                 key={item.id}
-                href={`/posts/${mid}/${item.id}`}
+                href={`/posts/${mid}/${item.slug}`}
                 rel="noopener noreferrer"
                 className="group flex items-center gap-4 py-3.5 px-1 hover:bg-slate-50 transition-colors duration-200"
               >
