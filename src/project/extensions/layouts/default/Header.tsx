@@ -9,12 +9,12 @@ import Left from "@components/panel/Left";
 
 import AccountDropwdown from "@widgets/forms/AccountDropwdown";
 import SideNav from "@components/nav/SideNav";
-import nav from "@res/config/navigation.json";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 import Right from "@components/panel/Right";
 import MymenuTemplate from "@widgets/forms/MymenuTemplate";
 import NotificationBell from "@components/bell/bell";
+import type { SiteNavigationItem } from "@/modules/admin/actions/_type";
 
 export type NavType = {
   name: string;
@@ -24,15 +24,6 @@ export type NavType = {
   route: string;
 };
 
-interface MenuItem {
-  name: string;
-  title: string;
-  route: string;
-  icon?: string;
-  parent?: string;
-  subMenu?: MenuItem[];
-}
-
 interface Inspage {
   route?: string;
 }
@@ -40,9 +31,11 @@ interface Inspage {
 const Header = ({
   siteUrl = "/",
   siteTitle = "지제이웍스",
+  navigationItems = [],
 }: {
   siteUrl?: string;
   siteTitle?: string;
+  navigationItems?: SiteNavigationItem[];
 }) => {
   const pathname = usePathname();
 
@@ -116,19 +109,13 @@ const Header = ({
     visible: { opacity: 1, x: 0 },
   };
 
-  const getMenuByName = (menuConfig: Record<string, MenuItem>, name: string): MenuItem | null => {
-    // reduce<반환타입>을 명시하여 found와 menu의 타입을 확정짓습니다.
-    return Object.values(menuConfig).reduce<MenuItem | null>((found, menu) => {
-      // 이제 menu는 MenuItem 타입으로 인식됩니다.
-      if (found) return found;
-      if (menu.name === name) return menu;
+  const isMenuActive = (item: SiteNavigationItem) => {
+    if (!pathname) return false;
+    if (pathname === item.href) return true;
+    if (item.href !== "/" && pathname.startsWith(item.href)) return true;
 
-      return menu.subMenu?.find((sub) => sub.name === name) || null;
-    }, null);
+    return item.children.some((child) => child.href !== "/" && pathname.startsWith(child.href));
   };
-
-// 컴포넌트 내부
-  const matched = getMenuByName(nav.header, currentPage?.route ?? "");
 
   return (
     <>
@@ -244,8 +231,7 @@ const Header = ({
               // onMouseLeave={} // 마우스리브 시에는 키값이 지워진다
               >
                 <div className="flex items-center gap-1">
-                  {nav.header &&
-                    Object.entries(nav.header).map(([key, item]) => (
+                  {navigationItems.map((item) => (
                       <div
                         key={item.name}
                         className="relative flex items-center h-full"
@@ -253,16 +239,18 @@ const Header = ({
                         onMouseLeave={() => setHoveredMenu(null)}
                       >
                         <Link
-                          href={item.route}
+                          href={item.href}
+                          target={item.target || undefined}
+                          rel={item.target === "_blank" ? "noreferrer" : undefined}
                           className={
                             "relative flex items-center gap-2 py-2 px-5 text-xs font-normal lg:text-[0.762rem] transition-colors duration-200 " +
-                            (matched?.parent === item.parent
+                            (isMenuActive(item)
                               ? "text-gray-900 dark:text-white font-medium bg-gray-900/5 backdrop-blur-lg hover:bg-gray-900/5 rounded-full "
                               : "dark:text-dark-500 text-gray-950 hover:text-gray-400 dark:hover:text-white")
                           }
                         >
                           <div>{item.title}</div>
-                          {item.subMenu.length > 0 && (
+                          {item.children.length > 0 && (
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`size-3 transition-transform duration-200 ${hoveredMenu === item.name ? "rotate-180" : ""}`}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                             </svg>
@@ -272,7 +260,7 @@ const Header = ({
 
                         {/* 2차 메뉴 영역 */}
                         <AnimatePresence>
-                          {item.subMenu.length > 0 && hoveredMenu === item.name && (
+                          {item.children.length > 0 && hoveredMenu === item.name && (
                             <motion.div
                               variants={containerVariants}
                               initial="hidden"
@@ -282,17 +270,19 @@ const Header = ({
                             >
                               <div className="overflow-hidden rounded-lg shadow-lg shadow-gray-900/5 bg-white dark:bg-dark-900/75 backdrop-blur-lg border border-gray-100 dark:border-dark-800">
                                 <div className="flex flex-col py-1">
-                                  {item.subMenu.map((subItem) => (
+                                  {item.children.map((subItem) => (
                                     <motion.div
                                       key={subItem.name} variants={itemVariants}
                                       whileHover={{ x: 6 }}
                                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                                     >
                                       <Link
-                                        href={subItem.route}
+                                        href={subItem.href}
+                                        target={subItem.target || undefined}
+                                        rel={subItem.target === "_blank" ? "noreferrer" : undefined}
                                         className={
                                         "block px-4 py-3 text-[0.762rem] dark:text-gray-200 transition-colors " +
-                                          (subItem.name === currentPage?.route ? " text-gray-400 " : "  text-gray-900 hover:text-gray-400")
+                                          (isMenuActive(subItem) ? " text-gray-400 " : "  text-gray-900 hover:text-gray-400")
                                         }
                                       >
                                         {subItem.title}

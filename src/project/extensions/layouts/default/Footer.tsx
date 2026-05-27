@@ -4,8 +4,41 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import type { SiteNavigationItem } from "@/modules/admin/actions/_type";
 
-const Footer = () => {
+const fallbackPartnerItems: Pick<SiteNavigationItem, "name" | "title" | "href" | "target">[] = [
+  { name: "partner-center", title: "파트너 센터", href: "/public", target: null },
+  { name: "partner-apply", title: "파트너 신청", href: "/public", target: null },
+];
+
+const fallbackDeveloperItems: Pick<SiteNavigationItem, "name" | "title" | "href" | "target">[] = [
+  { name: "documentation", title: "Documentation", href: "/features/getting-started", target: null },
+  { name: "orders", title: "구매내역", href: "/public", target: null },
+  { name: "store", title: "스토어", href: "/posts/store", target: null },
+  { name: "license", title: "License", href: "/license", target: null },
+];
+
+const fallbackFooterItems: Pick<SiteNavigationItem, "name" | "title" | "href" | "target">[] = [
+  { name: "about-footer", title: "ABOUT", href: "/about", target: null },
+  { name: "terms-footer", title: "Terms of service", href: "/terms", target: null },
+  { name: "privacy-footer", title: "Privacy policy", href: "/privacy", target: null },
+];
+
+const Footer = ({
+  siteTitle = "지제이웍스",
+  footerItems = [],
+  partnerItems = [],
+  developerItems = [],
+}: {
+  siteTitle?: string;
+  footerItems?: SiteNavigationItem[];
+  partnerItems?: SiteNavigationItem[];
+  developerItems?: SiteNavigationItem[];
+}) => {
+  const displayFooterItems = footerItems.length > 0 ? footerItems : fallbackFooterItems;
+  const displayPartnerItems = partnerItems.length > 0 ? partnerItems : fallbackPartnerItems;
+  const displayDeveloperItems = developerItems.length > 0 ? developerItems : fallbackDeveloperItems;
+
   const variants = {
     onscreen: {
       opacity: [0, 1],
@@ -57,22 +90,18 @@ const Footer = () => {
               </motion.div>
               <motion.div className="col-span-3 flex items-center lg:col-span-1">
                 <div className="flex gap-4">
-                  <motion.div variants={parentVariants} className="">
-                    <Link
-                      href="/public"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
-                    >
-                      파트너 센터
-                    </Link>
-                  </motion.div>
-                  <motion.div variants={parentVariants} className="">
-                    <Link
-                      href="/public"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
-                    >
-                      파트너 신청
-                    </Link>
-                  </motion.div>
+                  {displayPartnerItems.map((item) => (
+                    <motion.div key={item.name || item.href} variants={parentVariants} className="">
+                      <Link
+                        href={item.href}
+                        target={item.target || undefined}
+                        rel={item.target === "_blank" ? "noreferrer" : undefined}
+                        className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
+                      >
+                        {item.title}
+                      </Link>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             </motion.div>
@@ -85,38 +114,18 @@ const Footer = () => {
               </motion.div>
               <motion.div className="col-span-3 flex items-center lg:col-span-1">
                 <div className="flex flex-wrap gap-4">
-                  <motion.div variants={parentVariants}>
-                    <Link
-                      href="/public"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
-                    >
-                      Documentation
-                    </Link>
-                  </motion.div>
-                  <motion.div variants={parentVariants}>
-                    <Link
-                      href="/public"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
-                    >
-                      구매내역
-                    </Link>
-                  </motion.div>
-                  <motion.div variants={parentVariants}>
-                    <Link
-                      href="/public"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
-                    >
-                      스토어
-                    </Link>
-                  </motion.div>
-                  <motion.div variants={parentVariants}>
-                    <Link
-                      href="/public"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
-                    >
-                      License
-                    </Link>
-                  </motion.div>
+                  {displayDeveloperItems.map((item) => (
+                    <motion.div key={item.name || item.href} variants={parentVariants}>
+                      <Link
+                        href={item.href}
+                        target={item.target || undefined}
+                        rel={item.target === "_blank" ? "noreferrer" : undefined}
+                        className="dark:text-dark-400 text-xs text-gray-400 hover:text-black dark:hover:text-white"
+                      >
+                        {item.title}
+                      </Link>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             </div>
@@ -165,42 +174,25 @@ const Footer = () => {
                     variants={parentVariants}
                   >
                     <div className="dark:text-dark-200 text-center text-xs text-gray-950 lg:text-left pt-1">
-                      ⓒ 지제이웍스
+                      ⓒ {siteTitle}
                     </div>
                   </motion.div>
-                  <motion.div
-                    variants={parentVariants}
-                    className="order-1 md:order-2"
-                  >
-                    <Link
-                      href="/about"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-gray-950 dark:hover:text-white hover:underline"
+                  {displayFooterItems.map((item) => (
+                    <motion.div
+                      key={item.name || item.href}
+                      variants={parentVariants}
+                      className="order-1 md:order-2"
                     >
-                      ABOUT
-                    </Link>
-                  </motion.div>
-                  <motion.div
-                    variants={parentVariants}
-                    className="order-2 md:order-3"
-                  >
-                    <Link
-                      href="/terms"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-gray-950 dark:hover:text-white hover:underline"
-                    >
-                      Terms of service
-                    </Link>
-                  </motion.div>
-                  <motion.div
-                    variants={parentVariants}
-                    className="order-3 md:order-4"
-                  >
-                    <Link
-                      href="/privacy"
-                      className="dark:text-dark-400 text-xs text-gray-400 hover:text-gray-950 dark:hover:text-white hover:underline"
-                    >
-                      Privacy policy
-                    </Link>
-                  </motion.div>
+                      <Link
+                        href={item.href}
+                        target={item.target || undefined}
+                        rel={item.target === "_blank" ? "noreferrer" : undefined}
+                        className="dark:text-dark-400 text-xs text-gray-400 hover:text-gray-950 dark:hover:text-white hover:underline"
+                      >
+                        {item.title}
+                      </Link>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             </motion.div>

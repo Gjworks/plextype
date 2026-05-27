@@ -64,7 +64,9 @@ export const ModelName = {
   DocumentViewLog: 'DocumentViewLog',
   Attachment: 'Attachment',
   Notification: 'Notification',
-  AppSetting: 'AppSetting'
+  AppSetting: 'AppSetting',
+  SiteNavigationGroup: 'SiteNavigationGroup',
+  SiteNavigation: 'SiteNavigation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -306,6 +308,44 @@ export const AppSettingScalarFieldEnum = {
 } as const
 
 export type AppSettingScalarFieldEnum = (typeof AppSettingScalarFieldEnum)[keyof typeof AppSettingScalarFieldEnum]
+
+
+export const SiteNavigationGroupScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  title: 'title',
+  description: 'description',
+  area: 'area',
+  order: 'order',
+  isActive: 'isActive',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteNavigationGroupScalarFieldEnum = (typeof SiteNavigationGroupScalarFieldEnum)[keyof typeof SiteNavigationGroupScalarFieldEnum]
+
+
+export const SiteNavigationScalarFieldEnum = {
+  id: 'id',
+  groupId: 'groupId',
+  parentId: 'parentId',
+  name: 'name',
+  title: 'title',
+  href: 'href',
+  target: 'target',
+  icon: 'icon',
+  order: 'order',
+  depth: 'depth',
+  location: 'location',
+  visibility: 'visibility',
+  isActive: 'isActive',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteNavigationScalarFieldEnum = (typeof SiteNavigationScalarFieldEnum)[keyof typeof SiteNavigationScalarFieldEnum]
 
 
 export const SortOrder = {

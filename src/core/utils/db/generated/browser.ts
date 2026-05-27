@@ -87,3 +87,13 @@ export type Notification = Prisma.NotificationModel
  * 
  */
 export type AppSetting = Prisma.AppSettingModel
+/**
+ * Model SiteNavigationGroup
+ * 
+ */
+export type SiteNavigationGroup = Prisma.SiteNavigationGroupModel
+/**
+ * Model SiteNavigation
+ * 
+ */
+export type SiteNavigation = Prisma.SiteNavigationModel
