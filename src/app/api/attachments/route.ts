@@ -5,11 +5,152 @@ import { v4 as uuidv4 } from "uuid";
 import prisma from "@/core/utils/db/prisma";
 import dayjs from "dayjs";
 import { verify } from "@/core/utils/auth/jwtAuth";
+import { getUploadSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 
-const ALLOWED_EXTS = [".png", ".jpg", ".jpeg", ".gif", ".mp3", ".mp4", ".avif", ".webm", ".webp", ".mov", ".ogg", ".zip"];
-const ALLOWED_MIMES = ["image/png", "image/jpeg", "image/gif", "image/avif", "image/webp", "audio/mpeg", "audio/ogg", "video/mp4", "video/webm", "video/quicktime", "application/zip"];
+const IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/gif", "image/avif", "image/webp"]);
+const AUDIO_MIMES = new Set(["audio/mpeg", "audio/ogg"]);
+const VIDEO_MIMES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+const ARCHIVE_MIMES = new Set(["application/zip"]);
+const MIME_BY_EXT = new Map<string, string[]>([
+  [".png", ["image/png"]],
+  [".jpg", ["image/jpeg"]],
+  [".jpeg", ["image/jpeg"]],
+  [".gif", ["image/gif"]],
+  [".avif", ["image/avif"]],
+  [".webp", ["image/webp"]],
+  [".mp3", ["audio/mpeg"]],
+  [".ogg", ["audio/ogg"]],
+  [".mp4", ["video/mp4"]],
+  [".webm", ["video/webm"]],
+  [".mov", ["video/quicktime"]],
+  [".zip", ["application/zip"]],
+]);
+
+const parseAllowedExtensions = (value: string) => {
+  return new Set(
+    value
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean)
+      .map((item) => item.startsWith(".") ? item : `.${item}`),
+  );
+};
+
+const isVideoMime = (mimeType: string) => VIDEO_MIMES.has(mimeType);
+const isArchiveMime = (mimeType: string) => ARCHIVE_MIMES.has(mimeType);
+const isKnownMime = (mimeType: string) => (
+  IMAGE_MIMES.has(mimeType)
+  || AUDIO_MIMES.has(mimeType)
+  || VIDEO_MIMES.has(mimeType)
+  || ARCHIVE_MIMES.has(mimeType)
+);
+const isSharpProcessableImage = (mimeType: string) => (
+  mimeType === "image/jpeg"
+  || mimeType === "image/png"
+  || mimeType === "image/webp"
+  || mimeType === "image/avif"
+);
+
+const IMAGE_FORMAT_META = {
+  jpeg: { ext: ".jpg", mimeType: "image/jpeg" },
+  png: { ext: ".png", mimeType: "image/png" },
+  webp: { ext: ".webp", mimeType: "image/webp" },
+  avif: { ext: ".avif", mimeType: "image/avif" },
+} as const;
+
+const getOriginalImageFormat = (mimeType: string) => {
+  if (mimeType === "image/jpeg") return "jpeg";
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/webp") return "webp";
+  if (mimeType === "image/avif") return "avif";
+  return null;
+};
+
+const processImageBuffer = async (
+  inputBuffer: Buffer,
+  mimeType: string,
+  settings: Awaited<ReturnType<typeof getUploadSettingsRuntimeAction>>,
+) => {
+  const originalFormat = getOriginalImageFormat(mimeType);
+  if (!settings.enableImageProcessing || !originalFormat || !isSharpProcessableImage(mimeType)) {
+    return {
+      buffer: inputBuffer,
+      ext: null,
+      mimeType,
+    };
+  }
+
+  let image = sharp(inputBuffer, { animated: false });
+  const metadata = await image.metadata();
+
+  if ((metadata.pages || 1) > 1) {
+    return {
+      buffer: inputBuffer,
+      ext: null,
+      mimeType,
+    };
+  }
+
+  image = image
+    .rotate()
+    .resize({
+      width: settings.maxImageWidth,
+      height: settings.maxImageHeight,
+      fit: "inside",
+      withoutEnlargement: true,
+    });
+
+  if (!settings.stripImageMetadata) {
+    image = image.keepMetadata();
+  }
+
+  const outputFormat = settings.imageOutputFormat === "original"
+    ? originalFormat
+    : settings.imageOutputFormat;
+  const outputMeta = IMAGE_FORMAT_META[outputFormat];
+
+  if (outputFormat === "jpeg") {
+    const buffer = await image
+      .flatten({ background: "#ffffff" })
+      .jpeg({ quality: settings.imageQuality, mozjpeg: true })
+      .toBuffer();
+
+    return { buffer, ...outputMeta };
+  }
+
+  if (outputFormat === "png") {
+    const buffer = await image
+      .png({ quality: settings.imageQuality, compressionLevel: 9 })
+      .toBuffer();
+
+    return { buffer, ...outputMeta };
+  }
+
+  if (outputFormat === "webp") {
+    const buffer = await image
+      .webp({ quality: settings.imageQuality })
+      .toBuffer();
+
+    return { buffer, ...outputMeta };
+  }
+
+  if (outputFormat === "avif") {
+    const buffer = await image
+      .avif({ quality: settings.imageQuality })
+      .toBuffer();
+
+    return { buffer, ...outputMeta };
+  }
+
+  return {
+    buffer: inputBuffer,
+    ext: null,
+    mimeType,
+  };
+};
 
 // =========================================================================
 // POST: 유저 보관함에 파일 업로드
@@ -25,6 +166,7 @@ export async function POST(req: NextRequest) {
     const verifyToken = await verify(accessToken);
     if (!verifyToken || !verifyToken.id) return NextResponse.json({ error: "유효하지 않은 토큰입니다." }, { status: 401 });
     const userId = verifyToken.id;
+    const uploadSettings = await getUploadSettingsRuntimeAction();
 
     // 2. 파일 수신 및 유효성 검사
     const file = formData.get("file-attachments") as unknown as File;
@@ -33,13 +175,56 @@ export async function POST(req: NextRequest) {
     }
 
     const ext = path.extname(file.name).toLowerCase();
-    if (!ALLOWED_EXTS.includes(ext) || !ALLOWED_MIMES.includes(file.type)) {
+    const allowedExts = parseAllowedExtensions(uploadSettings.allowedExtensions);
+    const maxFileSize = uploadSettings.maxUploadSizeMb * 1024 * 1024;
+    const userStorageLimit = uploadSettings.userStorageLimitMb * 1024 * 1024;
+
+    if (file.size > maxFileSize) {
+      return NextResponse.json({ error: `파일은 ${uploadSettings.maxUploadSizeMb}MB 이하만 업로드할 수 있습니다.` }, { status: 400 });
+    }
+
+    if (!allowedExts.has(ext)) {
       return NextResponse.json({ error: "허용되지 않은 파일 형식입니다." }, { status: 400 });
+    }
+
+    if (!uploadSettings.allowVideo && isVideoMime(file.type)) {
+      return NextResponse.json({ error: "동영상 업로드가 허용되어 있지 않습니다." }, { status: 400 });
+    }
+
+    if (!uploadSettings.allowArchive && isArchiveMime(file.type)) {
+      return NextResponse.json({ error: "압축파일 업로드가 허용되어 있지 않습니다." }, { status: 400 });
+    }
+
+    if (uploadSettings.verifyMimeType) {
+      const extMimes = MIME_BY_EXT.get(ext) || [];
+      if (!isKnownMime(file.type) || !extMimes.includes(file.type)) {
+        return NextResponse.json({ error: "파일 MIME 타입이 확장자와 일치하지 않습니다." }, { status: 400 });
+      }
+    }
+
+    const bytes = await file.arrayBuffer();
+    const fileBuffer = Buffer.from(bytes);
+    const processedFile = await processImageBuffer(fileBuffer, file.type, uploadSettings);
+    const outputBuffer = processedFile.buffer;
+    const outputExt = processedFile.ext || ext;
+    const outputMimeType = processedFile.mimeType || file.type;
+
+    if (outputBuffer.byteLength > maxFileSize) {
+      return NextResponse.json({ error: `처리된 파일은 ${uploadSettings.maxUploadSizeMb}MB 이하만 저장할 수 있습니다.` }, { status: 400 });
+    }
+
+    const storageUsage = await prisma.attachment.aggregate({
+      where: { userId },
+      _sum: { size: true },
+    });
+    const currentStorageSize = storageUsage._sum.size || 0;
+    if (currentStorageSize + outputBuffer.byteLength > userStorageLimit) {
+      return NextResponse.json({ error: `사용자별 보관 용량 ${uploadSettings.userStorageLimitMb}MB를 초과했습니다.` }, { status: 400 });
     }
 
     // 3. 🌟 물리적 경로 생성 (심볼릭 링크 구조에 맞춤)
     const fileUuid = uuidv4();
-    const fileName = `${fileUuid}${ext}`;
+    const fileName = `${fileUuid}${outputExt}`;
     const datePath = dayjs().format("YYYY/MM");
 
     // 물리 저장 경로: 프로젝트루트/storage/uploads/...
@@ -52,8 +237,7 @@ export async function POST(req: NextRequest) {
 
     // 4. 파일 저장
     await mkdir(uploadDir, { recursive: true });
-    const bytes = await file.arrayBuffer();
-    await writeFile(path.join(uploadDir, fileName), Buffer.from(bytes));
+    await writeFile(path.join(uploadDir, fileName), outputBuffer);
 
     // 5. 📝 DB 기록 (게시글 연결 정보 제외, 유저 소유권만 기록)
     const attachment = await prisma.attachment.create({
@@ -61,8 +245,8 @@ export async function POST(req: NextRequest) {
         uuid: fileUuid,
         fileName: fileName,
         originalName: file.name,
-        mimeType: file.type,
-        size: file.size,
+        mimeType: outputMimeType,
+        size: outputBuffer.byteLength,
         path: dbPath,
         userId: userId,
       },

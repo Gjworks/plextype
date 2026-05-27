@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState, useTransition } from "react";
+import React, { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   Bell,
   Globe2,
@@ -12,8 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { SiteSettingsData } from "@/modules/admin/actions/_type";
-import { updateSiteSettingsAdminAction } from "@/modules/admin/actions/settings.action";
+import { SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
+import { updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 
@@ -22,6 +22,7 @@ type SettingsSection = "site" | "seo" | "auth" | "upload" | "notification";
 type SettingsProps = {
   section?: SettingsSection;
   initialSiteSettings?: SiteSettingsData;
+  initialUploadSettings?: UploadSettingsData;
 };
 
 const sectionMeta: Record<SettingsSection, {
@@ -137,23 +138,198 @@ const InlineField = ({
   );
 };
 
-const Toggle = ({ defaultChecked = false }: { defaultChecked?: boolean }) => {
-  const [checked, setChecked] = useState(defaultChecked);
+const Toggle = ({
+  name,
+  checked,
+  defaultChecked = false,
+  onChange,
+}: {
+  name?: string;
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onChange?: (checked: boolean) => void;
+}) => {
+  const [internalChecked, setInternalChecked] = useState(defaultChecked);
+  const isControlled = typeof checked === "boolean";
+  const active = isControlled ? checked : internalChecked;
+  const handleClick = () => {
+    const next = !active;
+    if (!isControlled) setInternalChecked(next);
+    onChange?.(next);
+  };
 
   return (
-    <button
-      type="button"
-      onClick={() => setChecked((prev) => !prev)}
-      className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500"
-      data-checked={checked}
-      aria-pressed={checked}
-    >
-      <span
-        className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
-          checked ? "translate-x-5" : "translate-x-0"
-        }`}
+    <>
+      {name && active && <input type="hidden" name={name} value="true" />}
+      <button
+        type="button"
+        onClick={handleClick}
+        className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500"
+        data-checked={active}
+        aria-pressed={active}
+      >
+        <span
+          className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
+            active ? "translate-x-5" : "translate-x-0"
+          }`}
+        />
+      </button>
+    </>
+  );
+};
+
+const SiteImageUploadField = ({
+  title,
+  description,
+  recommendedSize,
+  currentPath,
+  pathName,
+  fileName,
+  variant = "wide",
+}: {
+  title: string;
+  description: string;
+  recommendedSize: string;
+  currentPath?: string;
+  pathName: keyof SiteSettingsData;
+  fileName: string;
+  variant?: "logo" | "favicon" | "wide";
+}) => {
+  const inputId = `site-${fileName}`;
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const displayUrl = previewUrl || currentPath || "";
+  const isFavicon = variant === "favicon";
+  const previewWrapClass = isFavicon
+    ? "mb-4 flex h-[148px] items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50"
+    : variant === "logo"
+      ? "mb-4 grid h-[148px] place-items-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50"
+      : "mb-4 grid aspect-[1.91/1] min-h-[148px] place-items-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50";
+  const imageClass = isFavicon ? "h-16 w-16 object-contain" : "h-full w-full object-contain";
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : null;
+    });
+  };
+
+  return (
+    <div className="flex h-full min-h-[356px] flex-col rounded-md border border-gray-100 bg-white p-4 transition-colors hover:border-gray-200 dark:border-dark-800 dark:bg-dark-900">
+      <input type="hidden" name={pathName} value={currentPath || ""} />
+      <div className={previewWrapClass}>
+        {displayUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={displayUrl} alt={title} className={imageClass} />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-gray-300">
+            <Image size={22} strokeWidth={1.5} />
+            <span className="text-xs font-medium">이미지 없음</span>
+          </div>
+        )}
+      </div>
+      <div className="mb-3">
+        <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{title}</div>
+        <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
+        <div className="mt-2 inline-flex rounded bg-gray-100 px-2 py-1 font-mono text-[10px] font-semibold text-gray-500 dark:bg-dark-800">
+          {recommendedSize}
+        </div>
+        {currentPath && <div className="mt-2 truncate font-mono text-[10px] text-gray-400">{currentPath}</div>}
+      </div>
+      <label
+        htmlFor={inputId}
+        className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md bg-gray-950 px-3 text-xs font-bold text-white transition-colors hover:bg-blue-500"
+      >
+        <Upload size={13} />
+        파일 선택
+      </label>
+      <input
+        id={inputId}
+        name={fileName}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/avif,image/webp,image/x-icon,image/vnd.microsoft.icon,.ico"
+        onChange={handleFileChange}
+        className="sr-only"
       />
-    </button>
+    </div>
+  );
+};
+
+const UploadNumberField = ({
+  refObject,
+  title,
+  description,
+  unit,
+  name,
+  value,
+  onChange,
+  error,
+  placeholder,
+}: {
+  refObject?: React.Ref<HTMLInputElement>;
+  title: string;
+  description: string;
+  unit: string;
+  name: keyof UploadSettingsData;
+  value: number;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  placeholder: string;
+}) => {
+  return (
+    <div className="rounded-md border border-gray-100 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
+      <div className="mb-3 min-h-[58px]">
+        <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{title}</div>
+        <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
+      </div>
+      <div className="relative">
+        <InputField
+          ref={refObject}
+          inputTitle={title}
+          name={name}
+          type="number"
+          value={value}
+          onChange={onChange}
+          error={error}
+          placeholder={placeholder}
+          hideLabel
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-400">
+          {unit}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const UploadTogglePolicy = ({
+  title,
+  description,
+  name,
+  checked,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  name: keyof UploadSettingsData;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) => {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-md border border-gray-100 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
+      <div>
+        <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{title}</div>
+        <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
+      </div>
+      <Toggle name={name} checked={checked} onChange={onChange} />
+    </div>
   );
 };
 
@@ -163,13 +339,37 @@ const defaultSiteSettings: SiteSettingsData = {
   projectTitle: "plextype",
   siteUrl: "http://localhost:3000",
   apiBaseUrl: "",
+  logoPath: "",
+  faviconPath: "",
+  defaultOgImage: "",
 };
 
-const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings }: SettingsProps) => {
+const defaultUploadSettings: UploadSettingsData = {
+  maxUploadSizeMb: 20,
+  userStorageLimitMb: 1024,
+  maxImageWidth: 2560,
+  maxImageHeight: 2560,
+  imageQuality: 85,
+  imageOutputFormat: "original",
+  allowedExtensions: ".png, .jpg, .jpeg, .gif, .webp, .avif, .mp3, .ogg, .mp4, .webm, .mov, .zip",
+  enableImageProcessing: true,
+  stripImageMetadata: true,
+  verifyMimeType: true,
+  restrictProfileImage: true,
+  allowVideo: true,
+  allowArchive: true,
+};
+
+const Settings = ({
+  section = "site",
+  initialSiteSettings = defaultSiteSettings,
+  initialUploadSettings = defaultUploadSettings,
+}: SettingsProps) => {
   const activeSection = sectionMeta[section] ? section : "site";
   const meta = useMemo(() => sectionMeta[activeSection], [activeSection]);
   const [isPending, startTransition] = useTransition();
   const [siteSettings, setSiteSettings] = useState<SiteSettingsData>(initialSiteSettings);
+  const [uploadSettings, setUploadSettings] = useState<UploadSettingsData>(initialUploadSettings);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const appNameRef = useRef<HTMLInputElement>(null);
@@ -177,6 +377,12 @@ const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings 
   const projectTitleRef = useRef<HTMLInputElement>(null);
   const siteUrlRef = useRef<HTMLInputElement>(null);
   const apiBaseUrlRef = useRef<HTMLInputElement>(null);
+  const maxUploadSizeMbRef = useRef<HTMLInputElement>(null);
+  const userStorageLimitMbRef = useRef<HTMLInputElement>(null);
+  const maxImageWidthRef = useRef<HTMLInputElement>(null);
+  const maxImageHeightRef = useRef<HTMLInputElement>(null);
+  const imageQualityRef = useRef<HTMLInputElement>(null);
+  const allowedExtensionsRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSiteChange = (field: keyof SiteSettingsData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setSiteSettings((prev) => ({
@@ -185,10 +391,31 @@ const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings 
     }));
   };
 
+  const handleUploadInputChange = (field: keyof UploadSettingsData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.type === "number" ? Number(e.target.value) : e.target.value;
+    setUploadSettings((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleUploadToggleChange = (field: keyof UploadSettingsData) => (checked: boolean) => {
+    setUploadSettings((prev) => ({
+      ...prev,
+      [field]: checked,
+    }));
+  };
+
   const resetSiteSettings = () => {
     setFieldErrors(null);
     setFormMessage(null);
     setSiteSettings(initialSiteSettings);
+  };
+
+  const resetUploadSettings = () => {
+    setFieldErrors(null);
+    setFormMessage(null);
+    setUploadSettings(initialUploadSettings);
   };
 
   const handleSiteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -221,8 +448,42 @@ const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings 
     });
   };
 
+  const handleUploadSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFieldErrors(null);
+    setFormMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const result = await updateUploadSettingsAdminAction(formData);
+
+      if (!result.success) {
+        if (result.fieldErrors) {
+          setFieldErrors(result.fieldErrors);
+
+          if (result.fieldErrors.maxUploadSizeMb) maxUploadSizeMbRef.current?.focus();
+          else if (result.fieldErrors.userStorageLimitMb) userStorageLimitMbRef.current?.focus();
+          else if (result.fieldErrors.maxImageWidth) maxImageWidthRef.current?.focus();
+          else if (result.fieldErrors.maxImageHeight) maxImageHeightRef.current?.focus();
+          else if (result.fieldErrors.imageQuality) imageQualityRef.current?.focus();
+          else if (result.fieldErrors.allowedExtensions) allowedExtensionsRef.current?.focus();
+        } else {
+          setFormMessage({ type: "error", message: result.message });
+        }
+        return;
+      }
+
+      if (result.data) setUploadSettings(result.data);
+      setFormMessage({ type: "success", message: result.message });
+    });
+  };
+
+  const handleSubmit = activeSection === "site" ? handleSiteSubmit : activeSection === "upload" ? handleUploadSubmit : undefined;
+  const handleReset = activeSection === "site" ? resetSiteSettings : activeSection === "upload" ? resetUploadSettings : undefined;
+
   return (
-    <form className="max-w-screen-2xl mx-auto px-3 py-10" onSubmit={activeSection === "site" ? handleSiteSubmit : undefined}>
+    <form className="max-w-screen-2xl mx-auto px-3 py-10" onSubmit={handleSubmit}>
       <div className="mb-8 flex flex-wrap items-end gap-4">
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">System Control / {meta.eyebrow}</div>
@@ -233,8 +494,8 @@ const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings 
         <div className="flex items-center gap-2">
           <Button
             type="button"
-            disabled={activeSection !== "site" || isPending}
-            onClick={resetSiteSettings}
+            disabled={!handleReset || isPending}
+            onClick={handleReset}
             className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:bg-white disabled:text-gray-400"
           >
             초기화
@@ -242,7 +503,7 @@ const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings 
           <Button
             type="submit"
             isLoading={isPending}
-            disabled={activeSection !== "site"}
+            disabled={!handleSubmit}
             className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white disabled:!bg-blue-100 disabled:!text-blue-300"
           >
             저장하기
@@ -327,19 +588,37 @@ const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings 
             </div>
           </SectionShell>
 
-          <SectionShell icon={<Image size={13} />} title="대표 이미지" description="로고, 파비콘, 공유 이미지를 지정합니다.">
-            <FieldRow label="이미지 경로" description="업로드 선택 기능은 추후 연결합니다.">
+          <SectionShell icon={<Image size={13} />} title="대표 이미지" description="로고, 파비콘, 공유 이미지를 업로드합니다.">
+            <FieldRow label="이미지 업로드" description="저장 시 파일이 업로드되고 사이트 설정에는 이미지 경로가 자동으로 기록됩니다.">
               <div className="grid gap-4 md:grid-cols-3">
-                <InputField inputTitle="로고 이미지" name="logoPath" placeholder="로고 이미지 경로" hideLabel />
-                <InputField inputTitle="파비콘" name="faviconPath" placeholder="파비콘 경로" hideLabel />
-                <InputField inputTitle="기본 OG 이미지" name="defaultOgImage" placeholder="기본 OG 이미지 경로" hideLabel />
+                <SiteImageUploadField
+                  title="로고 이미지"
+                  description="헤더와 브랜드 영역에서 사용할 기본 로고입니다."
+                  recommendedSize="권장 320x120px · PNG/WebP"
+                  currentPath={siteSettings.logoPath}
+                  pathName="logoPath"
+                  fileName="logoFile"
+                  variant="logo"
+                />
+                <SiteImageUploadField
+                  title="파비콘"
+                  description="브라우저 탭과 북마크에 표시할 아이콘입니다."
+                  recommendedSize="권장 32x32px 또는 180x180px · ICO/PNG"
+                  currentPath={siteSettings.faviconPath}
+                  pathName="faviconPath"
+                  fileName="faviconFile"
+                  variant="favicon"
+                />
+                <SiteImageUploadField
+                  title="기본 OG 이미지"
+                  description="공유 이미지가 없을 때 사용할 대표 이미지입니다."
+                  recommendedSize="권장 1200x630px · JPG/PNG/WebP"
+                  currentPath={siteSettings.defaultOgImage}
+                  pathName="defaultOgImage"
+                  fileName="defaultOgImageFile"
+                  variant="wide"
+                />
               </div>
-            </FieldRow>
-            <FieldRow label="기본 언어">
-              <select className={selectClass} name="defaultLocale" defaultValue="ko">
-                <option value="ko">한국어</option>
-                <option value="en">English</option>
-              </select>
             </FieldRow>
           </SectionShell>
         </>
@@ -417,35 +696,171 @@ const Settings = ({ section = "site", initialSiteSettings = defaultSiteSettings 
       {activeSection === "upload" && (
         <>
           <SectionShell icon={<Upload size={13} />} title="파일 제한" description="업로드 가능한 파일의 크기와 범위입니다.">
-            <FieldRow label="용량 제한">
-              <div className="grid gap-4 md:grid-cols-3">
-                <InputField inputTitle="파일당 MB" name="maxUploadSizeMb" type="number" placeholder="파일당 MB" hideLabel />
-                <InputField inputTitle="사용자별 MB" name="userStorageLimitMb" type="number" placeholder="사용자별 MB" hideLabel />
-                <InputField inputTitle="이미지 최대 너비" name="maxImageWidth" type="number" placeholder="이미지 최대 너비" hideLabel />
+            <FieldRow label="용량 및 이미지 크기" description="첨부파일 저장 용량은 MB 기준이고, 이미지 최대 너비는 px 기준입니다.">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <UploadNumberField
+                  refObject={maxUploadSizeMbRef}
+                  title="파일당 최대 용량"
+                  description="파일 1개가 업로드될 수 있는 최대 크기입니다."
+                  unit="MB"
+                  name="maxUploadSizeMb"
+                  value={uploadSettings.maxUploadSizeMb}
+                  onChange={handleUploadInputChange("maxUploadSizeMb")}
+                  error={fieldErrors?.maxUploadSizeMb}
+                  placeholder="20"
+                />
+                <UploadNumberField
+                  refObject={userStorageLimitMbRef}
+                  title="사용자별 보관 용량"
+                  description="한 사용자가 보관할 수 있는 전체 첨부파일 용량입니다."
+                  unit="MB"
+                  name="userStorageLimitMb"
+                  value={uploadSettings.userStorageLimitMb}
+                  onChange={handleUploadInputChange("userStorageLimitMb")}
+                  error={fieldErrors?.userStorageLimitMb}
+                  placeholder="1024"
+                />
+                <UploadNumberField
+                  refObject={maxImageWidthRef}
+                  title="이미지 최대 너비"
+                  description="이 너비를 넘는 이미지는 비율을 유지한 채 줄입니다."
+                  unit="PX"
+                  name="maxImageWidth"
+                  value={uploadSettings.maxImageWidth}
+                  onChange={handleUploadInputChange("maxImageWidth")}
+                  error={fieldErrors?.maxImageWidth}
+                  placeholder="2560"
+                />
+                <UploadNumberField
+                  refObject={maxImageHeightRef}
+                  title="이미지 최대 높이"
+                  description="이 높이를 넘는 이미지는 비율을 유지한 채 줄입니다."
+                  unit="PX"
+                  name="maxImageHeight"
+                  value={uploadSettings.maxImageHeight}
+                  onChange={handleUploadInputChange("maxImageHeight")}
+                  error={fieldErrors?.maxImageHeight}
+                  placeholder="2560"
+                />
               </div>
             </FieldRow>
+            <FieldRow label="이미지 처리" description="JPG, PNG, WebP, AVIF 업로드 시 sharp로 적용되는 이미지 최적화 정책입니다. GIF는 애니메이션 보호를 위해 원본 저장합니다.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-md border border-gray-100 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
+                  <div className="mb-4">
+                    <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">이미지 처리 사용</div>
+                    <div className="mt-1 text-xs leading-5 text-gray-400">끄면 이미지도 원본 그대로 저장합니다.</div>
+                  </div>
+                  <Toggle
+                    name="enableImageProcessing"
+                    checked={uploadSettings.enableImageProcessing}
+                    onChange={handleUploadToggleChange("enableImageProcessing")}
+                  />
+                </div>
+                <div className="rounded-md border border-gray-100 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
+                  <div className="mb-4">
+                    <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">메타데이터 제거</div>
+                    <div className="mt-1 text-xs leading-5 text-gray-400">EXIF 위치정보와 촬영 정보를 제거합니다.</div>
+                  </div>
+                  <Toggle
+                    name="stripImageMetadata"
+                    checked={uploadSettings.stripImageMetadata}
+                    onChange={handleUploadToggleChange("stripImageMetadata")}
+                  />
+                </div>
+              </div>
+            </FieldRow>
+            <FieldRow label="이미지 품질" description="이미지를 재인코딩할 때 사용할 품질 값입니다. 낮을수록 용량은 줄고 화질 손실은 커집니다.">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_120px] md:items-center">
+                <input
+                  name="imageQuality"
+                  type="range"
+                  min={1}
+                  max={100}
+                  value={uploadSettings.imageQuality}
+                  onChange={handleUploadInputChange("imageQuality")}
+                  className="w-full accent-cyan-500"
+                />
+                <InputField
+                  ref={imageQualityRef}
+                  inputTitle="이미지 품질"
+                  name="imageQuality"
+                  type="number"
+                  value={uploadSettings.imageQuality}
+                  onChange={handleUploadInputChange("imageQuality")}
+                  error={fieldErrors?.imageQuality}
+                  placeholder="85"
+                  hideLabel
+                />
+              </div>
+            </FieldRow>
+            <FieldRow label="이미지 출력 포맷" description="원본 유지 또는 지정 포맷으로 변환해 저장합니다. WebP는 용량 대비 품질이 좋아 일반적으로 무난합니다.">
+              <select
+                className={selectClass}
+                name="imageOutputFormat"
+                value={uploadSettings.imageOutputFormat}
+                onChange={(event) => setUploadSettings((prev) => ({
+                  ...prev,
+                  imageOutputFormat: event.target.value as UploadSettingsData["imageOutputFormat"],
+                }))}
+              >
+                <option value="original">원본 포맷 유지</option>
+                <option value="webp">WebP로 변환</option>
+                <option value="jpeg">JPEG로 변환</option>
+                <option value="png">PNG로 변환</option>
+                <option value="avif">AVIF로 변환</option>
+              </select>
+              {fieldErrors?.imageOutputFormat && <div className="mt-1.5 text-xs leading-5 text-red-500">{fieldErrors.imageOutputFormat}</div>}
+            </FieldRow>
             <FieldRow label="허용 확장자" description="쉼표로 구분된 확장자 목록입니다.">
-              <textarea className={textareaClass} name="allowedExtensions" rows={3} placeholder=".png, .jpg, .jpeg, .gif, .webp, .mp4, .zip" />
+              <textarea
+                ref={allowedExtensionsRef}
+                className={textareaClass}
+                name="allowedExtensions"
+                rows={3}
+                value={uploadSettings.allowedExtensions}
+                onChange={handleUploadInputChange("allowedExtensions")}
+                placeholder=".png, .jpg, .jpeg, .gif, .webp, .mp4, .zip"
+              />
+              {fieldErrors?.allowedExtensions && <div className="mt-1.5 text-xs leading-5 text-red-500">{fieldErrors.allowedExtensions}</div>}
             </FieldRow>
           </SectionShell>
 
           <SectionShell icon={<ShieldCheck size={13} />} title="검증 정책" description="파일 업로드 시 적용할 보안 검증입니다.">
-            <FieldRow label="MIME 타입 검증">
-              <Toggle defaultChecked />
+            <FieldRow label="파일 형식 검증" description="확장자만 믿지 않고 브라우저가 전달한 MIME 타입도 함께 확인합니다.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <UploadTogglePolicy
+                  title="MIME 타입 검증"
+                  description=".jpg 파일이 실제 JPEG인지처럼 확장자와 MIME 타입이 맞는지 검사합니다."
+                  name="verifyMimeType"
+                  checked={uploadSettings.verifyMimeType}
+                  onChange={handleUploadToggleChange("verifyMimeType")}
+                />
+                <UploadTogglePolicy
+                  title="프로필 이미지 제한"
+                  description="프로필 이미지 선택 화면에서는 이미지 MIME 타입만 허용하도록 제한합니다."
+                  name="restrictProfileImage"
+                  checked={uploadSettings.restrictProfileImage}
+                  onChange={handleUploadToggleChange("restrictProfileImage")}
+                />
+              </div>
             </FieldRow>
-            <FieldRow label="프로필 이미지 제한">
-              <Toggle defaultChecked />
-            </FieldRow>
-            <FieldRow label="동영상/압축파일 허용">
-              <div className="flex flex-wrap gap-8">
-                <label className="flex items-center gap-3 text-sm text-gray-600">
-                  <Toggle defaultChecked />
-                  동영상
-                </label>
-                <label className="flex items-center gap-3 text-sm text-gray-600">
-                  <Toggle defaultChecked />
-                  압축파일
-                </label>
+            <FieldRow label="파일 종류 허용" description="게시글/댓글 첨부에서 이미지 외 파일을 어느 범위까지 허용할지 정합니다.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <UploadTogglePolicy
+                  title="동영상 허용"
+                  description="MP4, WebM, MOV 같은 동영상 첨부를 허용합니다. 끄면 이미지/오디오 등 다른 허용 파일만 업로드됩니다."
+                  name="allowVideo"
+                  checked={uploadSettings.allowVideo}
+                  onChange={handleUploadToggleChange("allowVideo")}
+                />
+                <UploadTogglePolicy
+                  title="압축파일 허용"
+                  description="ZIP 첨부를 허용합니다. 배포 파일이나 자료실 용도가 아니라면 끄는 편이 안전합니다."
+                  name="allowArchive"
+                  checked={uploadSettings.allowArchive}
+                  onChange={handleUploadToggleChange("allowArchive")}
+                />
               </div>
             </FieldRow>
           </SectionShell>
