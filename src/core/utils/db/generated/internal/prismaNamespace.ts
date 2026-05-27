@@ -397,7 +397,9 @@ export const ModelName = {
   DocumentViewLog: 'DocumentViewLog',
   Attachment: 'Attachment',
   Notification: 'Notification',
-  AppSetting: 'AppSetting'
+  AppSetting: 'AppSetting',
+  SiteNavigationGroup: 'SiteNavigationGroup',
+  SiteNavigation: 'SiteNavigation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -413,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "profile" | "userGroup" | "userGroupUser" | "document" | "category" | "modules" | "fieldGroup" | "permission" | "comment" | "documentViewLog" | "attachment" | "notification" | "appSetting"
+    modelProps: "user" | "profile" | "userGroup" | "userGroupUser" | "document" | "category" | "modules" | "fieldGroup" | "permission" | "comment" | "documentViewLog" | "attachment" | "notification" | "appSetting" | "siteNavigationGroup" | "siteNavigation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1453,6 +1455,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SiteNavigationGroup: {
+      payload: Prisma.$SiteNavigationGroupPayload<ExtArgs>
+      fields: Prisma.SiteNavigationGroupFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SiteNavigationGroupFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SiteNavigationGroupFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>
+        }
+        findFirst: {
+          args: Prisma.SiteNavigationGroupFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SiteNavigationGroupFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>
+        }
+        findMany: {
+          args: Prisma.SiteNavigationGroupFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>[]
+        }
+        create: {
+          args: Prisma.SiteNavigationGroupCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>
+        }
+        createMany: {
+          args: Prisma.SiteNavigationGroupCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SiteNavigationGroupCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>[]
+        }
+        delete: {
+          args: Prisma.SiteNavigationGroupDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>
+        }
+        update: {
+          args: Prisma.SiteNavigationGroupUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>
+        }
+        deleteMany: {
+          args: Prisma.SiteNavigationGroupDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SiteNavigationGroupUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SiteNavigationGroupUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>[]
+        }
+        upsert: {
+          args: Prisma.SiteNavigationGroupUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationGroupPayload>
+        }
+        aggregate: {
+          args: Prisma.SiteNavigationGroupAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSiteNavigationGroup>
+        }
+        groupBy: {
+          args: Prisma.SiteNavigationGroupGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteNavigationGroupGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SiteNavigationGroupCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteNavigationGroupCountAggregateOutputType> | number
+        }
+      }
+    }
+    SiteNavigation: {
+      payload: Prisma.$SiteNavigationPayload<ExtArgs>
+      fields: Prisma.SiteNavigationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SiteNavigationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SiteNavigationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>
+        }
+        findFirst: {
+          args: Prisma.SiteNavigationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SiteNavigationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>
+        }
+        findMany: {
+          args: Prisma.SiteNavigationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>[]
+        }
+        create: {
+          args: Prisma.SiteNavigationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>
+        }
+        createMany: {
+          args: Prisma.SiteNavigationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SiteNavigationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>[]
+        }
+        delete: {
+          args: Prisma.SiteNavigationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>
+        }
+        update: {
+          args: Prisma.SiteNavigationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>
+        }
+        deleteMany: {
+          args: Prisma.SiteNavigationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SiteNavigationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SiteNavigationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>[]
+        }
+        upsert: {
+          args: Prisma.SiteNavigationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteNavigationPayload>
+        }
+        aggregate: {
+          args: Prisma.SiteNavigationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSiteNavigation>
+        }
+        groupBy: {
+          args: Prisma.SiteNavigationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteNavigationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SiteNavigationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteNavigationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1715,6 +1865,44 @@ export const AppSettingScalarFieldEnum = {
 } as const
 
 export type AppSettingScalarFieldEnum = (typeof AppSettingScalarFieldEnum)[keyof typeof AppSettingScalarFieldEnum]
+
+
+export const SiteNavigationGroupScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  title: 'title',
+  description: 'description',
+  area: 'area',
+  order: 'order',
+  isActive: 'isActive',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteNavigationGroupScalarFieldEnum = (typeof SiteNavigationGroupScalarFieldEnum)[keyof typeof SiteNavigationGroupScalarFieldEnum]
+
+
+export const SiteNavigationScalarFieldEnum = {
+  id: 'id',
+  groupId: 'groupId',
+  parentId: 'parentId',
+  name: 'name',
+  title: 'title',
+  href: 'href',
+  target: 'target',
+  icon: 'icon',
+  order: 'order',
+  depth: 'depth',
+  location: 'location',
+  visibility: 'visibility',
+  isActive: 'isActive',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteNavigationScalarFieldEnum = (typeof SiteNavigationScalarFieldEnum)[keyof typeof SiteNavigationScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1999,6 +2187,8 @@ export type GlobalOmitConfig = {
   attachment?: Prisma.AttachmentOmit
   notification?: Prisma.NotificationOmit
   appSetting?: Prisma.AppSettingOmit
+  siteNavigationGroup?: Prisma.SiteNavigationGroupOmit
+  siteNavigation?: Prisma.SiteNavigationOmit
 }
 
 /* Types for Logging */

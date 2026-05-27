@@ -1,15 +1,99 @@
 import Link from "next/link";
 import { ArrowRight, CircleUserRound, Menu, Search } from "lucide-react";
 import React from "react";
+import { getPublicSiteNavigationAction } from "@/modules/admin/actions/sitemap.action";
+import type { SiteNavigationItem } from "@/modules/admin/actions/_type";
 
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/posts/notice", label: "Notice" },
-  { href: "/docs", label: "Docs" },
-  { href: "/contact", label: "Contact" },
+const fallbackNavItems: SiteNavigationItem[] = [
+  {
+    id: 0,
+    groupId: null,
+    groupKey: "header-main",
+    groupTitle: "기본 상단 메뉴",
+    groupArea: "header",
+    parentId: null,
+    name: "home",
+    title: "Home",
+    href: "/",
+    target: null,
+    icon: null,
+    order: 0,
+    depth: 0,
+    location: "header",
+    visibility: "public",
+    isActive: true,
+    children: [],
+  },
+  {
+    id: 1,
+    groupId: null,
+    groupKey: "header-main",
+    groupTitle: "기본 상단 메뉴",
+    groupArea: "header",
+    parentId: null,
+    name: "notice",
+    title: "Notice",
+    href: "/posts/notice",
+    target: null,
+    icon: null,
+    order: 10,
+    depth: 0,
+    location: "header",
+    visibility: "public",
+    isActive: true,
+    children: [],
+  },
+  {
+    id: 2,
+    groupId: null,
+    groupKey: "header-main",
+    groupTitle: "기본 상단 메뉴",
+    groupArea: "header",
+    parentId: null,
+    name: "features",
+    title: "Features",
+    href: "/features",
+    target: null,
+    icon: null,
+    order: 20,
+    depth: 0,
+    location: "header",
+    visibility: "public",
+    isActive: true,
+    children: [],
+  },
+  {
+    id: 3,
+    groupId: null,
+    groupKey: "header-main",
+    groupTitle: "기본 상단 메뉴",
+    groupArea: "header",
+    parentId: null,
+    name: "contact",
+    title: "Contact",
+    href: "/contact",
+    target: null,
+    icon: null,
+    order: 30,
+    depth: 0,
+    location: "header",
+    visibility: "public",
+    isActive: true,
+    children: [],
+  },
 ];
 
-const DefaultLayout = ({
+const fallbackFooterItems: SiteNavigationItem[] = [
+  { ...fallbackNavItems[2], groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Features", href: "/features", name: "features-footer" },
+  { ...fallbackNavItems[2], id: 4, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Docs", href: "/features/getting-started", name: "docs-footer" },
+  { ...fallbackNavItems[1], id: 5, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Notice", href: "/posts/notice", name: "notice-footer" },
+  { ...fallbackNavItems[3], id: 6, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Contact", href: "/contact", name: "contact-footer" },
+  { ...fallbackNavItems[0], id: 7, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "License", href: "/license", name: "license-footer" },
+  { ...fallbackNavItems[0], id: 8, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Terms", href: "/terms", name: "terms-footer" },
+  { ...fallbackNavItems[0], id: 9, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Privacy", href: "/privacy", name: "privacy-footer" },
+];
+
+const DefaultLayout = async ({
   children,
   siteUrl = "/",
   siteTitle = "Plextype",
@@ -18,6 +102,13 @@ const DefaultLayout = ({
   siteUrl?: string;
   siteTitle?: string;
 }) => {
+  const [headerNavigationResult, footerNavigationResult] = await Promise.all([
+    getPublicSiteNavigationAction("header-main"),
+    getPublicSiteNavigationAction("footer"),
+  ]);
+  const navItems = headerNavigationResult.data?.length ? headerNavigationResult.data : fallbackNavItems;
+  const footerItems = footerNavigationResult.data?.length ? footerNavigationResult.data : fallbackFooterItems;
+
   return (
     <div className="min-h-screen bg-white text-gray-950 dark:bg-dark-950 dark:text-white">
       <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/85 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/85">
@@ -32,13 +123,31 @@ const DefaultLayout = ({
 
             <nav className="hidden items-center gap-1 md:flex">
               {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-md px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-dark-900 dark:hover:text-white"
-                >
-                  {item.label}
-                </Link>
+                <div key={item.id || item.href} className="group relative">
+                  <Link
+                    href={item.href}
+                    target={item.target || undefined}
+                    rel={item.target === "_blank" ? "noreferrer" : undefined}
+                    className="block rounded-md px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-dark-900 dark:hover:text-white"
+                  >
+                    {item.title}
+                  </Link>
+                  {item.children.length > 0 && (
+                    <div className="invisible absolute left-0 top-full min-w-44 translate-y-2 rounded-md border border-gray-100 bg-white/95 p-2 opacity-0 shadow-xl shadow-gray-200/60 backdrop-blur-xl transition-all group-hover:visible group-hover:translate-y-1 group-hover:opacity-100 dark:border-dark-800 dark:bg-dark-900/95">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.id || child.href}
+                          href={child.href}
+                          target={child.target || undefined}
+                          rel={child.target === "_blank" ? "noreferrer" : undefined}
+                          className="block rounded px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-dark-800 dark:hover:text-white"
+                        >
+                          {child.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </nav>
           </div>
@@ -96,24 +205,31 @@ const DefaultLayout = ({
             <div>
               <div className="text-xs font-semibold text-gray-950 dark:text-white">Product</div>
               <div className="mt-3 grid gap-2 text-sm text-gray-500 dark:text-dark-300">
-                <Link href="/features" className="hover:text-gray-950 dark:hover:text-white">Features</Link>
-                <Link href="/docs" className="hover:text-gray-950 dark:hover:text-white">Docs</Link>
-                <Link href="/license" className="hover:text-gray-950 dark:hover:text-white">License</Link>
+                {footerItems.slice(0, 3).map((item) => (
+                  <Link key={item.id || item.href} href={item.href} target={item.target || undefined} rel={item.target === "_blank" ? "noreferrer" : undefined} className="hover:text-gray-950 dark:hover:text-white">
+                    {item.title}
+                  </Link>
+                ))}
               </div>
             </div>
             <div>
               <div className="text-xs font-semibold text-gray-950 dark:text-white">Community</div>
               <div className="mt-3 grid gap-2 text-sm text-gray-500 dark:text-dark-300">
-                <Link href="/posts/notice" className="hover:text-gray-950 dark:hover:text-white">Notice</Link>
-                <Link href="/supports" className="hover:text-gray-950 dark:hover:text-white">Support</Link>
-                <Link href="/contact" className="hover:text-gray-950 dark:hover:text-white">Contact</Link>
+                {footerItems.slice(3, 6).map((item) => (
+                  <Link key={item.id || item.href} href={item.href} target={item.target || undefined} rel={item.target === "_blank" ? "noreferrer" : undefined} className="hover:text-gray-950 dark:hover:text-white">
+                    {item.title}
+                  </Link>
+                ))}
               </div>
             </div>
             <div>
               <div className="text-xs font-semibold text-gray-950 dark:text-white">Legal</div>
               <div className="mt-3 grid gap-2 text-sm text-gray-500 dark:text-dark-300">
-                <Link href="/terms" className="hover:text-gray-950 dark:hover:text-white">Terms</Link>
-                <Link href="/privacy" className="hover:text-gray-950 dark:hover:text-white">Privacy</Link>
+                {footerItems.slice(6).map((item) => (
+                  <Link key={item.id || item.href} href={item.href} target={item.target || undefined} rel={item.target === "_blank" ? "noreferrer" : undefined} className="hover:text-gray-950 dark:hover:text-white">
+                    {item.title}
+                  </Link>
+                ))}
               </div>
             </div>
           </div>

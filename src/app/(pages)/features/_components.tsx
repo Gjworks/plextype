@@ -15,7 +15,7 @@ export const docsNav = [
   { href: "/features/project-api", title: "Project API", desc: "proxy, Prisma, 배포판 확장 규칙" },
   { href: "/features/posts", title: "Posts", desc: "게시판 스킨과 issuetracker 구조" },
   { href: "/features/previews", title: "Previews", desc: "기본 제공 화면 확인" },
-  { href: "/features/operations", title: "운영 규칙", desc: "업데이트와 커스텀 충돌 방지" },
+  { href: "/features/operations", title: "운영 규칙", desc: "upstream 패치와 커스텀 충돌 방지" },
 ];
 
 export const FeatureDocPanel = ({ children }: { children: React.ReactNode }) => {

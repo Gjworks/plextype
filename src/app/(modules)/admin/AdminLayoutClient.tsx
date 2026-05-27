@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation' // ✅ useRouter 추가
 import { motion, AnimatePresence } from 'framer-motion'
 import pkg from '../../../../package.json'
-import { LayoutGrid, Settings, MessageSquareText, Users, Search, Bell, ChevronRight, Globe, ChevronDown, LogOut, UserCircle, Zap, FileText } from 'lucide-react'
+import { LayoutGrid, Settings, MessageSquareText, Users, Search, Bell, ChevronRight, Globe, ChevronDown, LogOut, UserCircle, Zap, FileText, Map } from 'lucide-react'
 import Link from 'next/link'
 import Dropdown from '@/core/components/dropdown/Dropdown'
 import DefaultList from '@/core/components/nav/DefaultList'
@@ -52,6 +52,14 @@ const MENU_CONFIG = [
     ],
   },
   {
+    id: 'site',
+    icon: <Map size={18} />,
+    label: '사이트 관리',
+    items: [
+      { label: '사이트맵', href: '/admin/site/sitemap' },
+    ],
+  },
+  {
     id: 'settings',
     icon: <Settings size={18} />,
     label: 'Settings',
@@ -92,6 +100,9 @@ const ADMIN_BREADCRUMB_LABELS: Record<string, Record<string, string>> = {
     attachments: 'ATTACHMENTS',
     reports: 'REPORTS',
   },
+  site: {
+    sitemap: 'SITEMAP',
+  },
   settings: {
     index: 'GENERAL',
     seo: 'SEO',
@@ -131,7 +142,7 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
   const [isMobile, setIsMobile] = useState(false)
   const [showRight, setShowRight] = useState(false)
 
-  const { user, isLoading } = useUserContext()
+  const { user, isLoading, refetch } = useUserContext()
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const isDashboardMain = normalizedPathname === '/admin'
   const breadcrumbs = useMemo(() => getAdminBreadcrumbs(normalizedPathname), [normalizedPathname])
@@ -175,6 +186,60 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
   const callbackName = (name: string) => {
     if (name === 'Signout') handleSignOut()
   }
+
+  useEffect(() => {
+    if (isLoading) return
+
+    if (!user) {
+      window.location.replace(`/auth/signin?reason=expired&redirect=${encodeURIComponent(normalizedPathname || '/admin')}`)
+      return
+    }
+
+    if (!user.isAdmin) {
+      window.location.replace('/access')
+    }
+  }, [isLoading, normalizedPathname, user])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const verifyAdminSession = async () => {
+      try {
+        const result = await refetch()
+        const nextUser = result?.data
+
+        if (!isMounted) return
+
+        if (!nextUser) {
+          window.location.replace(`/auth/signin?reason=expired&redirect=${encodeURIComponent(normalizedPathname || '/admin')}`)
+          return
+        }
+
+        if (!nextUser.isAdmin) {
+          window.location.replace('/access')
+        }
+      } catch {
+        if (isMounted) {
+          window.location.replace(`/auth/signin?reason=expired&redirect=${encodeURIComponent(normalizedPathname || '/admin')}`)
+        }
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) void verifyAdminSession()
+    }
+
+    window.addEventListener('focus', verifyAdminSession)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    const interval = window.setInterval(verifyAdminSession, 5 * 60 * 1000)
+
+    return () => {
+      isMounted = false
+      window.removeEventListener('focus', verifyAdminSession)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.clearInterval(interval)
+    }
+  }, [normalizedPathname, refetch])
 
   // 2️⃣ 모바일 체크 (실시간 해상도 감지) - 사이드바 대응용
   useEffect(() => {

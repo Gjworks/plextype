@@ -7,7 +7,7 @@ interface UserContextValue {
   user: any | null;
   isLoading: boolean;
   isError: boolean;
-  refetch: () => void; // 🌟 토큰 강제 갱신 등이 필요할 때를 위해 refetch도 넘겨줍니다.
+  refetch: () => Promise<any>; // 🌟 토큰 강제 갱신 등이 필요할 때를 위해 refetch도 넘겨줍니다.
 }
 
 const UserContext = createContext<UserContextValue | undefined>(undefined);

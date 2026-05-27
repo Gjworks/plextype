@@ -274,6 +274,50 @@ model AppSetting {
   @@index([isPublic], map: "idx_app_setting_public")
 }
 
+model SiteNavigationGroup {
+  id          Int              @id @default(autoincrement())
+  key         String           @unique @db.VarChar(100)
+  title       String           @db.VarChar(120)
+  description String?          @db.Text
+  area        String           @default("custom") @db.VarChar(45)
+  order       Int              @default(0)
+  isActive    Boolean          @default(true)
+  status      String?          @db.VarChar(45)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  items       SiteNavigation[]
+
+  @@index([area], map: "idx_site_navigation_group_area")
+  @@index([isActive], map: "idx_site_navigation_group_active")
+}
+
+model SiteNavigation {
+  id         Int                   @id @default(autoincrement())
+  groupId    Int?
+  parentId   Int?
+  name       String                @db.VarChar(100)
+  title      String                @db.VarChar(120)
+  href       String                @db.Text
+  target     String?               @db.VarChar(20)
+  icon       String?               @db.VarChar(60)
+  order      Int                   @default(0)
+  depth      Int                   @default(0)
+  location   String                @default("header") @db.VarChar(45)
+  visibility String                @default("public") @db.VarChar(45)
+  isActive   Boolean               @default(true)
+  status     String?               @db.VarChar(45)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+  group      SiteNavigationGroup?  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  parent     SiteNavigation?       @relation("SiteNavigationTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children   SiteNavigation[]      @relation("SiteNavigationTree")
+
+  @@index([groupId], map: "idx_site_navigation_group")
+  @@index([location], map: "idx_site_navigation_location")
+  @@index([parentId], map: "idx_site_navigation_parent")
+  @@index([isActive], map: "idx_site_navigation_active")
+}
+
 enum NotificationType {
   info
   success
