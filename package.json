@@ -64,6 +64,7 @@
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.72.0",
     "relative-time": "^1.0.0",
+    "sharp": "^0.34.5",
     "shiki": "^3.23.0",
     "systeminformation": "^5.31.6",
     "tiptap-extension-code-block-shiki": "^1.1.0",
