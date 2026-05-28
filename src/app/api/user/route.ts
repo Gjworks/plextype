@@ -5,6 +5,7 @@ import {
   getUserSessionAction,
   removeMyAccount,
 } from "@/modules/user/actions/user.action";
+import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
 
 /**
  * [GET] 내 정보 조회
@@ -30,6 +31,11 @@ export async function GET(): Promise<Response> {
  */
 export async function POST(request: NextRequest): Promise<Response> {
   try {
+    const authSettings = await getAuthSettingsRuntimeAction();
+    if (!authSettings.registrationEnabled) {
+      return jsonResponse(403, "현재 회원가입이 허용되어 있지 않습니다.", false);
+    }
+
     const formData = await request.formData();
 
     // 💡 팁: API에서 'email'로 보낸 값을 액션의 'email_address' 규격에 맞춰줍니다.

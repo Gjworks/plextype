@@ -133,7 +133,15 @@ const getAdminBreadcrumbs = (pathname: string) => {
   return [sectionLabel, (candidate || 'OVERVIEW').replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase()]
 }
 
-const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; appName: string }) => {
+const AdminLayoutClient = ({
+  children,
+  appName,
+  adminSessionGuard,
+}: {
+  children: React.ReactNode;
+  appName: string;
+  adminSessionGuard: boolean;
+}) => {
   const pathname = usePathname()
   // 1️⃣ 공통 유틸: 경로 끝의 슬래시 제거
   const cleanPath = (p: string) => p.replace(/\/$/, '')
@@ -201,6 +209,8 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
   }, [isLoading, normalizedPathname, user])
 
   useEffect(() => {
+    if (!adminSessionGuard) return
+
     let isMounted = true
 
     const verifyAdminSession = async () => {
@@ -239,7 +249,7 @@ const AdminLayoutClient = ({ children, appName }: { children: React.ReactNode; a
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.clearInterval(interval)
     }
-  }, [normalizedPathname, refetch])
+  }, [adminSessionGuard, normalizedPathname, refetch])
 
   // 2️⃣ 모바일 체크 (실시간 해상도 감지) - 사이드바 대응용
   useEffect(() => {

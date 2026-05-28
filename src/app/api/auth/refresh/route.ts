@@ -9,10 +9,12 @@ import {
 import prisma from "@/core/utils/db/prisma";
 import { getAccessTokenCookieOptions, getExpiredAuthCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
+import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
 
 export async function POST(): Promise<Response> {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get("refreshToken")?.value;
+  const authSettings = await getAuthSettingsRuntimeAction();
 
   try {
     if (!refreshToken) {
@@ -64,6 +66,19 @@ export async function POST(): Promise<Response> {
       return response;
     }
 
+    if (!user.isAdmin && user.status && user.status !== "active") {
+      const response = NextResponse.json({
+        success: false,
+        code: "inactive_account",
+        type: "error",
+        message: "현재 사용할 수 없는 계정입니다.",
+        data: {},
+      }, { status: 403 });
+      response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
+      response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
+      return response;
+    }
+
     const tokenParams = {
       id: user.id,
       accountId: user.accountId,
@@ -72,8 +87,8 @@ export async function POST(): Promise<Response> {
       groups: user.userGroups.map((group) => group.groupId),
     };
     const [newAccessToken, newRefreshToken] = await Promise.all([
-      sign(tokenParams),
-      refresh(tokenParams),
+      sign(tokenParams, authSettings.accessTokenExpiresIn),
+      refresh(tokenParams, authSettings.refreshTokenExpiresIn),
     ]);
 
     await prisma.user.update({
@@ -88,8 +103,8 @@ export async function POST(): Promise<Response> {
       message: "토큰이 갱신되었습니다.",
       data: {},
     });
-    response.cookies.set("accessToken", newAccessToken, getAccessTokenCookieOptions());
-    response.cookies.set("refreshToken", newRefreshToken, getRefreshTokenCookieOptions());
+    response.cookies.set("accessToken", newAccessToken, getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn));
+    response.cookies.set("refreshToken", newRefreshToken, getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn));
 
     return response;
   } catch (err) {

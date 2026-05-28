@@ -9,6 +9,7 @@ import * as query from "./user.query"; // 분리된 쿼리 함수 임포트
 import { validateForm } from "@utils/validation/formValidator";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
+import { getAuthSettingsRuntimeAction, validatePasswordByAuthSettings } from "@/modules/admin/actions/auth-settings";
 /**
  * 💡 공통 유틸: Prisma 결과물에서 민감한 정보(비밀번호 등) 제외하기
  */
@@ -270,6 +271,17 @@ export async function changePassword(formData: FormData): Promise<ActionState<nu
   const data = validation.data;
 
   try {
+    const authSettings = await getAuthSettingsRuntimeAction();
+    const passwordError = validatePasswordByAuthSettings(data.newPassword, authSettings);
+    if (passwordError) {
+      return {
+        success: false,
+        type: "error",
+        message: passwordError,
+        fieldErrors: { newPassword: passwordError },
+      };
+    }
+
     // 💡 2. 현재 로그인한 내 정보 가져오기
     const loggedInfo = await getLoggedUserAction();
     if (!loggedInfo || !loggedInfo.id) {
@@ -319,6 +331,11 @@ export async function removeMyAccount(formData: FormData): Promise<ActionState<n
   const data = validation.data;
 
   try {
+    const authSettings = await getAuthSettingsRuntimeAction();
+    if (!authSettings.accountDeletionEnabled) {
+      return { success: false, type: "error", message: "현재 회원 탈퇴가 허용되어 있지 않습니다." };
+    }
+
     const loggedInfo = await getLoggedUserAction();
     if (!loggedInfo || !loggedInfo.id) {
       return { success: false, type: "error", message: "로그인 정보가 없습니다." };

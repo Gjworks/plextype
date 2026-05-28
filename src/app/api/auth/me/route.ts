@@ -6,11 +6,13 @@ import { findUserById } from "@/modules/user/actions/user.query";
 import prisma from "@/core/utils/db/prisma";
 import { getAccessTokenCookieOptions, getExpiredAuthCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
+import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {
     const accessToken = request.cookies.get("accessToken")?.value;
     const refreshToken = request.cookies.get("refreshToken")?.value;
+    const authSettings = await getAuthSettingsRuntimeAction();
 
     let userId: number | null = null;
     let needsNewToken = false;
@@ -36,6 +38,10 @@ export async function GET(request: NextRequest): Promise<Response> {
         : null;
 
       if (refreshDecoded && refreshUser?.refreshToken === refreshTokenHash) {
+        if (!isUserAccountAvailable(refreshUser)) {
+          return expiredSessionResponse();
+        }
+
         userId = refreshDecoded.id;
 
         // 새로운 Access Token 발급 및 쿠키 설정 로직 진행
@@ -47,8 +53,8 @@ export async function GET(request: NextRequest): Promise<Response> {
           groups: refreshUser.userGroups.map((group) => group.groupId),
         };
         const [newAccessToken, newRefreshToken] = await Promise.all([
-          sign(tokenParams),
-          refresh(tokenParams),
+          sign(tokenParams, authSettings.accessTokenExpiresIn),
+          refresh(tokenParams, authSettings.refreshTokenExpiresIn),
         ]);
 
         await prisma.user.update({
@@ -67,12 +73,12 @@ export async function GET(request: NextRequest): Promise<Response> {
           response.cookies.set({
             name: "accessToken",
             value: newAccessToken,
-            ...getAccessTokenCookieOptions(),
+            ...getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn),
           });
           response.cookies.set({
             name: "refreshToken",
             value: newRefreshToken,
-            ...getRefreshTokenCookieOptions(),
+            ...getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn),
           });
           return response;
         }
@@ -83,6 +89,10 @@ export async function GET(request: NextRequest): Promise<Response> {
     if (userId) {
       const user = await findUserById(userId);
       if (user) {
+        if (!isUserAccountAvailable(user)) {
+          return expiredSessionResponse();
+        }
+
         return NextResponse.json({
           isLoggedIn: true,
           ...formatUserResponse(user)
@@ -91,14 +101,22 @@ export async function GET(request: NextRequest): Promise<Response> {
     }
 
     // 4. 모든 검증 실패 시 쿠키 삭제 및 비로그인 반환
-    const response = NextResponse.json({ isLoggedIn: false });
-    response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
-    response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
-    return response;
+    return expiredSessionResponse();
 
   } catch (error) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
+}
+
+function isUserAccountAvailable(user: any) {
+  return Boolean(user.isAdmin) || !user.status || user.status === "active";
+}
+
+function expiredSessionResponse() {
+  const response = NextResponse.json({ isLoggedIn: false });
+  response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
+  response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
+  return response;
 }
 
 // 헬퍼 함수: 응답 포맷 통일

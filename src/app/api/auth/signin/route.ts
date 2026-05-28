@@ -7,6 +7,7 @@ import prisma from "@/core/utils/db/prisma";
 import redisClient from "@/core/utils/redis/redis";
 import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
+import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
 
 
 
@@ -15,10 +16,6 @@ const LoginSchema = z.object({
   accountId: z.string().min(1, { message: "계정 아이디를 입력해주세요." }),
   password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
 });
-
-const LOGIN_FAIL_LIMIT = 5;
-const LOGIN_FAIL_WINDOW_SECONDS = 15 * 60;
-const LOGIN_LOCK_SECONDS = 15 * 60;
 
 const getClientIp = (request: Request) => {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -40,32 +37,32 @@ const getLoginRateLimitKeys = (accountId: string, ip: string) => {
   };
 };
 
-const getLoginRateLimitStatus = async (accountId: string, ip: string) => {
+const getLoginRateLimitStatus = async (accountId: string, ip: string, lockSeconds: number) => {
   try {
     const { lockKey } = getLoginRateLimitKeys(accountId, ip);
     const ttl = await redisClient.ttl(lockKey);
 
     return {
       locked: ttl > 0,
-      retryAfter: ttl > 0 ? ttl : LOGIN_LOCK_SECONDS,
+      retryAfter: ttl > 0 ? ttl : lockSeconds,
     };
   } catch (error) {
     console.error("Login RateLimit Check Error:", error);
-    return { locked: false, retryAfter: LOGIN_LOCK_SECONDS };
+    return { locked: false, retryAfter: lockSeconds };
   }
 };
 
-const recordLoginFailure = async (accountId: string, ip: string) => {
+const recordLoginFailure = async (accountId: string, ip: string, failLimit: number, failWindowSeconds: number, lockSeconds: number) => {
   try {
     const { failKey, lockKey } = getLoginRateLimitKeys(accountId, ip);
     const failCount = await redisClient.incr(failKey);
 
     if (failCount === 1) {
-      await redisClient.expire(failKey, LOGIN_FAIL_WINDOW_SECONDS);
+      await redisClient.expire(failKey, failWindowSeconds);
     }
 
-    if (failCount >= LOGIN_FAIL_LIMIT) {
-      await redisClient.set(lockKey, "1", "EX", LOGIN_LOCK_SECONDS);
+    if (failCount >= failLimit) {
+      await redisClient.set(lockKey, "1", "EX", lockSeconds);
       await redisClient.del(failKey);
     }
   } catch (error) {
@@ -109,7 +106,10 @@ export async function POST(request: Request): Promise<Response> {
 
     const { accountId, password } = validation.data;
     const userIp = getClientIp(request);
-    const rateLimitStatus = await getLoginRateLimitStatus(accountId, userIp);
+    const authSettings = await getAuthSettingsRuntimeAction();
+    const failWindowSeconds = authSettings.loginFailWindowMinutes * 60;
+    const lockSeconds = authSettings.loginLockMinutes * 60;
+    const rateLimitStatus = await getLoginRateLimitStatus(accountId, userIp, lockSeconds);
 
     if (rateLimitStatus.locked) {
       return NextResponse.json({
@@ -143,15 +143,33 @@ export async function POST(request: Request): Promise<Response> {
     };
 
     if (!userInfo) {
-      await recordLoginFailure(accountId, userIp);
+      await recordLoginFailure(accountId, userIp, authSettings.loginFailLimit, failWindowSeconds, lockSeconds);
       return NextResponse.json(loginFailResponse, { status: 401 });
     }
 
     // ✅ 4. 비밀번호 검증
     const isPasswordValid = await verifyPassword(password, userInfo.password);
     if (!isPasswordValid) {
-      await recordLoginFailure(accountId, userIp);
+      await recordLoginFailure(accountId, userIp, authSettings.loginFailLimit, failWindowSeconds, lockSeconds);
       return NextResponse.json(loginFailResponse, { status: 401 });
+    }
+
+    const userStatus = userInfo.status || "active";
+    if (!userInfo.isAdmin && userStatus !== "active") {
+      await clearLoginFailures(accountId, userIp);
+
+      const statusMessage = userStatus === "pending"
+        ? "관리자 승인 후 로그인할 수 있습니다."
+        : "현재 사용할 수 없는 계정입니다.";
+
+      return NextResponse.json({
+        success: false,
+        type: "error",
+        message: statusMessage,
+        fieldErrors: {
+          accountId: statusMessage,
+        },
+      }, { status: 403 });
     }
 
     await clearLoginFailures(accountId, userIp);
@@ -173,8 +191,8 @@ export async function POST(request: Request): Promise<Response> {
     };
 
     const [accessToken, refreshToken] = await Promise.all([
-      sign(tokenParams),
-      refresh(tokenParams),
+      sign(tokenParams, authSettings.accessTokenExpiresIn),
+      refresh(tokenParams, authSettings.refreshTokenExpiresIn),
     ]);
 
     await prisma.user.update({
@@ -200,17 +218,22 @@ export async function POST(request: Request): Promise<Response> {
     response.cookies.set({
       name: "accessToken",
       value: accessToken,
-      ...getAccessTokenCookieOptions(),
+      ...getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn),
     });
 
     response.cookies.set({
       name: "refreshToken",
       value: refreshToken,
-      ...getRefreshTokenCookieOptions(),
+      ...getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn),
     });
 
     const loginAt = new Date().toISOString();
     try {
+      if (!authSettings.allowConcurrentSessions) {
+        const existingKeys = await redisClient.keys(`active_user:${userInfo.id}:*`);
+        if (existingKeys.length > 0) await redisClient.del(...existingKeys);
+      }
+
       // 3. Redis에 실시간 접속 정보 저장 (미들웨어 검문 통과용)
       await redisClient.set(
         `active_user:${userInfo.id}:${userIp}`, 

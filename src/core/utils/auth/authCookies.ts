@@ -8,9 +8,9 @@ const getAuthCookieOptions = (maxAge: number) => ({
   maxAge,
 });
 
-const getAccessTokenCookieOptions = () => getAuthCookieOptions(timeToSeconds(process.env.ACCESSTOKEN_EXPIRES_IN || "1h"));
+const getAccessTokenCookieOptions = (expiresIn = process.env.ACCESSTOKEN_EXPIRES_IN || "1h") => getAuthCookieOptions(timeToSeconds(expiresIn));
 
-const getRefreshTokenCookieOptions = () => getAuthCookieOptions(timeToSeconds(process.env.REFRESHTOKEN_EXPIRES_IN || "4h"));
+const getRefreshTokenCookieOptions = (expiresIn = process.env.REFRESHTOKEN_EXPIRES_IN || "4h") => getAuthCookieOptions(timeToSeconds(expiresIn));
 
 const getExpiredAuthCookieOptions = () => ({
   httpOnly: true,
