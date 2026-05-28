@@ -36,8 +36,8 @@ const verifyByType = async <T extends BaseTokenPayload>(token: string, tokenType
 };
 
 // access Token 발급
-const sign = async (payload: object) => {
-  const accessToken_expiresIn = process.env.ACCESSTOKEN_EXPIRES_IN;
+const sign = async (payload: object, expiresIn = process.env.ACCESSTOKEN_EXPIRES_IN) => {
+  const accessToken_expiresIn = expiresIn;
   if (!accessToken_expiresIn)
     throw new Error("ACCESSTOKEN_EXPIRES_IN is not defined");
   return await new SignJWT({ ...payload, tokenType: "access" })
@@ -50,8 +50,8 @@ const sign = async (payload: object) => {
 const verify = async (token: string): Promise<AccessTokenPayload | null> => verifyByType<AccessTokenPayload>(token, "access");
 
 // refresh Token 발급
-const refresh = async (payload: object) => {
-  const refreshToken_expiresIn = process.env.REFRESHTOKEN_EXPIRES_IN;
+const refresh = async (payload: object, expiresIn = process.env.REFRESHTOKEN_EXPIRES_IN) => {
+  const refreshToken_expiresIn = expiresIn;
   if (!refreshToken_expiresIn)
     throw new Error("REFRESHTOKEN_EXPIRES_IN is not defined");
   return await new SignJWT({ ...payload, tokenType: "refresh" })

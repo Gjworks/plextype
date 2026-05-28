@@ -1,9 +1,10 @@
 // src/app/(extentions)/users/_actions/user.ts
-import { hashedPassword, verifyPassword } from "@utils/auth/password";
+import { hashedPassword } from "@utils/auth/password";
 import { verify } from "@utils/auth/jwtAuth";
 import * as query from "./user.query";
 import { dispatchTrigger } from "@utils/trigger/triggerHub";
-import { ActionState, UserUpsertSchema, PasswordChangeSchema, UserListParams, UserListSchema, UserListResponseData, LoggedParams, UserInfo, UserParams, PasswordVerifySchema } from "./_type";
+import { UserListParams, UserListSchema, UserInfo, LoggedParams } from "./_type";
+import { getAuthSettingsRuntimeAction, validatePasswordByAuthSettings } from "@/modules/admin/actions/auth-settings";
 
 /**
  * 🌟 타 모듈에서도 안심하고 쓸 수 있는 함수
@@ -99,13 +100,20 @@ export const saveUser = async (data: any, isProfileUpdate: boolean) => {
       return { success: false, message: "비밀번호는 필수입니다.", fieldErrors: { password: "비밀번호는 필수입니다." } };
     }
 
+    const authSettings = await getAuthSettingsRuntimeAction();
+    const passwordError = validatePasswordByAuthSettings(data.password, authSettings);
+    if (passwordError) {
+      return { success: false, message: passwordError, fieldErrors: { password: passwordError } };
+    }
+
     const pw = await hashedPassword(data.password);
     const insertData = {
       accountId: data.accountId,
       password: pw,
       email_address: data.email_address,
       nickName: data.nickName,
-      isAdmin: data.isAdmin
+      isAdmin: data.isAdmin,
+      status: authSettings.defaultUserStatus,
     };
 
     const created = await query.upsertUser(false, null, insertData, data.group?.map((g: any) => Number(g.groupId)) || []);
@@ -120,6 +128,12 @@ export const saveUser = async (data: any, isProfileUpdate: boolean) => {
     };
 
     if (data.password?.trim()) {
+      const authSettings = await getAuthSettingsRuntimeAction();
+      const passwordError = validatePasswordByAuthSettings(data.password, authSettings);
+      if (passwordError) {
+        return { success: false, message: passwordError, fieldErrors: { password: passwordError } };
+      }
+
       updateData.password = await hashedPassword(data.password);
     }
 

@@ -4,11 +4,18 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { getUserSessionAction } from "@/modules/user/actions/user.action";
 import { validateForm } from "@utils/validation/formValidator";
-import { ActionState, SiteSettingsData, SiteSettingsSchema, UploadSettingsData, UploadSettingsSchema } from "./_type";
+import { ActionState, AuthSettingsData, AuthSettingsSchema, SiteSettingsData, SiteSettingsSchema, UploadSettingsData, UploadSettingsSchema } from "./_type";
 import { getSettingsByKeysQuery, SettingSeed, upsertSettingsQuery } from "./settings.query";
 import redisClient from "@utils/redis/redis";
 import { v4 as uuidv4 } from "uuid";
 import { assertDecodableImage, detectMimeTypeFromBuffer, isMimeCompatibleWithExtension } from "@/core/utils/file/fileValidation";
+import {
+  AUTH_SETTING_KEYS,
+  mapRecordsToAuthSettings,
+  readAuthSettingsCache,
+  toAuthSettingSeeds,
+  writeAuthSettingsCache,
+} from "./auth-settings";
 
 const SITE_SETTINGS_CACHE_KEY = "app:settings:site";
 const UPLOAD_SETTINGS_CACHE_KEY = "app:settings:upload";
@@ -584,6 +591,40 @@ export const getUploadSettingsAdminAction = async (): Promise<ActionState<Upload
   }
 };
 
+export const getAuthSettingsAdminAction = async (): Promise<ActionState<AuthSettingsData>> => {
+  const sessionInfo = await getUserSessionAction();
+
+  if (!sessionInfo?.data?.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  try {
+    const cached = await readAuthSettingsCache();
+    if (cached) {
+      return {
+        success: true,
+        type: "success",
+        message: "회원/인증 설정을 불러왔습니다.",
+        data: cached,
+      };
+    }
+
+    const records = await getSettingsByKeysQuery(AUTH_SETTING_KEYS);
+    const data = mapRecordsToAuthSettings(records);
+    await writeAuthSettingsCache(data);
+
+    return {
+      success: true,
+      type: "success",
+      message: "회원/인증 설정을 불러왔습니다.",
+      data,
+    };
+  } catch (error) {
+    console.error("getAuthSettingsAdminAction Error:", error);
+    return { success: false, type: "error", message: "회원/인증 설정을 불러오지 못했습니다." };
+  }
+};
+
 export const getUploadSettingsRuntimeAction = async (): Promise<UploadSettingsData> => {
   const cached = await readUploadSettingsCache();
   if (cached) return cached;
@@ -690,5 +731,48 @@ export const updateUploadSettingsAdminAction = async (formData: FormData): Promi
   } catch (error) {
     console.error("updateUploadSettingsAdminAction Error:", error);
     return { success: false, type: "error", message: "업로드 설정 저장에 실패했습니다." };
+  }
+};
+
+export const updateAuthSettingsAdminAction = async (formData: FormData): Promise<ActionState<AuthSettingsData>> => {
+  const sessionInfo = await getUserSessionAction();
+
+  if (!sessionInfo?.data?.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  const formPayload = {
+    registrationEnabled: formData.has("registrationEnabled"),
+    accountDeletionEnabled: formData.has("accountDeletionEnabled"),
+    defaultUserStatus: formData.get("defaultUserStatus"),
+    minPasswordLength: formData.get("minPasswordLength"),
+    requirePasswordNumber: formData.has("requirePasswordNumber"),
+    requirePasswordLetter: formData.has("requirePasswordLetter"),
+    requirePasswordSpecial: formData.has("requirePasswordSpecial"),
+    loginFailLimit: formData.get("loginFailLimit"),
+    loginFailWindowMinutes: formData.get("loginFailWindowMinutes"),
+    loginLockMinutes: formData.get("loginLockMinutes"),
+    accessTokenExpiresIn: formData.get("accessTokenExpiresIn"),
+    refreshTokenExpiresIn: formData.get("refreshTokenExpiresIn"),
+    allowConcurrentSessions: formData.has("allowConcurrentSessions"),
+    adminSessionGuard: formData.has("adminSessionGuard"),
+  };
+
+  const validation = validateForm(AuthSettingsSchema, formPayload);
+  if (!validation.isValid) return validation.errorResponse;
+
+  try {
+    await upsertSettingsQuery(toAuthSettingSeeds(validation.data));
+    await writeAuthSettingsCache(validation.data);
+
+    return {
+      success: true,
+      type: "success",
+      message: "회원/인증 설정이 저장되었습니다.",
+      data: validation.data,
+    };
+  } catch (error) {
+    console.error("updateAuthSettingsAdminAction Error:", error);
+    return { success: false, type: "error", message: "회원/인증 설정 저장에 실패했습니다." };
   }
 };
