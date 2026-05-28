@@ -113,7 +113,7 @@ export const saveUser = async (data: any, isProfileUpdate: boolean) => {
       email_address: data.email_address,
       nickName: data.nickName,
       isAdmin: data.isAdmin,
-      status: authSettings.defaultUserStatus,
+      status: data.status || authSettings.defaultUserStatus,
     };
 
     const created = await query.upsertUser(false, null, insertData, data.group?.map((g: any) => Number(g.groupId)) || []);
@@ -126,6 +126,10 @@ export const saveUser = async (data: any, isProfileUpdate: boolean) => {
       isAdmin: data.isAdmin,
       accountId: data.accountId
     };
+
+    if (data.status) {
+      updateData.status = data.status;
+    }
 
     if (data.password?.trim()) {
       const authSettings = await getAuthSettingsRuntimeAction();

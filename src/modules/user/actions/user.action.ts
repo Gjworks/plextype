@@ -10,6 +10,7 @@ import { validateForm } from "@utils/validation/formValidator";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { getAuthSettingsRuntimeAction, validatePasswordByAuthSettings } from "@/modules/admin/actions/auth-settings";
+import redisClient from "@utils/redis/redis";
 /**
  * 💡 공통 유틸: Prisma 결과물에서 민감한 정보(비밀번호 등) 제외하기
  */
@@ -49,6 +50,7 @@ export const saveUserAction = async (formData: FormData, paths?: string): Promis
     nickName: formData.get("nickName")?.toString() || "",
     password: formData.get("password")?.toString() || "",
     isAdmin: safeIsAdmin,
+    status: isAdminRequest ? formData.get("status")?.toString() : undefined,
     group: isAdminRequest ? formData.getAll("groups[]").map(g => ({ groupId: g })) : undefined,
   };
 
@@ -134,6 +136,124 @@ export const removeUserAction = async (id: number): Promise<ActionState<any>> =>
   } catch (error: any) {
     console.error("removeUserAction 에러:", error);
     return { success: false, type: "error", message: error.message || "삭제 중 오류 발생" };
+  }
+};
+
+export const updateUserStatusAdminAction = async (
+  id: number,
+  status: "active" | "pending" | "blocked",
+): Promise<ActionState<{ id: number; status: string | null }>> => {
+  const loggedInfo = await getLoggedUserAction();
+  if (!loggedInfo.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  try {
+    const user = await query.updateUserStatus(id, status);
+    revalidatePath("/admin/user/list");
+    revalidatePath("/admin/user/pending");
+
+    return {
+      success: true,
+      type: "success",
+      message: status === "active" ? "회원이 승인되었습니다." : "회원 상태가 변경되었습니다.",
+      data: { id: user.id, status: user.status },
+    };
+  } catch (error) {
+    console.error("updateUserStatusAdminAction 에러:", error);
+    return { success: false, type: "error", message: "회원 상태 변경 중 오류가 발생했습니다." };
+  }
+};
+
+export type LoginLockInfo = {
+  id: string;
+  accountId: string;
+  ip: string;
+  lockedAt: string;
+  expiresAt: string;
+  retryAfter: number;
+};
+
+export const getLoginLockedUsersAdminAction = async (): Promise<ActionState<LoginLockInfo[]>> => {
+  const loggedInfo = await getLoggedUserAction();
+  if (!loggedInfo.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  try {
+    const metaKeys = await redisClient.keys("login_lock_meta:*");
+    const rawRecords = metaKeys.length > 0 ? await redisClient.mget(...metaKeys) : [];
+    const records = await Promise.all(rawRecords.map(async (raw, index) => {
+      if (!raw) return null;
+
+      try {
+        const parsed = JSON.parse(raw) as LoginLockInfo & { lockKey?: string };
+        const lockId = metaKeys[index].replace("login_lock_meta:", "");
+        const retryAfter = await redisClient.ttl(parsed.lockKey || `login_lock:${lockId}`);
+
+        if (retryAfter <= 0) {
+          await redisClient.del(metaKeys[index]);
+          return null;
+        }
+
+        return {
+          id: lockId,
+          accountId: parsed.accountId,
+          ip: parsed.ip,
+          lockedAt: parsed.lockedAt,
+          expiresAt: parsed.expiresAt,
+          retryAfter,
+        };
+      } catch {
+        return null;
+      }
+    }));
+    const knownIds = new Set(metaKeys.map((key) => key.replace("login_lock_meta:", "")));
+    const lockKeys = await redisClient.keys("login_lock:*");
+    const fallbackRecords = await Promise.all(lockKeys.map(async (lockKey) => {
+      const lockId = lockKey.replace("login_lock:", "");
+      if (knownIds.has(lockId)) return null;
+
+      const retryAfter = await redisClient.ttl(lockKey);
+      if (retryAfter <= 0) return null;
+      const now = new Date();
+
+      return {
+        id: lockId,
+        accountId: "정보 없음",
+        ip: "-",
+        lockedAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + retryAfter * 1000).toISOString(),
+        retryAfter,
+      };
+    }));
+
+    return {
+      success: true,
+      type: "success",
+      message: "로그인 잠금 목록을 불러왔습니다.",
+      data: [...records, ...fallbackRecords].filter(Boolean) as LoginLockInfo[],
+    };
+  } catch (error) {
+    console.error("getLoginLockedUsersAdminAction 에러:", error);
+    return { success: false, type: "error", message: "로그인 잠금 목록을 불러오지 못했습니다." };
+  }
+};
+
+export const unlockLoginUserAdminAction = async (lockId: string): Promise<ActionState<null>> => {
+  const loggedInfo = await getLoggedUserAction();
+  if (!loggedInfo.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  try {
+    await redisClient.del(`login_lock:${lockId}`, `login_lock_meta:${lockId}`);
+    revalidatePath("/admin/user/login-locks");
+
+    return { success: true, type: "success", message: "로그인 잠금을 해제했습니다." };
+  } catch (error) {
+    console.error("unlockLoginUserAdminAction 에러:", error);
+    return { success: false, type: "error", message: "로그인 잠금 해제 중 오류가 발생했습니다." };
   }
 };
 /**

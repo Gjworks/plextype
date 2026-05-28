@@ -32,8 +32,10 @@ const getLoginRateLimitKeys = (accountId: string, ip: string) => {
     .digest("hex");
 
   return {
+    id: fingerprint,
     failKey: `login_fail:${fingerprint}`,
     lockKey: `login_lock:${fingerprint}`,
+    lockMetaKey: `login_lock_meta:${fingerprint}`,
   };
 };
 
@@ -54,7 +56,7 @@ const getLoginRateLimitStatus = async (accountId: string, ip: string, lockSecond
 
 const recordLoginFailure = async (accountId: string, ip: string, failLimit: number, failWindowSeconds: number, lockSeconds: number) => {
   try {
-    const { failKey, lockKey } = getLoginRateLimitKeys(accountId, ip);
+    const { id, failKey, lockKey, lockMetaKey } = getLoginRateLimitKeys(accountId, ip);
     const failCount = await redisClient.incr(failKey);
 
     if (failCount === 1) {
@@ -62,7 +64,22 @@ const recordLoginFailure = async (accountId: string, ip: string, failLimit: numb
     }
 
     if (failCount >= failLimit) {
+      const lockedAt = new Date();
+      const expiresAt = new Date(lockedAt.getTime() + lockSeconds * 1000);
       await redisClient.set(lockKey, "1", "EX", lockSeconds);
+      await redisClient.set(
+        lockMetaKey,
+        JSON.stringify({
+          id,
+          lockKey,
+          accountId,
+          ip,
+          lockedAt: lockedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+        }),
+        "EX",
+        lockSeconds,
+      );
       await redisClient.del(failKey);
     }
   } catch (error) {

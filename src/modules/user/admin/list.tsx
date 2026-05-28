@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Activity, Bell, Clock3, Edit3, FileText, Loader2, MessageSquareText, Paperclip, Plus, Search, Trash2, UsersRound } from "lucide-react";
 
 import { UserInfo, UserListResponseData } from "@/modules/user/actions/_type";
-import { removeUserAction } from "@/modules/user/actions/user.action";
+import { removeUserAction, updateUserStatusAdminAction } from "@/modules/user/actions/user.action";
 import {
   getUserTimelineAdminAction,
   UserTimelineData,
@@ -21,6 +21,10 @@ import Bottom from "@components/panel/Bottom";
 type Props = {
   initialUserList: UserInfo[];
   initialNavigation: UserListResponseData["navigation"];
+  title?: string;
+  description?: string;
+  basePath?: string;
+  showStatusActions?: boolean;
 };
 
 const checkboxClass =
@@ -226,7 +230,20 @@ const AdminUserTimelinePanel = ({ userId }: { userId: number }) => {
   );
 };
 
-const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
+const statusMeta: Record<string, { label: string; className: string }> = {
+  active: { label: "활성", className: "bg-emerald-50 text-emerald-600 ring-emerald-100" },
+  pending: { label: "승인 대기", className: "bg-amber-50 text-amber-600 ring-amber-100" },
+  blocked: { label: "차단", className: "bg-rose-50 text-rose-600 ring-rose-100" },
+};
+
+const AdminUserList = ({
+  initialUserList,
+  initialNavigation,
+  title = "회원 목록",
+  description,
+  basePath = "/admin/user/list",
+  showStatusActions = true,
+}: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchTarget = searchParams?.get("target") || "accountId";
@@ -240,7 +257,7 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
     const params = new URLSearchParams(searchParams?.toString());
     params.delete("timelineUserId");
     const query = params.toString();
-    return query ? `/admin/user/list?${query}` : "/admin/user/list";
+    return query ? `${basePath}?${query}` : basePath;
   })();
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -249,7 +266,7 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
     const target = formData.get("target") as string;
     const keyword = formData.get("keyword") as string;
 
-    router.push(`?page=1&target=${target}&keyword=${keyword}`);
+    router.push(`${basePath}?page=1&target=${target}&keyword=${keyword}`);
   };
 
   const handleCheck = (id: number, isChecked: boolean) => {
@@ -287,7 +304,15 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
   const handleOpenTimeline = (id: number) => {
     const params = new URLSearchParams(searchParams?.toString());
     params.set("timelineUserId", id.toString());
-    router.push(`/admin/user/list?${params.toString()}`);
+    router.push(`${basePath}?${params.toString()}`);
+  };
+
+  const handleStatusChange = (id: number, status: "active" | "pending" | "blocked") => {
+    startTransition(async () => {
+      const result = await updateUserStatusAdminAction(id, status);
+      alert(result.message);
+      if (result.success) router.refresh();
+    });
   };
 
   return (
@@ -298,9 +323,9 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
             <UsersRound size={13} />
             User Control
           </div>
-          <div className="mt-2 text-lg font-semibold text-gray-700">회원 목록</div>
+          <div className="mt-2 text-lg font-semibold text-gray-700">{title}</div>
           <div className="mt-1 text-sm text-gray-400">
-            전체 {initialNavigation.totalCount}명 중 {initialUserList.length}명을 표시하고 있습니다.
+            {description || `전체 ${initialNavigation.totalCount}명 중 ${initialUserList.length}명을 표시하고 있습니다.`}
           </div>
         </div>
 
@@ -354,6 +379,7 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Account</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Email</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Nickname</th>
+                <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
                 <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Timeline</th>
                 <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Edit</th>
                 <th className="w-14 px-4 py-3 text-center">
@@ -377,6 +403,29 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-500">{item.email_address}</td>
                     <td className="px-4 py-4 text-sm text-gray-600">{item.nickName}</td>
+                    <td className="px-4 py-4 text-center">
+                      {(() => {
+                        const meta = statusMeta[item.status || "active"] || statusMeta.active;
+
+                        return (
+                          <div className="flex flex-col items-center gap-2">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${meta.className}`}>
+                              {meta.label}
+                            </span>
+                            {showStatusActions && item.status === "pending" && (
+                              <button
+                                type="button"
+                                onClick={() => handleStatusChange(item.id, "active")}
+                                disabled={isPending}
+                                className="cursor-pointer rounded-md bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                승인
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="px-4 py-4 text-center">
                       <button
                         type="button"
@@ -406,7 +455,7 @@ const AdminUserList = ({ initialUserList, initialNavigation }: Props) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-sm text-gray-400">조회된 회원이 없습니다.</td>
+                  <td colSpan={8} className="py-16 text-center text-sm text-gray-400">조회된 회원이 없습니다.</td>
                 </tr>
               )}
             </tbody>
