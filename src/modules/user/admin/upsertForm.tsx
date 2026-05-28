@@ -17,6 +17,9 @@ type UpsertFormProps = {
 const textareaClass =
   "w-full resize-y rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm leading-6 text-gray-700 outline-none transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:placeholder:text-dark-500";
 
+const selectClass =
+  "w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 outline-none transition-colors hover:border-gray-300 focus:border-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100";
+
 const SectionShell = ({
   icon,
   title,
@@ -243,6 +246,14 @@ const UpsertForm = ({ user, groupList }: UpsertFormProps) => {
       </SectionShell>
 
       <SectionShell icon={<ShieldCheck size={13} />} title="권한 설정" description="관리자 권한과 회원 그룹을 지정합니다.">
+        <FieldRow label="계정 상태" description="승인 대기나 차단 상태인 일반 회원은 로그인할 수 없습니다. 승인할 회원은 즉시 활성화로 변경하세요.">
+          <select className={selectClass} name="status" defaultValue={user?.status || "active"}>
+            <option value="active">즉시 활성화</option>
+            <option value="pending">승인 대기</option>
+            <option value="blocked">차단 상태</option>
+          </select>
+        </FieldRow>
+
         <FieldRow label="관리자 설정" description="관리자 페이지 접근 권한을 부여합니다.">
           <div className="flex items-center gap-3">
             <Toggle checked={isAdmin} onChange={setIsAdmin} />

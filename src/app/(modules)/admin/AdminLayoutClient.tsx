@@ -27,6 +27,8 @@ const MENU_CONFIG = [
     label: '회원 설정',
     items: [
       { label: '회원 목록', href: '/admin/user/list' },
+      { label: '가입 대기 회원', href: '/admin/user/pending' },
+      { label: '로그인 잠금', href: '/admin/user/login-locks' },
       { label: '회원 추가', href: '/admin/user/create' },
       { label: '회원 그룹 관리', href: '/admin/user/groupList' },
     ],
@@ -84,6 +86,8 @@ const ADMIN_BREADCRUMB_LABELS: Record<string, Record<string, string>> = {
     list: 'LIST',
     create: 'CREATE',
     groupList: 'GROUPS',
+    pending: 'PENDING',
+    'login-locks': 'LOGIN LOCKS',
     update: 'UPDATE',
     active: 'ACTIVE',
   },

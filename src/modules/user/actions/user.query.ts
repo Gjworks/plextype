@@ -71,12 +71,16 @@ export function findUserByCondition(whereObj: Prisma.UserWhereUniqueInput) { // 
 }
 
 export async function findUserList(params: UserListParsedParams) { // 💡 getUserList -> find 로 변경
-  const { page, target, keyword, listCount } = params;
+  const { page, target, keyword, listCount, status } = params;
   const skipAmount = (page - 1) * listCount;
   const where: any = {};
 
   if (target && keyword) {
     where[target] = { contains: keyword };
+  }
+
+  if (status) {
+    where.status = status;
   }
 
   const [totalItems, userList] = await Promise.all([
@@ -162,6 +166,13 @@ export async function upsertUser(
     }
 
     return userRecord;
+  });
+}
+
+export async function updateUserStatus(userId: number, status: "active" | "pending" | "blocked") {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { status },
   });
 }
 
