@@ -83,17 +83,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    // 아직 로직은 없지만 무조건 Response를 리턴해야 함
-    return NextResponse.json(
-      { success: true, message: "아직 구현되지 않음" },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error("게시판 생성 API 오류:", error);
-    return NextResponse.json(
-      { success: false, message: "게시판 생성 중 오류 발생" },
-      { status: 500 },
-    );
-  }
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405, headers: { Allow: "GET" } },
+  );
 }

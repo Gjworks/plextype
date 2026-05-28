@@ -53,7 +53,6 @@
     "ioredis": "^5.10.1",
     "isomorphic-dompurify": "^2.35.0",
     "jose": "^6.0.9",
-    "js-cookie": "^3.0.5",
     "lucide-react": "^0.562.0",
     "mime-types": "^3.0.1",
     "nanoid": "^5.1.9",

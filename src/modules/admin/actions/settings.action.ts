@@ -8,6 +8,7 @@ import { ActionState, SiteSettingsData, SiteSettingsSchema, UploadSettingsData, 
 import { getSettingsByKeysQuery, SettingSeed, upsertSettingsQuery } from "./settings.query";
 import redisClient from "@utils/redis/redis";
 import { v4 as uuidv4 } from "uuid";
+import { assertDecodableImage, detectMimeTypeFromBuffer, isMimeCompatibleWithExtension } from "@/core/utils/file/fileValidation";
 
 const SITE_SETTINGS_CACHE_KEY = "app:settings:site";
 const UPLOAD_SETTINGS_CACHE_KEY = "app:settings:upload";
@@ -461,6 +462,20 @@ const saveSiteImage = async (file: File, fieldLabel: string) => {
     throw new Error(`${fieldLabel}의 파일 형식이 허용되지 않습니다.`);
   }
 
+  const bytes = await file.arrayBuffer();
+  const fileBuffer = Buffer.from(bytes);
+  const detectedMimeType = detectMimeTypeFromBuffer(fileBuffer);
+
+  if (!detectedMimeType || !SITE_IMAGE_ALLOWED_MIMES.has(detectedMimeType) || !isMimeCompatibleWithExtension(ext, detectedMimeType)) {
+    throw new Error(`${fieldLabel}의 실제 파일 형식이 확장자와 일치하지 않습니다.`);
+  }
+
+  try {
+    await assertDecodableImage(fileBuffer, detectedMimeType);
+  } catch {
+    throw new Error(`${fieldLabel} 이미지를 정상적으로 해석할 수 없습니다.`);
+  }
+
   const fileUuid = uuidv4();
   const date = new Date();
   const year = String(date.getFullYear());
@@ -475,8 +490,7 @@ const saveSiteImage = async (file: File, fieldLabel: string) => {
   );
 
   await mkdir(uploadDir, { recursive: true });
-  const bytes = await file.arrayBuffer();
-  await writeFile(path.join(uploadDir, fileName), Buffer.from(bytes));
+  await writeFile(path.join(uploadDir, fileName), fileBuffer);
 
   return `/storage/uploads/settings/${year}/${month}/${fileName}`;
 };

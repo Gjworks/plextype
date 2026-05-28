@@ -7,8 +7,10 @@ const createRedisClient = () => {
     return {
       get: async () => null,
       set: async () => "OK",
+      incr: async () => 1,
       exists: async () => 0,
       expire: async () => 0,
+      ttl: async () => -2,
       keys: async () => [],
       mget: async (...keys: string[]) => keys.map(() => null),
       del: async () => 0,

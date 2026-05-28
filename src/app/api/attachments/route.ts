@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import { verify } from "@/core/utils/auth/jwtAuth";
 import { getUploadSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
 import sharp from "sharp";
+import { assertDecodableImage, detectMimeTypeFromBuffer, isMimeCompatibleWithExtension } from "@/core/utils/file/fileValidation";
 
 export const runtime = "nodejs";
 
@@ -14,21 +15,6 @@ const IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/gif", "image/avif
 const AUDIO_MIMES = new Set(["audio/mpeg", "audio/ogg"]);
 const VIDEO_MIMES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const ARCHIVE_MIMES = new Set(["application/zip"]);
-const MIME_BY_EXT = new Map<string, string[]>([
-  [".png", ["image/png"]],
-  [".jpg", ["image/jpeg"]],
-  [".jpeg", ["image/jpeg"]],
-  [".gif", ["image/gif"]],
-  [".avif", ["image/avif"]],
-  [".webp", ["image/webp"]],
-  [".mp3", ["audio/mpeg"]],
-  [".ogg", ["audio/ogg"]],
-  [".mp4", ["video/mp4"]],
-  [".webm", ["video/webm"]],
-  [".mov", ["video/quicktime"]],
-  [".zip", ["application/zip"]],
-]);
-
 const parseAllowedExtensions = (value: string) => {
   return new Set(
     value
@@ -187,24 +173,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "허용되지 않은 파일 형식입니다." }, { status: 400 });
     }
 
-    if (!uploadSettings.allowVideo && isVideoMime(file.type)) {
+    const bytes = await file.arrayBuffer();
+    const fileBuffer = Buffer.from(bytes);
+    const detectedMimeType = detectMimeTypeFromBuffer(fileBuffer);
+    const validationMimeType = detectedMimeType || file.type;
+
+    if (!uploadSettings.allowVideo && isVideoMime(validationMimeType)) {
       return NextResponse.json({ error: "동영상 업로드가 허용되어 있지 않습니다." }, { status: 400 });
     }
 
-    if (!uploadSettings.allowArchive && isArchiveMime(file.type)) {
+    if (!uploadSettings.allowArchive && isArchiveMime(validationMimeType)) {
       return NextResponse.json({ error: "압축파일 업로드가 허용되어 있지 않습니다." }, { status: 400 });
     }
 
     if (uploadSettings.verifyMimeType) {
-      const extMimes = MIME_BY_EXT.get(ext) || [];
-      if (!isKnownMime(file.type) || !extMimes.includes(file.type)) {
-        return NextResponse.json({ error: "파일 MIME 타입이 확장자와 일치하지 않습니다." }, { status: 400 });
+      if (!detectedMimeType || !isKnownMime(detectedMimeType) || !isMimeCompatibleWithExtension(ext, detectedMimeType)) {
+        return NextResponse.json({ error: "파일 실제 형식이 확장자와 일치하지 않습니다." }, { status: 400 });
+      }
+
+      try {
+        await assertDecodableImage(fileBuffer, detectedMimeType);
+      } catch {
+        return NextResponse.json({ error: "이미지 파일을 정상적으로 해석할 수 없습니다." }, { status: 400 });
       }
     }
 
-    const bytes = await file.arrayBuffer();
-    const fileBuffer = Buffer.from(bytes);
-    const processedFile = await processImageBuffer(fileBuffer, file.type, uploadSettings);
+    const processedFile = await processImageBuffer(fileBuffer, validationMimeType, uploadSettings);
     const outputBuffer = processedFile.buffer;
     const outputExt = processedFile.ext || ext;
     const outputMimeType = processedFile.mimeType || file.type;

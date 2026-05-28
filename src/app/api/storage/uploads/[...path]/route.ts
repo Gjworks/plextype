@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
         "Content-Disposition": `${dispositionType}; filename="${encodeURIComponent(path.basename(fileSystemPath))}"`,
         "Cache-Control": "public, max-age=31536000, immutable",
         "X-Content-Type-Options": "nosniff",
+        "Cross-Origin-Resource-Policy": "same-origin",
       },
     });
   } catch (err) {

@@ -44,10 +44,8 @@ export async function GET(request: NextRequest): Promise<Response> {
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
-  try {
-    return NextResponse.json({ success: true, message: "POST OK" });
-  } catch (error) {
-    console.error("Server error:", error);
-    return jsonResponse(500, "Internal server error. Please try again later.");
-  }
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405, headers: { Allow: "GET" } },
+  );
 }
