@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { z } from "zod"; // ✅ Zod 추가
 import { verifyPassword } from "@/core/utils/auth/password";
 import { sign, refresh } from "@/core/utils/auth/jwtAuth";
@@ -14,6 +15,72 @@ const LoginSchema = z.object({
   accountId: z.string().min(1, { message: "계정 아이디를 입력해주세요." }),
   password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
 });
+
+const LOGIN_FAIL_LIMIT = 5;
+const LOGIN_FAIL_WINDOW_SECONDS = 15 * 60;
+const LOGIN_LOCK_SECONDS = 15 * 60;
+
+const getClientIp = (request: Request) => {
+  const forwarded = request.headers.get("x-forwarded-for");
+  const rawIp = forwarded
+    ? forwarded.split(",")[0].trim()
+    : (request as any).ip || request.headers.get("x-real-ip") || "unknown";
+
+  return rawIp.replace(/^::ffff:/, "");
+};
+
+const getLoginRateLimitKeys = (accountId: string, ip: string) => {
+  const fingerprint = createHash("sha256")
+    .update(`${ip}:${accountId.trim().toLowerCase()}`)
+    .digest("hex");
+
+  return {
+    failKey: `login_fail:${fingerprint}`,
+    lockKey: `login_lock:${fingerprint}`,
+  };
+};
+
+const getLoginRateLimitStatus = async (accountId: string, ip: string) => {
+  try {
+    const { lockKey } = getLoginRateLimitKeys(accountId, ip);
+    const ttl = await redisClient.ttl(lockKey);
+
+    return {
+      locked: ttl > 0,
+      retryAfter: ttl > 0 ? ttl : LOGIN_LOCK_SECONDS,
+    };
+  } catch (error) {
+    console.error("Login RateLimit Check Error:", error);
+    return { locked: false, retryAfter: LOGIN_LOCK_SECONDS };
+  }
+};
+
+const recordLoginFailure = async (accountId: string, ip: string) => {
+  try {
+    const { failKey, lockKey } = getLoginRateLimitKeys(accountId, ip);
+    const failCount = await redisClient.incr(failKey);
+
+    if (failCount === 1) {
+      await redisClient.expire(failKey, LOGIN_FAIL_WINDOW_SECONDS);
+    }
+
+    if (failCount >= LOGIN_FAIL_LIMIT) {
+      await redisClient.set(lockKey, "1", "EX", LOGIN_LOCK_SECONDS);
+      await redisClient.del(failKey);
+    }
+  } catch (error) {
+    console.error("Login RateLimit Record Error:", error);
+  }
+};
+
+const clearLoginFailures = async (accountId: string, ip: string) => {
+  try {
+    const { failKey, lockKey } = getLoginRateLimitKeys(accountId, ip);
+    await redisClient.del(failKey, lockKey);
+  } catch (error) {
+    console.error("Login RateLimit Clear Error:", error);
+  }
+};
 
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -41,6 +108,24 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const { accountId, password } = validation.data;
+    const userIp = getClientIp(request);
+    const rateLimitStatus = await getLoginRateLimitStatus(accountId, userIp);
+
+    if (rateLimitStatus.locked) {
+      return NextResponse.json({
+        success: false,
+        type: "error",
+        message: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.",
+        fieldErrors: {
+          accountId: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.",
+        },
+      }, {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimitStatus.retryAfter),
+        },
+      });
+    }
 
     // ✅ 3. 사용자 조회
     const userInfo = await prisma.user.findUnique({
@@ -58,14 +143,18 @@ export async function POST(request: Request): Promise<Response> {
     };
 
     if (!userInfo) {
+      await recordLoginFailure(accountId, userIp);
       return NextResponse.json(loginFailResponse, { status: 401 });
     }
 
     // ✅ 4. 비밀번호 검증
     const isPasswordValid = await verifyPassword(password, userInfo.password);
     if (!isPasswordValid) {
+      await recordLoginFailure(accountId, userIp);
       return NextResponse.json(loginFailResponse, { status: 401 });
     }
+
+    await clearLoginFailures(accountId, userIp);
 
     // ✅ 5. 권한(그룹) 정보 가져오기
     const userGroups = await prisma.userGroupUser.findMany({
@@ -120,13 +209,6 @@ export async function POST(request: Request): Promise<Response> {
       ...getRefreshTokenCookieOptions(),
     });
 
-    const forwarded = request.headers.get("x-forwarded-for");
-    const rawIp = forwarded 
-      ? forwarded.split(",")[0].trim() 
-      : (request as any).ip || request.headers.get("x-real-ip") || "unknown";
-
-    // 2. IP 세척 (::ffff: 제거)
-    const userIp = rawIp.replace(/^::ffff:/, "");
     const loginAt = new Date().toISOString();
     try {
       // 3. Redis에 실시간 접속 정보 저장 (미들웨어 검문 통과용)
