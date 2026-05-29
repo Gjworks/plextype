@@ -14,7 +14,7 @@ export async function getPostListMetadata(mid: string): Promise<Metadata> {
   return await getSeoMetadata({
     title: info?.moduleName ?? "게시판",
     description:
-      info?.desc ?? `${info?.moduleName ?? "게시판"}의 게시글 목록입니다.`,
+      info?.moduleDesc ?? `${info?.moduleName ?? "게시판"}의 게시글 목록입니다.`,
     url: `/posts/${mid}`, // 상대 경로만 전달
   });
 }
@@ -34,7 +34,12 @@ export async function getPostReadMetadata(
   }
 
   const postTitle = doc.title ?? "제목 없음";
-  const description = doc.content?.slice(0, 150).replace(/<[^>]+>/g, "") || "";
+  const description = doc.content
+    ?.replace(/<[^>]+>/g, "")
+    .replace(/[{}[\]":,]/g, " ")
+    .replace(/\s+/g, " ")
+    .slice(0, 150)
+    .trim() || "";
   const author = doc.user?.nickName || "작성자";
 
   // 🌟 상세 페이지도 공통 헬퍼로 포장!
@@ -43,5 +48,6 @@ export async function getPostReadMetadata(
     description: `${author}님의 글: ${description}`,
     image: doc.thumbnail || undefined, // 썸네일 있으면 전달
     url: `/posts/${mid}/${slug}`,
+    type: "article",
   });
 }
