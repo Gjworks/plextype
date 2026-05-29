@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import * as query from "./notification.query";
+import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
+import { getSettingsByKeysQuery } from "@/modules/admin/actions/settings.query";
+import { notificationEvents } from "@/core/utils/trigger/notificationEvents";
 
 function extractTiptapText(nodes: any[]): string {
   return nodes
@@ -91,13 +94,96 @@ export const saveNotification = async (data: any) => {
   return result;
 };
 
+const toBool = (value: unknown, fallback = true) => {
+  if (value === true || value === "true") return true;
+  if (value === false || value === "false") return false;
+  return fallback;
+};
+
+const getCommentReplySubscription = async (commentId?: number | string | null) => {
+  if (!commentId) return true;
+
+  try {
+    const records = await getSettingsByKeysQuery([`notification.commentReply.${commentId}`]);
+    return toBool(records[0]?.value, true);
+  } catch {
+    return true;
+  }
+};
+
+const isNotificationTypeEnabled = async (data: any) => {
+  const settings = await getNotificationSettingsRuntimeAction();
+  const subType = data?.subType || data?.metadata?.subType;
+
+  if (subType === "comment") {
+    if (!settings.commentNotificationsEnabled) return { enabled: false, settings };
+    if (!toBool(data.documentNotificationEnabled, true)) return { enabled: false, settings };
+  }
+
+  if (subType === "reply") {
+    if (!settings.replyNotificationsEnabled) return { enabled: false, settings };
+    const subscribed = await getCommentReplySubscription(data.parentId);
+    if (!subscribed) return { enabled: false, settings };
+  }
+
+  if (["document", "attachment", "admin-comment"].includes(subType)) {
+    if (!settings.adminContentNotificationsEnabled) return { enabled: false, settings };
+  }
+
+  if (subType === "force-logout") {
+    if (!settings.forceLogoutNotificationsEnabled) return { enabled: false, settings };
+  }
+
+  if (settings.excludeSelfNotifications && data.actorId && data.userId && String(data.actorId) === String(data.userId)) {
+    return { enabled: false, settings };
+  }
+
+  return { enabled: true, settings };
+};
+
+export const dispatchNotificationAction = async (data: any, context?: any) => {
+  const actorId = context?.user?.id ?? data?.actorId;
+  const targetId = data?.userId;
+
+  if (!targetId) return null;
+
+  try {
+    const { enabled, settings } = await isNotificationTypeEnabled({ ...data, actorId });
+    if (!enabled) return null;
+
+    const notification = await saveNotification({
+      ...data,
+      actorId,
+      metadata: {
+        ...(data.metadata || {}),
+        ...(data.subType ? { subType: data.subType } : {}),
+      },
+      imageUrl: settings.showNotificationThumbnails ? data.imageUrl : null,
+    });
+
+    if (settings.realtimeNotificationsEnabled) {
+      notificationEvents.emit("new-notification", {
+        ...notification,
+        showToast: settings.toastNotificationsEnabled,
+        imageUrl: settings.showNotificationThumbnails ? notification.imageUrl : null,
+      });
+    }
+
+    return notification;
+  } catch (error) {
+    console.error("dispatchNotificationAction Error:", error);
+    return null;
+  }
+};
+
 /** 🌟 [GET] */
 export const getUnreadCount = async (userId: number) => {
   return await query.findUnreadCount(userId);
 };
 
 export const getUnreadList = async (userId: number) => {
-  return await query.findUnreadList(userId);
+  const settings = await getNotificationSettingsRuntimeAction();
+  return await query.findUnreadList(userId, settings.unreadPreviewLimit);
 };
 
 export const findHistoryPage = async (userId: number, skip: number, take: number) => {

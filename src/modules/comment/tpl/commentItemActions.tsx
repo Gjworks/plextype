@@ -20,6 +20,7 @@ interface CommentItemActionsProps {
     content: string;
     parentId?: number;
     commentId?: number;
+    notificationEnabled?: boolean;
     options?: { deleted?: boolean; remove?: boolean };
   }) => Promise<any>;
 }
@@ -57,16 +58,19 @@ const CommentItemActions = ({
   const editorRef = useRef<any>(null);
   const [mode, setMode] = useState<"reply" | "edit" | null>(null);
   const [content, setContent] = useState("");
+  const [notificationEnabled, setNotificationEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const openReply = () => {
     setMode("reply");
     setContent("");
+    setNotificationEnabled(true);
   };
 
   const openEdit = () => {
     setMode("edit");
     setContent(comment.content);
+    setNotificationEnabled(true);
   };
 
   const closeModal = () => {
@@ -86,6 +90,7 @@ const CommentItemActions = ({
         content: JSON.stringify(jsonContent),
         parentId: mode === "reply" ? comment.id : undefined,
         commentId: mode === "edit" ? comment.id : undefined,
+        notificationEnabled: mode === "reply" ? notificationEnabled : undefined,
       });
 
       if (!result.success) {
@@ -235,10 +240,19 @@ const CommentItemActions = ({
                 />
               </div>
               <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 rounded-full bg-gray-200" />
-                  <div className="w-2 h-2 rounded-full bg-gray-200" />
-                </div>
+                {mode === "reply" ? (
+                  <label className="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400">
+                    <input
+                      type="checkbox"
+                      checked={notificationEnabled}
+                      onChange={(event) => setNotificationEnabled(event.target.checked)}
+                      className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-blue-500 accent-blue-500"
+                    />
+                    답글 알림 받기
+                  </label>
+                ) : (
+                  <span className="text-[10px] text-gray-300">댓글 내용을 수정합니다.</span>
+                )}
                 <span className="text-[10px] text-gray-400 font-mono tracking-tight">
                   {content.length} / 1000
                 </span>

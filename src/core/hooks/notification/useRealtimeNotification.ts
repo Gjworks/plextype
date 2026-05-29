@@ -25,11 +25,13 @@ export function useRealtimeNotification(userId: string | number | undefined) {
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          addToast(data.content, "info", {
-            title: data.title,
-            imageUrl: data.imageUrl,
-            linkUrl: data.linkUrl,
-          });
+          if (data.showToast !== false) {
+            addToast(data.content, "info", {
+              title: data.title,
+              imageUrl: data.imageUrl,
+              linkUrl: data.linkUrl,
+            });
+          }
 
           window.dispatchEvent(new Event('refresh-unread'));
         } catch (err) {

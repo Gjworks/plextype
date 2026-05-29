@@ -43,6 +43,24 @@ export type SeoSettingsParams = z.infer<typeof SeoSettingsSchema>;
 
 export type SeoSettingsData = SeoSettingsParams;
 
+export const NotificationSettingsSchema = z.object({
+  commentNotificationsEnabled: z.boolean(),
+  replyNotificationsEnabled: z.boolean(),
+  adminContentNotificationsEnabled: z.boolean(),
+  forceLogoutNotificationsEnabled: z.boolean(),
+  excludeSelfNotifications: z.boolean(),
+  realtimeNotificationsEnabled: z.boolean(),
+  toastNotificationsEnabled: z.boolean(),
+  showNotificationThumbnails: z.boolean(),
+  unreadPreviewLimit: z.coerce.number().int().min(1, "메뉴 미리보기는 1개 이상이어야 합니다.").max(50, "메뉴 미리보기는 50개 이하로 입력해주세요."),
+  historyPageSize: z.coerce.number().int().min(5, "히스토리 페이지는 5개 이상이어야 합니다.").max(100, "히스토리 페이지는 100개 이하로 입력해주세요."),
+  retentionDays: z.coerce.number().int().min(1, "보관 기간은 1일 이상이어야 합니다.").max(3650, "보관 기간이 너무 깁니다."),
+});
+
+export type NotificationSettingsParams = z.infer<typeof NotificationSettingsSchema>;
+
+export type NotificationSettingsData = NotificationSettingsParams;
+
 export const UploadSettingsSchema = z.object({
   maxUploadSizeMb: z.coerce.number().int().min(1, "파일당 용량은 1MB 이상이어야 합니다.").max(500, "파일당 용량은 500MB 이하로 입력해주세요."),
   userStorageLimitMb: z.coerce.number().int().min(1, "사용자별 용량은 1MB 이상이어야 합니다.").max(102400, "사용자별 용량이 너무 큽니다."),

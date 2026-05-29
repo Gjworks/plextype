@@ -86,6 +86,7 @@ interface CommentListStaticProps {
     content: string;
     parentId?: number;
     commentId?: number;
+    notificationEnabled?: boolean;
     options?: { deleted?: boolean; remove?: boolean };
   }) => Promise<any>;
   className?: string;

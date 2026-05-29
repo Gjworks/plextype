@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/core/utils/auth/authHelper";
 import { findHistoryPage } from "@/modules/notification/actions/notification.action"; // 액션에서 가져오기
 import { isNotificationAuthError, notificationGuestResponse, notificationServerErrorResponse } from "../_utils";
+import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
 
 export async function GET(request: Request) {
   try {
@@ -14,7 +15,8 @@ export async function GET(request: Request) {
     // 2. 쿼리 스트링에서 페이지 번호와 개수 가져오기 (기본값: 1페이지, 20개)
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get("page")) || 1;
-    const limit = Number(searchParams.get("limit")) || 5;
+    const settings = await getNotificationSettingsRuntimeAction();
+    const limit = Number(searchParams.get("limit")) || settings.historyPageSize;
     const skip = (page - 1) * limit;
 
     // 3. DB에서 히스토리 데이터 조회

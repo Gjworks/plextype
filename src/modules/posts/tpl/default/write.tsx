@@ -43,7 +43,10 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
   const [title, setTitle] = useState(existingPost?.title || "");
   const [content, setContent] = useState(existingPost?.content || "");
   const [thumbnail, setThumbnail] = useState(existingPost?.thumbnail || "");
-  const [extraData, setExtraData] = useState<any>(existingPost?.extraFieldData || {});
+  const [extraData, setExtraData] = useState<any>({
+    ...(existingPost?.extraFieldData || {}),
+    notificationEnabled: existingPost?.extraFieldData?.notificationEnabled ?? true,
+  });
 
   // 🌟 1. tempId 상태를 추가합니다. (신규 글 작성용)
 
@@ -67,7 +70,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
       if (extraData) {
         Object.entries(extraData).forEach(([key, value]) => {
           // 만약 서버가 'extraData__필드명' 형식을 기대한다면 아래처럼 보냅니다.
-          formData.append(`extraData__${key}`, value as string);
+          formData.append(`extraData__${key}`, String(value));
 
           // 만약 서버가 그냥 '필드명' 그대로를 기대한다면 아래처럼 보냅니다.
           // formData.append(key, value as string);
@@ -211,6 +214,26 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
             {fieldErrors.content}
           </div>
         )}
+      </div>
+
+      <div className="rounded-md border border-gray-100 bg-white p-4">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={extraData.notificationEnabled !== false}
+            onChange={(event) => setExtraData((prev: any) => ({
+              ...prev,
+              notificationEnabled: event.target.checked,
+            }))}
+            className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-500"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-gray-800">댓글 알림 받기</span>
+            <span className="mt-1 block text-xs leading-5 text-gray-400">
+              이 글에 새 댓글이 달렸을 때 알림을 받습니다. 알림이 너무 많으면 글마다 끌 수 있습니다.
+            </span>
+          </span>
+        </label>
       </div>
 
       {/* 🌟 [핵심 조립] 첨부파일 엔진 */}

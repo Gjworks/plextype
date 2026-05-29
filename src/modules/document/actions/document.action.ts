@@ -95,7 +95,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
     formData.forEach((value, key) => {
       if (key.startsWith("extraData__")) {
         const cleanKey = key.replace("extraData__", "");
-        extraFieldData[cleanKey] = value;
+        extraFieldData[cleanKey] = value === "true" ? true : value === "false" ? false : value;
       }
     });
 

@@ -8,6 +8,7 @@ import { withTrigger } from "@utils/trigger/triggerWrapper";
 import { cookies } from "next/headers";
 import { verify } from "@utils/auth/jwtAuth";
 import {nanoid} from "nanoid";
+import { upsertSettingsQuery } from "@/modules/admin/actions/settings.query";
 
 
 async function getLoggedInfo() {
@@ -86,6 +87,8 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
     const documentId = Number(formData.get("documentId"));
     const content = formData.get("content") as string;
     const parentId = formData.get("parentId") ? Number(formData.get("parentId")) : null;
+    const notificationEnabledValue = formData.get("notificationEnabled");
+    const notificationEnabled = notificationEnabledValue !== "false";
 
     const access = await canAccessDocumentComments(documentId);
     if (!access.allowed) return { success: false, type: "error", message: "댓글을 작성할 권한이 없습니다." };
@@ -101,6 +104,16 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
 
       // 수정 (원본 updateComment 로직)
       result = await query.updateComment(id, { content });
+      if (notificationEnabledValue !== null) {
+        await upsertSettingsQuery([{
+          key: `notification.commentReply.${id}`,
+          value: String(notificationEnabled),
+          group: "notification-subscription",
+          label: "댓글 답글 알림 수신",
+          description: "이 댓글에 답글이 달렸을 때 작성자가 알림을 받을지 정합니다.",
+          isPublic: false,
+        }]);
+      }
     } else {
       // 등록 (원본 addComment 로직)
       let depth = 0;
@@ -114,6 +127,14 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
       result = await query.insertComment({ content, documentId, userId: loggedInfo.id, parentId: finalParentId, depth , slug});
       console.log(result)
       console.log("🔥 DB 저장 직후 결과:", JSON.stringify(result, null, 2));
+      await upsertSettingsQuery([{
+        key: `notification.commentReply.${result.id}`,
+        value: String(notificationEnabled),
+        group: "notification-subscription",
+        label: "댓글 답글 알림 수신",
+        description: "이 댓글에 답글이 달렸을 때 작성자가 알림을 받을지 정합니다.",
+        isPublic: false,
+      }]);
       // ✅ 여기서 원본의 addCommentAndIncrementCount 로직 실행
       await query.incrementDocumentCommentCount(documentId);
     }
