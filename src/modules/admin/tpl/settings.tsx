@@ -12,8 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { AuthSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
-import { updateAuthSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
+import { AuthSettingsData, SeoSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
+import { updateAuthSettingsAdminAction, updateSeoSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 
@@ -24,6 +24,7 @@ type SettingsProps = {
   initialSiteSettings?: SiteSettingsData;
   initialUploadSettings?: UploadSettingsData;
   initialAuthSettings?: AuthSettingsData;
+  initialSeoSettings?: SeoSettingsData;
 };
 
 const sectionMeta: Record<SettingsSection, {
@@ -378,11 +379,25 @@ const defaultAuthSettings: AuthSettingsData = {
   adminSessionGuard: true,
 };
 
+const defaultSeoSettings: SeoSettingsData = {
+  defaultTitle: "Plextype",
+  titleTemplate: "%s | Plextype",
+  metaDescription: "Plextype으로 만든 사이트입니다.",
+  keywords: "",
+  robotsIndex: "index",
+  robotsFollow: "follow",
+  twitterCard: "summary_large_image",
+  sitemapEnabled: true,
+  includePagesInSitemap: true,
+  includePostsInSitemap: true,
+};
+
 const Settings = ({
   section = "site",
   initialSiteSettings = defaultSiteSettings,
   initialUploadSettings = defaultUploadSettings,
   initialAuthSettings = defaultAuthSettings,
+  initialSeoSettings = defaultSeoSettings,
 }: SettingsProps) => {
   const activeSection = sectionMeta[section] ? section : "site";
   const meta = useMemo(() => sectionMeta[activeSection], [activeSection]);
@@ -390,6 +405,7 @@ const Settings = ({
   const [siteSettings, setSiteSettings] = useState<SiteSettingsData>(initialSiteSettings);
   const [uploadSettings, setUploadSettings] = useState<UploadSettingsData>(initialUploadSettings);
   const [authSettings, setAuthSettings] = useState<AuthSettingsData>(initialAuthSettings);
+  const [seoSettings, setSeoSettings] = useState<SeoSettingsData>(initialSeoSettings);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const appNameRef = useRef<HTMLInputElement>(null);
@@ -409,6 +425,10 @@ const Settings = ({
   const loginLockMinutesRef = useRef<HTMLInputElement>(null);
   const accessTokenExpiresInRef = useRef<HTMLInputElement>(null);
   const refreshTokenExpiresInRef = useRef<HTMLInputElement>(null);
+  const defaultTitleRef = useRef<HTMLInputElement>(null);
+  const titleTemplateRef = useRef<HTMLInputElement>(null);
+  const metaDescriptionRef = useRef<HTMLTextAreaElement>(null);
+  const keywordsRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSiteChange = (field: keyof SiteSettingsData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setSiteSettings((prev) => ({
@@ -447,6 +467,20 @@ const Settings = ({
     }));
   };
 
+  const handleSeoInputChange = (field: keyof SeoSettingsData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setSeoSettings((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+  };
+
+  const handleSeoToggleChange = (field: keyof SeoSettingsData) => (checked: boolean) => {
+    setSeoSettings((prev) => ({
+      ...prev,
+      [field]: checked,
+    }));
+  };
+
   const resetSiteSettings = () => {
     setFieldErrors(null);
     setFormMessage(null);
@@ -463,6 +497,12 @@ const Settings = ({
     setFieldErrors(null);
     setFormMessage(null);
     setAuthSettings(initialAuthSettings);
+  };
+
+  const resetSeoSettings = () => {
+    setFieldErrors(null);
+    setFormMessage(null);
+    setSeoSettings(initialSeoSettings);
   };
 
   const handleSiteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -557,8 +597,37 @@ const Settings = ({
     });
   };
 
-  const handleSubmit = activeSection === "site" ? handleSiteSubmit : activeSection === "upload" ? handleUploadSubmit : activeSection === "auth" ? handleAuthSubmit : undefined;
-  const handleReset = activeSection === "site" ? resetSiteSettings : activeSection === "upload" ? resetUploadSettings : activeSection === "auth" ? resetAuthSettings : undefined;
+  const handleSeoSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFieldErrors(null);
+    setFormMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const result = await updateSeoSettingsAdminAction(formData);
+
+      if (!result.success) {
+        if (result.fieldErrors) {
+          setFieldErrors(result.fieldErrors);
+
+          if (result.fieldErrors.defaultTitle) defaultTitleRef.current?.focus();
+          else if (result.fieldErrors.titleTemplate) titleTemplateRef.current?.focus();
+          else if (result.fieldErrors.metaDescription) metaDescriptionRef.current?.focus();
+          else if (result.fieldErrors.keywords) keywordsRef.current?.focus();
+        } else {
+          setFormMessage({ type: "error", message: result.message });
+        }
+        return;
+      }
+
+      if (result.data) setSeoSettings(result.data);
+      setFormMessage({ type: "success", message: result.message });
+    });
+  };
+
+  const handleSubmit = activeSection === "site" ? handleSiteSubmit : activeSection === "upload" ? handleUploadSubmit : activeSection === "auth" ? handleAuthSubmit : activeSection === "seo" ? handleSeoSubmit : undefined;
+  const handleReset = activeSection === "site" ? resetSiteSettings : activeSection === "upload" ? resetUploadSettings : activeSection === "auth" ? resetAuthSettings : activeSection === "seo" ? resetSeoSettings : undefined;
 
   return (
     <form className="max-w-screen-2xl mx-auto px-3 py-10" onSubmit={handleSubmit}>
@@ -705,32 +774,101 @@ const Settings = ({
       {activeSection === "seo" && (
         <>
           <SectionShell icon={<Search size={13} />} title="검색 노출" description="문서별 SEO 값이 없을 때 사용할 기본값입니다.">
-            <FieldRow label="타이틀 규칙">
-              <InputField inputTitle="타이틀 접미사" name="titleSuffix" placeholder="| Gjworks" hideLabel />
+            <div className="grid gap-4 md:grid-cols-2">
+              <InlineField title="기본 메타 제목" description="페이지 제목이 명확하지 않을 때 사용할 사이트 대표 제목입니다." settingKey="seo.defaultTitle">
+                <InputField
+                  ref={defaultTitleRef}
+                  inputTitle="기본 메타 제목"
+                  name="defaultTitle"
+                  value={seoSettings.defaultTitle}
+                  onChange={handleSeoInputChange("defaultTitle")}
+                  error={fieldErrors?.defaultTitle}
+                  placeholder="지제이웍스"
+                  hideLabel
+                />
+              </InlineField>
+              <InlineField title="타이틀 규칙" description="%s 자리에 각 페이지 제목이 들어갑니다. 예: %s | 지제이웍스" settingKey="seo.titleTemplate">
+                <InputField
+                  ref={titleTemplateRef}
+                  inputTitle="타이틀 규칙"
+                  name="titleTemplate"
+                  value={seoSettings.titleTemplate}
+                  onChange={handleSeoInputChange("titleTemplate")}
+                  error={fieldErrors?.titleTemplate}
+                  placeholder="%s | 지제이웍스"
+                  hideLabel
+                />
+              </InlineField>
+            </div>
+            <FieldRow label="기본 메타 설명" description="게시글이나 페이지가 별도 설명을 제공하지 않을 때 검색 결과와 공유 미리보기에서 사용합니다.">
+              <textarea
+                ref={metaDescriptionRef}
+                className={textareaClass}
+                name="metaDescription"
+                rows={4}
+                value={seoSettings.metaDescription}
+                onChange={handleSeoInputChange("metaDescription")}
+                placeholder="검색 결과에 노출될 기본 설명"
+              />
+              {fieldErrors?.metaDescription && <div className="mt-1.5 text-xs leading-5 text-red-500">{fieldErrors.metaDescription}</div>}
             </FieldRow>
-            <FieldRow label="기본 메타 설명">
-              <InputField inputTitle="Meta Description" name="metaDescription" placeholder="검색 결과에 노출될 기본 설명" hideLabel />
+            <FieldRow label="기본 키워드" description="쉼표로 구분해서 입력합니다. 최신 검색엔진 영향은 작지만 내부 검색/확장 기능에서 활용할 수 있습니다.">
+              <textarea
+                ref={keywordsRef}
+                className={textareaClass}
+                name="keywords"
+                rows={3}
+                value={seoSettings.keywords || ""}
+                onChange={handleSeoInputChange("keywords")}
+                placeholder="plextype, gjworks, xeant"
+              />
+              {fieldErrors?.keywords && <div className="mt-1.5 text-xs leading-5 text-red-500">{fieldErrors.keywords}</div>}
             </FieldRow>
             <FieldRow label="Robots" description="검색엔진 색인과 링크 추적 기본 정책입니다.">
               <div className="grid gap-4 md:grid-cols-2">
-                <select className={selectClass} name="robotsIndex" defaultValue="index">
+                <select className={selectClass} name="robotsIndex" value={seoSettings.robotsIndex} onChange={handleSeoInputChange("robotsIndex")}>
                   <option value="index">색인 허용</option>
                   <option value="noindex">색인 차단</option>
                 </select>
-                <select className={selectClass} name="robotsFollow" defaultValue="follow">
+                <select className={selectClass} name="robotsFollow" value={seoSettings.robotsFollow} onChange={handleSeoInputChange("robotsFollow")}>
                   <option value="follow">링크 추적 허용</option>
                   <option value="nofollow">링크 추적 차단</option>
                 </select>
               </div>
             </FieldRow>
+            <FieldRow label="소셜 카드" description="X/Twitter 등에서 링크를 공유할 때 사용할 카드 형태입니다. 대표 이미지가 있다면 큰 이미지 카드가 더 잘 보입니다.">
+              <select className={selectClass} name="twitterCard" value={seoSettings.twitterCard} onChange={handleSeoInputChange("twitterCard")}>
+                <option value="summary_large_image">큰 이미지 카드</option>
+                <option value="summary">요약 카드</option>
+              </select>
+            </FieldRow>
           </SectionShell>
 
           <SectionShell icon={<Globe2 size={13} />} title="사이트맵" description="검색엔진에 전달할 URL 범위입니다.">
-            <FieldRow label="사이트맵 사용">
-              <Toggle defaultChecked />
-            </FieldRow>
-            <FieldRow label="게시글 사이트맵 포함">
-              <Toggle defaultChecked />
+            <FieldRow label="사이트맵 정책" description="공개 메뉴와 공개 게시글을 sitemap.xml에 포함할지 정합니다. 비밀글과 외부 링크는 제외됩니다.">
+              <div className="grid gap-4 md:grid-cols-3">
+                <UploadTogglePolicy
+                  title="사이트맵 사용"
+                  description="끄면 sitemap.xml은 빈 목록에 가까운 기본 응답만 반환합니다."
+                  name="sitemapEnabled"
+                  checked={seoSettings.sitemapEnabled}
+                  onChange={handleSeoToggleChange("sitemapEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="페이지 포함"
+                  description="사이트맵 메뉴에 등록된 공개 내부 링크를 포함합니다."
+                  name="includePagesInSitemap"
+                  checked={seoSettings.includePagesInSitemap}
+                  onChange={handleSeoToggleChange("includePagesInSitemap")}
+                />
+                <UploadTogglePolicy
+                  title="게시글 포함"
+                  description="공개 게시판의 일반 게시글 URL을 포함합니다."
+                  name="includePostsInSitemap"
+                  checked={seoSettings.includePostsInSitemap}
+                  onChange={handleSeoToggleChange("includePostsInSitemap")}
+                />
+              </div>
             </FieldRow>
           </SectionShell>
         </>

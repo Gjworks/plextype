@@ -20,6 +20,29 @@ export type SiteSettingsParams = z.infer<typeof SiteSettingsSchema>;
 
 export type SiteSettingsData = SiteSettingsParams;
 
+export const SeoSettingsSchema = z.object({
+  defaultTitle: z.string().trim().min(1, "기본 메타 제목을 입력해주세요.").max(120, "기본 메타 제목은 120자 이하로 입력해주세요."),
+  titleTemplate: z.string().trim().min(1, "타이틀 규칙을 입력해주세요.").max(120, "타이틀 규칙은 120자 이하로 입력해주세요."),
+  metaDescription: z.string().trim().min(1, "기본 메타 설명을 입력해주세요.").max(300, "기본 메타 설명은 300자 이하로 입력해주세요."),
+  keywords: z.string().trim().max(300, "키워드는 300자 이하로 입력해주세요.").optional().or(z.literal("")),
+  robotsIndex: z.enum(["index", "noindex"], {
+    error: "색인 정책을 선택해주세요.",
+  }),
+  robotsFollow: z.enum(["follow", "nofollow"], {
+    error: "링크 추적 정책을 선택해주세요.",
+  }),
+  twitterCard: z.enum(["summary", "summary_large_image"], {
+    error: "Twitter 카드 타입을 선택해주세요.",
+  }),
+  sitemapEnabled: z.boolean(),
+  includePagesInSitemap: z.boolean(),
+  includePostsInSitemap: z.boolean(),
+});
+
+export type SeoSettingsParams = z.infer<typeof SeoSettingsSchema>;
+
+export type SeoSettingsData = SeoSettingsParams;
+
 export const UploadSettingsSchema = z.object({
   maxUploadSizeMb: z.coerce.number().int().min(1, "파일당 용량은 1MB 이상이어야 합니다.").max(500, "파일당 용량은 500MB 이하로 입력해주세요."),
   userStorageLimitMb: z.coerce.number().int().min(1, "사용자별 용량은 1MB 이상이어야 합니다.").max(102400, "사용자별 용량이 너무 큽니다."),

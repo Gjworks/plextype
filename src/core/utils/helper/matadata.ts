@@ -1,49 +1,69 @@
 
 import type { Metadata } from "next";
-import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
+import { getPublicSiteSettingsAction, getSeoSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
 
 interface SeoOptions {
-  title: string;
+  title?: string;
   description?: string;
   image?: string;
   url?: string;
+  type?: "website" | "article";
 }
 
 export async function getSeoMetadata({
-                                 title,
-                                 description = "Plextype으로 만든 멋진 사이트입니다.", // 기본 설명
-                                 image = "/default-og.png", // 기본 OG 이미지
-                                 url, // 이제 호출 시 없으면 환경변수에서 가져옵니다.
-                               }: SeoOptions): Promise<Metadata> {
+  title,
+  description,
+  image,
+  url,
+  type = "website",
+}: SeoOptions): Promise<Metadata> {
+  const [settings, seoSettings] = await Promise.all([
+    getPublicSiteSettingsAction(),
+    getSeoSettingsRuntimeAction(),
+  ]);
 
-  const settings = await getPublicSiteSettingsAction();
   const siteTitle = settings.data?.projectTitle || "Plextype";
   const siteUrl = settings.data?.siteUrl || "http://localhost:3000";
-
-  // 최종 타이틀 구성 (예: "공지사항 | Plextype")
-  const fullTitle = `${title} - ${siteTitle}`;
-  const fullUrl = url ? `${siteUrl}${url}` : siteUrl;
+  const baseUrl = siteUrl.endsWith("/") ? siteUrl.slice(0, -1) : siteUrl;
+  const pageTitle = title?.trim() || seoSettings.defaultTitle || siteTitle;
+  const fullTitle = seoSettings.titleTemplate.includes("%s")
+    ? seoSettings.titleTemplate.replace("%s", pageTitle)
+    : `${pageTitle} ${seoSettings.titleTemplate}`.trim();
+  const metaDescription = description?.trim() || seoSettings.metaDescription;
+  const imageUrl = image || settings.data?.defaultOgImage || "/default-og.png";
+  const fullUrl = url ? `${baseUrl}${url.startsWith("/") ? url : `/${url}`}` : baseUrl;
+  const keywords = seoSettings.keywords
+    ? seoSettings.keywords.split(",").map((keyword) => keyword.trim()).filter(Boolean)
+    : undefined;
 
   return {
+    metadataBase: new URL(baseUrl),
     title: fullTitle,
-    description,
+    description: metaDescription,
+    keywords,
+    alternates: {
+      canonical: fullUrl,
+    },
+    robots: {
+      index: seoSettings.robotsIndex === "index",
+      follow: seoSettings.robotsFollow === "follow",
+    },
     openGraph: {
       title: fullTitle,
-      description,
+      description: metaDescription,
       url: fullUrl,
-      siteName: siteTitle, // 사이트 이름 추가
-      images: [{ url: image }],
-      type: "website",
+      siteName: siteTitle,
+      images: [{ url: imageUrl }],
+      type,
     },
     twitter: {
-      card: "summary_large_image",
+      card: seoSettings.twitterCard,
       title: fullTitle,
-      description,
-      images: [image],
+      description: metaDescription,
+      images: [imageUrl],
     },
-    // 파비콘 설정 같은 것도 여기에 통합해두면 편해요!
     icons: {
-      icon: "/favicon.ico",
+      icon: settings.data?.faviconPath || "/favicon.ico",
     },
   };
 }

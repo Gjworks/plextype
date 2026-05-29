@@ -4,8 +4,8 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { getUserSessionAction } from "@/modules/user/actions/user.action";
 import { validateForm } from "@utils/validation/formValidator";
-import { ActionState, AuthSettingsData, AuthSettingsSchema, SiteSettingsData, SiteSettingsSchema, UploadSettingsData, UploadSettingsSchema } from "./_type";
-import { getSettingsByKeysQuery, SettingSeed, upsertSettingsQuery } from "./settings.query";
+import { ActionState, AuthSettingsData, AuthSettingsSchema, SeoSettingsData, SeoSettingsSchema, SiteSettingsData, SiteSettingsSchema, UploadSettingsData, UploadSettingsSchema } from "./_type";
+import { getPublicPageSitemapEntriesQuery, getPublicPostSitemapEntriesQuery, getSettingsByKeysQuery, SettingSeed, upsertSettingsQuery } from "./settings.query";
 import redisClient from "@utils/redis/redis";
 import { v4 as uuidv4 } from "uuid";
 import { assertDecodableImage, detectMimeTypeFromBuffer, isMimeCompatibleWithExtension } from "@/core/utils/file/fileValidation";
@@ -19,6 +19,7 @@ import {
 
 const SITE_SETTINGS_CACHE_KEY = "app:settings:site";
 const UPLOAD_SETTINGS_CACHE_KEY = "app:settings:upload";
+const SEO_SETTINGS_CACHE_KEY = "app:settings:seo";
 const SITE_SETTINGS_CACHE_TTL = 60 * 60 * 24;
 const SITE_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
 const SITE_IMAGE_ALLOWED_EXTS = new Set([".png", ".jpg", ".jpeg", ".gif", ".avif", ".webp", ".ico"]);
@@ -176,6 +177,71 @@ const UPLOAD_SETTING_META = {
 
 const UPLOAD_SETTING_KEYS = Object.values(UPLOAD_SETTING_META).map((item) => item.key);
 
+const SEO_SETTING_META = {
+  defaultTitle: {
+    key: "seo.defaultTitle",
+    label: "기본 메타 제목",
+    fallback: "Plextype",
+    isPublic: true,
+  },
+  titleTemplate: {
+    key: "seo.titleTemplate",
+    label: "타이틀 규칙",
+    fallback: "%s | Plextype",
+    isPublic: true,
+  },
+  metaDescription: {
+    key: "seo.metaDescription",
+    label: "기본 메타 설명",
+    fallback: "Plextype으로 만든 사이트입니다.",
+    isPublic: true,
+  },
+  keywords: {
+    key: "seo.keywords",
+    label: "기본 키워드",
+    fallback: "",
+    isPublic: true,
+  },
+  robotsIndex: {
+    key: "seo.robotsIndex",
+    label: "색인 정책",
+    fallback: "index",
+    isPublic: true,
+  },
+  robotsFollow: {
+    key: "seo.robotsFollow",
+    label: "링크 추적 정책",
+    fallback: "follow",
+    isPublic: true,
+  },
+  twitterCard: {
+    key: "seo.twitterCard",
+    label: "Twitter 카드",
+    fallback: "summary_large_image",
+    isPublic: true,
+  },
+  sitemapEnabled: {
+    key: "seo.sitemapEnabled",
+    label: "사이트맵 사용",
+    fallback: "true",
+    isPublic: true,
+  },
+  includePagesInSitemap: {
+    key: "seo.includePagesInSitemap",
+    label: "페이지 사이트맵 포함",
+    fallback: "true",
+    isPublic: true,
+  },
+  includePostsInSitemap: {
+    key: "seo.includePostsInSitemap",
+    label: "게시글 사이트맵 포함",
+    fallback: "true",
+    isPublic: true,
+  },
+} as const;
+
+const SEO_SETTING_KEYS = Object.values(SEO_SETTING_META).map((item) => item.key);
+
 const getEnvFallback = (name: keyof typeof SITE_SETTING_META) => {
   const meta = SITE_SETTING_META[name];
   return process.env[meta.env] || meta.fallback;
@@ -220,6 +286,18 @@ const readUploadSettingsCache = async (): Promise<UploadSettingsData | null> => 
   }
 };
 
+const readSeoSettingsCache = async (): Promise<SeoSettingsData | null> => {
+  try {
+    const cached = await redisClient.get(SEO_SETTINGS_CACHE_KEY);
+    if (!cached) return null;
+
+    return SeoSettingsSchema.parse(JSON.parse(cached));
+  } catch (error) {
+    console.warn("readSeoSettingsCache Warning:", error);
+    return null;
+  }
+};
+
 const writeSiteSettingsCache = async (data: SiteSettingsData) => {
   try {
     await redisClient.set(
@@ -246,10 +324,40 @@ const writeUploadSettingsCache = async (data: UploadSettingsData) => {
   }
 };
 
+const writeSeoSettingsCache = async (data: SeoSettingsData) => {
+  try {
+    await redisClient.set(
+      SEO_SETTINGS_CACHE_KEY,
+      JSON.stringify(data),
+      "EX",
+      SITE_SETTINGS_CACHE_TTL,
+    );
+  } catch (error) {
+    console.warn("writeSeoSettingsCache Warning:", error);
+  }
+};
+
 const toBool = (value: string | null | undefined, fallback: boolean) => {
   if (value === "true") return true;
   if (value === "false") return false;
   return fallback;
+};
+
+const mapRecordsToSeoSettings = (records: Awaited<ReturnType<typeof getSettingsByKeysQuery>>): SeoSettingsData => {
+  const values = new Map(records.map((record) => [record.key, record.value || ""]));
+
+  return {
+    defaultTitle: values.get(SEO_SETTING_META.defaultTitle.key) || SEO_SETTING_META.defaultTitle.fallback,
+    titleTemplate: values.get(SEO_SETTING_META.titleTemplate.key) || SEO_SETTING_META.titleTemplate.fallback,
+    metaDescription: values.get(SEO_SETTING_META.metaDescription.key) || SEO_SETTING_META.metaDescription.fallback,
+    keywords: values.get(SEO_SETTING_META.keywords.key) || SEO_SETTING_META.keywords.fallback,
+    robotsIndex: (values.get(SEO_SETTING_META.robotsIndex.key) || SEO_SETTING_META.robotsIndex.fallback) as SeoSettingsData["robotsIndex"],
+    robotsFollow: (values.get(SEO_SETTING_META.robotsFollow.key) || SEO_SETTING_META.robotsFollow.fallback) as SeoSettingsData["robotsFollow"],
+    twitterCard: (values.get(SEO_SETTING_META.twitterCard.key) || SEO_SETTING_META.twitterCard.fallback) as SeoSettingsData["twitterCard"],
+    sitemapEnabled: toBool(values.get(SEO_SETTING_META.sitemapEnabled.key), true),
+    includePagesInSitemap: toBool(values.get(SEO_SETTING_META.includePagesInSitemap.key), true),
+    includePostsInSitemap: toBool(values.get(SEO_SETTING_META.includePostsInSitemap.key), true),
+  };
 };
 
 const mapRecordsToUploadSettings = (records: Awaited<ReturnType<typeof getSettingsByKeysQuery>>): UploadSettingsData => {
@@ -450,6 +558,91 @@ const toUploadSettingSeeds = (data: UploadSettingsData): SettingSeed[] => {
   ];
 };
 
+const toSeoSettingSeeds = (data: SeoSettingsData): SettingSeed[] => {
+  return [
+    {
+      key: SEO_SETTING_META.defaultTitle.key,
+      value: data.defaultTitle,
+      group: "seo",
+      label: SEO_SETTING_META.defaultTitle.label,
+      description: "사이트 기본 메타 제목입니다.",
+      isPublic: SEO_SETTING_META.defaultTitle.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.titleTemplate.key,
+      value: data.titleTemplate,
+      group: "seo",
+      label: SEO_SETTING_META.titleTemplate.label,
+      description: "%s 자리에 페이지 제목을 넣어 최종 title을 만듭니다.",
+      isPublic: SEO_SETTING_META.titleTemplate.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.metaDescription.key,
+      value: data.metaDescription,
+      group: "seo",
+      label: SEO_SETTING_META.metaDescription.label,
+      description: "문서별 설명이 없을 때 사용할 기본 메타 설명입니다.",
+      isPublic: SEO_SETTING_META.metaDescription.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.keywords.key,
+      value: data.keywords || "",
+      group: "seo",
+      label: SEO_SETTING_META.keywords.label,
+      description: "쉼표로 구분한 기본 키워드입니다.",
+      isPublic: SEO_SETTING_META.keywords.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.robotsIndex.key,
+      value: data.robotsIndex,
+      group: "seo",
+      label: SEO_SETTING_META.robotsIndex.label,
+      description: "검색엔진 색인 허용 여부입니다.",
+      isPublic: SEO_SETTING_META.robotsIndex.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.robotsFollow.key,
+      value: data.robotsFollow,
+      group: "seo",
+      label: SEO_SETTING_META.robotsFollow.label,
+      description: "검색엔진 링크 추적 허용 여부입니다.",
+      isPublic: SEO_SETTING_META.robotsFollow.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.twitterCard.key,
+      value: data.twitterCard,
+      group: "seo",
+      label: SEO_SETTING_META.twitterCard.label,
+      description: "소셜 공유 시 사용할 Twitter 카드 타입입니다.",
+      isPublic: SEO_SETTING_META.twitterCard.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.sitemapEnabled.key,
+      value: String(data.sitemapEnabled),
+      group: "seo",
+      label: SEO_SETTING_META.sitemapEnabled.label,
+      description: "동적 사이트맵 생성 여부입니다.",
+      isPublic: SEO_SETTING_META.sitemapEnabled.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.includePagesInSitemap.key,
+      value: String(data.includePagesInSitemap),
+      group: "seo",
+      label: SEO_SETTING_META.includePagesInSitemap.label,
+      description: "공개 페이지 메뉴를 사이트맵에 포함할지 정합니다.",
+      isPublic: SEO_SETTING_META.includePagesInSitemap.isPublic,
+    },
+    {
+      key: SEO_SETTING_META.includePostsInSitemap.key,
+      value: String(data.includePostsInSitemap),
+      group: "seo",
+      label: SEO_SETTING_META.includePostsInSitemap.label,
+      description: "공개 게시글을 사이트맵에 포함할지 정합니다.",
+      isPublic: SEO_SETTING_META.includePostsInSitemap.isPublic,
+    },
+  ];
+};
+
 const isFileLike = (value: FormDataEntryValue | null): value is File => {
   return typeof value === "object" && value !== null && "arrayBuffer" in value && "size" in value && "name" in value;
 };
@@ -625,6 +818,40 @@ export const getAuthSettingsAdminAction = async (): Promise<ActionState<AuthSett
   }
 };
 
+export const getSeoSettingsAdminAction = async (): Promise<ActionState<SeoSettingsData>> => {
+  const sessionInfo = await getUserSessionAction();
+
+  if (!sessionInfo?.data?.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  try {
+    const cached = await readSeoSettingsCache();
+    if (cached) {
+      return {
+        success: true,
+        type: "success",
+        message: "SEO 설정을 불러왔습니다.",
+        data: cached,
+      };
+    }
+
+    const records = await getSettingsByKeysQuery(SEO_SETTING_KEYS);
+    const data = mapRecordsToSeoSettings(records);
+    await writeSeoSettingsCache(data);
+
+    return {
+      success: true,
+      type: "success",
+      message: "SEO 설정을 불러왔습니다.",
+      data,
+    };
+  } catch (error) {
+    console.error("getSeoSettingsAdminAction Error:", error);
+    return { success: false, type: "error", message: "SEO 설정을 불러오지 못했습니다." };
+  }
+};
+
 export const getUploadSettingsRuntimeAction = async (): Promise<UploadSettingsData> => {
   const cached = await readUploadSettingsCache();
   if (cached) return cached;
@@ -634,6 +861,66 @@ export const getUploadSettingsRuntimeAction = async (): Promise<UploadSettingsDa
   await writeUploadSettingsCache(data);
 
   return data;
+};
+
+export const getSeoSettingsRuntimeAction = async (): Promise<SeoSettingsData> => {
+  const cached = await readSeoSettingsCache();
+  if (cached) return cached;
+
+  try {
+    const records = await getSettingsByKeysQuery(SEO_SETTING_KEYS);
+    const data = mapRecordsToSeoSettings(records);
+    await writeSeoSettingsCache(data);
+
+    return data;
+  } catch (error) {
+    console.error("getSeoSettingsRuntimeAction Error:", error);
+    return mapRecordsToSeoSettings([]);
+  }
+};
+
+export const getPublicSitemapEntriesAction = async () => {
+  try {
+    const [seoSettings, siteSettings] = await Promise.all([
+      getSeoSettingsRuntimeAction(),
+      getPublicSiteSettingsAction(),
+    ]);
+
+    if (!seoSettings.sitemapEnabled) {
+      return {
+        success: true,
+        type: "success",
+        message: "사이트맵이 비활성화되어 있습니다.",
+        data: { siteUrl: siteSettings.data?.siteUrl || "http://localhost:3000", entries: [] },
+      };
+    }
+
+    const [pageEntries, postEntries] = await Promise.all([
+      seoSettings.includePagesInSitemap ? getPublicPageSitemapEntriesQuery() : Promise.resolve([]),
+      seoSettings.includePostsInSitemap ? getPublicPostSitemapEntriesQuery() : Promise.resolve([]),
+    ]);
+
+    const entries = [...pageEntries, ...postEntries];
+    const uniqueEntries = Array.from(new Map(entries.map((entry) => [entry.url, entry])).values());
+
+    return {
+      success: true,
+      type: "success",
+      message: "사이트맵 데이터를 불러왔습니다.",
+      data: {
+        siteUrl: siteSettings.data?.siteUrl || "http://localhost:3000",
+        entries: uniqueEntries,
+      },
+    };
+  } catch (error) {
+    console.error("getPublicSitemapEntriesAction Error:", error);
+    return {
+      success: true,
+      type: "success",
+      message: "사이트맵 기본값을 사용합니다.",
+      data: { siteUrl: "http://localhost:3000", entries: [] },
+    };
+  }
 };
 
 export const updateSiteSettingsAdminAction = async (formData: FormData): Promise<ActionState<SiteSettingsData>> => {
@@ -689,6 +976,45 @@ export const updateSiteSettingsAdminAction = async (formData: FormData): Promise
       type: "error",
       message: error instanceof Error ? error.message : "사이트 기본정보 저장에 실패했습니다.",
     };
+  }
+};
+
+export const updateSeoSettingsAdminAction = async (formData: FormData): Promise<ActionState<SeoSettingsData>> => {
+  const sessionInfo = await getUserSessionAction();
+
+  if (!sessionInfo?.data?.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  const formPayload = {
+    defaultTitle: formData.get("defaultTitle"),
+    titleTemplate: formData.get("titleTemplate"),
+    metaDescription: formData.get("metaDescription"),
+    keywords: formData.get("keywords"),
+    robotsIndex: formData.get("robotsIndex"),
+    robotsFollow: formData.get("robotsFollow"),
+    twitterCard: formData.get("twitterCard"),
+    sitemapEnabled: formData.has("sitemapEnabled"),
+    includePagesInSitemap: formData.has("includePagesInSitemap"),
+    includePostsInSitemap: formData.has("includePostsInSitemap"),
+  };
+
+  const validation = validateForm(SeoSettingsSchema, formPayload);
+  if (!validation.isValid) return validation.errorResponse;
+
+  try {
+    await upsertSettingsQuery(toSeoSettingSeeds(validation.data));
+    await writeSeoSettingsCache(validation.data);
+
+    return {
+      success: true,
+      type: "success",
+      message: "SEO 설정이 저장되었습니다.",
+      data: validation.data,
+    };
+  } catch (error) {
+    console.error("updateSeoSettingsAdminAction Error:", error);
+    return { success: false, type: "error", message: "SEO 설정 저장에 실패했습니다." };
   }
 };
 

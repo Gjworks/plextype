@@ -6,6 +6,11 @@ import Log from "@/core/utils/debug/Log";
 export const dynamic = 'force-dynamic';
 import { ToastContainer } from "@/core/components/toast/toast";
 import RealtimeNotificationListener from "@/core/components/toast/RealtimeNotificationListener";
+import { getSeoMetadata } from "@/core/utils/helper/matadata";
+
+export async function generateMetadata() {
+  return getSeoMetadata({});
+}
 
 export default function RootLayout({ children }) {
   if (typeof globalThis.Log === "undefined") {
