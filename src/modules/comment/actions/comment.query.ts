@@ -56,6 +56,7 @@ export async function insertComment(data: any) {
           id: true,
           slug:true,
           userId: true, // 게시글 작성자
+          extraFieldData: true,
           module: { select: { mid: true } }
         }
       },
@@ -70,8 +71,16 @@ export async function insertComment(data: any) {
   const targetUserId = result.parentId ? result.parent?.userId : result.document.userId;
 
   const notificationTitle = result.parentId ? "💬 내 댓글에 답글이 달렸습니다" : "💬 새 댓글이 달렸습니다";
+  const documentExtraFieldData = result.document.extraFieldData as Record<string, any> | null;
+  const documentNotificationEnabled = documentExtraFieldData?.notificationEnabled !== false && documentExtraFieldData?.notificationEnabled !== "false";
 
-  return { ...result, targetUserId, notificationTitle };
+  return {
+    ...result,
+    targetUserId,
+    notificationTitle,
+    notificationSubType: result.parentId ? "reply" : "comment",
+    documentNotificationEnabled,
+  };
 }
 
 export async function updateComment(id: number, data: any) {

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { deleteAttachmentAction } from "@/modules/attachment/actions/attachment.action";
 import { removeCommentAction } from "@/modules/comment/actions/comment.action";
 import { removeDocumentAction } from "@/modules/document/actions/document.action";
-import { saveNotification } from "@/modules/notification/actions/notification.action";
+import { dispatchNotificationAction } from "@/modules/notification/actions/notification.action";
 import { getUserSessionAction } from "@/modules/user/actions/user.action";
 import { ActionState } from "@/modules/admin/actions/_type";
 import {
@@ -195,8 +195,9 @@ const notifyDeletedOwner = async ({
 }) => {
   if (!userId || userId === actorId) return;
 
-  await saveNotification({
+  await dispatchNotificationAction({
     userId,
+    actorId,
     type: "warning",
     title,
     content,
@@ -204,7 +205,7 @@ const notifyDeletedOwner = async ({
     metadata: {
       appId: "gjworks",
       groupKey: "ADMIN_CONTENT",
-      subType: contentType,
+      subType: contentType === "comment" ? "admin-comment" : contentType,
     },
   });
 };

@@ -22,6 +22,7 @@ interface UpsertCommentArgs {
   content: string;
   parentId?: number;
   commentId?: number;
+  notificationEnabled?: boolean;
   options?: { deleted?: boolean; remove?: boolean };
 }
 
@@ -47,6 +48,7 @@ interface CommentsListProps {
     content: string;
     parentId?: number;
     commentId?: number;
+    notificationEnabled?: boolean;
     options?: { deleted?: boolean; remove?: boolean };
   }) => Promise<UpsertResponse>;
 
@@ -81,6 +83,8 @@ export default function CommentsList({
   const [modalParent, setModalParent] = useState<ParentComment | null>(null);
   const [commentsState, setCommentsState] = useState(commentsData);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [newNotificationEnabled, setNewNotificationEnabled] = useState(true);
+  const [modalNotificationEnabled, setModalNotificationEnabled] = useState(true);
   const { permissions } = usePostContext();
 
   // props로 넘어온 데이터가 변경되면 내부 상태도 동기화
@@ -156,7 +160,7 @@ export default function CommentsList({
     setLoading(true);
     try {
       const jsonContent = editorRef.current.getJSON();
-      const result = await upsertComment({ documentId, content: JSON.stringify(jsonContent) });
+      const result = await upsertComment({ documentId, content: JSON.stringify(jsonContent), notificationEnabled: newNotificationEnabled });
 
       // 🌟 result.item 혹은 (result as any).data 둘 다 확인하도록 수정
       const newComment = result.item || (result as any).data;
@@ -175,6 +179,7 @@ export default function CommentsList({
 
         // ✅ 여기서 확실하게 비워줍니다!
         setNewContent("");
+        setNewNotificationEnabled(true);
         setIsComposerOpen(false);
         editorRef.current.commands.clearContent();
         router.refresh();
@@ -223,6 +228,7 @@ export default function CommentsList({
         content: modalContent,
         parentId: isEditMode ? undefined : currentTarget?.id,
         commentId: isEditMode ? currentTarget?.id : undefined,
+        notificationEnabled: isEditMode ? undefined : modalNotificationEnabled,
       });
 
       // 🌟 여기도 마찬가지로 데이터 키값 확인
@@ -287,6 +293,7 @@ export default function CommentsList({
   const openReplyModal = (comment: CommentWithChildren) => {
     setCurrentTarget(comment);
     setModalContent("");
+    setModalNotificationEnabled(true);
     setIsEditMode(false);
     setShowModal(true);
 
@@ -302,6 +309,7 @@ export default function CommentsList({
   const openEditModal = (comment: CommentWithChildren) => {
     setCurrentTarget(comment);
     setModalContent(comment.content);
+    setModalNotificationEnabled(true);
     setIsEditMode(true);
     setShowModal(true);
   };
@@ -533,6 +541,15 @@ export default function CommentsList({
                   <span className="text-[10px] text-gray-300 font-mono tracking-tighter">
           {newContent.length} / 1000 characters
         </span>
+                  <label className="mt-2 flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400">
+                    <input
+                      type="checkbox"
+                      checked={newNotificationEnabled}
+                      onChange={(event) => setNewNotificationEnabled(event.target.checked)}
+                      className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-blue-500"
+                    />
+                    이 댓글의 답글 알림 받기
+                  </label>
                 </div>
 
                 {/* 오른쪽: 등록 버튼 */}
@@ -677,11 +694,19 @@ export default function CommentsList({
 
                 {/* 입력창 하단: 툴바 스타일 */}
                 <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
-                  <div className="flex gap-2">
-                    {/* 나중에 이모지나 파일첨부 버튼이 들어갈 자리 */}
-                    <div className="w-2 h-2 rounded-full bg-gray-200" />
-                    <div className="w-2 h-2 rounded-full bg-gray-200" />
-                  </div>
+                  {!isEditMode ? (
+                    <label className="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400">
+                      <input
+                        type="checkbox"
+                        checked={modalNotificationEnabled}
+                        onChange={(event) => setModalNotificationEnabled(event.target.checked)}
+                        className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-blue-500"
+                      />
+                      답글 알림 받기
+                    </label>
+                  ) : (
+                    <span className="text-[10px] text-gray-300">댓글 내용을 수정합니다.</span>
+                  )}
                   <span className="text-[10px] text-gray-400 font-mono tracking-tight">
             {modalContent.length} / 1000
           </span>

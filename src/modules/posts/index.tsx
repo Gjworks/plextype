@@ -202,6 +202,9 @@ async function PostComments({
     if (data.commentId) formData.append("id", data.commentId.toString());
     formData.append("documentId", id.toString());
     formData.append("content", data.content);
+    if (typeof data.notificationEnabled === "boolean") {
+      formData.append("notificationEnabled", data.notificationEnabled ? "true" : "false");
+    }
     if (data.parentId) formData.append("parentId", data.parentId.toString());
     return await saveCommentAction(formData, path);
   }

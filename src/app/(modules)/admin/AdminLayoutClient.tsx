@@ -137,6 +137,23 @@ const getAdminBreadcrumbs = (pathname: string) => {
   return [sectionLabel, (candidate || 'OVERVIEW').replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase()]
 }
 
+const cleanAdminPath = (path: string) => {
+  if (!path || path === '/') return path
+  return path.replace(/\/+$/, '')
+}
+
+const isAdminIndexHref = (href: string) => href === '/admin' || href === '/admin/settings'
+
+const isAdminPathActive = (pathname: string, href: string) => {
+  const cleanedPath = cleanAdminPath(pathname)
+  const cleanedHref = cleanAdminPath(href)
+
+  if (cleanedPath === cleanedHref) return true
+  if (isAdminIndexHref(cleanedHref)) return false
+
+  return cleanedPath.startsWith(`${cleanedHref}/`)
+}
+
 const AdminLayoutClient = ({
   children,
   appName,
@@ -148,8 +165,7 @@ const AdminLayoutClient = ({
 }) => {
   const pathname = usePathname()
   // 1️⃣ 공통 유틸: 경로 끝의 슬래시 제거
-  const cleanPath = (p: string) => p.replace(/\/$/, '')
-  const normalizedPathname = cleanPath(pathname ?? '')
+  const normalizedPathname = cleanAdminPath(pathname ?? '')
   const [isHovered, setIsHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showRight, setShowRight] = useState(false)
@@ -284,10 +300,10 @@ const AdminLayoutClient = ({
 
     const parent = MENU_CONFIG.find(menu => {
       // 대메뉴 자체 href와 일치하거나
-      if (menu.href && cleanPath(menu.href) === baseCategoryPath) return true
+      if (menu.href && cleanAdminPath(menu.href) === baseCategoryPath) return true
 
       // 서브 아이템 중 하나라도 대분류 경로와 일치하는게 있는지 확인
-      return menu.items?.some(sub => cleanPath(sub.href).startsWith(baseCategoryPath))
+      return menu.items?.some(sub => cleanAdminPath(sub.href).startsWith(baseCategoryPath))
     })
 
     return parent?.items || null
@@ -449,8 +465,7 @@ const AdminLayoutClient = ({
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="shrink-0 border-b border-gray-100 bg-white/50 backdrop-blur-sm px-6 md:px-10">
                     <div className="flex items-center gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
                       {activeSubMenus.map(sub => {
-                        const subHref = cleanPath(sub.href)
-                        const isSubActive = normalizedPathname === subHref || normalizedPathname.startsWith(`${subHref}/`)
+                        const isSubActive = isAdminPathActive(normalizedPathname, sub.href)
 
                         return (
                           <Link key={sub.href} href={sub.href} className="relative py-4 shrink-0">
@@ -495,36 +510,20 @@ const AdminLayoutClient = ({
 const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
   const pathname = usePathname()
   const router = useRouter()
-  const cleanPath = (p: string) => p.replace(/\/$/, '')
-  const normalizedPathname = cleanPath(pathname ?? '')
+  const normalizedPathname = cleanAdminPath(pathname ?? '')
 
   // 🌟 1. 활성화 판별 로직 고도화
   const isActive = useMemo(() => {
-    const pathSegments = normalizedPathname.split('/')
-    const currentBase = pathSegments.slice(0, 3).join('/') // "/admin/posts" 등
-
     // [Case A] 서브 메뉴가 있는 아코디언 메뉴 (Posts, Settings 등)
     if (menu.items) {
       return menu.items.some((sub: any) => {
-        const subHref = cleanPath(sub.href)
-        const subBase = subHref.split('/').slice(0, 3).join('/')
-
-        // 현재 주소가 서브 메뉴로 시작하거나, 대분류(Prefix)가 같으면 활성화
-        return normalizedPathname.startsWith(subHref) || subBase === currentBase
+        return isAdminPathActive(normalizedPathname, sub.href)
       })
     }
 
     // [Case B] 단일 메뉴 (Dashboard 등)
     if (menu.href) {
-      const targetHref = cleanPath(menu.href)
-
-      // 🌟 핵심: 대시보드(/admin)는 '정확히' 일치할 때만 활성화
-      // 그 외의 단일 메뉴는 'startsWith'로 처리
-      if (targetHref === '/admin') {
-        return normalizedPathname === '/admin'
-      }
-
-      return normalizedPathname.startsWith(targetHref)
+      return isAdminPathActive(normalizedPathname, menu.href)
     }
 
     return false
@@ -532,25 +531,7 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
 
   // 🌟 2. 하위 메뉴 중 정확히 어디에 불을 켤지 결정 (isChildActive)
   const isChildActive = (subHref: string) => {
-    const cleanedSub = cleanPath(subHref)
-
-    // 🌟 1. 정확히 일치하면 당연히 True
-    if (normalizedPathname === cleanedSub) return true
-
-    if (cleanedSub === '/admin/settings') return false
-
-    // 🌟 2. 동적 경로(/2/categories 등) 대응 로직
-    const subSegments = cleanedSub.split('/') // ["", "admin", "user", "list"]
-    const pathSegments = normalizedPathname.split('/') // ["", "admin", "posts", "list"]
-
-    // 핵심: 대분류 카테고리(index 2번: user vs posts)가 다르면 무조건 탈락!
-    const isSameCategory = subSegments[2] === pathSegments[2]
-
-    // 소분류 키워드(list, category 등) 포함 여부 확인
-    const subKeyword = [...subSegments].pop() // 원본 훼손 방지를 위해 복사 후 pop
-    const hasKeyword = normalizedPathname.includes(subKeyword || '')
-
-    return isSameCategory && hasKeyword
+    return isAdminPathActive(normalizedPathname, subHref)
   }
 
   const [isOpen, setIsOpen] = useState(isActive)

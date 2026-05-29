@@ -12,8 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { AuthSettingsData, SeoSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
-import { updateAuthSettingsAdminAction, updateSeoSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
+import { AuthSettingsData, NotificationSettingsData, SeoSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
+import { updateAuthSettingsAdminAction, updateNotificationSettingsAdminAction, updateSeoSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 
@@ -25,6 +25,7 @@ type SettingsProps = {
   initialUploadSettings?: UploadSettingsData;
   initialAuthSettings?: AuthSettingsData;
   initialSeoSettings?: SeoSettingsData;
+  initialNotificationSettings?: NotificationSettingsData;
 };
 
 const sectionMeta: Record<SettingsSection, {
@@ -166,7 +167,7 @@ const Toggle = ({
       <button
         type="button"
         onClick={handleClick}
-        className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500"
+        className="relative block h-6 w-11 min-w-11 shrink-0 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500"
         data-checked={active}
         aria-pressed={active}
       >
@@ -326,7 +327,7 @@ const UploadTogglePolicy = ({
 }) => {
   return (
     <div className="flex items-center justify-between gap-4 rounded-md border border-gray-100 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
-      <div>
+      <div className="min-w-0">
         <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{title}</div>
         <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
       </div>
@@ -392,12 +393,27 @@ const defaultSeoSettings: SeoSettingsData = {
   includePostsInSitemap: true,
 };
 
+const defaultNotificationSettings: NotificationSettingsData = {
+  commentNotificationsEnabled: true,
+  replyNotificationsEnabled: true,
+  adminContentNotificationsEnabled: true,
+  forceLogoutNotificationsEnabled: true,
+  excludeSelfNotifications: true,
+  realtimeNotificationsEnabled: true,
+  toastNotificationsEnabled: true,
+  showNotificationThumbnails: true,
+  unreadPreviewLimit: 20,
+  historyPageSize: 20,
+  retentionDays: 90,
+};
+
 const Settings = ({
   section = "site",
   initialSiteSettings = defaultSiteSettings,
   initialUploadSettings = defaultUploadSettings,
   initialAuthSettings = defaultAuthSettings,
   initialSeoSettings = defaultSeoSettings,
+  initialNotificationSettings = defaultNotificationSettings,
 }: SettingsProps) => {
   const activeSection = sectionMeta[section] ? section : "site";
   const meta = useMemo(() => sectionMeta[activeSection], [activeSection]);
@@ -406,6 +422,7 @@ const Settings = ({
   const [uploadSettings, setUploadSettings] = useState<UploadSettingsData>(initialUploadSettings);
   const [authSettings, setAuthSettings] = useState<AuthSettingsData>(initialAuthSettings);
   const [seoSettings, setSeoSettings] = useState<SeoSettingsData>(initialSeoSettings);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettingsData>(initialNotificationSettings);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const appNameRef = useRef<HTMLInputElement>(null);
@@ -429,6 +446,9 @@ const Settings = ({
   const titleTemplateRef = useRef<HTMLInputElement>(null);
   const metaDescriptionRef = useRef<HTMLTextAreaElement>(null);
   const keywordsRef = useRef<HTMLTextAreaElement>(null);
+  const unreadPreviewLimitRef = useRef<HTMLInputElement>(null);
+  const historyPageSizeRef = useRef<HTMLInputElement>(null);
+  const retentionDaysRef = useRef<HTMLInputElement>(null);
 
   const handleSiteChange = (field: keyof SiteSettingsData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setSiteSettings((prev) => ({
@@ -481,6 +501,20 @@ const Settings = ({
     }));
   };
 
+  const handleNotificationInputChange = (field: keyof NotificationSettingsData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNotificationSettings((prev) => ({
+      ...prev,
+      [field]: Number(e.target.value),
+    }));
+  };
+
+  const handleNotificationToggleChange = (field: keyof NotificationSettingsData) => (checked: boolean) => {
+    setNotificationSettings((prev) => ({
+      ...prev,
+      [field]: checked,
+    }));
+  };
+
   const resetSiteSettings = () => {
     setFieldErrors(null);
     setFormMessage(null);
@@ -503,6 +537,12 @@ const Settings = ({
     setFieldErrors(null);
     setFormMessage(null);
     setSeoSettings(initialSeoSettings);
+  };
+
+  const resetNotificationSettings = () => {
+    setFieldErrors(null);
+    setFormMessage(null);
+    setNotificationSettings(initialNotificationSettings);
   };
 
   const handleSiteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -626,8 +666,36 @@ const Settings = ({
     });
   };
 
-  const handleSubmit = activeSection === "site" ? handleSiteSubmit : activeSection === "upload" ? handleUploadSubmit : activeSection === "auth" ? handleAuthSubmit : activeSection === "seo" ? handleSeoSubmit : undefined;
-  const handleReset = activeSection === "site" ? resetSiteSettings : activeSection === "upload" ? resetUploadSettings : activeSection === "auth" ? resetAuthSettings : activeSection === "seo" ? resetSeoSettings : undefined;
+  const handleNotificationSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFieldErrors(null);
+    setFormMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const result = await updateNotificationSettingsAdminAction(formData);
+
+      if (!result.success) {
+        if (result.fieldErrors) {
+          setFieldErrors(result.fieldErrors);
+
+          if (result.fieldErrors.unreadPreviewLimit) unreadPreviewLimitRef.current?.focus();
+          else if (result.fieldErrors.historyPageSize) historyPageSizeRef.current?.focus();
+          else if (result.fieldErrors.retentionDays) retentionDaysRef.current?.focus();
+        } else {
+          setFormMessage({ type: "error", message: result.message });
+        }
+        return;
+      }
+
+      if (result.data) setNotificationSettings(result.data);
+      setFormMessage({ type: "success", message: result.message });
+    });
+  };
+
+  const handleSubmit = activeSection === "site" ? handleSiteSubmit : activeSection === "upload" ? handleUploadSubmit : activeSection === "auth" ? handleAuthSubmit : activeSection === "seo" ? handleSeoSubmit : activeSection === "notification" ? handleNotificationSubmit : undefined;
+  const handleReset = activeSection === "site" ? resetSiteSettings : activeSection === "upload" ? resetUploadSettings : activeSection === "auth" ? resetAuthSettings : activeSection === "seo" ? resetSeoSettings : activeSection === "notification" ? resetNotificationSettings : undefined;
 
   return (
     <form className="max-w-screen-2xl mx-auto px-3 py-10" onSubmit={handleSubmit}>
@@ -1181,33 +1249,114 @@ const Settings = ({
 
       {activeSection === "notification" && (
         <>
-          <SectionShell icon={<Bell size={13} />} title="댓글 알림" description="게시글과 답글 이벤트 알림 기준입니다.">
-            <FieldRow label="댓글 알림">
-              <Toggle defaultChecked />
+          <SectionShell icon={<Bell size={13} />} title="알림 생성" description="어떤 이벤트에서 알림을 만들지 정합니다. 글/댓글 작성 화면의 개별 수신 옵션도 이 정책 아래에서 동작합니다.">
+            <FieldRow label="커뮤니티 알림" description="댓글과 답글은 알림이 많이 발생하기 쉬운 영역입니다. 전체 정책을 끄면 개별 글/댓글 옵션보다 우선합니다.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <UploadTogglePolicy
+                  title="댓글 알림"
+                  description="게시글에 새 댓글이 달리면 글 작성자에게 알림을 보냅니다."
+                  name="commentNotificationsEnabled"
+                  checked={notificationSettings.commentNotificationsEnabled}
+                  onChange={handleNotificationToggleChange("commentNotificationsEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="답글 알림"
+                  description="내 댓글에 답글이 달리면 댓글 작성자에게 알림을 보냅니다."
+                  name="replyNotificationsEnabled"
+                  checked={notificationSettings.replyNotificationsEnabled}
+                  onChange={handleNotificationToggleChange("replyNotificationsEnabled")}
+                />
+              </div>
             </FieldRow>
-            <FieldRow label="답글 알림">
-              <Toggle defaultChecked />
+            <FieldRow label="관리 알림" description="관리자 화면에서 발생한 강제 처리 이벤트를 사용자에게 알릴지 정합니다.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <UploadTogglePolicy
+                  title="콘텐츠 처리 알림"
+                  description="관리자가 게시글, 댓글, 첨부파일을 삭제하면 작성자에게 알림을 보냅니다."
+                  name="adminContentNotificationsEnabled"
+                  checked={notificationSettings.adminContentNotificationsEnabled}
+                  onChange={handleNotificationToggleChange("adminContentNotificationsEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="강제 로그아웃 알림"
+                  description="관리자가 접속 중인 사용자를 강제로 로그아웃했을 때 알림을 보냅니다."
+                  name="forceLogoutNotificationsEnabled"
+                  checked={notificationSettings.forceLogoutNotificationsEnabled}
+                  onChange={handleNotificationToggleChange("forceLogoutNotificationsEnabled")}
+                />
+              </div>
             </FieldRow>
-            <FieldRow label="본인 액션 제외" description="내 글에 내가 작성한 댓글은 알림을 만들지 않습니다.">
-              <Toggle defaultChecked />
-            </FieldRow>
-            <FieldRow label="실시간 알림">
-              <Toggle defaultChecked />
+            <FieldRow label="공통 정책" description="알림 생성 후 실시간 전달과 토스트 표시 방식을 정합니다.">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <UploadTogglePolicy
+                  title="본인 액션 제외"
+                  description="내가 작성한 댓글이나 처리로 나에게 알림이 가지 않게 합니다."
+                  name="excludeSelfNotifications"
+                  checked={notificationSettings.excludeSelfNotifications}
+                  onChange={handleNotificationToggleChange("excludeSelfNotifications")}
+                />
+                <UploadTogglePolicy
+                  title="실시간 알림"
+                  description="DB 저장 후 SSE로 즉시 브라우저에 전달합니다."
+                  name="realtimeNotificationsEnabled"
+                  checked={notificationSettings.realtimeNotificationsEnabled}
+                  onChange={handleNotificationToggleChange("realtimeNotificationsEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="토스트 표시"
+                  description="실시간 알림을 화면 우측 토스트로 표시합니다."
+                  name="toastNotificationsEnabled"
+                  checked={notificationSettings.toastNotificationsEnabled}
+                  onChange={handleNotificationToggleChange("toastNotificationsEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="썸네일 표시"
+                  description="알림에 이미지가 있으면 토스트와 목록에 함께 표시합니다."
+                  name="showNotificationThumbnails"
+                  checked={notificationSettings.showNotificationThumbnails}
+                  onChange={handleNotificationToggleChange("showNotificationThumbnails")}
+                />
+              </div>
             </FieldRow>
           </SectionShell>
 
           <SectionShell icon={<Bell size={13} />} title="알림 보관" description="알림 목록과 히스토리 화면의 기본값입니다.">
-            <FieldRow label="보관 기간">
-              <InputField inputTitle="보관 기간(일)" name="notificationRetentionDays" type="number" placeholder="90일" hideLabel />
-            </FieldRow>
-            <FieldRow label="노출 개수">
-              <div className="grid gap-4 md:grid-cols-2">
-                <InputField inputTitle="메뉴 미리보기" name="notificationPreviewCount" type="number" placeholder="메뉴 미리보기 5" hideLabel />
-                <InputField inputTitle="히스토리 페이지" name="notificationPageSize" type="number" placeholder="히스토리 페이지 20" hideLabel />
+            <FieldRow label="노출 및 보관" description="알림 API가 기본으로 가져오는 개수와 보관 기간입니다. 보관 기간 정리는 추후 배치/관리 액션에서 이 값을 사용합니다.">
+              <div className="grid gap-4 md:grid-cols-3">
+                <UploadNumberField
+                  refObject={unreadPreviewLimitRef}
+                  title="메뉴 미리보기"
+                  description="알림 메뉴와 unread API에서 가져올 최대 개수입니다."
+                  unit="개"
+                  name="unreadPreviewLimit"
+                  value={notificationSettings.unreadPreviewLimit}
+                  onChange={handleNotificationInputChange("unreadPreviewLimit")}
+                  error={fieldErrors?.unreadPreviewLimit}
+                  placeholder="20"
+                />
+                <UploadNumberField
+                  refObject={historyPageSizeRef}
+                  title="히스토리 페이지"
+                  description="알림 기록 화면의 기본 페이지 크기입니다."
+                  unit="개"
+                  name="historyPageSize"
+                  value={notificationSettings.historyPageSize}
+                  onChange={handleNotificationInputChange("historyPageSize")}
+                  error={fieldErrors?.historyPageSize}
+                  placeholder="20"
+                />
+                <UploadNumberField
+                  refObject={retentionDaysRef}
+                  title="보관 기간"
+                  description="알림 기록을 보관할 기준 일수입니다."
+                  unit="일"
+                  name="retentionDays"
+                  value={notificationSettings.retentionDays}
+                  onChange={handleNotificationInputChange("retentionDays")}
+                  error={fieldErrors?.retentionDays}
+                  placeholder="90"
+                />
               </div>
-            </FieldRow>
-            <FieldRow label="썸네일 표시">
-              <Toggle defaultChecked />
             </FieldRow>
           </SectionShell>
         </>

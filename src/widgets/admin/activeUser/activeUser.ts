@@ -1,7 +1,7 @@
 'use server';
 
 import redisClient from "@core/utils/redis/redis";
-import { saveNotification } from "@/modules/notification/actions/notification.action"; // 🌟 기존 액션 불러오기
+import { dispatchNotificationAction } from "@/modules/notification/actions/notification.action";
 
 export async function getActiveUserList(limit?: number) {
   try {
@@ -80,11 +80,16 @@ export async function forceLogout(userId: string) { // 🌟 IP는 이제 참고�
     }
 
     // 3. 알림 생성 로직 (기존 saveNotification 그대로 사용)
-    await saveNotification({
+    await dispatchNotificationAction({
       userId: Number(userId),
       type: 'warning',
       title: '강제 로그아웃',
       content: '관리자에 의해 모든 세션에서 강제 로그아웃 되었습니다.',
+      metadata: {
+        appId: "gjworks",
+        groupKey: "ADMIN",
+        subType: "force-logout",
+      },
     });
 
     return { success: true };
