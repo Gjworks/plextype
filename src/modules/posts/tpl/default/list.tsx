@@ -76,10 +76,10 @@ const PostsListClient = ({
         {documentInfo.map((doc) => (
           <div
             key={doc.id}
-            className="border-b border-gray-100 hover:bg-gray-50"
+            className="border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-dark-800 dark:hover:bg-dark-900/70"
           >
             <div className="flex gap-4 flex-1 px-3 py-4 lg:py-8">
-              <div className="relative shrink-0 w-[80px] h-[80px] rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+              <div className="relative shrink-0 w-[80px] h-[80px] rounded-md overflow-hidden bg-gray-100 flex items-center justify-center dark:bg-dark-900 dark:ring-1 dark:ring-dark-800">
                 {doc.thumbnail ? (
                   <Image
                     src={doc.thumbnail}
@@ -141,12 +141,12 @@ const PostsListClient = ({
                     </div>
                     <div className="flex items-center gap-2">
                       {doc.category && (
-                        <div className="relative text-gray-900 text-xs before:bg-gray-300">
+                        <div className="relative text-gray-900 text-xs before:bg-gray-300 dark:text-dark-300 dark:before:bg-dark-700">
                           {doc.category.title}
                         </div>
                       )}
-                      <div className="relative flex items-center gap-1.5 text-gray-900 dark:text-dark-100 text-xs before:bg-gray-300">
-                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400">
+                      <div className="relative flex items-center gap-1.5 text-gray-900 dark:text-dark-100 text-xs before:bg-gray-300 dark:before:bg-dark-700">
+                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400 dark:bg-dark-800 dark:text-dark-300">
                           {doc.user?.profile?.profileImage ? (
                             <img
                               src={doc.user.profile.profileImage}
@@ -162,15 +162,15 @@ const PostsListClient = ({
                       <div className="relative text-gray-400 text-xs before:bg-gray-300">
                         {dayjs(doc.createdAt).fromNow()}
                       </div>
-                      <div className="relative flex gap-2 before:bg-gray-300">
+                      <div className="relative flex gap-2 before:bg-gray-300 dark:before:bg-dark-700">
                         <div className="text-xs text-gray-400">댓글</div>
-                        <div className="text-xs text-gray-700">
+                        <div className="text-xs text-gray-700 dark:text-dark-300">
                           {doc.commentCount}
                         </div>
                       </div>
                       <div className="flex gap-2">
                         <div className="text-xs text-gray-400">조회수</div>
-                        <div className="text-xs text-gray-700">
+                        <div className="text-xs text-gray-700 dark:text-dark-300">
                           {doc.readCount}
                         </div>
                       </div>
@@ -200,7 +200,7 @@ const PostsListClient = ({
                           </svg>
                           <div className="!text-[12px] lg:text-sm text-gray-600 dark:text-dark-100 line-clamp-1">
                             <span className="inline-flex items-center gap-1.5">
-                              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400">
+                              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400 dark:bg-dark-800 dark:text-dark-300">
                                 {doc.latestComment?.user?.profile?.profileImage ? (
                                   <img
                                     src={doc.latestComment.user.profile.profileImage}
@@ -218,7 +218,7 @@ const PostsListClient = ({
                             {dayjs(doc.latestComment?.createdAt).fromNow()}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 !text-[12px] text-gray-500">
+                        <div className="flex items-center gap-2 !text-[12px] text-gray-500 dark:text-dark-400">
                           {doc.latestComment.image && (
                             <Image
                               src={doc.latestComment.image}
@@ -236,7 +236,7 @@ const PostsListClient = ({
                     </div>
                   ) : (
                     /* 댓글이 없을 때 보여줄 빈 상태 (선택 사항) */
-                    <div className="hidden lg:flex flex-1 items-center justify-center py-2 px-4 border-l border-gray-100 italic text-[12px] text-gray-400">
+                    <div className="hidden lg:flex flex-1 items-center justify-center py-2 px-4 border-l border-gray-100 italic text-[12px] text-gray-400 dark:border-dark-800 dark:text-dark-500">
                       아직 댓글이 없습니다.
                     </div>
                   )}

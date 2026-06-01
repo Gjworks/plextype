@@ -122,7 +122,7 @@ const Header = ({
       <motion.header
         transition={{ duration: 0.3 }}
         className={
-          "sticky bg-white/90 top-0 w-full  backdrop-blur-lg dark:bg-dark-950/95 z-20 " +
+          "sticky top-0 z-20 w-full bg-white/90 backdrop-blur-lg dark:bg-dark-950/90 " +
           (showNavigation ? "  " : " ")
         }
       >
@@ -173,7 +173,7 @@ const Header = ({
                         alt="gjworks logo"
                         width="16"
                         height="16"
-                        className="block w-[1.25rem] h-[1.25rem]"
+                        className="block h-[1.25rem] w-[1.25rem] dark:brightness-200 dark:invert"
                       />
                       {/* <Image
                         src="/assets/images/brand/gjworks.svg"
@@ -194,7 +194,7 @@ const Header = ({
                       className="flex md:flex items-center"
                     >
                       <div className="flex text-sm font-semibold md:text-[0.913rem]">
-                        <div className="text-black dark:text-white">
+                        <div className="text-black dark:text-dark-100">
                           {siteTitle}
                         </div>
                       </div>
@@ -245,8 +245,8 @@ const Header = ({
                           className={
                             "relative flex items-center gap-2 py-2 px-5 text-xs font-normal lg:text-[0.762rem] transition-colors duration-200 " +
                             (isMenuActive(item)
-                              ? "text-gray-900 dark:text-white font-medium bg-gray-900/5 backdrop-blur-lg hover:bg-gray-900/5 rounded-full "
-                              : "dark:text-dark-500 text-gray-950 hover:text-gray-400 dark:hover:text-white")
+                              ? "rounded-full bg-gray-900/5 text-gray-900 font-medium backdrop-blur-lg hover:bg-gray-900/5 dark:bg-white/[0.06] dark:text-dark-100 dark:hover:bg-white/[0.08] "
+                              : "text-gray-700 hover:text-gray-950 dark:text-dark-300 dark:hover:text-white")
                           }
                         >
                           <div>{item.title}</div>
@@ -268,7 +268,7 @@ const Header = ({
                               exit="exit"
                               className="absolute left-0 top-full z-50 pt-2 w-48"
                             >
-                              <div className="overflow-hidden rounded-lg shadow-lg shadow-gray-900/5 bg-white dark:bg-dark-900/75 backdrop-blur-lg border border-gray-100 dark:border-dark-800">
+                              <div className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-lg shadow-gray-900/5 backdrop-blur-lg dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
                                 <div className="flex flex-col py-1">
                                   {item.children.map((subItem) => (
                                     <motion.div
@@ -281,8 +281,10 @@ const Header = ({
                                         target={subItem.target || undefined}
                                         rel={subItem.target === "_blank" ? "noreferrer" : undefined}
                                         className={
-                                        "block px-4 py-3 text-[0.762rem] dark:text-gray-200 transition-colors " +
-                                          (isMenuActive(subItem) ? " text-gray-400 " : "  text-gray-900 hover:text-gray-400")
+                                          "block px-4 py-3 text-[0.762rem] transition-colors " +
+                                          (isMenuActive(subItem)
+                                            ? "text-gray-900 font-medium dark:text-dark-100"
+                                            : "text-gray-600 hover:text-gray-950 dark:text-dark-300 dark:hover:text-white")
                                         }
                                       >
                                         {subItem.title}
@@ -300,14 +302,14 @@ const Header = ({
 
                 <div className="relative flex items-center">
                   <div
-                    className="relative inline-block before:absolute h-[12px] before:-translate-y-1/2 before:h-12 w-[1px] before:top-0 before:left-0 bg-gray-300 dark:bg-dark-600 before:block before:content-['']"></div>
+	                    className="relative inline-block before:absolute h-[12px] before:-translate-y-1/2 before:h-12 w-[1px] before:top-0 before:left-0 bg-gray-300 dark:bg-dark-700 before:block before:content-['']"></div>
                 </div>
                 <div>
                   <div className="relative flex items-start">
                     <Link
                       className={`relative flex items-center gap-1 py-0 text-xs font-normal lg:py-2 md:text-[0.762rem] tracking-wider ` + (currentPage?.route === '/works'
-                        ? "text-gray-400 dark:text-white font-medium"
-                        : "dark:text-dark-500 text-gray-950 hover:text-gray-600 dark:hover:text-white")}
+	                        ? "text-gray-900 dark:text-dark-100 font-medium"
+	                        : "text-gray-700 hover:text-gray-950 dark:text-dark-300 dark:hover:text-white")}
                       href="/works">
                       <div>Works</div>
                       <div>

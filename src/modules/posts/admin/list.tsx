@@ -126,31 +126,31 @@ const AdminPostsList = ({
             <MessageSquareText size={13} />
             Board Control
           </div>
-          <div className="mt-2 text-lg font-semibold text-gray-700">게시판 목록</div>
+          <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">게시판 목록</div>
           <div className="mt-1 text-sm text-gray-400">
             전체 {pageNavigation.totalCount}개 중 {initialData.length}개를 표시하고 있습니다.
           </div>
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
-          <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-md border border-gray-200 bg-white px-3 shadow-sm shadow-gray-100 xl:w-[420px] xl:flex-none">
+          <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-md border border-gray-200 bg-white px-3 shadow-sm shadow-gray-100 xl:w-[420px] xl:flex-none dark:border-dark-700 dark:bg-dark-900 dark:shadow-black/20">
             <select
               name="target"
               defaultValue={searchTarget}
-              className="shrink-0 bg-transparent py-2.5 pr-3 text-sm text-gray-500 outline-none"
+              className="shrink-0 bg-transparent py-2.5 pr-3 text-sm text-gray-500 outline-none dark:text-dark-300"
             >
               <option value="moduleName">게시판 이름</option>
               <option value="mid">게시판 ID</option>
             </select>
-            <div className="h-4 w-px bg-gray-200" />
+            <div className="h-4 w-px bg-gray-200 dark:bg-dark-700" />
             <input
               type="text"
               name="keyword"
               defaultValue={searchKeyword}
-              className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-gray-700 outline-none placeholder:text-gray-300"
+              className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-gray-700 outline-none placeholder:text-gray-300 dark:text-dark-100 dark:placeholder:text-dark-500"
               placeholder="검색어 입력"
             />
-            <button type="submit" className="cursor-pointer text-gray-400 transition-colors hover:text-gray-900" aria-label="검색">
+            <button type="submit" className="cursor-pointer text-gray-400 transition-colors hover:text-gray-900 dark:hover:text-dark-100" aria-label="검색">
               <Search size={17} />
             </button>
           </form>
@@ -172,11 +172,11 @@ const AdminPostsList = ({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100">
+      <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px]">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
+              <tr className="border-b border-gray-100 bg-gray-50/80 dark:border-dark-800 dark:bg-dark-950/70">
                 <th className="w-16 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">ID</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Module</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Name</th>
@@ -197,26 +197,26 @@ const AdminPostsList = ({
             <tbody>
               {initialData.length > 0 ? (
                 initialData.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40">
+                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40 dark:border-dark-800 dark:hover:bg-white/[0.04]">
                     <td className="px-4 py-4 text-sm font-medium text-gray-400">{item.id}</td>
                     <td className="px-4 py-4">
-                      <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600">
+                      <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600 dark:bg-dark-800 dark:text-dark-300">
                         {item.mid}
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <Link
                         href={`/posts/${item.mid}`}
-                        className="text-sm font-semibold text-gray-800 transition-colors hover:text-blue-600"
+                        className="text-sm font-semibold text-gray-800 transition-colors hover:text-blue-600 dark:text-dark-100 dark:hover:text-cyan-400"
                       >
                         {item.moduleName}
                       </Link>
                       {item.moduleDesc && <div className="mt-1 text-xs text-gray-400">{item.moduleDesc}</div>}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{item.config?.skin || "default"}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{dayjs(item.createdAt).fromNow()}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500 dark:text-dark-300">{item.config?.skin || "default"}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500 dark:text-dark-300">{dayjs(item.createdAt).fromNow()}</td>
                     <td className="px-4 py-4 text-center">
-                      <Link href={`/admin/posts/${item.id}/update`} className="inline-flex items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white">
+                      <Link href={`/admin/posts/${item.id}/update`} className="inline-flex items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-cyan-500 dark:hover:text-dark-950">
                         <Edit3 size={13} />
                         수정
                       </Link>

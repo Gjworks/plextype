@@ -216,23 +216,23 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
         )}
       </div>
 
-      <div className="rounded-md border border-gray-100 bg-white p-4">
-        <label className="flex cursor-pointer items-start gap-3">
-          <input
-            type="checkbox"
-            checked={extraData.notificationEnabled !== false}
+	      <div className="rounded-md border border-gray-100 bg-white p-4 dark:border-dark-700 dark:bg-dark-900/80">
+	        <label className="flex cursor-pointer items-start gap-3">
+	          <input
+	            type="checkbox"
+	            checked={extraData.notificationEnabled !== false}
             onChange={(event) => setExtraData((prev: any) => ({
               ...prev,
               notificationEnabled: event.target.checked,
             }))}
-            className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-500"
-          />
-          <span>
-            <span className="block text-sm font-semibold text-gray-800">댓글 알림 받기</span>
-            <span className="mt-1 block text-xs leading-5 text-gray-400">
-              이 글에 새 댓글이 달렸을 때 알림을 받습니다. 알림이 너무 많으면 글마다 끌 수 있습니다.
-            </span>
-          </span>
+	            className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
+	          />
+	          <span>
+	            <span className="block text-sm font-semibold text-gray-800 dark:text-dark-100">댓글 알림 받기</span>
+	            <span className="mt-1 block text-xs leading-5 text-gray-400 dark:text-dark-400">
+	              이 글에 새 댓글이 달렸을 때 알림을 받습니다. 알림이 너무 많으면 글마다 끌 수 있습니다.
+	            </span>
+	          </span>
         </label>
       </div>
 

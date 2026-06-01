@@ -50,7 +50,7 @@ const LoginLockList = ({ items }: Props) => {
             <ShieldAlert size={13} />
             User Security
           </div>
-          <div className="mt-2 text-lg font-semibold text-gray-700">로그인 잠금</div>
+          <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">로그인 잠금</div>
           <div className="mt-1 text-sm text-gray-400">
             로그인 실패 제한에 걸린 계정과 IP 조합을 확인하고 즉시 해제할 수 있습니다.
           </div>
@@ -65,11 +65,11 @@ const LoginLockList = ({ items }: Props) => {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100">
+      <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px]">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
+              <tr className="border-b border-gray-100 bg-gray-50/80 dark:border-dark-800 dark:bg-dark-950/70">
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Account</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">IP</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Locked</th>
@@ -80,15 +80,15 @@ const LoginLockList = ({ items }: Props) => {
             <tbody>
               {items.length > 0 ? (
                 items.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40">
+                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40 dark:border-dark-800 dark:hover:bg-white/[0.04]">
                     <td className="px-4 py-4">
-                      <div className="text-sm font-semibold text-gray-800">{item.accountId}</div>
+                      <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{item.accountId}</div>
                       <div className="mt-1 max-w-[220px] truncate text-[11px] font-medium text-gray-300">{item.id}</div>
                     </td>
-                    <td className="px-4 py-4 text-sm font-medium text-gray-500">{item.ip}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{formatDate(item.lockedAt)}</td>
+                    <td className="px-4 py-4 text-sm font-medium text-gray-500 dark:text-dark-300">{item.ip}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500 dark:text-dark-300">{formatDate(item.lockedAt)}</td>
                     <td className="px-4 py-4">
-                      <div className="text-sm font-semibold text-gray-700">{formatDate(item.expiresAt)}</div>
+                      <div className="text-sm font-semibold text-gray-700 dark:text-dark-200">{formatDate(item.expiresAt)}</div>
                       <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-500">
                         <LockKeyhole size={11} />
                         남은 시간 {formatSeconds(item.retryAfter)}
@@ -99,7 +99,7 @@ const LoginLockList = ({ items }: Props) => {
                         type="button"
                         onClick={() => handleUnlock(item.id)}
                         disabled={isPending}
-                        className="inline-flex cursor-pointer items-center justify-center rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-emerald-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex cursor-pointer items-center justify-center rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-emerald-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-dark-800 dark:text-dark-300"
                       >
                         해제
                       </button>

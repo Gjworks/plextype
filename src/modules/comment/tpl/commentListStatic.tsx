@@ -27,7 +27,7 @@ const commentExtensions = [
     },
     blockquote: {
       HTMLAttributes: {
-        class: "border-l-4 border-gray-300 pl-4 italic text-gray-600",
+	        class: "border-l-4 border-gray-300 pl-4 italic text-gray-600 dark:border-dark-700 dark:text-dark-300",
       },
     },
     bulletList: false,
@@ -64,7 +64,7 @@ const renderCommentContent = (content: string) => {
 
       return (
         <div
-          className="prose prose-zinc prose-sm max-w-none dark:prose-invert prose-pre:bg-gray-50 prose-pre:text-gray-700 prose-img:rounded-xl prose-img:border prose-img:border-gray-100"
+	          className="prose prose-zinc prose-sm max-w-none dark:prose-invert prose-pre:bg-gray-50 prose-pre:text-gray-700 prose-img:rounded-xl prose-img:border prose-img:border-gray-100 dark:prose-pre:bg-dark-900 dark:prose-pre:text-dark-200 dark:prose-img:border-dark-800"
           dangerouslySetInnerHTML={{ __html: cleanHtml }}
         />
       );
@@ -101,13 +101,13 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
       return (
         <article key={`${comment.id}-${comment.uuid}`} id={`comment-${comment.id}`} className="relative">
           {comment.children && comment.children.length > 0 && (
-            <div className="absolute left-[19px] top-10 bottom-0 w-[1px] bg-gray-100 dark:bg-gray-800 z-0" />
+	            <div className="absolute left-[19px] top-10 bottom-0 z-0 w-[1px] bg-gray-100 dark:bg-dark-800" />
           )}
 
           <div className={`relative flex items-start ${depth > 0 ? "ml-10 mb-6" : "mb-8"}`}>
             {depth > 0 && (
               <div
-                className={`absolute left-[-21px] w-[21px] z-0 border-gray-100 dark:border-gray-800 ${
+	                className={`absolute left-[-21px] w-[21px] z-0 border-gray-100 dark:border-dark-800 ${
                   isLast
                     ? "top-[-32px] h-[52px] border-l-[1px] border-b-[1px] rounded-bl-xl"
                     : "top-[-32px] h-[52px] border-l-[1px] border-b-[1px] rounded-bl-xl"
@@ -117,7 +117,7 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
 
             <div className="relative shrink-0 z-10">
               <div
-                className={`flex items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-dark-900 ${
+	                className={`flex items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-dark-800 border-2 border-white dark:border-dark-950 ${
                   depth > 0 ? "w-7 h-7" : "w-10 h-10"
                 }`}
                 aria-hidden="true"
@@ -147,7 +147,7 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
                         className="h-4 w-4 rounded-full object-cover"
                       />
                     )}
-                    <span className="text-[13px] font-bold text-gray-900 dark:text-gray-100">{comment.userName || "익명"}</span>
+	                    <span className="text-[13px] font-bold text-gray-900 dark:text-dark-100">{comment.userName || "익명"}</span>
                     <time className="text-[10px] text-gray-400" dateTime={String(comment.createdAt)}>
                       {dayjs(comment.createdAt).fromNow()}
                     </time>
@@ -163,11 +163,11 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
                   />
                 </div>
 
-                <div className="text-[14px] text-gray-700 dark:text-gray-300 leading-relaxed mb-2 whitespace-pre-wrap">
+	                <div className="mb-2 whitespace-pre-wrap text-[14px] leading-relaxed text-gray-700 dark:text-dark-300">
                   {comment.depth > 1 && parentUserName && (
-                    <span className="text-blue-500 font-bold mr-1.5 opacity-80">@{parentUserName}</span>
+	                    <span className="mr-1.5 font-bold text-gray-500 opacity-80 dark:text-dark-200">@{parentUserName}</span>
                   )}
-                  {comment.isDeleted ? <span className="text-gray-300 italic text-xs">삭제된 댓글입니다.</span> : renderCommentContent(comment.content)}
+	                  {comment.isDeleted ? <span className="text-xs italic text-gray-300 dark:text-dark-500">삭제된 댓글입니다.</span> : renderCommentContent(comment.content)}
                 </div>
 
                 <CommentItemActions
@@ -191,7 +191,7 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
     <section className={`max-w-screen-md mx-auto px-2 pt-16 ${className}`} aria-label="댓글 목록">
       <h2 className="sr-only">댓글</h2>
       {comments.length > 0 ? renderComments(comments) : (
-        <p className="text-sm text-gray-400">아직 댓글이 없습니다.</p>
+	        <p className="text-sm text-gray-400 dark:text-dark-500">아직 댓글이 없습니다.</p>
       )}
     </section>
   );

@@ -158,25 +158,25 @@ const CommentItemActions = ({
           {mode === "reply" && (
             <div className="relative flex gap-3 pb-2">
               <div
-                className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-gray-100"
+	                className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-gray-100 dark:bg-dark-800"
                 style={{ height: "calc(100% + 16px)" }}
               />
               <div className="shrink-0 z-10">
-                <div className="w-12 h-12 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center shadow-sm">
-                  <span className="text-[16px] text-gray-400 font-bold uppercase">
+	                <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gray-100 shadow-sm dark:border-dark-950 dark:bg-dark-800">
+	                  <span className="text-[16px] font-bold uppercase text-gray-400 dark:text-dark-300">
                     {comment.userName?.slice(0, 1) || "익"}
                   </span>
                 </div>
               </div>
-              <div className="flex-1 bg-gray-50/50 rounded-2xl p-3 border border-gray-100 overflow-hidden">
+	              <div className="flex-1 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/50 p-3 dark:border-dark-800 dark:bg-dark-900">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[11px] font-bold text-gray-700">@{comment.userName || "익명"}</span>
+	                  <span className="text-[11px] font-bold text-gray-700 dark:text-dark-100">@{comment.userName || "익명"}</span>
                 </div>
                 <div className="relative">
-                  <p className="text-[13px] text-gray-500 leading-relaxed max-h-[80px] overflow-y-auto pr-2">
+	                  <p className="max-h-[80px] overflow-y-auto pr-2 text-[13px] leading-relaxed text-gray-500 dark:text-dark-400">
                     {getCommentPreview(comment.content)}
                   </p>
-                  <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-50/80 to-transparent pointer-events-none" />
+	                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-50/80 to-transparent dark:from-dark-900" />
                 </div>
               </div>
             </div>
@@ -185,16 +185,16 @@ const CommentItemActions = ({
           <div className={`relative ${mode === "reply" ? "pl-11 pt-2" : ""}`}>
             {mode === "reply" && (
               <div
-                className="absolute left-[15px] top-[-10px] w-7 h-8 border-l-2 border-b-2 border-gray-100 rounded-bl-xl"
+	                className="absolute left-[15px] top-[-10px] h-8 w-7 rounded-bl-xl border-b-2 border-l-2 border-gray-100 dark:border-dark-800"
                 style={{ pointerEvents: "none" }}
               />
             )}
-            <div className="relative group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-100 transition-all duration-300 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
-              <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/30 flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+	            <div className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-100 transition-all duration-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/70 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/30 dark:focus-within:border-dark-500 dark:focus-within:ring-dark-800/60">
+	              <div className="flex items-center gap-2 border-b border-gray-50 bg-gray-50/30 px-4 py-2 dark:border-dark-800 dark:bg-dark-950/50">
+	                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-600 dark:bg-dark-300">
+	                  <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-white dark:bg-dark-950" />
                 </div>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+	                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-dark-400">
                   {mode === "edit" ? "Edit Comment" : "New Reply"}
                 </span>
               </div>
@@ -239,21 +239,21 @@ const CommentItemActions = ({
                   onFileDelete={handleFileDelete}
                 />
               </div>
-              <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
+	              <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2 dark:border-dark-800 dark:bg-dark-950/50">
                 {mode === "reply" ? (
-                  <label className="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400">
+	                  <label className="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400 dark:text-dark-400">
                     <input
                       type="checkbox"
                       checked={notificationEnabled}
                       onChange={(event) => setNotificationEnabled(event.target.checked)}
-                      className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-blue-500 accent-blue-500"
+	                      className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
                     />
                     답글 알림 받기
                   </label>
                 ) : (
-                  <span className="text-[10px] text-gray-300">댓글 내용을 수정합니다.</span>
+	                  <span className="text-[10px] text-gray-300 dark:text-dark-500">댓글 내용을 수정합니다.</span>
                 )}
-                <span className="text-[10px] text-gray-400 font-mono tracking-tight">
+	                <span className="font-mono text-[10px] tracking-tight text-gray-400 dark:text-dark-500">
                   {content.length} / 1000
                 </span>
               </div>
@@ -265,7 +265,7 @@ const CommentItemActions = ({
               type="button"
               onClick={closeModal}
               disabled={loading}
-              className="!text-gray-400 font-semibold hover:!bg-gray-200 hover:!text-gray-600"
+	              className="font-semibold !text-gray-400 hover:!bg-gray-200 hover:!text-gray-600 dark:hover:!bg-dark-800 dark:hover:!text-dark-100"
             >
               취소
             </Button>
@@ -275,8 +275,8 @@ const CommentItemActions = ({
               disabled={!content.trim()}
               className={
                 mode === "edit"
-                  ? "!bg-blue-100 !text-blue-600 hover:!bg-blue-600 hover:!text-white !px-7 !font-bold"
-                  : "!bg-blue-600 !text-white hover:!bg-blue-700 !px-7 !font-bold shadow-lg shadow-blue-600/20"
+	                  ? "!bg-gray-100 !text-gray-700 hover:!bg-gray-900 hover:!text-white !px-7 !font-bold dark:!bg-dark-800 dark:!text-dark-200 dark:hover:!bg-dark-100 dark:hover:!text-dark-950"
+	                  : "!bg-gray-900 !text-white hover:!bg-gray-800 !px-7 !font-bold shadow-lg shadow-gray-900/20 dark:!bg-dark-100 dark:!text-dark-950 dark:hover:!bg-dark-200"
               }
             >
               {mode === "edit" ? "수정" : "보내기"}
@@ -295,7 +295,7 @@ const CommentItemActions = ({
             <Button
               type="button"
               onClick={openEdit}
-              className="!p-1 !text-gray-300 hover:!text-blue-500 !bg-transparent"
+	              className="!bg-transparent !p-1 !text-gray-300 hover:!text-gray-600 dark:!text-dark-500 dark:hover:!text-dark-200"
               icon={<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 0 0 1 3 18.75V8.25A2.25 0 0 1 5.25 6H10" /></svg>}
             />
             <Button
@@ -314,7 +314,7 @@ const CommentItemActions = ({
   return (
     <>
       <div className="mt-2 flex items-center gap-3">
-        <button className="flex items-center gap-1 group/like text-gray-300 hover:text-rose-400 transition-colors cursor-pointer">
+	          <button className="group/like flex cursor-pointer items-center gap-1 text-gray-300 transition-colors hover:text-rose-400 dark:text-dark-500 dark:hover:text-rose-400">
           <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>
           <span className="text-[11px] font-bold">0</span>
         </button>
@@ -323,7 +323,7 @@ const CommentItemActions = ({
           <button
             type="button"
             onClick={openReply}
-            className="text-[11px] font-bold text-gray-300 hover:text-blue-500 transition-colors uppercase tracking-tight cursor-pointer"
+	            className="cursor-pointer text-[11px] font-bold uppercase tracking-tight text-gray-300 transition-colors hover:text-gray-700 dark:text-dark-500 dark:hover:text-dark-200"
           >
             Reply
           </button>

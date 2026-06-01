@@ -75,7 +75,7 @@ const Popup: React.FC<PopupProps> = ({
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed bottom-0 left-1/2 z-[100] w-full max-w-xl -translate-x-1/2 px-4 pb-6 lg:pb-10"
           >
-            <div className="overflow-hidden rounded-2xl bg-white shadow-2xl backdrop-blur-2xl dark:border-zinc-800 dark:bg-zinc-900/90">
+	            <div className="overflow-hidden rounded-2xl bg-white shadow-2xl backdrop-blur-2xl dark:border-dark-800 dark:bg-dark-900/90">
 
               {/* 헤더 */}
               <div className="flex items-center justify-between border-b border-black/[0.05] px-4 py-2 dark:border-white/[0.05]">

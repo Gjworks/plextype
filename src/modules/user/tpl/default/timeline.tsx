@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import HeaderUser from "@/modules/user/tpl/default/header";
+import { ActionState } from "@/modules/user/actions/_type";
 import {
   getUserTimelineAction,
   UserTimelineData,
@@ -21,8 +22,17 @@ import {
   UserTimelineKind,
 } from "@/modules/user/actions/timeline.action";
 
+type TimelineLoadAction = (
+  cursor?: string | null,
+  limit?: number,
+  filter?: UserTimelineFilter,
+) => Promise<ActionState<UserTimelineData>>;
+
 type TimelineProps = {
-  initialData: UserTimelineData;
+  initialData?: UserTimelineData | null;
+  loadTimelineAction?: TimelineLoadAction;
+  showHeader?: boolean;
+  embedded?: boolean;
 };
 
 const kindMeta: Record<UserTimelineKind, {
@@ -101,7 +111,7 @@ const groupTimelineItems = (items: UserTimelineItem[]) => {
 const TimelineImage = ({ item }: { item: UserTimelineItem }) => {
   if (item.imageUrl) {
     return (
-      <div className="mt-4 overflow-hidden rounded-xl bg-gray-100 ring-1 ring-gray-200">
+      <div className="mt-4 overflow-hidden rounded-xl bg-gray-100 ring-1 ring-gray-200 dark:bg-dark-900 dark:ring-dark-800">
         <img src={item.imageUrl} alt={item.title} className="max-h-[420px] w-full object-cover" loading="lazy" />
       </div>
     );
@@ -110,12 +120,12 @@ const TimelineImage = ({ item }: { item: UserTimelineItem }) => {
   if (item.kind !== "attachment") return null;
 
   return (
-    <div className="mt-4 flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-gray-500">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-gray-400 ring-1 ring-gray-200">
+    <div className="mt-4 flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-gray-500 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-400">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-gray-400 ring-1 ring-gray-200 dark:bg-dark-800 dark:text-dark-300 dark:ring-dark-700">
         <Paperclip size={18} />
       </div>
       <div className="min-w-0">
-        <div className="line-clamp-1 text-sm font-bold text-gray-800">{item.title}</div>
+        <div className="line-clamp-1 text-sm font-bold text-gray-800 dark:text-dark-100">{item.title}</div>
         <div className="mt-0.5 text-xs font-semibold text-gray-400">{item.description}</div>
       </div>
     </div>
@@ -124,11 +134,11 @@ const TimelineImage = ({ item }: { item: UserTimelineItem }) => {
 
 const TimelineAvatar = ({ imageUrl, name }: { imageUrl: string | null; name: string }) => {
   return (
-    <div className="h-11 w-11 overflow-hidden rounded-full bg-gray-200 ring-1 ring-gray-200">
+    <div className="h-11 w-11 overflow-hidden rounded-full bg-gray-200 ring-1 ring-gray-200 dark:bg-dark-800 dark:ring-dark-700">
       {imageUrl ? (
         <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-gray-500">
+        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-gray-500 dark:text-dark-300">
           {name.slice(0, 1)}
         </div>
       )}
@@ -145,7 +155,7 @@ const TimelineCard = ({
 }) => {
   const meta = kindMeta[item.kind];
   const card = (
-    <article className="group rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm shadow-gray-100 transition-all duration-200 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/70">
+    <article className="group rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm shadow-gray-100 transition-all duration-200 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/70 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20 dark:hover:border-dark-700 dark:hover:shadow-black/30">
       <div className="flex items-start gap-3">
         <TimelineAvatar imageUrl={user.profileImage} name={user.nickName} />
 
@@ -153,7 +163,7 @@ const TimelineCard = ({
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <div className="line-clamp-1 text-sm font-bold text-gray-900">{user.nickName}</div>
+                <div className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-dark-100">{user.nickName}</div>
                 <span className="text-xs font-semibold text-gray-400">@{user.accountId}</span>
                 <span className="text-xs text-gray-300">·</span>
                 <span className="text-xs font-semibold text-gray-400">{formatRelativeDate(item.createdAt)}</span>
@@ -168,15 +178,15 @@ const TimelineCard = ({
           </div>
 
           <div className="mt-4">
-            <div className="line-clamp-2 text-[15px] font-bold leading-6 text-gray-900">{item.title}</div>
+            <div className="line-clamp-2 text-[15px] font-bold leading-6 text-gray-900 dark:text-dark-100">{item.title}</div>
             {item.kind !== "attachment" && (
-              <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-500">{item.description}</p>
+              <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-500 dark:text-dark-400">{item.description}</p>
             )}
           </div>
 
           <TimelineImage item={item} />
 
-          <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs font-semibold text-gray-400">
+          <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs font-semibold text-gray-400 dark:border-dark-800 dark:text-dark-500">
             <div className="inline-flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${meta.marker}`} />
               <span>{item.status || meta.label}</span>
@@ -204,19 +214,25 @@ const TimelineCard = ({
   );
 };
 
-const Timeline = ({ initialData }: TimelineProps) => {
-  const [items, setItems] = useState(initialData.items);
-  const [nextCursor, setNextCursor] = useState(initialData.nextCursor);
-  const [hasMore, setHasMore] = useState(initialData.hasMore);
+const Timeline = ({
+  initialData = null,
+  loadTimelineAction = getUserTimelineAction,
+  showHeader = true,
+  embedded = false,
+}: TimelineProps) => {
+  const [data, setData] = useState<UserTimelineData | null>(initialData);
+  const [items, setItems] = useState(initialData?.items || []);
+  const [nextCursor, setNextCursor] = useState(initialData?.nextCursor || null);
+  const [hasMore, setHasMore] = useState(initialData?.hasMore || false);
   const [activeFilter, setActiveFilter] = useState<UserTimelineFilter>("all");
   const [isPending, startTransition] = useTransition();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const groupedItems = useMemo(() => groupTimelineItems(items), [items]);
-  const totalActivity = initialData.summary.documentCount
-    + initialData.summary.commentCount
-    + initialData.summary.attachmentCount
-    + initialData.summary.notificationCount;
+  const summary = data?.summary;
+  const totalActivity = summary
+    ? summary.documentCount + summary.commentCount + summary.attachmentCount + summary.notificationCount
+    : 0;
   const filterTabs: Array<{
     key: UserTimelineFilter;
     label: string;
@@ -224,18 +240,63 @@ const Timeline = ({ initialData }: TimelineProps) => {
     activeClass: string;
   }> = [
     { key: "all", label: "전체", count: totalActivity, activeClass: "bg-gray-950 text-white" },
-    { key: "document", label: "게시글", count: initialData.summary.documentCount, activeClass: "bg-cyan-500 text-white" },
-    { key: "comment", label: "댓글", count: initialData.summary.commentCount, activeClass: "bg-violet-500 text-white" },
-    { key: "attachment", label: "파일", count: initialData.summary.attachmentCount, activeClass: "bg-emerald-500 text-white" },
-    { key: "notification", label: "알림", count: initialData.summary.notificationCount, activeClass: "bg-amber-500 text-white" },
+    { key: "document", label: "게시글", count: summary?.documentCount || 0, activeClass: "bg-cyan-500 text-white" },
+    { key: "comment", label: "댓글", count: summary?.commentCount || 0, activeClass: "bg-violet-500 text-white" },
+    { key: "attachment", label: "파일", count: summary?.attachmentCount || 0, activeClass: "bg-emerald-500 text-white" },
+    { key: "notification", label: "알림", count: summary?.notificationCount || 0, activeClass: "bg-amber-500 text-white" },
   ];
+
+  useEffect(() => {
+    setActiveFilter("all");
+
+    if (initialData) {
+      setData(initialData);
+      setItems(initialData.items);
+      setNextCursor(initialData.nextCursor);
+      setHasMore(initialData.hasMore);
+      return;
+    }
+
+    let isMounted = true;
+
+    startTransition(async () => {
+      try {
+        const result = await loadTimelineAction(null, 15, "all");
+        if (!isMounted) return;
+
+        if (!result.success || !result.data) {
+          setData(null);
+          setItems([]);
+          setNextCursor(null);
+          setHasMore(false);
+          return;
+        }
+
+        setData(result.data);
+        setItems(result.data.items);
+        setNextCursor(result.data.nextCursor);
+        setHasMore(result.data.hasMore);
+      } catch (error) {
+        console.error("loadTimelineInitial Error:", error);
+        if (!isMounted) return;
+        setData(null);
+        setItems([]);
+        setNextCursor(null);
+        setHasMore(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialData, loadTimelineAction]);
 
   const loadMore = () => {
     if (!hasMore || isPending || !nextCursor) return;
 
     startTransition(async () => {
       try {
-        const result = await getUserTimelineAction(nextCursor, 15, activeFilter);
+        const result = await loadTimelineAction(nextCursor, 15, activeFilter);
         if (!result.success || !result.data) {
           setHasMore(false);
           return;
@@ -249,6 +310,7 @@ const Timeline = ({ initialData }: TimelineProps) => {
         });
         setNextCursor(nextData.nextCursor);
         setHasMore(nextData.hasMore);
+        setData(nextData);
       } catch (error) {
         console.error("loadMoreTimeline Error:", error);
         setHasMore(false);
@@ -262,7 +324,7 @@ const Timeline = ({ initialData }: TimelineProps) => {
     setActiveFilter(filter);
     startTransition(async () => {
       try {
-        const result = await getUserTimelineAction(null, 15, filter);
+        const result = await loadTimelineAction(null, 15, filter);
         if (!result.success || !result.data) {
           setItems([]);
           setNextCursor(null);
@@ -273,6 +335,7 @@ const Timeline = ({ initialData }: TimelineProps) => {
         setItems(result.data.items);
         setNextCursor(result.data.nextCursor);
         setHasMore(result.data.hasMore);
+        setData(result.data);
       } catch (error) {
         console.error("changeTimelineFilter Error:", error);
         setItems([]);
@@ -294,31 +357,45 @@ const Timeline = ({ initialData }: TimelineProps) => {
     return () => observer.disconnect();
   }, [hasMore, isPending, nextCursor]);
 
-  return (
-    <div className="min-h-screen">
-      <HeaderUser />
+  if (!data) {
+    return (
+      <div className={`${embedded ? "bg-transparent" : "min-h-screen bg-white dark:bg-dark-950"}`}>
+        {showHeader && <HeaderUser />}
+        <div className={`${embedded ? "px-4 pb-16 pt-2" : "mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10"}`}>
+          <div className="mx-auto flex min-h-80 max-w-2xl items-center justify-center rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-400 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500">
+            <Loader2 size={18} className="mr-2 animate-spin" />
+            타임라인을 불러오는 중
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      <div className="mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10">
+  return (
+    <div className={`${embedded ? "bg-transparent" : "min-h-screen bg-white dark:bg-dark-950"}`}>
+      {showHeader && <HeaderUser />}
+
+      <div className={`${embedded ? "px-4 pb-16 pt-2" : "mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10"}`}>
         <section className="mx-auto max-w-2xl">
-          <div className="flex flex-col gap-5 border-b border-gray-200 pb-5 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-5 border-b border-gray-200 pb-5 md:flex-row md:items-end md:justify-between dark:border-dark-800">
             <div className="flex items-end gap-4">
-              <div className="h-20 w-20 overflow-hidden rounded-full bg-gray-200 ring-4 ring-white shadow-sm shadow-gray-200">
-                {initialData.user.profileImage ? (
-                  <img src={initialData.user.profileImage} alt={initialData.user.nickName} className="h-full w-full object-cover" />
+              <div className="h-20 w-20 overflow-hidden rounded-full bg-gray-200 ring-4 ring-white shadow-sm shadow-gray-200 dark:bg-dark-800 dark:ring-dark-900 dark:shadow-black/30">
+                {data.user.profileImage ? (
+                  <img src={data.user.profileImage} alt={data.user.nickName} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-gray-500">
-                    {initialData.user.nickName.slice(0, 1)}
+                  <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-gray-500 dark:text-dark-300">
+                    {data.user.nickName.slice(0, 1)}
                   </div>
                 )}
               </div>
               <div className="pb-1">
-                <div className="text-2xl font-black tracking-tight text-gray-950">{initialData.user.nickName}</div>
+                <div className="text-2xl font-black tracking-tight text-gray-950 dark:text-dark-100">{data.user.nickName}</div>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-400">
-                  <span>@{initialData.user.accountId}</span>
-                  {initialData.user.email && (
+                  <span>@{data.user.accountId}</span>
+                  {data.user.email && (
                     <>
                       <span className="text-gray-300">·</span>
-                      <span>{initialData.user.email}</span>
+                      <span>{data.user.email}</span>
                     </>
                   )}
                 </div>
@@ -331,7 +408,7 @@ const Timeline = ({ initialData }: TimelineProps) => {
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2 overflow-x-auto border-b border-gray-200 pb-4">
+          <div className="mt-4 flex gap-2 overflow-x-auto border-b border-gray-200 pb-4 dark:border-dark-800">
             {filterTabs.map((tab) => {
               const active = activeFilter === tab.key;
 
@@ -340,10 +417,10 @@ const Timeline = ({ initialData }: TimelineProps) => {
                   key={tab.key}
                   type="button"
                   onClick={() => changeFilter(tab.key)}
-                  className={`flex min-w-24 cursor-pointer items-center justify-between gap-3 rounded-full px-3 py-2 text-left text-xs font-bold transition-colors ${active ? tab.activeClass : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"}`}
+                  className={`flex min-w-24 cursor-pointer items-center justify-between gap-3 rounded-full px-3 py-2 text-left text-xs font-bold transition-colors ${active ? tab.activeClass : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:bg-dark-900 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-dark-100"}`}
                 >
                   <span>{tab.label}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] ${active ? "bg-white/20 text-current" : "bg-white text-gray-400"}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] ${active ? "bg-white/20 text-current" : "bg-white text-gray-400 dark:bg-dark-800 dark:text-dark-400"}`}>
                     {tab.count}
                   </span>
                 </button>
@@ -358,14 +435,14 @@ const Timeline = ({ initialData }: TimelineProps) => {
               {Object.entries(groupedItems).map(([date, dateItems]) => (
                 <div key={date} className="space-y-4">
                   <div className="sticky top-14 z-10 flex md:top-16">
-                    <div className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-sm mx-auto text-gray-500 shadow-md shadow-gray-950/5 backdrop-blur-lg">
+                    <div className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-sm mx-auto text-gray-500 shadow-md shadow-gray-950/5 backdrop-blur-lg dark:border-dark-800 dark:bg-dark-900/90 dark:text-dark-300 dark:shadow-black/30">
                       {date}
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     {dateItems.map((item) => (
-                      <TimelineCard key={item.id} item={item} user={initialData.user} />
+                      <TimelineCard key={item.id} item={item} user={data.user} />
                     ))}
                   </div>
                 </div>
@@ -373,7 +450,7 @@ const Timeline = ({ initialData }: TimelineProps) => {
 
               <div ref={sentinelRef} className="flex min-h-16 items-center justify-center py-4">
                 {isPending ? (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-400 shadow-sm shadow-gray-100">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-400 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500 dark:shadow-black/20">
                     <Loader2 size={14} className="animate-spin" />
                     활동을 더 불러오는 중
                   </div>
@@ -381,24 +458,24 @@ const Timeline = ({ initialData }: TimelineProps) => {
                   <button
                     type="button"
                     onClick={loadMore}
-                    className="cursor-pointer rounded-full border border-gray-100 bg-white px-4 py-2 text-xs font-semibold text-gray-500 shadow-sm shadow-gray-100 transition-colors hover:border-gray-200 hover:bg-gray-50 hover:text-gray-900"
+                    className="cursor-pointer rounded-full border border-gray-100 bg-white px-4 py-2 text-xs font-semibold text-gray-500 shadow-sm shadow-gray-100 transition-colors hover:border-gray-200 hover:bg-gray-50 hover:text-gray-900 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-400 dark:shadow-black/20 dark:hover:border-dark-700 dark:hover:bg-dark-800 dark:hover:text-dark-100"
                   >
                     더 보기
                   </button>
                 ) : (
-                  <div className="rounded-full bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-400">
+                  <div className="rounded-full bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-400 dark:bg-dark-900 dark:text-dark-500">
                     모든 활동을 확인했습니다.
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="rounded-md border border-dashed border-gray-300 bg-white p-10 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-gray-100 text-gray-400">
+            <div className="rounded-md border border-dashed border-gray-300 bg-white p-10 text-center dark:border-dark-700 dark:bg-dark-900">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-gray-100 text-gray-400 dark:bg-dark-800 dark:text-dark-400">
                 <Clock3 size={22} />
               </div>
-              <div className="mt-4 text-sm font-bold text-gray-900">아직 기록된 활동이 없습니다.</div>
-              <p className="mt-2 text-sm text-gray-500">게시글, 댓글, 첨부파일 활동이 생기면 이곳에 시간순으로 표시됩니다.</p>
+              <div className="mt-4 text-sm font-bold text-gray-900 dark:text-dark-100">아직 기록된 활동이 없습니다.</div>
+              <p className="mt-2 text-sm text-gray-500 dark:text-dark-400">게시글, 댓글, 첨부파일 활동이 생기면 이곳에 시간순으로 표시됩니다.</p>
             </div>
           )}
         </section>

@@ -134,11 +134,11 @@ const PostPermissions: React.FC<PostPermissionsProps> = ({
       onClick={onClick}
       className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
         checked
-          ? "border-blue-200 bg-blue-50 text-blue-600"
-          : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900"
+          ? "border-gray-300 bg-gray-100 text-gray-900 dark:border-dark-500 dark:bg-dark-800 dark:text-dark-100"
+          : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-400 dark:hover:border-dark-500 dark:hover:text-dark-100"
       }`}
     >
-      <span className={`h-3 w-3 rounded-sm border ${checked ? "border-blue-500 bg-blue-500" : "border-gray-300"}`} />
+      <span className={`h-3 w-3 rounded-sm border ${checked ? "border-gray-900 bg-gray-900 dark:border-dark-100 dark:bg-dark-100" : "border-gray-300 dark:border-dark-600"}`} />
       {label}
     </button>
   );

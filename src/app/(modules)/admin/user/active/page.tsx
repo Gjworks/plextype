@@ -13,14 +13,14 @@ const UserRow = ({ user, onKick }: { user: any; onKick: (id: string, ip: string,
   const timeAgo = useRelativeTime(user.loginAt)
 
   return (
-    <tr className="hover:bg-gray-50/30 transition-colors">
+    <tr className="hover:bg-gray-50/30 transition-colors dark:hover:bg-white/[0.04]">
       <td className="p-4">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] text-blue-600 font-bold">{user.nickName?.charAt(0)}</div>
-          <span className="text-sm font-medium text-gray-700">{user.nickName}</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-dark-100">{user.nickName}</span>
         </div>
       </td>
-      <td className="p-4 text-sm text-gray-500 font-mono">{user.accountId || '-'}</td>
+      <td className="p-4 text-sm text-gray-500 font-mono dark:text-dark-300">{user.accountId || '-'}</td>
       <td className="p-4 text-sm text-gray-400 font-mono">{user.ip}</td>
 
       {/* 🌟 2. 접속 시간 컬럼 데이터 */}
@@ -76,24 +76,24 @@ export default function ActiveUsersPage() {
   }, [])
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-8 max-w-6xl mx-auto dark:text-dark-100">
       <header className="flex justify-between items-center mb-10">
         <div className="flex items-center gap-4">
-          <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-full transition-all">
+          <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-full transition-all dark:hover:bg-dark-800">
             <ArrowLeft size={20} />
           </Link>
           <h1 className="text-2xl font-bold tracking-tight">실시간 접속자 명단</h1>
         </div>
-        <button onClick={loadData} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 active:scale-95 transition-all">
+        <button onClick={loadData} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 active:scale-95 transition-all dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:bg-dark-800">
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           새로고침
         </button>
       </header>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50/50 border-b border-gray-100">
+            <tr className="bg-gray-50/50 border-b border-gray-100 dark:border-dark-800 dark:bg-dark-950/70">
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">사용자</th>
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">계정 ID</th>
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">IP 주소</th>
@@ -102,7 +102,7 @@ export default function ActiveUsersPage() {
               <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider text-right">관리</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-gray-50 dark:divide-dark-800">
             {users.map((user, i) => (
               <UserRow key={user.id || i} user={user} onKick={handleKick} />
             ))}

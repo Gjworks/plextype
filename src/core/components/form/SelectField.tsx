@@ -33,12 +33,12 @@ const SelectField = forwardRef<HTMLSelectElement, Props>((props, ref) => {
   const hasError = !!error
 
   const containerClass =
-    'group flex w-full items-center rounded-md border shadow-md transition-all duration-200 ' +
+    'group flex w-full items-center rounded-md border shadow-md transition-all duration-200 dark:shadow-black/30 ' +
     (disabled
       ? 'cursor-not-allowed border-gray-200 bg-gray-50 shadow-none opacity-70 dark:border-dark-700 dark:bg-dark-800 '
       : hasError
-        ? 'border-red-300 bg-white shadow-red-100 hover:border-red-400 focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-100 dark:border-red-500/60 dark:bg-dark-900 dark:focus-within:ring-red-500/20 '
-      : 'border-gray-200 bg-white shadow-gray-100 hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:focus-within:border-dark-300 dark:focus-within:ring-dark-300 ')
+        ? 'border-red-300 bg-white shadow-red-100 hover:border-red-400 focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-100 dark:border-red-500/60 dark:bg-dark-900 dark:shadow-red-950/20 dark:focus-within:ring-red-500/15 '
+      : 'border-gray-200 bg-white shadow-gray-100 hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:focus-within:border-dark-500 dark:focus-within:ring-dark-800/80 ')
 
   return (
     <div className="w-full">

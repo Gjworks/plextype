@@ -128,7 +128,7 @@ const Modal: React.FC<ModalProps> = ({
               animate={isDenied ? "denied" : (state ? "open" : "close")}
               exit="close"
               variants={contentVariants}
-              className={`relative z-[121] w-full ${SIZE_MAP[size]} bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800`}
+              className={`relative z-[121] w-full ${SIZE_MAP[size]} overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl dark:border-dark-800 dark:bg-dark-900`}
             >
               <ModalContext.Provider value={{ close: () => close(false) }}>
                 {children}

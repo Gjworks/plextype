@@ -22,7 +22,7 @@ const Button = ({
                 }: ButtonProps) => {
 
   const baseClasses = "relative inline-flex items-center justify-center rounded px-5 py-2 text-xs font-medium transition-colors duration-200 focus:outline-none disabled:cursor-not-allowed cursor-pointer outline-none overflow-hidden";
-  const themeClasses = "bg-gray-100 text-gray-700 hover:bg-gray-800 hover:text-gray-200 disabled:bg-gray-200 disabled:text-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 dark:disabled:bg-gray-800";
+  const themeClasses = "bg-gray-100 text-gray-700 hover:bg-gray-800 hover:text-gray-200 disabled:bg-gray-200 disabled:text-gray-400 dark:bg-dark-800 dark:text-dark-100 dark:hover:bg-dark-700 dark:hover:text-white dark:disabled:bg-dark-900 dark:disabled:text-dark-600";
   const widthClass = fullWidth ? "w-full" : "w-auto";
 
   return (

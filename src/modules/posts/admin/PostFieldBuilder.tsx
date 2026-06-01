@@ -34,10 +34,10 @@ export default function PostFieldBuilder({ initialFields, onSave }: PostFieldBui
   return (
     <div className="bg-white dark:bg-dark-950 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm shadow-gray-200/50 dark:shadow-none overflow-hidden">
       {/* 1. Header: gjworks 어드민의 깔끔한 스타일 */}
-      <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+      <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 dark:border-gray-800 dark:bg-dark-900/70">
         <div className="flex items-center gap-2">
           <LayoutGrid size={18} className="text-blue-600" />
-          <h3 className="text-sm font-bold text-gray-800">추가 필드 구성 관리</h3>
+          <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100">추가 필드 구성 관리</h3>
         </div>
 
         <Button
@@ -63,7 +63,7 @@ export default function PostFieldBuilder({ initialFields, onSave }: PostFieldBui
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="flex items-end gap-4 p-4 rounded-lg border border-gray-100 bg-white hover:bg-gray-50/30 transition-colors group"
+                className="flex items-end gap-4 p-4 rounded-lg border border-gray-100 bg-white hover:bg-gray-50/30 transition-colors group dark:border-gray-800 dark:bg-dark-900 dark:hover:bg-dark-800"
               >
                 {/* 순서 변경 핸들 (장식) */}
                 <div className="mb-3 text-gray-300 group-hover:text-gray-400 cursor-grab">
@@ -92,10 +92,10 @@ export default function PostFieldBuilder({ initialFields, onSave }: PostFieldBui
 
                 {/* 필드 타입 선택 */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm text-black font-medium">데이터 타입</label>
+                  <label className="text-sm text-black font-medium dark:text-gray-100">데이터 타입</label>
                   <select
                     {...register(`extraFields.${index}.type` as const)}
-                    className="h-[46px] min-w-[120px] px-3 rounded-md border border-gray-200 bg-white text-sm text-gray-700 outline-none focus:ring-4 focus:ring-gray-100 transition-all shadow-md shadow-gray-100"
+                    className="h-[46px] min-w-[120px] px-3 rounded-md border border-gray-200 bg-white text-sm text-gray-700 outline-none focus:ring-4 focus:ring-gray-100 transition-all shadow-md shadow-gray-100 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:shadow-black/20 dark:focus:ring-dark-800"
                   >
                     <option value="text">텍스트</option>
                     <option value="tags">태그(Tags)</option>
@@ -119,14 +119,14 @@ export default function PostFieldBuilder({ initialFields, onSave }: PostFieldBui
           </AnimatePresence>
 
           {fields.length === 0 && (
-            <div className="py-16 text-center border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/30">
+            <div className="py-16 text-center border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/30 dark:border-dark-800 dark:bg-dark-900">
               <p className="text-sm text-gray-400">설정된 추가 필드가 없습니다. 우측 상단의 필드 추가 버튼을 클릭하세요.</p>
             </div>
           )}
         </div>
 
         {/* 3. Footer: 액션 영역 */}
-        <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+        <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end dark:border-dark-800">
           <Button
             type="submit"
             disabled={isSubmitting}

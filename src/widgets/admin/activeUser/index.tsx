@@ -21,14 +21,14 @@ const UserItem = ({ user }: { user: ActiveUser }) => {
   return (
     <div className="flex items-center gap-3">
       {/* 아바타 (첫 글자) */}
-      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[10px] text-blue-400 border border-blue-100 font-bold">{user.nickName.charAt(0).toUpperCase()}</div>
+      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-100 bg-gray-50 text-[10px] font-bold text-gray-500 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-200">{user.nickName.charAt(0).toUpperCase()}</div>
 
       <div className="flex-1">
-        <p className="text-[12px] font-medium text-gray-800">{user.nickName}</p>
+        <p className="text-[12px] font-medium text-gray-800 dark:text-dark-100">{user.nickName}</p>
         <div className="flex items-center gap-1.5">
-          <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
+          <div className="h-1 w-1 animate-pulse rounded-full bg-gray-500 dark:bg-dark-300" />
           {/* 🌟 기존 duration 대신 timeAgo(상대 시간) 표시 */}
-          <p className="text-[11px] text-blue-500 font-mono">{timeAgo}</p>
+          <p className="font-mono text-[11px] text-gray-500 dark:text-dark-300">{timeAgo}</p>
         </div>
       </div>
     </div>
@@ -52,14 +52,14 @@ export default function ActiveUserPulse() {
   }, [])
 
   return (
-    <section className="space-y-8 bg-white/80 p-8 rounded-xl shadow-lg shadow-gray-100">
+    <section className="space-y-8 rounded-xl bg-white/80 p-8 shadow-lg shadow-gray-100 dark:border dark:border-dark-800 dark:bg-dark-900/70 dark:shadow-black/20">
       <header className="flex justify-between items-center">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.012em] text-gray-400 mb-1">Active</p>
-          <div className="text-sm font-medium text-gray-500">Live session ({users.length})</div>
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.012em] text-gray-400 dark:text-dark-500">Active</p>
+          <div className="text-sm font-medium text-gray-500 dark:text-dark-300">Live session ({users.length})</div>
         </div>
-        <Link href="/admin/user/active" className="hover:text-blue-500 transition-colors cursor-pointer">
-          <Users size={14} className="text-gray-300 hover:text-blue-500" />
+        <Link href="/admin/user/active" className="cursor-pointer transition-colors hover:text-gray-700 dark:hover:text-dark-100">
+          <Users size={14} className="text-gray-300 hover:text-gray-700 dark:text-dark-500 dark:hover:text-dark-100" />
         </Link>
       </header>
 
@@ -70,7 +70,7 @@ export default function ActiveUserPulse() {
             <UserItem key={user.id} user={user} />
           ))
         ) : (
-          <p className="text-[11px] text-gray-400 text-center py-4">접속자가 없습니다.</p>
+          <p className="py-4 text-center text-[11px] text-gray-400 dark:text-dark-500">접속자가 없습니다.</p>
         )}
       </div>
     </section>
