@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import { ToastContainer } from "@/core/components/toast/toast";
 import RealtimeNotificationListener from "@/core/components/toast/RealtimeNotificationListener";
 import { getSeoMetadata } from "@/core/utils/helper/matadata";
+import UserPreferenceBootstrap from "@/core/providers/UserPreferenceBootstrap";
 
 export async function generateMetadata() {
   return getSeoMetadata({});
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
       <body>
         <ReactQueryProvider>
           <UserProvider>
+            <UserPreferenceBootstrap />
             <RealtimeNotificationListener />
 
             {children}

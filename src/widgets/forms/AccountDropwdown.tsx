@@ -35,6 +35,7 @@ const AccountDropdown = () => {
 
   const userNav: Array<Item> = [
     { title: "내 정보", name: "user", route: "/user" },
+    { title: "개인 설정", name: "preferences", route: "/user/preferences" },
     {
       title: "관리자",
       name: "admin",
@@ -62,7 +63,7 @@ const AccountDropdown = () => {
       <div className="relative">
         {isActuallyLoading ? (
           // 🌟 로딩 스켈레톤 (기존 스타일 유지)
-          <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />
+          <div className="w-8 h-8 animate-pulse rounded-full bg-gray-200 dark:bg-dark-800" />
         ) : (
           <button
             onClick={() => setShowDropdown(!showDropdown)}
@@ -81,16 +82,16 @@ const AccountDropdown = () => {
         <Dropdown state={showDropdown} close={closeDropdown}>
           {user ? (
             <>
-              <div className="w-64 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-xl shadow-gray-950/5 overflow-hidden p-2">
-                <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-                  <p className="text-sm font-bold">{user?.nickName}님 환영합니다</p>
+              <div className="w-64 overflow-hidden rounded-xl border border-zinc-100 bg-white p-2 shadow-xl shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
+                <div className="border-b border-zinc-100 px-4 py-3 dark:border-dark-800">
+                  <p className="text-sm font-bold text-zinc-900 dark:text-dark-100">{user?.nickName}님 환영합니다</p>
                 </div>
                 <DefaultList list={userNav} loggedInfo={user} callback={callbackName} />
               </div>
             </>
           ) : (
             <>
-              <div className="w-64 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-xl shadow-gray-950/5 overflow-hidden p-2">
+              <div className="w-64 overflow-hidden rounded-xl border border-zinc-100 bg-white p-2 shadow-xl shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
                 <DefaultList list={guestNav} callback={callbackName} />
               </div>
             </>

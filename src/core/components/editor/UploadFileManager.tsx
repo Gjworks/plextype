@@ -165,8 +165,10 @@ export default function UploadFileManager({
   return (
     <div>
       <div
-        className={`border border-dashed rounded-xl p-8 text-center cursor-pointer mb-8 ${
-          isDragging ? "border-dashed border-blue-400 bg-blue-50" : "border-gray-300 bg-gray-50"
+        className={`mb-8 cursor-pointer rounded-xl border border-dashed p-8 text-center transition-colors ${
+          isDragging
+            ? "border-gray-500 bg-gray-100 dark:border-dark-500 dark:bg-dark-800"
+            : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100 dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:hover:bg-dark-800"
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -176,12 +178,12 @@ export default function UploadFileManager({
       >
         <div className={`flex justify-center mb-2.5`}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2}
-               stroke="currentColor" className="size-10 text-gray-400">
+	               stroke="currentColor" className="size-10 text-gray-400 dark:text-dark-400">
             <path strokeLinecap="round" strokeLinejoin="round"
                   d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
           </svg>
         </div>
-        <p className="text-gray-500 text-sm">파일을 여기에 끌어다 놓거나 클릭하여 선택하세요.</p>
+        <p className="text-sm text-gray-500 dark:text-dark-300">파일을 여기에 끌어다 놓거나 클릭하여 선택하세요.</p>
       </div>
       {errorData.message &&
         <Alert message={errorData.message} type={errorData.type} />
@@ -190,23 +192,23 @@ export default function UploadFileManager({
       {files.length > 0 && (
         <div className="space-y-2 mt-4">
           {files.map((f, idx) => (
-            <div key={idx} className="flex items-center justify-between p-3 bg-white border rounded-lg shadow-sm">
+            <div key={idx} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-dark-700 dark:bg-dark-900">
               <div className="flex-1 mr-4">
                 <div className="flex justify-between mb-1">
-                  <span className="text-xs font-medium truncate max-w-[200px]">{f.file.name}</span>
-                  <span className="text-[10px] text-gray-400">{f.progress}%</span>
+                  <span className="max-w-[200px] truncate text-xs font-medium text-gray-700 dark:text-dark-200">{f.file.name}</span>
+                  <span className="text-[10px] text-gray-400 dark:text-dark-400">{f.progress}%</span>
                 </div>
                 {/* 프로그레스 바 */}
-                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-dark-800">
                   <div
-                    className={`h-full transition-all duration-300 ${f.status === 'error' ? 'bg-red-500' : 'bg-blue-500'}`}
+                    className={`h-full transition-all duration-300 ${f.status === 'error' ? 'bg-red-500' : 'bg-gray-700 dark:bg-dark-300'}`}
                     style={{ width: `${f.progress}%` }}
                   />
                 </div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); handleDelete(f); }}
-                className="text-gray-400 hover:text-red-500"
+                className="text-gray-400 hover:text-red-500 dark:text-dark-400 dark:hover:text-red-400"
               >
                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" /></svg>
               </button>

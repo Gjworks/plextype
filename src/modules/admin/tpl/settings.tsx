@@ -61,7 +61,7 @@ const sectionMeta: Record<SettingsSection, {
 };
 
 const selectClass =
-  "w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 outline-none transition-colors hover:border-gray-300 focus:border-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100";
+  "w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 outline-none transition-colors hover:border-gray-300 focus:border-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:hover:border-dark-600";
 
 const textareaClass =
   "w-full resize-y rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm leading-6 text-gray-700 outline-none transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:placeholder:text-dark-500";
@@ -167,7 +167,7 @@ const Toggle = ({
       <button
         type="button"
         onClick={handleClick}
-        className="relative block h-6 w-11 min-w-11 shrink-0 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500"
+        className="relative block h-6 w-11 min-w-11 shrink-0 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500 dark:bg-dark-700 dark:data-[checked=true]:bg-cyan-500"
         data-checked={active}
         aria-pressed={active}
       >
@@ -203,10 +203,10 @@ const SiteImageUploadField = ({
   const displayUrl = previewUrl || currentPath || "";
   const isFavicon = variant === "favicon";
   const previewWrapClass = isFavicon
-    ? "mb-4 flex h-[148px] items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50"
+    ? "mb-4 flex h-[148px] items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50 dark:border-dark-700 dark:bg-dark-950"
     : variant === "logo"
-      ? "mb-4 grid h-[148px] place-items-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50"
-      : "mb-4 grid aspect-[1.91/1] min-h-[148px] place-items-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50";
+      ? "mb-4 grid h-[148px] place-items-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50 dark:border-dark-700 dark:bg-dark-950"
+      : "mb-4 grid aspect-[1.91/1] min-h-[148px] place-items-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50 dark:border-dark-700 dark:bg-dark-950";
   const imageClass = isFavicon ? "h-16 w-16 object-contain" : "h-full w-full object-contain";
 
   useEffect(() => {
@@ -698,11 +698,11 @@ const Settings = ({
   const handleReset = activeSection === "site" ? resetSiteSettings : activeSection === "upload" ? resetUploadSettings : activeSection === "auth" ? resetAuthSettings : activeSection === "seo" ? resetSeoSettings : activeSection === "notification" ? resetNotificationSettings : undefined;
 
   return (
-    <form className="max-w-screen-2xl mx-auto px-3 py-10" onSubmit={handleSubmit}>
+    <form className="max-w-screen-2xl mx-auto px-3 py-10 dark:text-dark-100" onSubmit={handleSubmit}>
       <div className="mb-8 flex flex-wrap items-end gap-4">
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">System Control / {meta.eyebrow}</div>
-          <div className="mt-2 text-lg font-semibold text-gray-700">{meta.label}</div>
+          <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">{meta.label}</div>
           <div className="mt-1 text-sm text-gray-400">{meta.description}</div>
         </div>
         <div className="flex-1" />
@@ -711,7 +711,7 @@ const Settings = ({
             type="button"
             disabled={!handleReset || isPending}
             onClick={handleReset}
-            className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:bg-white disabled:text-gray-400"
+            className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:bg-white disabled:text-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:bg-dark-800 dark:hover:text-white dark:disabled:bg-dark-900 dark:disabled:text-dark-600"
           >
             초기화
           </Button>
@@ -728,7 +728,7 @@ const Settings = ({
 
       {formMessage && (
         <div className={`mb-6 rounded-md px-3 py-2 text-sm leading-6 ${
-          formMessage.type === "success" ? "bg-cyan-50 text-cyan-600" : "bg-red-50 text-red-500"
+          formMessage.type === "success" ? "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-300" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-300"
         }`}>
           {formMessage.message}
         </div>

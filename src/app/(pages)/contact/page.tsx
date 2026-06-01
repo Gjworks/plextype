@@ -168,7 +168,7 @@ const ContactUsPage = () => {
 
 
   return (
-    <div className="min-h-screen overflow-hidden bg-white px-4 py-16 text-gray-950 md:px-8">
+    <div className="min-h-screen overflow-hidden bg-white px-4 py-16 text-gray-950 dark:bg-dark-950 dark:text-dark-100 md:px-8">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -185,7 +185,7 @@ const ContactUsPage = () => {
             whileTap={{
               scale: 0.96,
             }}
-            className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-950 text-white shadow-xl shadow-gray-200"
+            className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-950 text-white shadow-xl shadow-gray-200 dark:bg-dark-100 dark:text-dark-950 dark:shadow-black/40"
           >
             <MessageSquareText size={24} />
           </motion.div>
@@ -199,14 +199,14 @@ const ContactUsPage = () => {
 
           <motion.h1
             variants={itemVariants}
-            className="text-4xl font-black tracking-tight text-gray-950 md:text-6xl"
+            className="text-4xl font-black tracking-tight text-gray-950 dark:text-dark-100 md:text-6xl"
           >
             무엇을 도와드릴까요?
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-gray-500 md:text-base"
+            className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-gray-500 dark:text-dark-400 md:text-base"
           >
             서비스 이용, 기술 지원, 제휴 문의, 기타 요청사항을 남겨주세요.
             확인 후 순차적으로 답변드리겠습니다.
@@ -215,23 +215,23 @@ const ContactUsPage = () => {
 
         <motion.section
           variants={cardVariants}
-          className="mt-12 rounded-[32px] border border-gray-200 bg-[#fafafa] p-4 shadow-[0_30px_80px_rgba(15,23,42,0.08)] md:p-6"
+          className="mt-12 rounded-[32px] border border-gray-200 bg-[#fafafa] p-4 shadow-[0_30px_80px_rgba(15,23,42,0.08)] dark:border-dark-800 dark:bg-dark-900/70 dark:shadow-black/30 md:p-6"
         >
 
           <motion.form
             onSubmit={handleSubmit}
             variants={containerVariants}
-            className="rounded-[26px] border border-gray-200 bg-white p-5 md:p-8"
+            className="rounded-[26px] border border-gray-200 bg-white p-5 dark:border-dark-800 dark:bg-dark-950 md:p-8"
           >
             <motion.div
               variants={itemVariants}
-              className="mb-8 flex flex-col gap-3 border-b border-gray-100 pb-6 md:flex-row md:items-center md:justify-between"
+              className="mb-8 flex flex-col gap-3 border-b border-gray-100 pb-6 dark:border-dark-800 md:flex-row md:items-center md:justify-between"
             >
               <div>
-                <h2 className="text-xl font-black text-gray-950">
+                <h2 className="text-xl font-black text-gray-950 dark:text-dark-100">
                   문의 작성
                 </h2>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-gray-500 dark:text-dark-400">
                   답변을 받을 수 있는 정보를 함께 입력해주세요.
                 </p>
 
@@ -323,7 +323,7 @@ const ContactUsPage = () => {
             </motion.div>
 
             <motion.div variants={itemVariants} className="mt-5">
-              <label className="mb-2 block text-sm font-medium text-black">
+              <label className="mb-2 block text-sm font-medium text-black dark:text-dark-200">
                 문의 내용
               </label>
 
@@ -338,7 +338,7 @@ const ContactUsPage = () => {
                     ? '로그인 후 문의 내용을 입력할 수 있습니다.'
                     : '문의하실 내용을 자세히 입력해주세요.'
                 }
-                className="w-full resize-none rounded-md border border-gray-200 bg-white px-4 py-3 text-sm text-black shadow-md shadow-gray-100 outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-gray-300 focus:border-gray-300 focus:ring-4 focus:ring-gray-200/75"
+                className="w-full resize-none rounded-md border border-gray-200 bg-white px-4 py-3 text-sm text-black shadow-md shadow-gray-100 outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-gray-300 focus:border-gray-300 focus:ring-4 focus:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:shadow-black/30 dark:placeholder:text-dark-500 dark:hover:border-dark-500 dark:focus:border-dark-500 dark:focus:ring-dark-800/80"
               />
               {errors.message && (
                 <p className="mt-1.5 text-xs font-medium text-red-500">
@@ -349,7 +349,7 @@ const ContactUsPage = () => {
 
             <motion.div
               variants={itemVariants}
-              className="mt-8 flex flex-col gap-4 border-t border-gray-100 pt-6 md:flex-row md:items-center md:justify-between"
+              className="mt-8 flex flex-col gap-4 border-t border-gray-100 pt-6 dark:border-dark-800 md:flex-row md:items-center md:justify-between"
             >
               <p className="text-xs leading-5 text-gray-400">
                 입력하신 정보는 문의 답변 목적으로만 사용됩니다.

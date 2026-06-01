@@ -72,12 +72,12 @@ const Toggle = ({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500"
+      className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-gray-900 dark:bg-dark-700 dark:data-[checked=true]:bg-dark-100"
       data-checked={checked}
       aria-pressed={checked}
     >
       <span
-        className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
+        className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform dark:bg-dark-300 dark:shadow-black/40 ${
           checked ? "translate-x-5" : "translate-x-0"
         }`}
       />
@@ -180,14 +180,14 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors })
         <FieldRow label="좋아요 사용" description="게시글 본문에 좋아요 기능을 사용합니다.">
           <div className="flex items-center gap-3">
             <Toggle checked={Boolean(value.config.documentLike)} onChange={(checked) => onChange({ documentLike: checked })} />
-            <span className="text-sm text-gray-600">좋아요 기능</span>
+            <span className="text-sm text-gray-600 dark:text-dark-400">좋아요 기능</span>
           </div>
         </FieldRow>
 
         <FieldRow label="상담 기능 사용" description="관리자와 작성자만 글을 볼 수 있는 게시판으로 운영합니다.">
           <div className="flex items-center gap-3">
             <Toggle checked={Boolean(value.config.consultingState)} onChange={(checked) => onChange({ consultingState: checked })} />
-            <span className="text-sm text-gray-600">작성자 전용 목록</span>
+            <span className="text-sm text-gray-600 dark:text-dark-400">작성자 전용 목록</span>
           </div>
         </FieldRow>
       </SectionShell>

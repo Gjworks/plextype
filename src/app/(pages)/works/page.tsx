@@ -23,7 +23,7 @@ export default function WorksPage() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return <div className="min-h-screen bg-white" />;
+  if (!mounted) return <div className="min-h-screen bg-white dark:bg-dark-950" />;
 
   const works = [
     {
@@ -59,7 +59,7 @@ export default function WorksPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-primary-600 selection:text-white">
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-primary-600 selection:text-white dark:bg-dark-950 dark:text-dark-100">
       <div className="max-w-4xl mx-auto pt-12 px-6">
 
         <header className="mb-24">
@@ -74,7 +74,7 @@ export default function WorksPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-slate-500 font-medium tracking-tight"
+            className="text-slate-500 font-medium tracking-tight dark:text-dark-400"
           >
             우리가 설계하고 현실로 만들어가는 프로젝트들입니다.
           </motion.p>
@@ -100,12 +100,12 @@ export default function WorksPage() {
                     rel="noopener noreferrer"
                     className="block group"
                   >
-                    <div className="relative p-8 rounded-3xl border border-slate-200 bg-white transition-all duration-500 hover:border-primary-600 hover:shadow-2xl hover:shadow-primary-100/50 cursor-pointer">
+                    <div className="relative p-8 rounded-3xl border border-slate-200 bg-white transition-all duration-500 hover:border-primary-600 hover:shadow-2xl hover:shadow-primary-100/50 cursor-pointer dark:border-dark-800 dark:bg-dark-900 dark:hover:border-dark-600 dark:hover:shadow-black/30">
                       <WorkContent work={work} isReleased={isReleased} />
                     </div>
                   </Link>
                 ) : (
-                  <div className="relative p-8 rounded-3xl border border-slate-100 bg-slate-50/50 opacity-70">
+                  <div className="relative p-8 rounded-3xl border border-slate-100 bg-slate-50/50 opacity-70 dark:border-dark-800 dark:bg-dark-900/50">
                     <WorkContent work={work} isReleased={isReleased} />
                   </div>
                 )}
@@ -134,18 +134,18 @@ function WorkContent({ work, isReleased }: { work: any, isReleased: boolean }) {
           <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-widest">{work.category}</span>
         </div>
 
-        <h2 className={`text-3xl font-black tracking-tight mb-4 ${isReleased ? 'text-slate-900' : 'text-slate-400'}`}>
+        <h2 className={`text-3xl font-black tracking-tight mb-4 ${isReleased ? 'text-slate-900 dark:text-dark-100' : 'text-slate-400 dark:text-dark-500'}`}>
           {work.title}
         </h2>
 
-        <p className={`text-sm leading-relaxed mb-8 max-w-xl ${isReleased ? 'text-slate-600' : 'text-slate-400'}`}>
+        <p className={`text-sm leading-relaxed mb-8 max-w-xl ${isReleased ? 'text-slate-600 dark:text-dark-300' : 'text-slate-400 dark:text-dark-500'}`}>
           {work.description}
         </p>
 
         <div className="flex flex-wrap gap-2">
           {work.tags.map((tag: string) => (
             <span key={tag} className={`text-[10px] px-2 py-0.5 rounded border font-bold ${
-              isReleased ? 'border-slate-200 text-slate-500' : 'border-slate-100 text-slate-300'
+              isReleased ? 'border-slate-200 text-slate-500 dark:border-dark-700 dark:text-dark-400' : 'border-slate-100 text-slate-300 dark:border-dark-800 dark:text-dark-600'
             }`}>
               #{tag.toUpperCase()}
             </span>

@@ -79,7 +79,7 @@ const Toggle = ({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500"
+      className="relative block h-6 w-11 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500 dark:bg-dark-700 dark:data-[checked=true]:bg-cyan-500"
       data-checked={checked}
       aria-pressed={checked}
     >
@@ -153,7 +153,7 @@ const UpsertForm = ({ user, groupList }: UpsertFormProps) => {
   };
 
   return (
-    <form onSubmit={submitHandler}>
+    <form onSubmit={submitHandler} className="dark:text-dark-100">
       {formMessage && (
         <div className="mb-6">
           <Alert type={formMessage.type} message={formMessage.message} />
@@ -167,7 +167,7 @@ const UpsertForm = ({ user, groupList }: UpsertFormProps) => {
           <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
             User Control / {isUpdateMode ? "Update" : "Create"}
           </div>
-          <div className="mt-2 text-lg font-semibold text-gray-700">
+          <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">
             {isUpdateMode ? "회원 수정" : "회원 추가"}
           </div>
           <div className="mt-1 text-sm text-gray-400">
@@ -176,7 +176,7 @@ const UpsertForm = ({ user, groupList }: UpsertFormProps) => {
         </div>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
-          <Button type="button" onClick={() => router.back()} fullWidth={false} className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800">
+          <Button type="button" onClick={() => router.back()} fullWidth={false} className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:bg-dark-800 dark:hover:text-white">
             뒤로가기
           </Button>
           <Button
@@ -257,7 +257,7 @@ const UpsertForm = ({ user, groupList }: UpsertFormProps) => {
         <FieldRow label="관리자 설정" description="관리자 페이지 접근 권한을 부여합니다.">
           <div className="flex items-center gap-3">
             <Toggle checked={isAdmin} onChange={setIsAdmin} />
-            <span className="text-sm text-gray-600">관리자 권한</span>
+            <span className="text-sm text-gray-600 dark:text-dark-300">관리자 권한</span>
           </div>
         </FieldRow>
 
@@ -272,8 +272,8 @@ const UpsertForm = ({ user, groupList }: UpsertFormProps) => {
                   onClick={() => handleGroupChange(group.id)}
                   className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
                     checked
-                      ? "border-blue-200 bg-blue-50 text-blue-600"
-                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900"
+                      ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-cyan-500/40 dark:bg-cyan-500/10 dark:text-cyan-300"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:text-dark-100"
                   }`}
                 >
                   <span className={`h-3 w-3 rounded-sm border ${checked ? "border-blue-500 bg-blue-500" : "border-gray-300"}`} />

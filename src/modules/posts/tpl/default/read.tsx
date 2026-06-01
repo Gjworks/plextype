@@ -81,7 +81,7 @@ const tiptapExtensions = [
     },
     blockquote: {
       HTMLAttributes: {
-        class: 'border-l-4 border-gray-300 pl-4 italic text-gray-600',
+        class: 'border-l-4 border-gray-300 pl-4 italic text-gray-600 dark:border-dark-700 dark:text-dark-300',
       },
     },
     bulletList: false,
@@ -212,7 +212,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
           </div>
           <div className="flex justify-center pb-12 pt-12">
             <div
-              className="inline-block text-3xl md:text-4xl font-medium text-black dark:text-white leading-10"
+              className="inline-block text-3xl md:text-4xl font-medium text-black dark:text-dark-100 leading-10"
               style={{ lineHeight: "140%" }}
             >
               {document.title}
@@ -289,7 +289,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
                     />
                   </svg>
                 </div>
-                <div className="text-xs text-gray-500">{document.readCount}</div>
+                <div className="text-xs text-gray-500 dark:text-dark-500">{document.readCount}</div>
               </div>
               <div className="flex gap-1 items-center">
                 <div className=" dark:text-dark-500">
@@ -410,9 +410,9 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
                   if (value === undefined || value === null || value === "") return null;
 
                   return (
-                    <div key={field.name} className="grid grid-cols-2 gap-4 flex items-center justify-between border-b border-gray-200/40 dark:border-dark-700/50  bg-gray-50">
+                    <div key={field.name} className="grid grid-cols-2 gap-4 flex items-center justify-between border-b border-gray-200/40 bg-gray-50 dark:border-dark-700/50 dark:bg-dark-900/70">
                       <div className="px-3 py-3 text-xs font-medium text-gray-500 dark:text-dark-400">{field.label}</div>
-                      <div className="px-3 py-3 bg-white text-sm font-bold text-gray-900 dark:text-dark-100">
+                      <div className="px-3 py-3 bg-white text-sm font-bold text-gray-900 dark:bg-dark-950 dark:text-dark-100">
                         {field.type === 'date' ? dayjs(value).format('YYYY-MM-DD') : String(value)}
                       </div>
                     </div>
@@ -424,7 +424,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
         </div>
       </div>
 
-      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-400 tracking-tight">
+      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-300 tracking-tight">
         <style dangerouslySetInnerHTML={{ __html: `
       .plextype-shiki-block {
         display: block !important;
@@ -452,6 +452,10 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
 
       .plextype-shiki-block::-webkit-scrollbar {
         display: none;
+      }
+
+      .dark .plextype-shiki-block {
+        background-color: #12161e !important;
       }
     `}} />
         {content}

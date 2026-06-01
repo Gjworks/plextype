@@ -124,46 +124,81 @@ export default function MainIntro() {
               <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-80 hover:shadow-lg hover:shadow-gray-950/10">
                 <div className="grid place-content-between h-full gap-4">
                   <div className="text-xl font-light text-gray-400 dark:text-dark-400">
-                    Approach expanding{" "}
+                    Build modular{" "}
                     <span className="font-semibold text-gray-950 dark:text-white">
-                      workplace
+                      platforms
                     </span>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-dark-400">
-                    Sessions
+                    Plextype Core
                   </div>
                 </div>
               </div>
             </div>
             <div className="relative w-44 md:w-64 flex-none -rotate-[16deg] translate-y-24">
-              <div className="relative rounded-2xl p-5 bg-gray-50 bg-[url(/assets/images/bg46.jpg)] bg-no-repeat bg-cover bg-center transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/50">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-gray-950/30 via-gray-950/40 to-gray-950/70"></div>
+              <div className="relative h-60 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50 md:h-80">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(145deg,rgba(20,184,166,0.22),transparent_42%),linear-gradient(315deg,rgba(99,102,241,0.18),transparent_38%)]" />
+                <div className="relative flex h-full flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="h-2 w-16 rounded-full bg-white/40" />
+                    <div className="h-2 w-24 rounded-full bg-white/20" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[0, 1, 2, 3, 4, 5].map((item) => (
+                      <div key={item} className="h-10 rounded-lg border border-white/10 bg-white/[0.06] backdrop-blur" />
+                    ))}
+                  </div>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.35em] text-white/40">Admin</div>
+                      <div className="mt-1 text-lg font-semibold leading-tight text-white">Control Layer</div>
+                    </div>
+                    <div className="h-10 w-10 rounded-full border border-white/15 bg-white/10" />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="relative w-44 md:w-64 flex-none -rotate-[10deg] translate-y-6">
               <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
                 <div className="grid place-content-between h-full gap-4">
                   <div className="text-xl font-light text-gray-400 dark:text-dark-400">
-                    Approach expanding{" "}
+                    Design flexible{" "}
                     <span className="font-semibold text-gray-950 dark:text-white">
-                      workplace
+                      systems
                     </span>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-dark-400">
-                    Sessions
+                    Extension Ready
                   </div>
                 </div>
               </div>
             </div>
             <div className="relative w-44 md:w-64 flex-none">
-              <div className="relative rounded-2xl p-5 bg-gray-50 bg-[url(/assets/images/bg39.jpg)] bg-no-repeat bg-cover bg-center transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/50">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-gray-950/50 via-gray-950/40 to-gray-950/70"></div>
+              <div className="relative h-60 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50 md:h-80">
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.14),transparent_30%),radial-gradient(circle_at_70%_30%,rgba(14,165,233,0.24),transparent_32%),radial-gradient(circle_at_35%_75%,rgba(244,63,94,0.16),transparent_30%)]" />
+                <div className="absolute inset-x-5 top-8 h-px bg-white/15" />
+                <div className="absolute bottom-6 left-6 top-12 w-px bg-white/15" />
                 <div className="relative grid place-content-between h-full gap-4">
-                  <div className="text-xl font-light text-white/70">
-                    find <span className="font-semibold text-white">your</span>{" "}
-                    possibilities
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-white/70" />
+                      <div className="h-2 w-28 rounded-full bg-white/25" />
+                    </div>
+                    <div className="ml-4 rounded-xl border border-white/10 bg-white/[0.06] p-3">
+                      <div className="h-2 w-20 rounded-full bg-white/40" />
+                      <div className="mt-2 h-2 w-28 rounded-full bg-white/15" />
+                    </div>
+                    <div className="ml-12 rounded-xl border border-white/10 bg-white/[0.06] p-3">
+                      <div className="h-2 w-16 rounded-full bg-white/40" />
+                      <div className="mt-2 h-2 w-24 rounded-full bg-white/15" />
+                    </div>
                   </div>
-                  <div className="text-xs text-white/50">Loquence</div>
+                  <div>
+                    <div className="text-xl font-light text-white/70">
+                      smarter <span className="font-semibold text-white">flows</span>
+                    </div>
+                    <div className="mt-1 text-xs text-white/50">Practical Automation</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -171,34 +206,51 @@ export default function MainIntro() {
               <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
                 <div className="grid place-content-between h-full gap-4">
                   <div className="text-xl font-light text-gray-400 dark:text-dark-400">
-                    find{" "}
+                    ship{" "}
                     <span className="font-semibold text-gray-950 dark:text-white">
-                      your
+                      better
                     </span>{" "}
-                    possibilities
+                    ideas
                   </div>
                   <div className="text-xs text-gray-600 dark:text-dark-400">
-                    Loquence
+                    Gjworks Lab
                   </div>
                 </div>
               </div>
             </div>
             <div className="relative w-44 md:w-64 flex-none rotate-[16deg] translate-y-24">
-              <div className="relative rounded-2xl p-5 bg-gray-50 bg-[url(/assets/images/bg41.jpg)] bg-no-repeat bg-cover bg-center transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/50">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-gray-950/30 via-gray-950/40 to-gray-950/70"></div>
+              <div className="relative h-60 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50 md:h-80">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.16),transparent_24%),linear-gradient(160deg,rgba(34,197,94,0.16),transparent_36%),linear-gradient(330deg,rgba(251,146,60,0.16),transparent_36%)]" />
+                <div className="relative flex h-full flex-col justify-between">
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3 font-mono text-[10px] leading-5 text-white/55">
+                    <div><span className="text-white/30">$</span> npm run setup</div>
+                    <div><span className="text-white/30">$</span> prisma sync</div>
+                    <div><span className="text-white/30">$</span> deploy cleanly</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="h-16 rounded-xl border border-white/10 bg-white/[0.06]" />
+                    <div className="h-16 rounded-xl border border-white/10 bg-white/[0.06]" />
+                  </div>
+                  <div>
+                    <div className="text-xl font-light text-white/70">
+                      reliable <span className="font-semibold text-white">launches</span>
+                    </div>
+                    <div className="mt-1 text-xs text-white/50">Project Runtime</div>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="relative w-44 md:w-64 flex-none rotate-[24deg] translate-y-52">
               <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
                 <div className="grid place-content-between h-full gap-4">
                   <div className="text-xl font-light text-gray-400 dark:text-dark-400">
-                    Approach expanding{" "}
+                    Create lasting{" "}
                     <span className="font-semibold text-gray-950 dark:text-white">
-                      workplace
+                      services
                     </span>
                   </div>
                   <div className="text-xs text-gray-600 dark:text-dark-400">
-                    Sessions
+                    Developer First
                   </div>
                 </div>
               </div>
@@ -225,20 +277,19 @@ export default function MainIntro() {
                           variants={variants}
                           className="mb-4 text-2xl font-thin text-black md:text-4xl dark:text-white !leading-tight tracking-tight text-center"
                         >
-                          6 best things for
+                          Build systems for
                           <br />{" "}
                           <span className={`text-primary-500`}>
-                            employees
+                            creators
                           </span>{" "}
-                          & what they deserve!
+                          who ship with clarity.
                         </motion.div>
                         <motion.div
                           variants={variants}
                           className="dark:text-dark-500 text-xs md:text-sm text-gray-400 text-center"
                         >
-                          컴포넌트는 React와 Next.js에서 사용할 수 있습니다.
-                          모든 Component는 tailwindcss와 Framer motion을
-                          활용하여 애니메이션과 스타일을 정의했습니다.
+                          Gjworks builds extensible web systems with Plextype,
+                          AI-assisted workflows, and practical developer tools.
                         </motion.div>
                       </div>
                     </div>

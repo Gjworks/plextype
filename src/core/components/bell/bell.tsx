@@ -50,7 +50,7 @@ export default function NotificationBell() {
 
   if (!mounted) {
     return (
-      <div className="p-2 text-gray-500 rounded-full relative">
+      <div className="relative rounded-full p-2 text-gray-500 dark:text-dark-300">
         <Bell size={20} />
       </div>
     );
@@ -61,8 +61,8 @@ export default function NotificationBell() {
   const bgColor = "bg-red-600";
 
   return (
-    <div className="p-2 text-gray-500 hover:bg-black/5 rounded-full transition-all relative group">
-      <Bell size={20} className="group-hover:text-black transition-colors" />
+    <div className="group relative rounded-full p-2 text-gray-500 transition-all hover:bg-black/5 dark:text-dark-300 dark:hover:bg-white/[0.06]">
+      <Bell size={20} className="transition-colors group-hover:text-black dark:group-hover:text-white" />
 
       <AnimatePresence>
         {hasUnread && (

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { KeyRound, RotateCcw, Save, ShieldCheck } from "lucide-react";
 
 import Alert from "@components/message/Alert";
 import InputField from "@components/form/InputField";
@@ -76,56 +77,63 @@ const ChangePassword = ({ close }: { close: (state: boolean) => void }) => {
   };
 
   return (
-    <form ref={formRef} onSubmit={submitHandler}>
-      <div className="px-5">
-        {error && <Alert message={error.message} type={error.type} />}
-
-        <div className="grid grid-cols-3 gap-4 py-3 mb-2 border-b border-gray-100">
-          <div className="col-span-1 text-sm text-gray-400 p-2">이전 비밀번호</div>
-          <div className="col-span-2">
-            {/* 💡 name을 서버와 동일한 nowPassword 로 변경! */}
-            <InputField
-              inputTitle=""
-              type="password"
-              name="nowPassword"
-              placeholder="현재 비밀번호 입력"
-            />
+    <form ref={formRef} onSubmit={submitHandler} className="space-y-5">
+      <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+        <div className="mb-5 flex items-start gap-3">
+          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+            <ShieldCheck size={17} />
+          </div>
+          <div>
+            <div className="text-sm font-black text-gray-950 dark:text-dark-100">비밀번호 변경</div>
+            <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-400">
+              현재 비밀번호를 확인한 뒤 새 비밀번호로 변경합니다.
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 py-3 mb-2 border-b border-gray-100">
-          <div className="col-span-1 text-sm text-gray-400 p-2">신규 비밀번호</div>
-          <div className="col-span-2">
-            {/* 💡 name을 newPassword 로 변경! */}
-            <InputField
-              inputTitle=""
-              type="password"
-              name="newPassword"
-              placeholder="새 비밀번호 입력"
-            />
+        {error && (
+          <div className="mb-4">
+            <Alert message={error.message} type={error.type} />
           </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-3 gap-4 py-3 mb-2">
-          <div className="col-span-1 text-sm text-gray-400 p-2">신규 비밀번호 확인</div>
-          <div className="col-span-2">
-            {/* 💡 name을 renewPassword 로 변경! */}
-            <InputField
-              inputTitle=""
-              type="password"
-              name="renewPassword"
-              placeholder="새 비밀번호 다시 입력"
-            />
-          </div>
+        <div className="space-y-4">
+          <InputField
+            inputTitle="현재 비밀번호"
+            type="password"
+            name="nowPassword"
+            placeholder="현재 비밀번호를 입력해주세요."
+            icon={<KeyRound size={15} />}
+          />
+
+          <InputField
+            inputTitle="새 비밀번호"
+            type="password"
+            name="newPassword"
+            placeholder="새 비밀번호를 입력해주세요."
+            icon={<KeyRound size={15} />}
+          />
+
+          <InputField
+            inputTitle="새 비밀번호 확인"
+            type="password"
+            name="renewPassword"
+            placeholder="새 비밀번호를 다시 입력해주세요."
+            icon={<KeyRound size={15} />}
+          />
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-gray-200 gap-[1px] bg-gray-200 mt-4">
+      <div className="flex items-center justify-between gap-3 px-1 pt-1">
         <button
           type="button"
-          onClick={() => formRef.current?.reset()}
-          className="flex-1 bg-white text-sm py-4 px-5 hover:bg-gray-100 hover:text-gray-900 text-gray-500 transition"
+          onClick={() => {
+            formRef.current?.reset();
+            setError(null);
+          }}
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-transparent bg-transparent px-3 py-2 text-xs font-bold text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-dark-100"
         >
+          <RotateCcw size={14} />
           비우기
         </button>
 
@@ -133,9 +141,12 @@ const ChangePassword = ({ close }: { close: (state: boolean) => void }) => {
           type="submit"
           isLoading={mutation.isPending}
           fullWidth={false}
-          className="flex-1 !rounded-none !py-4 bg-white !text-blue-500 border-none hover:!bg-blue-500 hover:!text-white transition"
+          className="rounded-full px-4 text-xs font-bold"
         >
-          변경하기
+          <span className="inline-flex items-center gap-2">
+            <Save size={14} />
+            변경하기
+          </span>
         </Button>
       </div>
     </form>

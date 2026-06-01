@@ -108,7 +108,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
               <UsersRound size={13} />
               User Control
             </div>
-            <div className="mt-2 text-lg font-semibold text-gray-700">회원 그룹 관리</div>
+            <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">회원 그룹 관리</div>
             <div className="mt-1 text-sm text-gray-400">
               전체 {initialGroupList.length}개의 회원 그룹을 관리합니다.
             </div>
@@ -125,11 +125,11 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
           </Button>
         </div>
 
-        <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100">
+        <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px]">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/80">
+                <tr className="border-b border-gray-100 bg-gray-50/80 dark:border-dark-800 dark:bg-dark-950/70">
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Group</th>
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">ID</th>
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Description</th>
@@ -140,16 +140,16 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
               <tbody>
                 {initialGroupList.length > 0 ? (
                   initialGroupList.map((group, index) => (
-                    <tr key={group.id || index} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40">
+                    <tr key={group.id || index} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40 dark:border-dark-800 dark:hover:bg-white/[0.04]">
                       <td className="px-4 py-4">
-                        <div className="text-sm font-semibold text-gray-800">{group.groupTitle}</div>
+                        <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{group.groupTitle}</div>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600">
+                        <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600 dark:bg-dark-800 dark:text-dark-300">
                           {group.groupName}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-500">{group.groupDesc || "-"}</td>
+                      <td className="px-4 py-4 text-sm text-gray-500 dark:text-dark-300">{group.groupDesc || "-"}</td>
                       <td className="px-4 py-4 text-center">
                         <span className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${group.groupDefault ? "bg-cyan-50 text-cyan-600" : "bg-gray-100 text-gray-400"}`}>
                           {group.groupDefault ? "YES" : "NO"}
@@ -161,7 +161,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
                             type="button"
                             onClick={() => openUpdateModal(group)}
                             disabled={isPending}
-                            className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white disabled:cursor-not-allowed disabled:text-gray-300"
+                            className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white disabled:cursor-not-allowed disabled:text-gray-300 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-cyan-500 dark:hover:text-dark-950"
                           >
                             <Edit3 size={13} />
                             수정
@@ -193,21 +193,21 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
       </div>
 
       <Modal state={showModal} close={setShowModal} size="sm" position="center" escClose overlay overlayClose>
-        <div className="max-h-[85vh] overflow-y-auto bg-white">
-          <div className="flex items-center gap-4 border-b border-gray-100 px-5 py-4">
+        <div className="max-h-[85vh] overflow-y-auto bg-white dark:bg-dark-900 dark:text-dark-100">
+          <div className="flex items-center gap-4 border-b border-gray-100 px-5 py-4 dark:border-dark-800">
             <div className="flex-1">
               <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
                 <ShieldCheck size={13} />
                 Group
               </div>
-              <div className="mt-1 text-base font-semibold text-gray-800">
+              <div className="mt-1 text-base font-semibold text-gray-800 dark:text-dark-100">
                 {groupUpdate ? "그룹 수정" : "그룹 추가"}
               </div>
             </div>
             <button
               type="button"
               onClick={() => setShowModal(false)}
-              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-dark-100"
               aria-label="닫기"
             >
               <X size={17} />
@@ -225,7 +225,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
 
             <div className="grid gap-5">
               <div>
-                <div className="mb-2 text-sm font-medium text-black">그룹명</div>
+                <div className="mb-2 text-sm font-medium text-black dark:text-dark-100">그룹명</div>
                 <InputField
                   ref={groupTitleRef}
                   inputTitle="그룹명"
@@ -240,7 +240,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
               </div>
 
               <div>
-                <div className="mb-2 text-sm font-medium text-black">그룹 ID</div>
+                <div className="mb-2 text-sm font-medium text-black dark:text-dark-100">그룹 ID</div>
                 <InputField
                   ref={groupNameRef}
                   inputTitle="그룹 ID"
@@ -253,13 +253,13 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
                   error={fieldErrors?.groupName}
                   hideLabel
                 />
-                <div className="mt-2 rounded-md bg-gray-50 px-3 py-2 text-xs leading-5 text-gray-500">
+                <div className="mt-2 rounded-md bg-gray-50 px-3 py-2 text-xs leading-5 text-gray-500 dark:bg-dark-950 dark:text-dark-400">
                   영문으로 작성해주세요. 한 번 정한 ID는 변경할 수 없습니다.
                 </div>
               </div>
 
               <div>
-                <div className="mb-2 text-sm font-medium text-black">그룹 소개</div>
+                <div className="mb-2 text-sm font-medium text-black dark:text-dark-100">그룹 소개</div>
                 <InputField
                   ref={groupDescRef}
                   inputTitle="그룹 소개"
@@ -274,7 +274,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-2 border-t border-gray-100 pt-5">
+            <div className="mt-6 flex justify-end gap-2 border-t border-gray-100 pt-5 dark:border-dark-800">
               <Button type="button" onClick={() => setShowModal(false)} disabled={isPending} fullWidth={false}>
                 취소
               </Button>

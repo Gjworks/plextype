@@ -75,7 +75,7 @@ const FeatureIndexClient = ({ featureLinks }: { featureLinks: FeatureLink[] }) =
     <div className="relative flex min-h-[calc(100vh-228px)] items-center justify-center py-10">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="flex h-full items-center justify-center">
-          <div className="rotate-90 text-[7rem] font-bold uppercase tracking-normal text-black sm:rotate-0 lg:text-[13rem] xl:text-[16rem] 2xl:text-[18rem]">
+	          <div className="rotate-90 text-[7rem] font-bold uppercase tracking-normal text-black dark:text-white sm:rotate-0 lg:text-[13rem] xl:text-[16rem] 2xl:text-[18rem]">
             Features
           </div>
         </div>

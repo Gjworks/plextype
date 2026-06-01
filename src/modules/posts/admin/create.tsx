@@ -151,7 +151,7 @@ const DashboardPostCreate = ({
           <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
             Board Control / {isUpdateMode ? "Update" : "Create"}
           </div>
-          <div className="mt-2 text-lg font-semibold text-gray-700">
+          <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">
             {isUpdateMode ? "게시판 수정" : "게시판 생성"}
           </div>
           <div className="mt-1 text-sm text-gray-400">
@@ -164,7 +164,7 @@ const DashboardPostCreate = ({
             type="button"
             onClick={() => router.back()}
             fullWidth={false}
-            className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+            className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:bg-dark-800 dark:hover:text-white"
           >
             뒤로가기
           </Button>

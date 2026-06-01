@@ -57,10 +57,10 @@ export const Attachment = {
           <Button
             type="button"
             onClick={() => setShowPopup(true)}
-            className="bg-white border !border-gray-200 hover:!bg-sky-100 hover:!text-sky-500 hover:!border-sky-200 text-xs"
+	            className="border !border-gray-300 bg-white text-xs text-gray-700 hover:!border-gray-400 hover:!bg-gray-100 hover:!text-gray-950 dark:!border-dark-700 dark:!bg-dark-900 dark:!text-dark-200 dark:hover:!border-dark-500 dark:hover:!bg-dark-800 dark:hover:!text-white"
           >
             <span className="flex items-center gap-1">
-              <FolderArchive size={14} className="text-gray-500" />
+	              <FolderArchive size={14} className="text-gray-500 dark:text-dark-300" />
             나의 보관함
             </span>
           </Button>
