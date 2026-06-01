@@ -31,7 +31,7 @@ export default async function ExtraFieldPage({
 
   return (
     <>
-      <div className="p-8 max-w-6xl mx-auto min-h-screen">
+      <div className="p-8 max-w-6xl mx-auto min-h-screen dark:text-dark-100">
         {/* 1. Header & Breadcrumb: gjworks 관리자 스타일 */}
         <div className="mb-8">
           <nav className="flex items-center gap-2 text-xs text-gray-400 mb-3 font-medium uppercase tracking-wider">
@@ -43,7 +43,7 @@ export default async function ExtraFieldPage({
           </nav>
 
           <div className="flex flex-col gap-1">
-            <div className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <div className="text-2xl font-bold text-gray-900 flex items-center gap-3 dark:text-dark-100">
               {post.moduleName}
               <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">
                 ID: {post.mid}
@@ -69,7 +69,7 @@ export default async function ExtraFieldPage({
         </div>
 
         {/* 3. 도움말 영역 (선택사항) */}
-        <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-100">
+        <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10">
           <p className="text-xs text-amber-700 leading-relaxed">
             <span className="font-bold">💡 Tip:</span> 필드 키(Field Key)는
             데이터베이스에 저장되는 고유 명칭입니다. 가급적 영문 소문자와

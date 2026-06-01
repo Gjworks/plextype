@@ -153,10 +153,10 @@ const ContentAdmin = ({
   };
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-3 py-8 md:px-5 md:py-10">
+    <div className="max-w-screen-2xl mx-auto px-3 py-8 md:px-5 md:py-10 dark:text-dark-100">
       <div className="mb-8">
         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{meta.eyebrow}</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">{meta.title}</h1>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-dark-100">{meta.title}</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">{meta.description}</p>
       </div>
 
@@ -166,12 +166,12 @@ const ContentAdmin = ({
             <Link
               key={item.href}
               href={item.href}
-              className="group rounded-md border border-gray-200 bg-white p-5 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="group rounded-md border border-gray-200 bg-white p-5 transition-colors hover:border-gray-300 hover:bg-gray-50 dark:border-dark-800 dark:bg-dark-900 dark:hover:border-dark-700 dark:hover:bg-dark-800"
             >
-              <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-md bg-gray-950 text-white">
+              <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-md bg-gray-950 text-white dark:bg-cyan-500 dark:text-dark-950">
                 {item.icon}
               </div>
-              <div className="text-sm font-semibold text-gray-900">{item.title}</div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-dark-100">{item.title}</div>
               <p className="mt-2 text-sm leading-6 text-gray-500">{item.desc}</p>
             </Link>
           ))}
@@ -184,11 +184,11 @@ const ContentAdmin = ({
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100">
+          <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[980px]">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50/80">
+                  <tr className="border-b border-gray-100 bg-gray-50/80 dark:border-dark-800 dark:bg-dark-950/70">
                     <th className="w-16 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">ID</th>
                     <th className="w-36 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Board</th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Document</th>
@@ -203,10 +203,10 @@ const ContentAdmin = ({
                 <tbody>
                   {initialDocuments.length > 0 ? (
                     initialDocuments.map((item) => (
-                      <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40">
+                      <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40 dark:border-dark-800 dark:hover:bg-white/[0.04]">
                         <td className="px-4 py-4 text-sm font-medium text-gray-400">{item.id}</td>
                         <td className="px-4 py-4">
-                          <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600">
+                          <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600 dark:bg-dark-800 dark:text-dark-300">
                             {item.module.mid}
                           </div>
                           <div className="mt-1 truncate text-xs text-gray-400">{item.module.moduleName}</div>
@@ -215,7 +215,7 @@ const ContentAdmin = ({
                           <div className="flex min-w-0 flex-col">
                             <Link
                               href={`/posts/${item.module.mid}/${item.slug}`}
-                              className="line-clamp-1 text-sm font-semibold text-gray-800 transition-colors hover:text-blue-600"
+                              className="line-clamp-1 text-sm font-semibold text-gray-800 transition-colors hover:text-blue-600 dark:text-dark-100 dark:hover:text-cyan-400"
                             >
                               {item.title}
                             </Link>
@@ -224,7 +224,7 @@ const ContentAdmin = ({
                             </div>
                             <div className="mt-2 flex flex-wrap gap-1">
                               {item.category?.title && (
-                                <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
+                                <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-dark-800 dark:text-dark-300">
                                   {item.category.title}
                                 </span>
                               )}
@@ -245,14 +245,14 @@ const ContentAdmin = ({
                           <div className="mt-1">댓글 {item.commentCount || 0}</div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="text-sm text-gray-600">{item.status || "public"}</div>
+                          <div className="text-sm text-gray-600 dark:text-dark-300">{item.status || "public"}</div>
                           <div className="mt-1 text-xs text-gray-400">{item.published ? "published" : "draft"}</div>
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-500">{formatDate(item.createdAt)}</td>
                         <td className="px-4 py-4 text-center">
                           <Link
                             href={`/posts/${item.module.mid}/${item.slug}`}
-                            className="inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-900 hover:text-white"
+                            className="inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-900 hover:text-white dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-cyan-500 dark:hover:text-dark-950"
                             aria-label={`${item.title} 보기`}
                           >
                             <Eye size={14} />
@@ -295,11 +295,11 @@ const ContentAdmin = ({
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100">
+          <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[980px]">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50/80">
+                  <tr className="border-b border-gray-100 bg-gray-50/80 dark:border-dark-800 dark:bg-dark-950/70">
                     <th className="w-16 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">ID</th>
                     <th className="w-36 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Board</th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Comment</th>
@@ -314,21 +314,21 @@ const ContentAdmin = ({
                 <tbody>
                   {initialComments.length > 0 ? (
                     initialComments.map((item) => (
-                      <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40">
+                      <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40 dark:border-dark-800 dark:hover:bg-white/[0.04]">
                         <td className="px-4 py-4 text-sm font-medium text-gray-400">{item.id}</td>
                         <td className="px-4 py-4">
-                          <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600">
+                          <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600 dark:bg-dark-800 dark:text-dark-300">
                             {item.document.module.mid}
                           </div>
                           <div className="mt-1 truncate text-xs text-gray-400">{item.document.module.moduleName}</div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="line-clamp-2 text-sm font-medium leading-6 text-gray-700">
+                          <div className="line-clamp-2 text-sm font-medium leading-6 text-gray-700 dark:text-dark-200">
                             {item.content}
                           </div>
                           <div className="mt-2 flex flex-wrap gap-1">
                             {item.depth > 0 && (
-                              <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
+                              <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-dark-800 dark:text-dark-300">
                                 답글
                               </span>
                             )}
@@ -343,7 +343,7 @@ const ContentAdmin = ({
                         <td className="px-4 py-4">
                           <Link
                             href={`/posts/${item.document.module.mid}/${item.document.slug}`}
-                            className="line-clamp-2 text-sm font-semibold text-gray-800 transition-colors hover:text-blue-600"
+                            className="line-clamp-2 text-sm font-semibold text-gray-800 transition-colors hover:text-blue-600 dark:text-dark-100 dark:hover:text-cyan-400"
                           >
                             {item.document.title || "제목 없음"}
                           </Link>
@@ -352,14 +352,14 @@ const ContentAdmin = ({
                           {item.user?.nickName || item.user?.accountId || "비회원"}
                         </td>
                         <td className="px-4 py-4">
-                          <div className="text-sm text-gray-600">{item.status || "normal"}</div>
+                          <div className="text-sm text-gray-600 dark:text-dark-300">{item.status || "normal"}</div>
                           <div className="mt-1 text-xs text-gray-400">{item.parentId ? "reply" : "root"}</div>
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-500">{formatDate(item.createdAt)}</td>
                         <td className="px-4 py-4 text-center">
                           <Link
                             href={`/posts/${item.document.module.mid}/${item.document.slug}`}
-                            className="inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-900 hover:text-white"
+                            className="inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-900 hover:text-white dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-cyan-500 dark:hover:text-dark-950"
                             aria-label={`${item.document.title || "게시글"} 보기`}
                           >
                             <Eye size={14} />
@@ -410,9 +410,9 @@ const ContentAdmin = ({
                 return (
                   <div
                     key={item.id}
-                    className="group overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 transition-colors hover:border-gray-200 hover:bg-gray-50"
+                    className="group overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 transition-colors hover:border-gray-200 hover:bg-gray-50 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20 dark:hover:border-dark-700 dark:hover:bg-dark-800"
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-dark-950">
                       {isImage ? (
                         <img
                           src={item.path}
@@ -427,34 +427,34 @@ const ContentAdmin = ({
                         </div>
                       )}
 
-                      <div className="absolute left-3 top-3 rounded bg-white/90 px-2 py-1 text-[10px] font-bold text-gray-500 shadow-sm">
+                      <div className="absolute left-3 top-3 rounded bg-white/90 px-2 py-1 text-[10px] font-bold text-gray-500 shadow-sm dark:bg-dark-950/85 dark:text-dark-300">
                         #{item.id}
                       </div>
                     </div>
 
                     <div className="p-4">
-                      <div className="line-clamp-1 text-sm font-semibold text-gray-800">{item.originalName}</div>
+                      <div className="line-clamp-1 text-sm font-semibold text-gray-800 dark:text-dark-100">{item.originalName}</div>
                       <div className="mt-1 line-clamp-1 text-xs text-gray-400">{item.fileName}</div>
 
                       <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-gray-500">
                         <div>
-                          <div className="font-semibold text-gray-700">{formatFileSize(item.size)}</div>
+                          <div className="font-semibold text-gray-700 dark:text-dark-200">{formatFileSize(item.size)}</div>
                           <div className="mt-0.5 text-gray-400">용량</div>
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-700">{item.uploadedBy?.nickName || item.uploadedBy?.accountId || "알 수 없음"}</div>
+                          <div className="font-semibold text-gray-700 dark:text-dark-200">{item.uploadedBy?.nickName || item.uploadedBy?.accountId || "알 수 없음"}</div>
                           <div className="mt-0.5 text-gray-400">업로더</div>
                         </div>
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+                      <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-dark-800">
                         <div className="text-xs text-gray-400">{formatDate(item.createdAt)}</div>
                         <div className="flex items-center gap-1">
                           <a
                             href={item.path}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-500 transition-colors hover:bg-gray-900 hover:text-white"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-500 transition-colors hover:bg-gray-900 hover:text-white dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-cyan-500 dark:hover:text-dark-950"
                             aria-label={`${item.originalName} 열기`}
                           >
                             <Eye size={14} />
@@ -462,7 +462,7 @@ const ContentAdmin = ({
                           <a
                             href={item.path}
                             download={item.originalName}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-500 transition-colors hover:bg-gray-900 hover:text-white"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-500 transition-colors hover:bg-gray-900 hover:text-white dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-cyan-500 dark:hover:text-dark-950"
                             aria-label={`${item.originalName} 다운로드`}
                           >
                             <Download size={14} />
@@ -483,7 +483,7 @@ const ContentAdmin = ({
               })}
             </div>
           ) : (
-            <div className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-400">
+            <div className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-400 dark:border-dark-700 dark:bg-dark-900">
               조회된 첨부파일이 없습니다.
             </div>
           )}
@@ -495,8 +495,8 @@ const ContentAdmin = ({
           )}
         </div>
       ) : (
-        <div className="rounded-md border border-dashed border-gray-300 bg-white p-8">
-          <div className="text-sm font-semibold text-gray-900">관리 리스트 준비 중</div>
+        <div className="rounded-md border border-dashed border-gray-300 bg-white p-8 dark:border-dark-700 dark:bg-dark-900">
+          <div className="text-sm font-semibold text-gray-900 dark:text-dark-100">관리 리스트 준비 중</div>
           <p className="mt-2 text-sm leading-6 text-gray-500">
             이 화면은 콘텐츠 운영용 라우트와 사이드 메뉴를 먼저 잡아둔 상태입니다. 다음 단계에서 검색, 필터, 목록,
             일괄 처리 액션을 붙이면 됩니다.

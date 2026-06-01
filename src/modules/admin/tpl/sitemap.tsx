@@ -109,7 +109,7 @@ const defaultGroupFormState: GroupFormState = {
   isActive: true,
 };
 
-const selectClass = "w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 shadow-md shadow-gray-100 outline-none transition-all hover:border-gray-300 focus:border-gray-300 focus:ring-4 focus:ring-gray-200/75";
+const selectClass = "w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 shadow-md shadow-gray-100 outline-none transition-all hover:border-gray-300 focus:border-gray-300 focus:ring-4 focus:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:shadow-black/20 dark:hover:border-dark-600 dark:focus:border-dark-600 dark:focus:ring-dark-800";
 
 const flattenNavigation = (items: SiteNavigationItem[]) => {
   const rows: SiteNavigationItem[] = [];
@@ -534,26 +534,26 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
   };
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-3 py-8 md:px-5 md:py-10">
+    <div className="mx-auto max-w-screen-2xl px-3 py-8 md:px-5 md:py-10 dark:text-dark-100">
       <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Site</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">사이트맵</h1>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-dark-100">사이트맵</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">
             그룹을 고르고, 그룹 안의 메뉴를 선택한 뒤, 오른쪽에서 상세 정보를 수정합니다.
           </p>
         </div>
         <div className="grid grid-cols-3 gap-2 text-center sm:w-[360px]">
-          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100">
-            <div className="text-lg font-bold text-gray-950">{groups.length}</div>
+          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+            <div className="text-lg font-bold text-gray-950 dark:text-dark-100">{groups.length}</div>
             <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Groups</div>
           </div>
-          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100">
-            <div className="text-lg font-bold text-gray-950">{flatItems.length}</div>
+          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+            <div className="text-lg font-bold text-gray-950 dark:text-dark-100">{flatItems.length}</div>
             <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Menus</div>
           </div>
-          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100">
-            <div className="text-lg font-bold text-gray-950">{activeCount}</div>
+          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+            <div className="text-lg font-bold text-gray-950 dark:text-dark-100">{activeCount}</div>
             <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Active</div>
           </div>
         </div>
@@ -561,7 +561,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
       {message && (
         <div className={`mb-5 rounded-md px-3 py-2 text-sm ${
-          message.type === "success" ? "bg-cyan-50 text-cyan-600" : "bg-red-50 text-red-500"
+          message.type === "success" ? "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-300" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-300"
         }`}>
           {message.text}
         </div>
@@ -569,10 +569,10 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="grid gap-4 xl:grid-cols-[300px_360px_minmax(0,1fr)]">
-          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100">
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-dark-800">
               <div>
-                <div className="text-sm font-bold text-gray-950">Menu groups</div>
+                <div className="text-sm font-bold text-gray-950 dark:text-dark-100">Menu groups</div>
                 <div className="mt-1 text-xs text-gray-400">레이아웃에서 호출하는 메뉴 묶음</div>
               </div>
               <Button type="button" onClick={openCreateGroupModal} icon={<Plus size={14} />} className="!px-3">
@@ -600,10 +600,10 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100">
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-dark-800">
               <div className="min-w-0">
-                <div className="truncate text-sm font-bold text-gray-950">{selectedGroup?.title || "메뉴 그룹"}</div>
+                <div className="truncate text-sm font-bold text-gray-950 dark:text-dark-100">{selectedGroup?.title || "메뉴 그룹"}</div>
                 <div className="mt-1 truncate text-xs text-gray-400">{selectedGroup?.key}</div>
               </div>
               <div className="flex gap-2">
@@ -639,10 +639,10 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
             </DroppableMenuList>
           </section>
 
-          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100">
-          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-dark-800">
             <div>
-              <div className="text-sm font-bold text-gray-950">
+              <div className="text-sm font-bold text-gray-950 dark:text-dark-100">
                 {menuFormState.id ? "메뉴 상세" : "새 메뉴"}
               </div>
               <div className="mt-1 text-xs text-gray-400">
@@ -658,9 +658,9 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
           <form onSubmit={handleSubmitMenu} className="p-4">
             {!isMenuEditing && selectedGroupItems.length > 0 ? (
-              <div className="flex min-h-[420px] items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50 px-6 text-center">
+              <div className="flex min-h-[420px] items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50 px-6 text-center dark:border-dark-700 dark:bg-dark-950">
                 <div>
-                  <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-white text-gray-300 shadow-sm">
+                  <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-white text-gray-300 shadow-sm dark:bg-dark-900 dark:text-dark-500">
                     <FolderTree size={18} />
                   </div>
                   <div className="text-sm font-bold text-gray-500">수정할 메뉴를 선택하세요.</div>
@@ -678,7 +678,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-black">상위 메뉴</label>
+                    <label className="mb-2 block text-sm font-medium text-black dark:text-dark-100">상위 메뉴</label>
                     <select name="parentId" value={menuFormState.parentId} onChange={handleMenuChange("parentId")} className={selectClass}>
                       <option value="">최상위 메뉴</option>
                       {selectedGroupItems
@@ -692,7 +692,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
                     {fieldErrors?.parentId && <div className="mt-1.5 text-xs leading-5 text-red-500">{fieldErrors.parentId}</div>}
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-black">공개 범위</label>
+                    <label className="mb-2 block text-sm font-medium text-black dark:text-dark-100">공개 범위</label>
                     <select name="visibility" value={menuFormState.visibility} onChange={handleMenuChange("visibility")} className={selectClass}>
                       <option value="public">Public</option>
                       <option value="member">Member</option>
@@ -708,9 +708,9 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
                   <InputField inputTitle="링크 타겟" name="target" value={menuFormState.target} onChange={handleMenuChange("target")} error={fieldErrors?.target} placeholder="_blank 또는 비움" />
                 </div>
 
-                <label className="mt-4 flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-3">
+                <label className="mt-4 flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-950">
                   <span>
-                    <span className="block text-sm font-bold text-gray-900">메뉴 사용</span>
+                    <span className="block text-sm font-bold text-gray-900 dark:text-dark-100">메뉴 사용</span>
                     <span className="mt-1 block text-xs text-gray-500">꺼두면 공개 레이아웃 메뉴에서 숨겨집니다.</span>
                   </span>
                   <input type="checkbox" name="isActive" checked={menuFormState.isActive} onChange={handleMenuChange("isActive")} className="h-4 w-4 rounded border-gray-300 text-blue-600" />
@@ -733,10 +733,10 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
         <form onSubmit={handleSubmitGroup} className="max-h-[85vh] overflow-y-auto p-5">
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <div className="text-base font-bold text-gray-950">{groupFormState.id ? "메뉴 그룹 수정" : "메뉴 그룹 추가"}</div>
+              <div className="text-base font-bold text-gray-950 dark:text-dark-100">{groupFormState.id ? "메뉴 그룹 수정" : "메뉴 그룹 추가"}</div>
               <p className="mt-1 text-xs leading-5 text-gray-500">레이아웃에서 호출할 메뉴 묶음을 관리합니다.</p>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-950 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-950 text-white dark:bg-cyan-500 dark:text-dark-950">
               <FolderTree size={16} />
             </div>
           </div>
@@ -749,7 +749,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
             <InputField inputTitle="설명" name="description" value={groupFormState.description} onChange={handleGroupChange("description")} error={groupFieldErrors?.description} placeholder="어디에서 쓰는 메뉴인지 적어주세요." />
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-black">영역</label>
+                <label className="mb-2 block text-sm font-medium text-black dark:text-dark-100">영역</label>
                 <select name="area" value={groupFormState.area} onChange={handleGroupChange("area")} className={selectClass}>
                   <option value="header">Header</option>
                   <option value="footer">Footer</option>
@@ -761,9 +761,9 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
               </div>
               <InputField inputTitle="정렬" name="groupOrder" type="number" value={groupFormState.order} onChange={handleGroupChange("order")} error={groupFieldErrors?.order} placeholder="0" />
             </div>
-            <label className="flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-3">
+            <label className="flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-950">
               <span>
-                <span className="block text-sm font-bold text-gray-900">그룹 사용</span>
+                <span className="block text-sm font-bold text-gray-900 dark:text-dark-100">그룹 사용</span>
                 <span className="mt-1 block text-xs text-gray-500">꺼두면 공개 메뉴 조회에서 제외됩니다.</span>
               </span>
               <input type="checkbox" name="groupIsActive" checked={groupFormState.isActive} onChange={handleGroupChange("isActive")} className="h-4 w-4 rounded border-gray-300 text-blue-600" />
@@ -833,19 +833,19 @@ const SortableGroupButton = ({
       style={style}
       className={`group relative mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left transition-colors ${
         isDragging
-          ? "bg-white text-gray-400 opacity-60"
+          ? "bg-white text-gray-400 opacity-60 dark:bg-dark-900 dark:text-dark-500"
           : isOver
-          ? "bg-blue-50 text-blue-600"
+          ? "bg-blue-50 text-blue-600 dark:bg-cyan-500/10 dark:text-cyan-300"
           : isSelected
-            ? "bg-gray-950 text-white shadow-lg shadow-gray-950/10"
-            : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            ? "bg-gray-950 text-white shadow-lg shadow-gray-950/10 dark:bg-cyan-500 dark:text-dark-950 dark:shadow-cyan-950/20"
+            : "text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-dark-400 dark:hover:bg-white/[0.04] dark:hover:text-dark-100"
       }`}
     >
       <span
         {...attributes}
         {...listeners}
         className={`grid h-8 w-5 shrink-0 cursor-grab place-items-center rounded-md active:cursor-grabbing ${
-          isSelected ? "text-white/45 hover:bg-white/10" : "text-gray-300 hover:bg-white hover:text-gray-500"
+          isSelected ? "text-white/45 hover:bg-white/10 dark:text-dark-950/55" : "text-gray-300 hover:bg-white hover:text-gray-500 dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-300"
         }`}
       >
         <GripVertical size={14} />
@@ -853,14 +853,14 @@ const SortableGroupButton = ({
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 cursor-pointer text-left">
         <span className="flex min-w-0 items-center gap-2">
           <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md ${
-            isSelected ? "bg-white/10 text-white" : "bg-gray-100 text-gray-400 group-hover:bg-white group-hover:text-gray-600"
+            isSelected ? "bg-white/10 text-white dark:bg-dark-950/15 dark:text-dark-950" : "bg-gray-100 text-gray-400 group-hover:bg-white group-hover:text-gray-600 dark:bg-dark-800 dark:text-dark-500 dark:group-hover:bg-dark-700 dark:group-hover:text-dark-200"
           }`}>
             <Layers3 size={14} />
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-bold leading-5">{group.title}</span>
             <span className={`mt-0.5 block truncate text-[11px] leading-4 ${
-              isSelected ? "text-white/45" : "text-gray-400"
+              isSelected ? "text-white/45 dark:text-dark-950/60" : "text-gray-400 dark:text-dark-500"
             }`}>
               {group.key} · {getAreaLabel(group.area)}
             </span>
@@ -869,7 +869,7 @@ const SortableGroupButton = ({
       </button>
       <div className="ml-1 flex shrink-0 items-center gap-0.5">
         <span className={`grid h-7 min-w-7 place-items-center rounded-md px-2 text-[10px] font-bold ${
-          isSelected ? "bg-white text-gray-950" : "bg-gray-100 text-gray-500"
+          isSelected ? "bg-white text-gray-950 dark:bg-dark-950 dark:text-cyan-300" : "bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300"
         }`}>
           {count}
         </span>
@@ -880,7 +880,7 @@ const SortableGroupButton = ({
             onEdit();
           }}
           className={`grid h-7 w-7 cursor-pointer place-items-center rounded-md transition-colors ${
-            isSelected ? "text-white/45 hover:bg-white/10 hover:text-white" : "text-gray-300 hover:bg-white hover:text-blue-500"
+            isSelected ? "text-white/45 hover:bg-white/10 hover:text-white dark:text-dark-950/60 dark:hover:bg-dark-950/15 dark:hover:text-dark-950" : "text-gray-300 hover:bg-white hover:text-blue-500 dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-cyan-400"
           }`}
           aria-label={`${group.title} 그룹 수정`}
         >
@@ -893,7 +893,7 @@ const SortableGroupButton = ({
             onDelete();
           }}
           className={`grid h-7 w-7 cursor-pointer place-items-center rounded-md transition-colors ${
-            isSelected ? "text-white/45 hover:bg-white/10 hover:text-white" : "text-gray-300 hover:bg-red-50 hover:text-red-500"
+            isSelected ? "text-white/45 hover:bg-white/10 hover:text-white dark:text-dark-950/60 dark:hover:bg-dark-950/15 dark:hover:text-dark-950" : "text-gray-300 hover:bg-red-50 hover:text-red-500 dark:text-dark-600 dark:hover:bg-red-500/10 dark:hover:text-red-300"
           }`}
           aria-label={`${group.title} 그룹 삭제`}
         >
@@ -919,7 +919,7 @@ const DroppableMenuList = ({
     <div
       ref={setNodeRef}
       className={`max-h-[650px] min-h-[180px] overflow-y-auto p-2 transition-colors ${
-        isOver ? "bg-blue-50/40" : ""
+        isOver ? "bg-blue-50/40 dark:bg-cyan-500/10" : ""
       }`}
     >
       {children}
@@ -964,14 +964,14 @@ const SortableMenuItem = ({
       style={style}
       className={`relative mb-1.5 flex cursor-pointer items-center gap-2 overflow-hidden rounded-lg border px-3 py-2.5 text-left transition-colors ${
         isOver
-          ? "border-blue-200 bg-blue-50 text-blue-600 ring-2 ring-blue-100"
+          ? "border-blue-200 bg-blue-50 text-blue-600 ring-2 ring-blue-100 dark:border-cyan-500/40 dark:bg-cyan-500/10 dark:text-cyan-300 dark:ring-cyan-500/10"
           : isDragging
-            ? "border-gray-200 bg-white text-gray-400 opacity-60"
+            ? "border-gray-200 bg-white text-gray-400 opacity-60 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500"
             : isSelected
-              ? "border-blue-200 bg-blue-50/70 text-blue-600 shadow-sm shadow-blue-50"
+              ? "border-blue-200 bg-blue-50/70 text-blue-600 shadow-sm shadow-blue-50 dark:border-cyan-500/40 dark:bg-cyan-500/10 dark:text-cyan-300 dark:shadow-none"
               : item.depth > 0
-                ? "border-gray-100 bg-gray-50/80 text-gray-700 hover:border-gray-200 hover:bg-white"
-                : "border-gray-100 bg-white text-gray-700 hover:border-gray-200 hover:bg-gray-50"
+                ? "border-gray-100 bg-gray-50/80 text-gray-700 hover:border-gray-200 hover:bg-white dark:border-dark-800 dark:bg-dark-950/70 dark:text-dark-300 dark:hover:border-dark-700 dark:hover:bg-dark-800"
+                : "border-gray-100 bg-white text-gray-700 hover:border-gray-200 hover:bg-gray-50 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-700 dark:hover:bg-dark-800"
       }`}
     >
       {item.depth > 0 && (
@@ -994,7 +994,7 @@ const SortableMenuItem = ({
         <span
           {...attributes}
           {...listeners}
-          className="grid h-6 w-5 cursor-grab place-items-center rounded-md text-gray-300 transition-colors hover:bg-white hover:text-gray-500 active:cursor-grabbing"
+          className="grid h-6 w-5 cursor-grab place-items-center rounded-md text-gray-300 transition-colors hover:bg-white hover:text-gray-500 active:cursor-grabbing dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-300"
           onClick={(event) => event.stopPropagation()}
         >
           <GripVertical size={13} />
@@ -1007,15 +1007,15 @@ const SortableMenuItem = ({
           {item.target === "_blank" && <ExternalLink size={12} className="shrink-0 text-gray-300" />}
         </span>
         <span className="mt-0.5 flex min-w-0 items-center gap-2">
-          <span className="truncate text-xs leading-4 text-gray-400">{item.href}</span>
-          <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gray-400">
+          <span className="truncate text-xs leading-4 text-gray-400 dark:text-dark-500">{item.href}</span>
+          <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:bg-dark-800 dark:text-dark-400">
             {item.visibility}
           </span>
         </span>
       </span>
 
       <span className={`ml-2 flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${
-        item.isActive ? "bg-cyan-50 text-cyan-500" : "bg-gray-100 text-gray-300"
+        item.isActive ? "bg-cyan-50 text-cyan-500 dark:bg-cyan-500/10 dark:text-cyan-300" : "bg-gray-100 text-gray-300 dark:bg-dark-800 dark:text-dark-500"
       }`}>
         <span className={`h-1.5 w-1.5 rounded-full ${item.isActive ? "bg-cyan-400" : "bg-gray-300"}`} />
         {item.isActive ? "ON" : "OFF"}

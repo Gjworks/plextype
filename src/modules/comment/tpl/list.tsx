@@ -327,7 +327,7 @@ export default function CommentsList({
         >
           {/* 🧶 [기둥 선] 자식이 있을 때만 아바타 아래로 길게 내림 (중복 방지를 위해 부모만 담당) */}
           {c.children && c.children.length > 0 && (
-            <div className="absolute left-[19px] top-10 bottom-0 w-[1px] bg-gray-100 dark:bg-gray-800 z-0" />
+	            <div className="absolute left-[19px] top-10 bottom-0 z-0 w-[1px] bg-gray-100 dark:bg-dark-800" />
           )}
 
           <div className={`relative flex items-start ${depth > 0 ? "ml-10 mb-6" : "mb-8"}`}>
@@ -335,7 +335,7 @@ export default function CommentsList({
             {/* 🧵 [연결 꺽쇠] 대댓글일 때만 왼쪽 기둥에서 아바타로 연결 (ㄴ자만 담당) */}
             {depth > 0 && (
               <div
-                className={`absolute left-[-21px] w-[21px] z-0 border-gray-100 dark:border-gray-800
+	                className={`absolute left-[-21px] w-[21px] z-0 border-gray-100 dark:border-dark-800
                 ${isLast
                   ? "top-[-32px] h-[52px] border-l-[1px] border-b-[1px] rounded-bl-xl"
                   : "top-[-32px] h-[52px] border-l-[1px] border-b-[1px] rounded-bl-xl"
@@ -350,7 +350,7 @@ export default function CommentsList({
             {/* 1. 아바타 영역 */}
             <div className="relative shrink-0 z-10">
               <div className={`
-              flex items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-dark-900
+	              flex items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-dark-800 border-2 border-white dark:border-dark-950
               ${depth > 0 ? "w-7 h-7" : "w-10 h-10"}
             `}>
                 {c.user?.profile?.profileImage ? (
@@ -380,7 +380,7 @@ export default function CommentsList({
                         className="h-4 w-4 rounded-full object-cover"
                       />
                     )}
-                    <span className="text-[13px] font-bold text-gray-900 dark:text-gray-100">{c.userName || "익명"}</span>
+	                    <span className="text-[13px] font-bold text-gray-900 dark:text-dark-100">{c.userName || "익명"}</span>
                     <span className="text-[10px] text-gray-400">{dayjs(c.createdAt).fromNow()}</span>
                   </div>
 
@@ -388,33 +388,33 @@ export default function CommentsList({
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         onClick={() => openEditModal(c)}
-                        className="!p-1 !text-gray-300 hover:!text-blue-500 !bg-transparent"
+	                        className="!bg-transparent !p-1 !text-gray-300 hover:!text-gray-600 dark:!text-dark-500 dark:hover:!text-dark-200"
                         icon={<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>}
                       />
                       <Button
                         onClick={() => handleDelete(c)}
-                        className="!p-1 !text-gray-300 hover:!text-red-400 !bg-transparent"
+	                        className="!bg-transparent !p-1 !text-gray-300 hover:!text-red-400 dark:!text-dark-500 dark:hover:!text-red-400"
                         icon={<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>}
                       />
                     </div>
                   )}
                 </div>
 
-                <div className="text-[14px] text-gray-700 dark:text-gray-300 leading-relaxed mb-2">
+	                <div className="mb-2 text-[14px] leading-relaxed text-gray-700 dark:text-dark-300">
                   {c.depth > 1 && parentUserName && (
-                    <span className="text-blue-500 font-bold mr-1.5 opacity-80">@{parentUserName}</span>
+	                    <span className="mr-1.5 font-bold text-gray-500 opacity-80 dark:text-dark-200">@{parentUserName}</span>
                   )}
-                  {c.isDeleted ? <span className="text-gray-300 italic text-xs">삭제된 댓글입니다.</span> : c.content}
+	                  {c.isDeleted ? <span className="text-xs italic text-gray-300 dark:text-dark-500">삭제된 댓글입니다.</span> : c.content}
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <button className="flex items-center gap-1 group/like text-gray-300 hover:text-rose-400 transition-colors cursor-pointer">
+	                  <button className="group/like flex cursor-pointer items-center gap-1 text-gray-300 transition-colors hover:text-rose-400 dark:text-dark-500 dark:hover:text-rose-400">
                     <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>
                     <span className="text-[11px] font-bold">0</span>
                   </button>
                   <button
                     onClick={() => openReplyModal(c)}
-                    className="text-[11px] font-bold text-gray-300 hover:text-blue-500 transition-colors uppercase tracking-tight cursor-pointer"
+	                    className="cursor-pointer text-[11px] font-bold uppercase tracking-tight text-gray-300 transition-colors hover:text-gray-700 dark:text-dark-500 dark:hover:text-dark-200"
                   >
                     Reply
                   </button>
@@ -462,15 +462,15 @@ export default function CommentsList({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-200/50 transition-all duration-300 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10"
+	              className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-200/50 transition-all duration-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/70 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/30 dark:focus-within:border-dark-500 dark:focus-within:ring-dark-800/60"
             >
               {/* 1. 상단 정보 바 (Status Bar) */}
-              <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+	              <div className="flex items-center justify-between border-b border-gray-50 bg-gray-50/30 px-4 py-2 dark:border-dark-800 dark:bg-dark-950/50">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">New Comment</span>
+	                  <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-gray-500 dark:bg-dark-300" />
+	                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-dark-400">New Comment</span>
                 </div>
-                <div className="text-[10px] text-gray-400 font-medium italic">
+	                <div className="text-[10px] font-medium italic text-gray-400 dark:text-dark-500">
                   {currentUser?.nickName}님으로 작성 중
                 </div>
               </div>
@@ -524,7 +524,7 @@ export default function CommentsList({
                 ) : (
                   <button
                     type="button"
-                    className="w-full min-h-[140px] p-5 text-left text-sm text-gray-300 leading-relaxed"
+	                    className="min-h-[140px] w-full p-5 text-left text-sm leading-relaxed text-gray-300 dark:text-dark-500"
                   >
                     따뜻한 댓글은 작성자에게 큰 힘이 됩니다...
                   </button>
@@ -532,21 +532,21 @@ export default function CommentsList({
               </div>
 
               {/* 3. 하단 툴바 및 버튼 바 */}
-              <div className="px-4 py-3 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center transition-colors group-focus-within:bg-white">
+	              <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-3 transition-colors group-focus-within:bg-white dark:border-dark-800 dark:bg-dark-950/50 dark:group-focus-within:bg-dark-900">
                 {/* 왼쪽: 도움말 또는 글자 수 */}
                 <div className="flex flex-col">
-        <span className="text-[10px] text-gray-400 font-medium">
+	        <span className="text-[10px] font-medium text-gray-400 dark:text-dark-400">
           정성껏 작성 중...
         </span>
-                  <span className="text-[10px] text-gray-300 font-mono tracking-tighter">
+	                  <span className="font-mono text-[10px] tracking-tighter text-gray-300 dark:text-dark-500">
           {newContent.length} / 1000 characters
         </span>
-                  <label className="mt-2 flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400">
+	                  <label className="mt-2 flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400 dark:text-dark-400">
                     <input
                       type="checkbox"
                       checked={newNotificationEnabled}
                       onChange={(event) => setNewNotificationEnabled(event.target.checked)}
-                      className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-blue-500"
+	                      className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
                     />
                     이 댓글의 답글 알림 받기
                   </label>
@@ -560,8 +560,8 @@ export default function CommentsList({
                   className={`
           !py-2.5 !px-6 !rounded-xl !font-bold transition-all
           ${newContent.trim()
-                    ? "!bg-blue-500 !text-white shadow-lg shadow-blue-500/20"
-                    : "!bg-gray-100 !text-gray-400"
+	                    ? "!bg-gray-900 !text-white shadow-lg shadow-gray-900/20 dark:!bg-dark-100 dark:!text-dark-950 dark:shadow-black/30"
+	                    : "!bg-gray-100 !text-gray-400 dark:!bg-dark-800 dark:!text-dark-500"
                   }
         `}
                   icon={!loading && (
@@ -587,7 +587,7 @@ export default function CommentsList({
         <div className="relative flex items-center justify-center my-12 px-4">
           {/* 🧶 배경을 가로지르는 은은한 구분선 */}
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-gray-100 dark:border-gray-800"></div>
+	            <div className="w-full border-t border-gray-100 dark:border-dark-800"></div>
           </div>
 
           {/* 🌟 Button 컴포넌트 활용 */}
@@ -595,9 +595,9 @@ export default function CommentsList({
             onClick={handleLoadMore}
             isLoading={loading}
             className="
-        !relative !bg-white dark:!bg-dark-900 !px-8 !py-2.5 !rounded-full
-        !border-gray-200 !text-gray-400
-        hover:!border-blue-400 hover:!text-blue-500
+	        !relative !bg-white dark:!bg-dark-900 !px-8 !py-2.5 !rounded-full
+	        !border-gray-200 dark:!border-dark-800 !text-gray-400 dark:!text-dark-400
+	        hover:!border-gray-300 hover:!text-gray-700 dark:hover:!border-dark-600 dark:hover:!text-dark-100
         shadow-sm transition-all duration-300
       "
             icon={
@@ -622,35 +622,35 @@ export default function CommentsList({
               <div className="relative flex gap-3 pb-2">
                 {/* 🧶 수직 연결선 (부모 아바타 아래에서 시작) */}
                 <div
-                  className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-gray-100"
+	                  className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-gray-100 dark:bg-dark-800"
                   style={{ height: 'calc(100% + 16px)' }} // 아래 입력창까지 강제로 연결
                 />
 
                 <div className="shrink-0 z-10">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center shadow-sm">
-            <span className="text-[16px] text-gray-400 font-bold uppercase">
+	                  <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gray-100 shadow-sm dark:border-dark-950 dark:bg-dark-800">
+	            <span className="text-[16px] font-bold uppercase text-gray-400 dark:text-dark-300">
               {modalParent.nickName?.slice(0, 1)}
             </span>
                   </div>
                 </div>
 
-                <div className="flex-1 bg-gray-50/50 rounded-2xl p-3 border border-gray-100 overflow-hidden">
+	                <div className="flex-1 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/50 p-3 dark:border-dark-800 dark:bg-dark-900">
                   {/* 1. 상단 메타 정보 (고정) */}
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[11px] font-bold text-gray-700">@{modalParent.nickName}</span>
-                    <span className="text-[10px] text-gray-400 font-medium">
+	                    <span className="text-[11px] font-bold text-gray-700 dark:text-dark-100">@{modalParent.nickName}</span>
+	                    <span className="text-[10px] font-medium text-gray-400 dark:text-dark-500">
       {dayjs(modalParent.createdAt).fromNow()}
     </span>
                   </div>
 
                   {/* 2. 내용 영역 (스크롤 적용) */}
                   <div className="relative">
-                    <p className="text-[13px] text-gray-500 leading-relaxed max-h-[80px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+	                    <p className="max-h-[80px] overflow-y-auto pr-2 text-[13px] leading-relaxed text-gray-500 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 dark:text-dark-400 dark:scrollbar-thumb-dark-700">
                       {modalParent.content}
                     </p>
 
                     {/* 🌟 선택 사항: 내용이 아주 길 때 하단이 잘린 느낌을 주는 그라데이션 페이드 */}
-                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-50/80 to-transparent pointer-events-none" />
+	                    <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-50/80 to-transparent dark:from-dark-900" />
                   </div>
                 </div>
               </div>
@@ -664,7 +664,7 @@ export default function CommentsList({
               {/* 🧶 L자형 연결 커브 (선이 끊어지지 않게 보정) */}
               {!isEditMode && modalParent && (
                 <div
-                  className="absolute left-[15px] top-[-10px] w-7 h-8 border-l-2 border-b-2 border-gray-100 rounded-bl-xl"
+	                  className="absolute left-[15px] top-[-10px] h-8 w-7 rounded-bl-xl border-b-2 border-l-2 border-gray-100 dark:border-dark-800"
                   style={{ pointerEvents: 'none' }}
                 />
               )}
@@ -672,14 +672,14 @@ export default function CommentsList({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-100 transition-all duration-300 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10"
+	                className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-100 transition-all duration-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/70 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/30 dark:focus-within:border-dark-500 dark:focus-within:ring-dark-800/60"
               >
                 {/* 입력창 상단: 유저 정보 */}
-                <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/30 flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+	                <div className="flex items-center gap-2 border-b border-gray-50 bg-gray-50/30 px-4 py-2 dark:border-dark-800 dark:bg-dark-950/50">
+	                  <div className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-600 dark:bg-dark-300">
+	                    <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-white dark:bg-dark-950" />
                   </div>
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+	                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-dark-400">
             {isEditMode ? "Edit Comment" : "New Reply"}
           </span>
                 </div>
@@ -688,26 +688,26 @@ export default function CommentsList({
                   value={modalContent}
                   onChange={(e) => setModalContent(e.target.value)}
                   placeholder={isEditMode ? "내용을 수정해주세요..." : "따뜻한 답변을 기다리고 있어요."}
-                  className="w-full p-4 text-sm bg-transparent outline-none resize-none min-h-[140px] text-gray-700 placeholder:text-gray-300 leading-relaxed"
+	                  className="min-h-[140px] w-full resize-none bg-transparent p-4 text-sm leading-relaxed text-gray-700 outline-none placeholder:text-gray-300 dark:text-dark-100 dark:placeholder:text-dark-500"
                   autoFocus
                 />
 
                 {/* 입력창 하단: 툴바 스타일 */}
-                <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
+	                <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2 dark:border-dark-800 dark:bg-dark-950/50">
                   {!isEditMode ? (
-                    <label className="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400">
+	                    <label className="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400 dark:text-dark-400">
                       <input
                         type="checkbox"
                         checked={modalNotificationEnabled}
                         onChange={(event) => setModalNotificationEnabled(event.target.checked)}
-                        className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-blue-500"
+	                        className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
                       />
                       답글 알림 받기
                     </label>
                   ) : (
-                    <span className="text-[10px] text-gray-300">댓글 내용을 수정합니다.</span>
+	                    <span className="text-[10px] text-gray-300 dark:text-dark-500">댓글 내용을 수정합니다.</span>
                   )}
-                  <span className="text-[10px] text-gray-400 font-mono tracking-tight">
+	                  <span className="font-mono text-[10px] tracking-tight text-gray-400 dark:text-dark-500">
             {modalContent.length} / 1000
           </span>
                 </div>
@@ -720,7 +720,7 @@ export default function CommentsList({
 
                   onClick={() => setShowModal(false)}
                   disabled={loading}
-                  className="!text-gray-400 font-semibold hover:!bg-gray-200 hover:!text-gray-600"
+	                  className="font-semibold !text-gray-400 hover:!bg-gray-200 hover:!text-gray-600 dark:hover:!bg-dark-800 dark:hover:!text-dark-100"
                 >
                   취소
                 </Button>
@@ -731,8 +731,8 @@ export default function CommentsList({
                   isLoading={loading}
                   className={
                     isEditMode
-                      ? "!bg-blue-100 !text-blue-600 hover:!bg-blue-600 hover:!text-white !px-7 !font-bold"
-                      : "!bg-blue-600 !text-white hover:!bg-blue-700 !px-7 !font-bold shadow-lg shadow-blue-600/20"
+	                      ? "!bg-gray-100 !text-gray-700 hover:!bg-gray-900 hover:!text-white !px-7 !font-bold dark:!bg-dark-800 dark:!text-dark-200 dark:hover:!bg-dark-100 dark:hover:!text-dark-950"
+	                      : "!bg-gray-900 !text-white hover:!bg-gray-800 !px-7 !font-bold shadow-lg shadow-gray-900/20 dark:!bg-dark-100 dark:!text-dark-950 dark:hover:!bg-dark-200"
                   }
                   icon={!loading && (
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">

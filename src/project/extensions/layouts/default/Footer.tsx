@@ -1,9 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
+import { Monitor, Moon, Sun } from "lucide-react";
+
+import { useUserContext } from "@/core/providers/UserProvider";
+import { saveMyPreferenceAction } from "@/modules/user/actions/preference.action";
+import type { UserPreferenceData, UserThemePreference } from "@/modules/user/actions/preference.query";
 import type { SiteNavigationItem } from "@/modules/admin/actions/_type";
 
 const fallbackPartnerItems: Pick<SiteNavigationItem, "name" | "title" | "href" | "target">[] = [
@@ -24,6 +28,44 @@ const fallbackFooterItems: Pick<SiteNavigationItem, "name" | "title" | "href" | 
   { name: "privacy-footer", title: "Privacy policy", href: "/privacy", target: null },
 ];
 
+const THEME_STORAGE_KEY = "userThemePreference";
+
+const defaultUserPreference: UserPreferenceData = {
+  theme: "system",
+  notifyComments: true,
+  notifyReplies: true,
+  notifyAdmin: true,
+  showProfileImage: true,
+  showNickname: true,
+  editorCompact: true,
+  reduceMotion: false,
+  fontScale: "normal",
+};
+
+const themeOptions: Array<{
+  value: UserThemePreference;
+  label: string;
+  icon: React.ReactNode;
+}> = [
+  { value: "system", label: "System", icon: <Monitor size={13} /> },
+  { value: "light", label: "Light", icon: <Sun size={13} /> },
+  { value: "dark", label: "Dark", icon: <Moon size={13} /> },
+];
+
+const resolveThemePreference = (value?: string | null): UserThemePreference => {
+  if (value === "light" || value === "dark") return value;
+  return "system";
+};
+
+const applyThemePreference = (theme: UserThemePreference) => {
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
+
+  document.documentElement.classList.toggle("dark", shouldUseDark);
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+};
+
 const Footer = ({
   siteTitle = "지제이웍스",
   footerItems = [],
@@ -38,6 +80,9 @@ const Footer = ({
   const displayFooterItems = footerItems.length > 0 ? footerItems : fallbackFooterItems;
   const displayPartnerItems = partnerItems.length > 0 ? partnerItems : fallbackPartnerItems;
   const displayDeveloperItems = developerItems.length > 0 ? developerItems : fallbackDeveloperItems;
+  const { user, refetch } = useUserContext();
+  const [themePreference, setThemePreference] = useState<UserThemePreference>("system");
+  const [, startThemeTransition] = useTransition();
 
   const variants = {
     onscreen: {
@@ -70,6 +115,38 @@ const Footer = ({
       },
     },
   };
+
+  useEffect(() => {
+    const savedTheme = resolveThemePreference(user?.preferences?.theme || localStorage.getItem(THEME_STORAGE_KEY));
+    setThemePreference(savedTheme);
+  }, [user?.preferences?.theme]);
+
+  const handleThemePreferenceChange = (theme: UserThemePreference) => {
+    setThemePreference(theme);
+    applyThemePreference(theme);
+
+    if (!user?.id) return;
+
+    const nextPreference: UserPreferenceData = {
+      ...defaultUserPreference,
+      ...(user.preferences || {}),
+      theme,
+    };
+    const formData = new FormData();
+    Object.entries(nextPreference).forEach(([key, value]) => {
+      formData.set(key, String(value));
+    });
+
+    startThemeTransition(async () => {
+      const result = await saveMyPreferenceAction(formData);
+      if (result.success && result.data) {
+        setThemePreference(result.data.theme);
+        applyThemePreference(result.data.theme);
+        void refetch();
+      }
+    });
+  };
+
   return (
     <>
       <div className="max-w-screen-xl mx-auto">
@@ -135,26 +212,33 @@ const Footer = ({
             initial="offscreen"
             whileInView="onscreen"
             viewport={{ once: false, amount: 0.3 }}
-            className="order-0 flex items-center gap-4 lg:order-1"
+            className="order-0 flex items-center lg:order-1"
           >
-            <motion.a
-              href="https://github.com/Gjworks"
-              target="_blank"
-              className="group flex flex-1 cursor-pointer justify-center"
+            <motion.div
+              variants={parentVariants}
+              className="inline-flex items-center gap-0.5 rounded-full border border-gray-200 bg-white/60 p-0.5 dark:border-dark-700 dark:bg-dark-900/80"
             >
-              <motion.div variants={parentVariants} className="px-1">
-                <svg className="w-5 h-5 fill-current text-gray-800" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-              </motion.div>
-            </motion.a>
-            <motion.a
-              href="https://x.com/gjworks2"
-              target="_blank"
-              className="group flex flex-1 cursor-pointer justify-center"
-            >
-              <motion.div variants={parentVariants} className="px-1">
-                <svg className="w-5 h-5 fill-current text-gray-800" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>X</title><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg>
-              </motion.div>
-            </motion.a>
+              {themeOptions.map((item) => {
+                const active = themePreference === item.value;
+
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => handleThemePreferenceChange(item.value)}
+                    className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-[9px] font-bold uppercase tracking-widest transition-colors ${
+                      active
+                        ? "bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950"
+                        : "text-gray-400 hover:bg-gray-100 hover:text-gray-800 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-dark-100"
+                    }`}
+                    aria-label={`${item.label} theme`}
+                    aria-pressed={active}
+                  >
+                    {item.icon}
+                  </button>
+                );
+              })}
+            </motion.div>
           </motion.div>
         </div>
         {/* <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200/75 dark:via-dark-700 to-transparent"></div> */}

@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useEffect, useRef, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation' // ✅ useRouter 추가
 import { motion, AnimatePresence } from 'framer-motion'
 import pkg from '../../../../package.json'
-import { LayoutGrid, Settings, MessageSquareText, Users, Search, Bell, ChevronRight, Globe, ChevronDown, LogOut, UserCircle, Zap, FileText, Map } from 'lucide-react'
+import { LayoutGrid, Settings, MessageSquareText, Users, Search, Bell, ChevronRight, Globe, ChevronDown, LogOut, UserCircle, Zap, FileText, Map, Monitor, Moon, Sun } from 'lucide-react'
 import Link from 'next/link'
 import Dropdown from '@/core/components/dropdown/Dropdown'
 import DefaultList from '@/core/components/nav/DefaultList'
@@ -13,6 +13,8 @@ import Avator from '@/core/components/avator/Avator'
 import NotificationBell from '@/core/components/bell/bell'
 import Right from '@/core/components/panel/Right'
 import MymenuTemplate from '@widgets/forms/MymenuTemplate'
+import { saveMyPreferenceAction } from '@/modules/user/actions/preference.action'
+import type { UserPreferenceData, UserThemePreference } from '@/modules/user/actions/preference.query'
 
 const MENU_CONFIG = [
   {
@@ -117,6 +119,44 @@ const ADMIN_BREADCRUMB_LABELS: Record<string, Record<string, string>> = {
   },
 }
 
+const THEME_STORAGE_KEY = 'userThemePreference'
+
+const defaultUserPreference: UserPreferenceData = {
+  theme: 'system',
+  notifyComments: true,
+  notifyReplies: true,
+  notifyAdmin: true,
+  showProfileImage: true,
+  showNickname: true,
+  editorCompact: true,
+  reduceMotion: false,
+  fontScale: 'normal',
+}
+
+const themeOptions: Array<{
+  value: UserThemePreference;
+  label: string;
+  icon: React.ReactNode;
+}> = [
+  { value: 'system', label: 'System', icon: <Monitor size={13} /> },
+  { value: 'light', label: 'Light', icon: <Sun size={13} /> },
+  { value: 'dark', label: 'Dark', icon: <Moon size={13} /> },
+]
+
+const resolveThemePreference = (value?: string | null): UserThemePreference => {
+  if (value === 'light' || value === 'dark') return value
+  return 'system'
+}
+
+const applyThemePreference = (theme: UserThemePreference) => {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const shouldUseDark = theme === 'dark' || (theme === 'system' && prefersDark)
+
+  document.documentElement.classList.toggle('dark', shouldUseDark)
+  document.documentElement.dataset.theme = theme
+  localStorage.setItem(THEME_STORAGE_KEY, theme)
+}
+
 const getAdminBreadcrumbs = (pathname: string) => {
   const segments = pathname.split('/').filter(Boolean)
   const section = segments[1]
@@ -169,6 +209,8 @@ const AdminLayoutClient = ({
   const [isHovered, setIsHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showRight, setShowRight] = useState(false)
+  const [themePreference, setThemePreference] = useState<UserThemePreference>('system')
+  const [, startThemeTransition] = useTransition()
 
   const { user, isLoading, refetch } = useUserContext()
   const [showUserDropdown, setShowUserDropdown] = useState(false)
@@ -202,6 +244,7 @@ const AdminLayoutClient = ({
 
   const userNav = [
     { title: '내 정보', name: 'user', route: '/user' },
+    { title: '개인 설정', name: 'preferences', route: '/user/preferences' },
     { title: '알림', name: 'notification', route: '#right' },
     { title: '로그아웃', name: 'Signout', route: '/' },
   ]
@@ -213,6 +256,35 @@ const AdminLayoutClient = ({
 
   const callbackName = (name: string) => {
     if (name === 'Signout') handleSignOut()
+  }
+
+  useEffect(() => {
+    const savedTheme = resolveThemePreference(user?.preferences?.theme || localStorage.getItem(THEME_STORAGE_KEY))
+    setThemePreference(savedTheme)
+  }, [user?.preferences?.theme])
+
+  const handleThemePreferenceChange = (theme: UserThemePreference) => {
+    setThemePreference(theme)
+    applyThemePreference(theme)
+
+    const nextPreference: UserPreferenceData = {
+      ...defaultUserPreference,
+      ...(user?.preferences || {}),
+      theme,
+    }
+    const formData = new FormData()
+    Object.entries(nextPreference).forEach(([key, value]) => {
+      formData.set(key, String(value))
+    })
+
+    startThemeTransition(async () => {
+      const result = await saveMyPreferenceAction(formData)
+      if (result.success && result.data) {
+        setThemePreference(result.data.theme)
+        applyThemePreference(result.data.theme)
+        void refetch()
+      }
+    })
   }
 
   useEffect(() => {
@@ -311,46 +383,91 @@ const AdminLayoutClient = ({
 
   return (
     <>
-      <motion.div className="flex bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden  font-sans relative">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none" />
+      <motion.div className="relative flex min-h-screen bg-[#FDFDFD] text-[#111] antialiased selection:bg-blue-100 selection:!text-black overflow-hidden font-sans dark:bg-dark-950 dark:text-dark-100 dark:selection:bg-cyan-500/30 dark:selection:!text-white">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none dark:bg-cyan-950/20" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[80%] bg-olive-200/50 rounded-full blur-[120px] pointer-events-none dark:bg-indigo-950/20" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-50/50 rounded-full blur-[100px] pointer-events-none dark:bg-blue-950/20" />
 
         {/* 1. SIDENAV */}
-        <motion.aside initial={false} animate={{ width: isExpanded ? 240 : 72 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className="fixed h-screen flex flex-col bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-          <div className="h-16 flex items-center justify-center shrink-0">
-            <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg shadow-gray-950/25 cursor-pointer">{appInitial}</div>
+        <motion.aside initial={false} animate={{ width: isExpanded ? 240 : 72 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className="fixed h-screen flex flex-col bg-white/20 backdrop-blur-3xl z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:bg-dark-950/55 dark:shadow-[4px_0_32px_rgba(0,0,0,0.35)]">
+          <Link href="/" className="h-16 flex items-center justify-center shrink-0 cursor-pointer">
+            <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-lg text-white font-bold shrink-0 shadow-lg shadow-gray-950/25 cursor-pointer dark:bg-dark-100 dark:text-dark-950 dark:shadow-black/40">{appInitial}</div>
             <AnimatePresence>
               {isExpanded && (
-                <motion.span initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 0 }} className="ml-3 text-[14px] font-bold tracking-tight truncate text-gray-800 whitespace-nowrap">
+                <motion.span initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 0 }} className="ml-3 text-[14px] font-bold tracking-tight truncate text-gray-800 whitespace-nowrap dark:text-dark-100">
                   {appName}
                 </motion.span>
               )}
             </AnimatePresence>
-          </div>
+          </Link>
 
           <div className="flex-1 py-6 overflow-y-auto px-3 space-y-1 scrollbar-hide">
             {MENU_CONFIG.map(menu => (
               <SideAccordionItem key={menu.id} menu={menu} isExpanded={isExpanded} isMobile={isMobile} />
             ))}
             <div className="py-6 px-4">
-              <div className="h-[1px] bg-black/5" />
+              <div className="h-[1px] bg-black/5 dark:bg-dark-800" />
             </div>
           </div>
 
           <div className="p-5 mt-auto">
-            {' '}
-            {/* mt-auto를 주면 사이드바 최하단에 고정됩니다 */}
-            <div className={`flex items-center justify-center md:justify-start gap-3 px-3 py-2 rounded-2xl transition-all ${isExpanded ? 'bg-black/[0.03] border border-black/[0.03]' : ''}`}>
-              {/* 버전에 어울리는 파란색 도트로 변경해봤어요 */}
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] shrink-0" />
-
+            <div className={`rounded-2xl transition-all ${isExpanded ? 'space-y-3 bg-black/[0.03] px-3 py-3 ring-1 ring-black/[0.03] dark:bg-dark-900 dark:ring-dark-800' : 'flex flex-col items-center gap-2'}`}>
               {isExpanded && (
-                <motion.div initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -5 }} className="flex flex-col items-start leading-none">
-                  <span className="text-[9px] font-bold text-gray-400 font-mono tracking-widest uppercase mb-0.5">System Version</span>
-                  <span className="text-[11px] font-bold text-gray-600 font-mono tracking-tighter">v{pkg.version}</span>
+                <motion.div initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -5 }} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-dark-500">Theme</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 dark:text-dark-600">{themePreference}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1 rounded-xl bg-white/60 p-1 ring-1 ring-black/[0.04] dark:bg-dark-950 dark:ring-dark-800">
+                    {themeOptions.map((item) => {
+                      const active = themePreference === item.value
+
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => handleThemePreferenceChange(item.value)}
+                          className={`flex h-8 cursor-pointer items-center justify-center rounded-lg transition-colors ${
+                            active
+                              ? 'bg-gray-950 text-white shadow-sm dark:bg-dark-100 dark:text-dark-950'
+                              : 'text-gray-400 hover:bg-black/[0.04] hover:text-gray-700 dark:text-dark-500 dark:hover:bg-white/[0.06] dark:hover:text-dark-200'
+                          }`}
+                          aria-label={`${item.label} theme`}
+                          aria-pressed={active}
+                        >
+                          {item.icon}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </motion.div>
               )}
+
+              {!isExpanded && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentIndex = themeOptions.findIndex((item) => item.value === themePreference)
+                    const nextTheme = themeOptions[(currentIndex + 1) % themeOptions.length]?.value || 'system'
+                    handleThemePreferenceChange(nextTheme)
+                  }}
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-black/[0.03] text-gray-400 ring-1 ring-black/[0.03] transition-colors hover:text-gray-800 dark:bg-dark-900 dark:text-dark-400 dark:ring-dark-800 dark:hover:text-dark-100"
+                  aria-label="Change theme"
+                >
+                  {themeOptions.find((item) => item.value === themePreference)?.icon || <Monitor size={13} />}
+                </button>
+              )}
+
+              <div className="flex items-center justify-center gap-3 md:justify-start">
+                <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400 shadow-[0_0_8px_rgba(156,163,175,0.45)] dark:bg-dark-400" />
+
+                {isExpanded && (
+                  <motion.div initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -5 }} className="flex flex-col items-start leading-none">
+                    <span className="mb-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-dark-500">System Version</span>
+                    <span className="font-mono text-[11px] font-bold tracking-tighter text-gray-600 dark:text-dark-300">v{pkg.version}</span>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
         </motion.aside>
@@ -366,7 +483,7 @@ const AdminLayoutClient = ({
             stiffness: 300,
             damping: 30,
           }}
-          className="flex-1 flex flex-col min-w-0 overflow-hidden"
+          className="flex-1 flex min-h-screen flex-col min-w-0 overflow-hidden"
         >
           <motion.header
             initial={false}
@@ -379,14 +496,14 @@ const AdminLayoutClient = ({
               stiffness: 300,
               damping: 30,
             }}
-            className="fixed h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40"
+            className="fixed h-16 flex items-center justify-end md:justify-between px-3 md:px-8 bg-white/40 backdrop-blur-2xl shrink-0 z-40 dark:bg-dark-950/45"
           >
             {/* Left: Breadcrumbs */}
-            <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400">
+            <div className="hidden md:flex items-center gap-2 text-[12px] font-medium text-gray-400 dark:text-dark-500">
               {breadcrumbs.map((item, index) => (
                 <React.Fragment key={`${item}-${index}`}>
-                  {index > 0 && <ChevronRight size={14} className="text-gray-200" />}
-                  <span className={`${index === breadcrumbs.length - 1 ? 'text-black' : 'text-gray-400'} font-bold uppercase tracking-widest text-[10px]`}>
+                  {index > 0 && <ChevronRight size={14} className="text-gray-200 dark:text-dark-700" />}
+                  <span className={`${index === breadcrumbs.length - 1 ? 'text-black dark:text-dark-100' : 'text-gray-400 dark:text-dark-500'} font-bold uppercase tracking-widest text-[10px]`}>
                     {item}
                   </span>
                 </React.Fragment>
@@ -396,8 +513,8 @@ const AdminLayoutClient = ({
             <div className="flex items-center gap-0 md:gap-3">
               {/* Search */}
               <div className="relative group hidden lg:block">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                <input type="text" placeholder="Quick search..." className="bg-black/5 rounded-full py-1.5 pl-9 pr-4 text-[12px] w-48 focus:w-64 focus:bg-white transition-all outline-none" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-500" size={14} />
+                <input type="text" placeholder="Quick search..." className="bg-black/5 rounded-full py-1.5 pl-9 pr-4 text-[12px] w-48 focus:w-64 focus:bg-white transition-all outline-none dark:bg-dark-900 dark:text-dark-100 dark:placeholder:text-dark-500 dark:focus:bg-dark-800" />
               </div>
 
               <button
@@ -408,12 +525,12 @@ const AdminLayoutClient = ({
                 <NotificationBell />
               </button>
 
-              <div className="h-4 w-[1px] bg-gray-200/60 mx-1" />
+              <div className="h-4 w-[1px] bg-gray-200/60 mx-1 dark:bg-dark-800" />
 
               {/* 🌟 런타임 데이터가 반영된 유저 드롭다운 버튼 */}
               <div className="relative" ref={dropdownRef}>
                 {isLoading ? (
-                  <div className="w-28 h-9 bg-black/[0.03] animate-pulse rounded-full" />
+                  <div className="w-28 h-9 bg-black/[0.03] animate-pulse rounded-full dark:bg-dark-900" />
                 ) : (
                   <button onClick={() => setShowUserDropdown(!showUserDropdown)} className={`flex items-center gap-3 py-1.5  transition-all border border-transparent group cursor-pointer ${showUserDropdown ? '' : ''}`}>
                     {/* 상태 도트 */}
@@ -426,7 +543,7 @@ const AdminLayoutClient = ({
                       />
                     </div>
 
-                    <ChevronDown size={14} className={`text-gray-400 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`text-gray-400 transition-transform dark:text-dark-500 ${showUserDropdown ? 'rotate-180' : ''}`} />
                   </button>
                 )}
 
@@ -434,10 +551,10 @@ const AdminLayoutClient = ({
                 <AnimatePresence>
                   {showUserDropdown && (
                     <motion.div initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.98 }} transition={{ duration: 0.15 }} style={{ transform: 'translateZ(0)' }} className="absolute right-0 top-[calc(100%+8px)] w-60 z-[100]">
-                      <div className="overflow-hidden bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[20px] shadow-xl p-2">
-                        <div className="px-3.5 py-3 border-b border-black/[0.04] mb-1.5">
-                          <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tighter mb-0.5">Signed in as</p>
-                          <p className="text-[13px] font-bold text-gray-900 truncate">{user?.email}</p>
+                      <div className="overflow-hidden bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[20px] shadow-xl p-2 dark:border-dark-800 dark:bg-dark-900/90 dark:shadow-black/30">
+                        <div className="px-3.5 py-3 border-b border-black/[0.04] mb-1.5 dark:border-dark-800">
+                          <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tighter mb-0.5 dark:text-dark-500">Signed in as</p>
+                          <p className="text-[13px] font-bold text-gray-900 truncate dark:text-dark-100">{user?.email}</p>
                         </div>
 
                         <div className="space-y-0.5">
@@ -451,29 +568,29 @@ const AdminLayoutClient = ({
             </div>
           </motion.header>
 
-          <div className="flex-1 px-2 md:px-4 pb-2 md:pb-4 mt-[64px] md:pt-4 overflow-hidden overflow-x-auto scrollbar-hide relative">
+          <div className="relative mt-[64px] flex min-h-[calc(100vh-64px)] flex-1 overflow-hidden overflow-x-auto px-2 pb-2 scrollbar-hide md:px-4 md:pb-4 md:pt-4">
             <main
-              className={`h-full w-full flex flex-col overflow-hidden ${
+              className={`min-h-full w-full flex flex-col overflow-hidden ${
                 isDashboardMain
                   ? 'bg-transparent border-none shadow-none' // 대시보드일 때 스타일
-                  : 'bg-white/80 backdrop-blur-lg rounded-xl md:rounded-xl shadow-xl shadow-gray-100' // 일반 페이지 스타일
+                  : 'bg-white/80 backdrop-blur-lg rounded-xl md:rounded-xl shadow-xl shadow-gray-100 dark:bg-dark-950/72 dark:shadow-black/25 dark:ring-1 dark:ring-dark-800' // 일반 페이지 스타일
               }`}
             >
               {/* 🌟 탭 내비게이션: 서브 메뉴가 있을 때만 출력 */}
               <AnimatePresence mode="wait">
                 {activeSubMenus && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="shrink-0 border-b border-gray-100 bg-white/50 backdrop-blur-sm px-6 md:px-10">
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="shrink-0 border-b border-gray-100 bg-white/50 backdrop-blur-sm px-6 md:px-10 dark:border-dark-800 dark:bg-dark-950/55">
                     <div className="flex items-center gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
                       {activeSubMenus.map(sub => {
                         const isSubActive = isAdminPathActive(normalizedPathname, sub.href)
 
                         return (
                           <Link key={sub.href} href={sub.href} className="relative py-4 shrink-0">
-                            <span className={`text-[13px] font-bold transition-colors ${isSubActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-900'}`}>{sub.label}</span>
+                            <span className={`text-[13px] font-bold transition-colors ${isSubActive ? 'text-blue-600 dark:text-cyan-400' : 'text-gray-400 hover:text-gray-900 dark:text-dark-500 dark:hover:text-dark-100'}`}>{sub.label}</span>
                             {isSubActive && (
                               <motion.div
                                 layoutId="activeTab"
-                                className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-600 rounded-full"
+                                className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-600 rounded-full dark:bg-cyan-400"
                                 transition={{
                                   type: 'spring',
                                   bounce: 0.2,
@@ -555,14 +672,14 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
 
   return (
     <div className="flex flex-col gap-0.5">
-      <button onClick={handleMenuClick} className={`group flex items-center w-full rounded-xl transition-all h-10 px-3 cursor-pointer ${isActive ? 'bg-white/80 text-black shadow-sm border border-white/60' : 'text-gray-400 hover:text-black hover:bg-white/40 border border-transparent'}`}>
-        <span className={`${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-black'} shrink-0 transition-colors`}>{menu.icon}</span>
+      <button onClick={handleMenuClick} className={`group flex items-center w-full rounded-xl transition-all h-10 px-3 cursor-pointer ${isActive ? 'bg-white/80 text-black shadow-sm border border-white/60 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-100' : 'text-gray-400 hover:text-black hover:bg-white/40 border border-transparent dark:text-dark-500 dark:hover:bg-dark-900 dark:hover:text-dark-100'}`}>
+        <span className={`${isActive ? 'text-blue-600 dark:text-cyan-400' : 'text-gray-400 group-hover:text-black dark:text-dark-500 dark:group-hover:text-dark-100'} shrink-0 transition-colors`}>{menu.icon}</span>
         <AnimatePresence>
           {isExpanded && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 items-center justify-between ml-3 overflow-hidden">
-              <span className={`text-[13px] font-semibold tracking-tight truncate ${isActive ? 'text-black' : ''}`}>{menu.label}</span>
+              <span className={`text-[13px] font-semibold tracking-tight truncate ${isActive ? 'text-black dark:text-dark-100' : ''}`}>{menu.label}</span>
               <motion.span animate={{ rotate: isOpen ? 180 : 0 }}>
-                <ChevronDown size={14} className={isActive ? 'text-black' : 'text-gray-300'} />
+                <ChevronDown size={14} className={isActive ? 'text-black dark:text-dark-100' : 'text-gray-300 dark:text-dark-600'} />
               </motion.span>
             </motion.div>
           )}
@@ -572,12 +689,12 @@ const SideAccordionItem = ({ menu, isExpanded, isMobile }: any) => {
       {/* 아코디언 내용 */}
       <AnimatePresence initial={false}>
         {isOpen && isExpanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden ml-9 flex flex-col border-l border-black/5">
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden ml-9 flex flex-col border-l border-black/5 dark:border-dark-800">
             {menu.items.map((sub: any) => {
               const active = isChildActive(sub.href) // 고도화된 체크 함수 사용
               return (
                 <Link key={sub.href} href={sub.href}>
-                  <div className={`px-4 py-2 text-xs font-medium transition-colors hover:text-black rounded-lg cursor-pointer ${active ? 'text-blue-600' : 'text-gray-500'}`}>{sub.label}</div>
+                  <div className={`px-4 py-2 text-xs font-medium transition-colors hover:text-black rounded-lg cursor-pointer dark:hover:text-dark-100 ${active ? 'text-blue-600 dark:text-cyan-400' : 'text-gray-500 dark:text-dark-500'}`}>{sub.label}</div>
                 </Link>
               )
             })}
@@ -594,8 +711,8 @@ const SideItem = ({ href, icon, label, isExpanded, active }: any) => {
 
   return (
     <Link href={href}>
-      <button className={`group flex items-center w-full rounded-xl transition-all h-10 px-3 mt-0.5 cursor-pointer ${isActive ? 'bg-white/80 text-black shadow-sm border border-white/60' : 'text-gray-400 hover:text-black hover:bg-white/40 border border-transparent'}`}>
-        <span className={`${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-black'} shrink-0 transition-colors`}>{icon}</span>
+      <button className={`group flex items-center w-full rounded-xl transition-all h-10 px-3 mt-0.5 cursor-pointer ${isActive ? 'bg-white/80 text-black shadow-sm border border-white/60 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-100' : 'text-gray-400 hover:text-black hover:bg-white/40 border border-transparent dark:text-dark-500 dark:hover:bg-dark-900 dark:hover:text-dark-100'}`}>
+        <span className={`${isActive ? 'text-blue-600 dark:text-cyan-400' : 'text-gray-400 group-hover:text-black dark:text-dark-500 dark:group-hover:text-dark-100'} shrink-0 transition-colors`}>{icon}</span>
         {isExpanded && <span className="ml-3 text-[13px] font-semibold tracking-tight">{label}</span>}
       </button>
     </Link>

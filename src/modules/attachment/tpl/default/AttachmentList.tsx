@@ -31,8 +31,8 @@ const AttachmentList = ({
   return (
     <div className="mb-8 mt-4">
       <div className="flex items-center justify-between px-1 mb-4">
-        <div className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-          Attachments <span className="text-gray-500">{attachments.length}</span>
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-dark-400">
+          Attachments <span className="text-gray-500 dark:text-dark-400">{attachments.length}</span>
         </div>
       </div>
 
@@ -41,11 +41,11 @@ const AttachmentList = ({
         {attachments.map((file) => (
           <div
             key={file.id}
-            className="group relative aspect-square bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
+            className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-dark-700 dark:bg-dark-900 dark:shadow-black/30"
             onClick={() => onFileClick?.(file)}
           >
             {/* 1. 배경 이미지/아이콘 영역 */}
-            <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+            <div className="flex h-full w-full items-center justify-center bg-gray-50 dark:bg-dark-800">
               {file.mimeType.startsWith("image/") ? (
                 <img
                   src={file.path}
@@ -54,10 +54,10 @@ const AttachmentList = ({
                 />
               ) : (
                 <div className="flex flex-col items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-gray-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6 text-gray-300 dark:text-dark-500">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                   </svg>
-                  <span className="text-[8px] font-bold text-gray-400 mt-1 uppercase">{file.mimeType.split('/')[1]}</span>
+                  <span className="mt-1 text-[8px] font-bold uppercase text-gray-400 dark:text-dark-400">{file.mimeType.split('/')[1]}</span>
                 </div>
               )}
             </div>

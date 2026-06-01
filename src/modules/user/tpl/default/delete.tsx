@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, CircleAlert, KeyRound, ShieldAlert, Trash2, UserRound } from "lucide-react";
 
 import Alert from "@components/message/Alert";
 import InputField from "@components/form/InputField";
@@ -94,90 +95,128 @@ const UserDelete = ({ initialUser }: Props) => {
   return (
     <>
       <HeaderUser />
-      <div className="max-w-xl mx-auto px-4 py-16">
-        <form ref={formRef} onSubmit={handlerUserDeleteSubmit}>
-
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">회원 탈퇴</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              탈퇴 전 아래의 유의사항을 반드시 확인해 주시기 바랍니다.
-            </p>
-          </div>
+      <div className="min-h-screen bg-white dark:bg-dark-950 dark:text-dark-100">
+        <div className="mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10">
+          <form ref={formRef} onSubmit={handlerUserDeleteSubmit} className="mx-auto max-w-2xl">
+            <section className="border-b border-gray-200 pb-6 dark:border-dark-800">
+              <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                <div className="flex items-end gap-4">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-500 ring-4 ring-white shadow-sm shadow-gray-200 dark:bg-red-500/10 dark:text-red-300 dark:ring-dark-900 dark:shadow-black/30">
+                    <ShieldAlert size={32} strokeWidth={1.7} />
+                  </div>
+                  <div className="pb-1">
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-dark-500">
+                      <UserRound size={14} />
+                      Account Removal
+                    </div>
+                    <h1 className="mt-2 text-2xl font-black tracking-tight text-gray-950 dark:text-dark-100">회원 탈퇴</h1>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-gray-400 dark:text-dark-400">
+                      {initialUser.nickName} 계정을 삭제하기 전에 보존되는 정보와 삭제되는 정보를 확인해주세요.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
 
           {/* 알림 메시지 영역 */}
-          {error && <div className="mb-6"><Alert message={error.message} type={error.type} /></div>}
-          {successMsg && <div className="mb-6"><Alert message={successMsg} type="success" /></div>}
+            {error && <div className="mt-5"><Alert message={error.message} type={error.type} /></div>}
+            {successMsg && <div className="mt-5"><Alert message={successMsg} type="success" /></div>}
 
-          <div className="mb-8 bg-white dark:bg-dark-900">
-            <div className="mb-7">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> 삭제되는 데이터
-              </h3>
-              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2 pl-3 border-l-2 border-gray-100 dark:border-dark-800 ml-1">
-                <li>회원 정보 (이메일, 프로필, 비밀번호, 그룹정보 등) 일체</li>
-                <li>웹사이트 내 이용 중인 서비스 설정 및 개인화 데이터</li>
-              </ul>
-            </div>
+            <section className="mt-6 space-y-4">
+              <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-300">
+                    <Trash2 size={17} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-gray-950 dark:text-dark-100">삭제되는 데이터</div>
+                    <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-400">
+                      탈퇴 처리와 함께 계정에 직접 연결된 개인 정보가 삭제됩니다.
+                    </p>
+                  </div>
+                </div>
+                <ul className="space-y-2 border-l border-gray-200 pl-4 text-sm leading-6 text-gray-600 dark:border-dark-700 dark:text-dark-300">
+                  <li>회원 정보, 이메일, 프로필, 비밀번호, 그룹 정보 일체</li>
+                  <li>웹사이트 내 개인화 설정과 계정 기준 저장 데이터</li>
+                </ul>
+              </div>
 
-            <div className="mb-8">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 보존되는 데이터
-              </h3>
-              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2 pl-3 border-l-2 border-gray-100 dark:border-dark-800 ml-1">
-                <li>서비스 신청 및 결제 내역 (관련 법령에 의거하여 일정 기간 보관)</li>
-                <li>1:1 문의 내역 및 고객센터 상담 기록</li>
-                <li>작성한 게시글, 댓글 등 (작성자가 '알 수 없음'으로 처리됨)</li>
-              </ul>
-            </div>
+              <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+                    <CircleAlert size={17} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-gray-950 dark:text-dark-100">보존되는 데이터</div>
+                    <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-400">
+                      서비스 운영과 법적 보관이 필요한 기록은 일정 기간 남을 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+                <ul className="space-y-2 border-l border-gray-200 pl-4 text-sm leading-6 text-gray-600 dark:border-dark-700 dark:text-dark-300">
+                  <li>서비스 신청 및 결제 내역</li>
+                  <li>1:1 문의 내역 및 고객센터 상담 기록</li>
+                  <li>작성한 게시글, 댓글 등 공개 콘텐츠</li>
+                </ul>
+              </div>
 
-            <hr className="border-gray-100 dark:border-dark-800 my-6" />
+              <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+                    <KeyRound size={17} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-gray-950 dark:text-dark-100">본인 확인</div>
+                    <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-400">
+                      현재 비밀번호를 먼저 확인한 뒤 탈퇴를 진행할 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+                <InputField
+                  inputTitle="현재 비밀번호"
+                  type="password"
+                  name="password"
+                  placeholder="비밀번호를 입력해주세요."
+                  onChange={() => {
+                    if (isVerified) {
+                      setIsVerified(false);
+                      setSuccessMsg(null);
+                    }
+                  }}
+                />
+              </div>
+            </section>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                본인 확인을 위해 현재 비밀번호를 입력해주세요.
-              </label>
-              {/* 💡 입력창에서 글자를 다시 수정하면 인증 상태가 풀리게 만듭니다! */}
-              <InputField
-                inputTitle=""
-                type="password"
-                name="password"
-                placeholder="비밀번호 입력"
-                onChange={() => {
-                  if (isVerified) {
-                    setIsVerified(false);
-                    setSuccessMsg(null);
-                  }
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse sm:flex-row items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-lg transition dark:bg-dark-800 dark:text-gray-300 dark:hover:bg-dark-700 dark:hover:text-white"
-            >
-              취소
-            </button>
+            <div className="sticky bottom-0 mt-6 flex items-center justify-between gap-3 border-t border-gray-200 bg-white/90 py-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/90">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-500 shadow-sm shadow-gray-100 transition-colors hover:border-gray-300 hover:bg-gray-50 hover:text-gray-950 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-400 dark:shadow-black/20 dark:hover:border-dark-700 dark:hover:bg-dark-800 dark:hover:text-dark-100"
+              >
+                <ArrowLeft size={14} />
+                취소
+              </button>
 
             {/* 🌟 마법의 버튼! 인증 여부에 따라 디자인과 텍스트가 확 바뀝니다! */}
-            <Button
-              type="submit"
-              isLoading={verifyMutation.isPending || deleteMutation.isPending}
-              fullWidth={false}
-              className={`w-full sm:w-auto px-8 !py-2.5 rounded-lg text-sm font-medium transition border-none text-white
-                ${!isVerified
-                ? "bg-gray-400 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"
-                : "bg-red-500 hover:bg-red-600 animate-pulse shadow-md shadow-red-500/20"
-              }
-              `}
-            >
-              {!isVerified ? "비밀번호 확인" : "진짜 탈퇴하기"}
-            </Button>
-          </div>
+              <Button
+                type="submit"
+                isLoading={verifyMutation.isPending || deleteMutation.isPending}
+                fullWidth={false}
+                className={`rounded-full px-5 text-xs font-bold transition ${
+                  !isVerified
+                    ? "bg-gray-100 !text-gray-600 hover:bg-gray-900 hover:!text-white dark:bg-dark-900 dark:!text-dark-200 dark:hover:bg-dark-100 dark:hover:!text-dark-950"
+                    : "bg-red-500 !text-white shadow-md shadow-red-500/20 hover:bg-red-600"
+                }`}
+              >
+                <span className="inline-flex items-center gap-2">
+                  {!isVerified ? <KeyRound size={14} /> : <Trash2 size={14} />}
+                  {!isVerified ? "비밀번호 확인" : "진짜 탈퇴하기"}
+                </span>
+              </Button>
+            </div>
 
-        </form>
+          </form>
+        </div>
       </div>
     </>
   );

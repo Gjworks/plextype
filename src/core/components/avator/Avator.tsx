@@ -75,7 +75,7 @@ const Avator = ({ username, isLoggedIn, tokenExpiryTime, profileImage }: AvatorP
   return (
     <div className="flex gap-2 items-center">
       <div className="flex items-center">
-        <div className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gray-400/60 text-[10px] font-semibold text-white transition-colors">
+        <div className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gray-400/60 text-[10px] font-semibold text-white transition-colors dark:bg-dark-700 dark:text-dark-100">
           {profileImage ? (
             <img
               src={profileImage}
@@ -86,13 +86,13 @@ const Avator = ({ username, isLoggedIn, tokenExpiryTime, profileImage }: AvatorP
             isLoggedIn && (username?.slice(0, 1).toUpperCase() || "?")
           )}
           {isLoggedIn && (
-            <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 transition-colors duration-500 ${statusColor[status]}`}></div>
+            <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-900 transition-colors duration-500 ${statusColor[status]}`}></div>
           )}
         </div>
       </div>
       {isLoggedIn && (
         <div className="hidden lg:flex flex-col leading-none">
-          <div className="text-left text-[12px] font-bold text-zinc-800 tracking-tight">
+          <div className="text-left text-[12px] font-bold tracking-tight text-zinc-800 dark:text-dark-100">
             {username}
           </div>
           <span className={`hidden text-[9px] font-bold uppercase mt-0.5 transition-colors ${status === 'online' ? 'text-green-500' : 'text-zinc-400'}`}>

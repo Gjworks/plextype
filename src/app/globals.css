@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 @source "../project";
 @source "../extensions";
 @source "./(extensions)";
@@ -48,6 +49,25 @@
 html,
 body {
     @apply tracking-wider;
+    @apply bg-white text-gray-950;
+    @apply dark:bg-dark-950 dark:text-dark-100;
+}
+
+html[data-font-scale="small"] body {
+    font-size: 0.9375rem;
+}
+
+html[data-font-scale="large"] body {
+    font-size: 1.0625rem;
+}
+
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
 }
 
 h1,

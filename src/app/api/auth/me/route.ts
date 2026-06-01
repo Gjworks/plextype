@@ -7,6 +7,7 @@ import prisma from "@/core/utils/db/prisma";
 import { getAccessTokenCookieOptions, getExpiredAuthCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
+import { findUserPreferenceByUserId } from "@/modules/user/actions/preference.query";
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest): Promise<Response> {
         if (user) {
           const response = NextResponse.json({
             isLoggedIn: true,
-            ...formatUserResponse(user) // 유저 정보 포맷팅
+            ...(await formatUserResponse(user)) // 유저 정보 포맷팅
           });
 
           response.cookies.set({
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
         return NextResponse.json({
           isLoggedIn: true,
-          ...formatUserResponse(user)
+          ...(await formatUserResponse(user))
         });
       }
     }
@@ -120,7 +121,7 @@ function expiredSessionResponse() {
 }
 
 // 헬퍼 함수: 응답 포맷 통일
-function formatUserResponse(user: any) {
+async function formatUserResponse(user: any) {
   return {
     id: user.id,
     accountId: user.accountId,
@@ -129,5 +130,6 @@ function formatUserResponse(user: any) {
     isAdmin: user.isAdmin,
     profile: user.profile,
     profileImage: user.profile?.profileImage || null,
+    preferences: await findUserPreferenceByUserId(user.id),
   };
 }

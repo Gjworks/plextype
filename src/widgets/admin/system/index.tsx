@@ -28,19 +28,19 @@ const SystemStackWidget = () => {
 
   if (loading) {
     return (
-      <section className="bg-white/80 p-8 rounded-xl shadow-lg shadow-gray-100">
-        <p className="text-[9px] font-bold uppercase tracking-[0.012em] text-gray-400 mb-1">
-          Runtime
-        </p>
-        <div className="text-sm font-medium text-gray-500 uppercase tracking-[0.012em] mb-6">
-          System Stack
-        </div>
+	      <section className="rounded-xl bg-white/80 p-8 shadow-lg shadow-gray-100 dark:border dark:border-dark-800 dark:bg-dark-900/70 dark:shadow-black/20">
+	        <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.012em] text-gray-400 dark:text-dark-500">
+	          Runtime
+	        </p>
+	        <div className="mb-6 text-sm font-medium uppercase tracking-[0.012em] text-gray-500 dark:text-dark-300">
+	          System Stack
+	        </div>
 
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="h-4 rounded bg-gray-100 animate-pulse" />
-          ))}
-        </div>
+	        <div className="space-y-3">
+	          {Array.from({ length: 5 }).map((_, index) => (
+	            <div key={index} className="h-4 animate-pulse rounded bg-gray-100 dark:bg-dark-800" />
+	          ))}
+	        </div>
       </section>
     )
   }
@@ -50,38 +50,38 @@ const SystemStackWidget = () => {
   }
 
   return (
-    <section className="bg-white/80 p-8 rounded-xl shadow-lg shadow-gray-100">
-      <div className="flex items-start justify-between mb-7">
-        <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.012em] text-gray-400 mb-1">
-            Runtime
-          </p>
-          <div className="text-sm font-medium text-gray-500 uppercase tracking-[0.012em]">
-            System Stack
-          </div>
-        </div>
+	    <section className="rounded-xl bg-white/80 p-8 shadow-lg shadow-gray-100 dark:border dark:border-dark-800 dark:bg-dark-900/70 dark:shadow-black/20">
+	      <div className="flex items-start justify-between mb-7">
+	        <div>
+	          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.012em] text-gray-400 dark:text-dark-500">
+	            Runtime
+	          </p>
+	          <div className="text-sm font-medium uppercase tracking-[0.012em] text-gray-500 dark:text-dark-300">
+	            System Stack
+	          </div>
+	        </div>
 
-        <div className="w-9 h-9 rounded-xl bg-gray-900 text-white flex items-center justify-center">
-          <Server size={15} />
-        </div>
-      </div>
+	        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white dark:bg-dark-100 dark:text-dark-950">
+	          <Server size={15} />
+	        </div>
+	      </div>
 
-      <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 mb-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">
-              Application
-            </p>
-            <p className="text-[13px] font-semibold text-gray-800">
-              {info.app.name}
-            </p>
-          </div>
+	      <div className="mb-5 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-dark-800 dark:bg-dark-950/70">
+	        <div className="flex items-center justify-between">
+	          <div>
+	            <p className="mb-1 text-[10px] font-bold uppercase text-gray-400 dark:text-dark-500">
+	              Application
+	            </p>
+	            <p className="text-[13px] font-semibold text-gray-800 dark:text-dark-100">
+	              {info.app.name}
+	            </p>
+	          </div>
 
-          <span className="px-2.5 py-1 rounded-full bg-white text-[10px] font-bold text-blue-600 shadow-sm">
-            v{info.app.version}
-          </span>
-        </div>
-      </div>
+	          <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-gray-600 shadow-sm dark:bg-dark-800 dark:text-dark-200">
+	            v{info.app.version}
+	          </span>
+	        </div>
+	      </div>
 
       <div className="grid grid-cols-2 gap-3 mb-5">
         <StackMini icon={Cpu} label="Node" value={info.runtime.node} />
@@ -92,8 +92,8 @@ const SystemStackWidget = () => {
         <StackMini icon={Database} label="pg" value={info.packages.pg} />
       </div>
 
-      <div className="border-t border-gray-100 pt-4 space-y-2">
-        <StackLine label="React DOM" value={info.packages.reactDom} />
+	      <div className="space-y-2 border-t border-gray-100 pt-4 dark:border-dark-800">
+	        <StackLine label="React DOM" value={info.packages.reactDom} />
         <StackLine label="Prisma CLI" value={info.packages.prismaCli} />
         <StackLine label="Adapter PG" value={info.packages.adapterPg} />
         <StackLine label="TypeScript" value={info.packages.typescript} />
@@ -111,23 +111,23 @@ const StackMini = ({
   label: string
   value: string
 }) => (
-  <div className="bg-white rounded-xl border border-gray-100 p-3">
-    <div className="flex items-center gap-2 mb-2">
-      <Icon size={12} className="text-gray-300" />
-      <p className="text-[9px] font-bold uppercase text-gray-400">
-        {label}
-      </p>
-    </div>
-    <p className="text-[13px] font-semibold text-gray-800">
-      {value}
-    </p>
-  </div>
+	  <div className="rounded-xl border border-gray-100 bg-white p-3 dark:border-dark-800 dark:bg-dark-950/70">
+	    <div className="flex items-center gap-2 mb-2">
+	      <Icon size={12} className="text-gray-300 dark:text-dark-500" />
+	      <p className="text-[9px] font-bold uppercase text-gray-400 dark:text-dark-500">
+	        {label}
+	      </p>
+	    </div>
+	    <p className="text-[13px] font-semibold text-gray-800 dark:text-dark-100">
+	      {value}
+	    </p>
+	  </div>
 )
 
 const StackLine = ({ label, value }: { label: string; value: string }) => (
   <div className="flex items-center justify-between">
-    <span className="text-[11px] text-gray-400">{label}</span>
-    <span className="text-[11px] font-mono text-gray-600">{value}</span>
+	    <span className="text-[11px] text-gray-400 dark:text-dark-500">{label}</span>
+	    <span className="font-mono text-[11px] text-gray-600 dark:text-dark-300">{value}</span>
   </div>
 )
 

@@ -99,7 +99,7 @@ const DefaultList = ({ list, loggedInfo, callback }: DefaultListProps) => {
               variants={itemVariants}
               className="py-1.5 px-3"
             >
-              <div className="h-[1px] bg-black/[0.04]" />
+              <div className="h-[1px] bg-black/[0.04] dark:bg-white/[0.06]" />
             </motion.div>
           );
         }
@@ -118,13 +118,13 @@ const DefaultList = ({ list, loggedInfo, callback }: DefaultListProps) => {
               className={`
                 group flex items-center justify-between w-full px-3 py-2 rounded-lg text-[13px] font-medium transition-all mb-1
                 ${isActive
-                ? "bg-blue-50 text-blue-600"
-                : "text-zinc-600 hover:bg-black/[0.03] hover:text-black"}
+                ? "bg-zinc-100 text-zinc-950 dark:bg-dark-800 dark:text-dark-100"
+                : "text-zinc-600 hover:bg-black/[0.03] hover:text-black dark:text-dark-400 dark:hover:bg-white/[0.05] dark:hover:text-dark-100"}
               `}
             >
               <span>{item.title}</span>
               {isActive && (
-                <div className="w-1 h-1 rounded-full bg-blue-600" />
+                <div className="h-1 w-1 rounded-full bg-zinc-950 dark:bg-dark-100" />
               )}
             </Link>
           </motion.div>

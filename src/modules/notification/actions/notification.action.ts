@@ -5,6 +5,7 @@ import * as query from "./notification.query";
 import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
 import { getSettingsByKeysQuery } from "@/modules/admin/actions/settings.query";
 import { notificationEvents } from "@/core/utils/trigger/notificationEvents";
+import { findUserPreferenceByUserId } from "@/modules/user/actions/preference.query";
 
 function extractTiptapText(nodes: any[]): string {
   return nodes
@@ -114,24 +115,29 @@ const getCommentReplySubscription = async (commentId?: number | string | null) =
 const isNotificationTypeEnabled = async (data: any) => {
   const settings = await getNotificationSettingsRuntimeAction();
   const subType = data?.subType || data?.metadata?.subType;
+  const userPreference = data.userId ? await findUserPreferenceByUserId(Number(data.userId)) : null;
 
   if (subType === "comment") {
     if (!settings.commentNotificationsEnabled) return { enabled: false, settings };
+    if (userPreference && !userPreference.notifyComments) return { enabled: false, settings };
     if (!toBool(data.documentNotificationEnabled, true)) return { enabled: false, settings };
   }
 
   if (subType === "reply") {
     if (!settings.replyNotificationsEnabled) return { enabled: false, settings };
+    if (userPreference && !userPreference.notifyReplies) return { enabled: false, settings };
     const subscribed = await getCommentReplySubscription(data.parentId);
     if (!subscribed) return { enabled: false, settings };
   }
 
   if (["document", "attachment", "admin-comment"].includes(subType)) {
     if (!settings.adminContentNotificationsEnabled) return { enabled: false, settings };
+    if (userPreference && !userPreference.notifyAdmin) return { enabled: false, settings };
   }
 
   if (subType === "force-logout") {
     if (!settings.forceLogoutNotificationsEnabled) return { enabled: false, settings };
+    if (userPreference && !userPreference.notifyAdmin) return { enabled: false, settings };
   }
 
   if (settings.excludeSelfNotifications && data.actorId && data.userId && String(data.actorId) === String(data.userId)) {

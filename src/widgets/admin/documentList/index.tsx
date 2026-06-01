@@ -65,7 +65,7 @@ const DocumentList = ({ mid, count = 5 }: any) => {
   }, [mid, count])
 
   if (!mounted) {
-    return <div className="h-[240px] w-full border-t border-slate-100" />
+	    return <div className="h-[240px] w-full border-t border-slate-100 dark:border-dark-800" />
   }
 
   if (loading) {
@@ -74,7 +74,7 @@ const DocumentList = ({ mid, count = 5 }: any) => {
         {Array.from({ length: count }).map((_, index) => (
           <div
             key={index}
-            className="h-4 w-full rounded bg-gray-100 animate-pulse"
+	            className="h-4 w-full animate-pulse rounded bg-gray-100 dark:bg-dark-800"
           />
         ))}
       </div>
@@ -83,7 +83,7 @@ const DocumentList = ({ mid, count = 5 }: any) => {
 
   if (items.length === 0) {
     return (
-      <div className="text-[12px] text-gray-400">
+	      <div className="text-[12px] text-gray-400 dark:text-dark-500">
         최근 게시글이 없습니다.
       </div>
     )
@@ -103,27 +103,27 @@ const DocumentList = ({ mid, count = 5 }: any) => {
           <Link
             href={`/posts/${module.mid}/${item.slug}`}
             key={item.id}
-            className="block group cursor-pointer"
+	            className="group block cursor-pointer"
           >
-            <div className="flex justify-between items-start gap-4">
-              <div className="min-w-0">
-                <div className="text-[12px] text-gray-600 group-hover:text-gray-900 transition-colors truncate">
-                  [{module.moduleName}] {item.title || '제목 없음'}
-                </div>
-
-                <div className="mt-1 text-[11px] text-gray-400 line-clamp-1">
-                  {preview}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[11px] font-medium text-gray-800">
-                  {item.user?.nickName || item.authorName || '비회원'}
-                </span>
-
-                <span className="text-[11px] font-medium text-gray-400">
-                  {dayjs(item.createdAt).fromNow()}
-                </span>
+	            <div className="flex items-start justify-between gap-4">
+	              <div className="min-w-0">
+	                <div className="truncate text-[12px] text-gray-600 transition-colors group-hover:text-gray-900 dark:text-dark-300 dark:group-hover:text-dark-100">
+	                  [{module.moduleName}] {item.title || '제목 없음'}
+	                </div>
+	
+	                <div className="mt-1 line-clamp-1 text-[11px] text-gray-400 dark:text-dark-500">
+	                  {preview}
+	                </div>
+	              </div>
+	
+	              <div className="flex shrink-0 items-center gap-2">
+	                <span className="text-[11px] font-medium text-gray-800 dark:text-dark-200">
+	                  {item.user?.nickName || item.authorName || '비회원'}
+	                </span>
+	
+	                <span className="text-[11px] font-medium text-gray-400 dark:text-dark-500">
+	                  {dayjs(item.createdAt).fromNow()}
+	                </span>
               </div>
             </div>
           </Link>

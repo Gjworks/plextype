@@ -111,7 +111,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
     editorProps: {
       attributes: {
         // ✅ 2. Tailwind prose 커스텀: 앞뒤 따옴표(`) 제거 및 에디터 내부 스타일 강화
-        class: `prose prose-zinc prose-sm focus:outline-none max-w-none text-gray-800 ${
+        class: `prose prose-zinc prose-sm focus:outline-none max-w-none text-gray-800 dark:prose-invert dark:text-dark-100 ${
           isCompact ? "min-h-[120px] px-4 py-4" : "min-h-[400px] px-6 py-10"
         } ` +
           "prose-pre:p-0 prose-pre:bg-transparent " + // Shiki 자체 배경과 패딩을 쓰기 위해 prose 스타일 무력화
@@ -173,9 +173,9 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
   if (!editor) return null;
 
   return (
-    <div className="w-full border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-md shadow-gray-100 transition-all duration-200 hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:focus-within:border-dark-300 dark:focus-within:ring-dark-300 flex flex-col">
+    <div className="w-full border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-md shadow-gray-100 transition-all duration-200 hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:shadow-black/30 dark:hover:border-dark-500 dark:focus-within:border-dark-500 dark:focus-within:ring-dark-800/80 flex flex-col">
       {/* 🛠️ 툴바 영역 */}
-      <div className="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border-b border-gray-100 sticky top-0 z-20">
+      <div className="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border-b border-gray-100 sticky top-0 z-20 dark:border-dark-800 dark:bg-dark-950">
 
         {/* 히스토리 */}
         <div className="flex items-center gap-1 mr-1">
@@ -203,7 +203,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
             icon={<Highlighter className="w-4 h-4" />}
           />
           {activeDropdown === 'highlight' && (
-            <div className="absolute top-full left-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3 animate-in fade-in zoom-in duration-150" onClick={e => e.stopPropagation()}>
+            <div className="absolute top-full left-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3 animate-in fade-in zoom-in duration-150 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/40" onClick={e => e.stopPropagation()}>
               <div className="grid grid-cols-6 gap-2 mb-2">
                 {HIGHLIGHT_COLORS.map((item) => (
                   <button
@@ -225,7 +225,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
                   editor.chain().focus().unsetHighlight().run();
                   setActiveDropdown(null);
                 }}
-                className="w-full text-[11px] py-1 text-gray-500 hover:bg-gray-50 rounded border border-dashed border-gray-200"
+                className="w-full text-[11px] py-1 text-gray-500 hover:bg-gray-50 rounded border border-dashed border-gray-200 dark:border-dark-700 dark:text-dark-400 dark:hover:bg-dark-800"
               >
                 형광펜 지우기
               </button>
@@ -248,16 +248,16 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
 
           {activeDropdown === 'link' && (
             <div
-              className="absolute top-full left-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in duration-150"
+              className="absolute top-full left-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in duration-150 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/40"
               onClick={(e) => e.stopPropagation()}
             >
               {/* ✅ 팝오버 헤더: 타이틀과 닫기 버튼 */}
-              <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
-                <span className="text-[11px] font-bold text-gray-500">URL 연결</span>
+              <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100 dark:border-dark-800 dark:bg-dark-950">
+                <span className="text-[11px] font-bold text-gray-500 dark:text-dark-400">URL 연결</span>
                 <button
                   type="button"
                   onClick={() => setActiveDropdown(null)}
-                  className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+                  className="p-1 hover:bg-gray-200 rounded-md transition-colors dark:hover:bg-dark-800"
                 >
                   <X className="w-3 h-3 text-gray-400" />
                 </button>
@@ -271,7 +271,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
                     onChange={(e) => setLinkUrl(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                     placeholder="https://example.com"
-                    className="flex-1 text-sm px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all text-gray-800"
+                    className="flex-1 text-sm px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-gray-400 transition-all text-gray-800 dark:border-dark-700 dark:bg-dark-950 dark:text-dark-100 dark:placeholder:text-dark-500 dark:focus:border-dark-500"
                     autoFocus
                   />
                   <button
@@ -316,13 +316,13 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
             }
           />
           {activeDropdown === 'heading' && (
-            <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-1 animate-in fade-in zoom-in duration-150">
+            <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-1 animate-in fade-in zoom-in duration-150 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/40">
               {[1, 2, 3].map(level => (
                 <button
                   key={level}
                   type="button"
                   onClick={() => { editor.chain().focus().toggleHeading({ level: level as any }).run(); setActiveDropdown(null); }}
-                  className={`w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 flex items-center justify-between ${editor.isActive('heading', { level }) ? 'bg-gray-50 text-blue-600 font-bold' : 'text-gray-700'}`}
+                  className={`w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 flex items-center justify-between dark:hover:bg-dark-800 ${editor.isActive('heading', { level }) ? 'bg-gray-50 text-gray-950 font-bold dark:bg-dark-800 dark:text-dark-100' : 'text-gray-700 dark:text-dark-300'}`}
                 >
                   제목 {level}
                   <span className="text-[10px] text-gray-400 font-normal">H{level}</span>
@@ -342,18 +342,18 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
             icon={<List className="w-4 h-4" />}
           />
           {activeDropdown === 'list' && (
-            <div className="absolute top-full left-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-1 animate-in fade-in zoom-in duration-150">
+            <div className="absolute top-full left-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-1 animate-in fade-in zoom-in duration-150 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/40">
               <button
                 type="button"
                 onClick={() => { editor.chain().focus().toggleBulletList().run(); setActiveDropdown(null); }}
-                className={`flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 ${editor.isActive('bulletList') ? 'bg-gray-50 text-blue-600' : 'text-gray-700'}`}
+                className={`flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-dark-800 ${editor.isActive('bulletList') ? 'bg-gray-50 text-gray-950 dark:bg-dark-800 dark:text-dark-100' : 'text-gray-700 dark:text-dark-300'}`}
               >
                 <List className="w-4 h-4" /> 불렛 리스트
               </button>
               <button
                 type="button"
                 onClick={() => { editor.chain().focus().toggleOrderedList().run(); setActiveDropdown(null); }}
-                className={`flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 ${editor.isActive('orderedList') ? 'bg-gray-50 text-blue-600' : 'text-gray-700'}`}
+                className={`flex items-center gap-2 w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-dark-800 ${editor.isActive('orderedList') ? 'bg-gray-50 text-gray-950 dark:bg-dark-800 dark:text-dark-100' : 'text-gray-700 dark:text-dark-300'}`}
               >
                 <ListOrdered className="w-4 h-4" /> 숫자 리스트
               </button>
@@ -392,7 +392,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
         <ToolbarButton tooltip="표 삽입" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} icon={<TableIcon className="w-4 h-4" />} />
       </div>
 
-      <div className={`${isCompact ? "min-h-[120px] max-h-[260px]" : "min-h-[400px] max-h-[800px] resize-y"} overflow-y-auto overflow-x-hidden border-b border-gray-50 bg-white`}
+      <div className={`${isCompact ? "min-h-[120px] max-h-[260px]" : "min-h-[400px] max-h-[800px] resize-y"} overflow-y-auto overflow-x-hidden border-b border-gray-50 bg-white dark:border-dark-800 dark:bg-dark-950 dark:text-dark-100`}
            style={{ direction: 'ltr' }}>
         <style dangerouslySetInnerHTML={{ __html: `
   /* 1. 이 클래스가 곧 <pre> 태그입니다! */
@@ -434,10 +434,29 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
   }
 
   /* 에디터 내부 커서 및 라인 높이 보정 */
-  .tiptap {
-    outline: none !important;
-  }
-`}} />
+	  .tiptap {
+	    outline: none !important;
+	    color: inherit !important;
+	  }
+	  .tiptap p,
+	  .tiptap li,
+	  .tiptap h1,
+	  .tiptap h2,
+	  .tiptap h3,
+	  .tiptap blockquote {
+	    color: inherit !important;
+	  }
+	  .tiptap .is-editor-empty:first-child::before {
+	    color: rgb(156 163 175);
+	    content: attr(data-placeholder);
+	    float: left;
+	    height: 0;
+	    pointer-events: none;
+	  }
+	  .dark .tiptap .is-editor-empty:first-child::before {
+	    color: rgb(82 90 106);
+	  }
+	`}} />
         <EditorContent editor={editor} />
       </div>
     </div>
@@ -457,8 +476,8 @@ const ToolbarButton = ({ onClick, active, disabled, icon, tooltip }: any) => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={`p-2 rounded-md transition-all duration-200 ${active
-          ? "bg-gray-900 text-white shadow-sm scale-105"
-          : "text-gray-500 hover:bg-gray-200 hover:text-gray-900 disabled:opacity-20"
+          ? "bg-gray-900 text-white shadow-sm scale-105 dark:bg-dark-100 dark:text-dark-950"
+          : "text-gray-500 hover:bg-gray-200 hover:text-gray-900 disabled:opacity-20 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-dark-100"
           }`}
       >
         {icon}
@@ -484,7 +503,7 @@ const DropdownButton = ({ onClick, active, icon, isOpen, tooltip, label }: any) 
         onClick={onClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`flex items-center gap-1.5 px-2 py-2 rounded-md transition-all ${active || isOpen ? "bg-gray-100 text-blue-600" : "text-gray-500 hover:bg-gray-200"
+        className={`flex items-center gap-1.5 px-2 py-2 rounded-md transition-all ${active || isOpen ? "bg-gray-100 text-gray-950 dark:bg-dark-800 dark:text-dark-100" : "text-gray-500 hover:bg-gray-200 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-dark-100"
           }`}
       >
         {icon}
@@ -500,7 +519,7 @@ const DropdownButton = ({ onClick, active, icon, isOpen, tooltip, label }: any) 
   );
 };
 
-const Divider = () => <div className="w-[1px] h-4 bg-gray-200 mx-1" />;
+const Divider = () => <div className="w-[1px] h-4 bg-gray-200 mx-1 dark:bg-dark-800" />;
 
 TiptapEditor.displayName = "TiptapEditor";
 export default TiptapEditor;

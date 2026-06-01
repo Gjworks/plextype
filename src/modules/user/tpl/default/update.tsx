@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { ArrowLeft, AtSign, Camera, KeyRound, Mail, Save, UserRound, X } from "lucide-react";
 
 import Popup from "@components/modal/Popup";
 import Alert from "@components/message/Alert";
@@ -116,109 +117,144 @@ const UpdateUser = ({ initialUser }: Props) => {
   return (
     <>
       <HeaderUser />
-      <div className="max-w-screen-md mx-auto px-3 py-8">
-        <form onSubmit={handleUserInfoSubmit}>
-          <div>
-            {error && <Alert message={error.message} type={error.type} />}
-            <div className="border-b border-gray-200 dark:border-dark-800">
+      <div className="min-h-screen bg-white dark:bg-dark-950">
+        <div className="mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10">
+          <form onSubmit={handleUserInfoSubmit} className="mx-auto max-w-2xl">
+            {error && (
+              <div className="mb-5">
+                <Alert message={error.message} type={error.type} />
+              </div>
+            )}
 
-              {/* 🌟 1. 아이디 영역 */}
-              <div className="grid grid-cols-3 gap-4 py-3 mb-2 border-b border-gray-100 dark:border-dark-800">
-                <div className="col-span-1 text-sm text-gray-400 p-2">
-                  아이디
+            <section className="border-b border-gray-200 pb-6 dark:border-dark-800">
+              <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                <div className="flex items-end gap-4">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-200 ring-4 ring-white shadow-sm shadow-gray-200 dark:bg-dark-800 dark:ring-dark-900 dark:shadow-black/30">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="프로필 이미지"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-gray-500 dark:text-dark-300">
+                        {initialUser.nickName?.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pb-1">
+                    <div className="text-2xl font-black tracking-tight text-gray-950 dark:text-dark-100">
+                      {initialUser.nickName}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-400">
+                      <span>@{initialUser.accountId}</span>
+                      <span className="text-gray-300 dark:text-dark-600">·</span>
+                      <span>{initialUser.email_address}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="col-span-2 text-sm text-gray-900 dark:text-dark-200 p-2">
-                  {initialUser.accountId}
+
+                <div className="flex w-full gap-2 md:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setShowProfilePopup(true)}
+                    className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 shadow-sm shadow-gray-100 transition-colors hover:border-gray-300 hover:bg-gray-50 hover:text-gray-950 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-300 dark:shadow-black/20 dark:hover:border-dark-700 dark:hover:bg-dark-800 dark:hover:text-dark-100 md:flex-none"
+                  >
+                    <Camera size={14} />
+                    이미지 변경
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleProfileImageDelete}
+                    disabled={!profileImage || profileMutation.isPending}
+                    className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-400 shadow-sm shadow-gray-100 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500 dark:shadow-black/20 dark:hover:border-red-900/60 dark:hover:bg-red-950/20 dark:hover:text-red-400 md:flex-none"
+                  >
+                    <X size={14} />
+                    삭제
+                  </button>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4 py-3 mb-2 border-b border-gray-100 dark:border-dark-800">
-                <div className="col-span-1 text-sm text-gray-400 p-2">
-                  이메일
-                </div>
-                <div className="col-span-2 text-sm text-gray-900 dark:text-dark-200 p-2">
-                  {initialUser.email_address}
-                </div>
-              </div>
+            </section>
 
-              {/* 🌟 2. 프로필 이미지 영역 */}
-              <div className="grid grid-cols-3 gap-4 py-3 mb-2 border-b border-gray-100 dark:border-dark-800">
-                <div className="col-span-1 text-sm text-gray-400 p-2">
-                  프로필 이미지
-                </div>
-                <div className="col-span-2">
-                  <div className="flex items-center gap-8">
-                    <div
-                      className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-2xl font-semibold text-gray-400 hover:bg-gray-300 dark:bg-dark-800 dark:hover:bg-dark-700"
-                    >
-                      {profileImage ? (
-                        <img
-                          src={profileImage}
-                          alt="프로필 이미지"
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        initialUser.nickName?.slice(0, 1).toUpperCase()
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowProfilePopup(true)}
-                        className="text-xs border-green-500 border py-1 px-3 rounded-lg hover:bg-green-500 hover:text-white text-green-500">
-                        변경하기
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleProfileImageDelete}
-                        disabled={!profileImage || profileMutation.isPending}
-                        className="text-xs border-rose-500 border py-1 px-3 rounded-lg hover:bg-rose-500 hover:text-white text-rose-500">
-                        삭제
-                      </button>
-                    </div>
+            <section className="mt-6 space-y-4">
+              <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+                    <AtSign size={17} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-dark-500">Account ID</div>
+                    <div className="mt-1 truncate text-sm font-bold text-gray-900 dark:text-dark-100">{initialUser.accountId}</div>
                   </div>
                 </div>
               </div>
 
-              {/* 🌟 3. 비밀번호 영역 */}
-              <div className="grid grid-cols-3 gap-4 py-3 mb-2 border-b border-gray-100 dark:border-dark-800">
-                <div className="col-span-1 text-sm text-gray-400 p-2">
-                  비밀번호
+              <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+                    <Mail size={17} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-dark-500">Email</div>
+                    <div className="mt-1 truncate text-sm font-bold text-gray-900 dark:text-dark-100">{initialUser.email_address}</div>
+                  </div>
                 </div>
-                <div className="col-span-2 flex items-center">
-                  <a
-                    className="text-xs border-purple-500 border py-2 px-3 rounded-lg hover:bg-purple-500 hover:text-white text-purple-500 cursor-pointer"
+              </div>
+
+              <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+                    <UserRound size={17} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-gray-950 dark:text-dark-100">닉네임</div>
+                    <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-400">
+                      게시글과 댓글에 표시되는 이름입니다.
+                    </p>
+                  </div>
+                </div>
+                <InputField
+                  inputTitle="닉네임"
+                  type="text"
+                  name="nickName"
+                  placeholder="변경할 닉네임을 입력해주세요."
+                  defaultValue={initialUser.nickName}
+                />
+              </div>
+
+              <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+                      <KeyRound size={17} />
+                    </div>
+                    <div>
+                      <div className="text-sm font-black text-gray-950 dark:text-dark-100">비밀번호</div>
+                      <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-400">
+                        계정 보호를 위해 주기적으로 비밀번호를 변경할 수 있습니다.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="inline-flex cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 hover:text-gray-950 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-200 dark:hover:border-dark-600 dark:hover:bg-dark-700 dark:hover:text-white"
                     onClick={() => setShowPopup(true)}
                   >
                     비밀번호 변경
-                  </a>
+                  </button>
                 </div>
               </div>
+            </section>
 
-              {/* 🌟 4. 닉네임 영역 (InputField 적용!) */}
-              <div className="grid grid-cols-3 gap-4 py-3 mb-2">
-                <div className="col-span-1 text-sm text-gray-400 p-2">
-                  닉네임
-                </div>
-                <div className="col-span-2">
-                  {/* 💡 타입스크립트가 요구하는 inputTitle을 추가했습니다! */}
-                  <InputField
-                    inputTitle="닉네임"
-                    type="text"
-                    name="nickName"
-                    placeholder="변경할 닉네임을 입력해주세요."
-                    defaultValue={initialUser.nickName}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 🌟 5. 하단 버튼 영역 */}
-            <div className="flex items-center justify-center gap-4 pt-4 pb-10 px-3">
+            <div className="sticky bottom-0 mt-6 flex items-center justify-between gap-3 border-t border-gray-200 bg-white/90 py-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/90">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="text-sm py-2 px-5 rounded-lg hover:bg-rose-500 hover:text-white text-rose-500 bg-rose-100">
-                뒤로가기
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-500 shadow-sm shadow-gray-100 transition-colors hover:border-gray-300 hover:bg-gray-50 hover:text-gray-950 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-400 dark:shadow-black/20 dark:hover:border-dark-700 dark:hover:bg-dark-800 dark:hover:text-dark-100"
+              >
+                <ArrowLeft size={14} />
+                돌아가기
               </button>
 
               <Button
@@ -226,14 +262,17 @@ const UpdateUser = ({ initialUser }: Props) => {
                 isLoading={mutation.isPending}
                 fullWidth={false}
               >
-                저장하기
+                <span className="inline-flex items-center gap-2">
+                  <Save size={14} />
+                  저장하기
+                </span>
               </Button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
 
-      <Popup id="change-password-popup" state={showPopup} title="비밀번호 변경" close={closePopup}>
+      <Popup id="change-password-popup" state={showPopup} title="비밀번호 변경" close={closePopup} showFooter={false}>
         <ChangePassword close={closePopup} />
       </Popup>
 
