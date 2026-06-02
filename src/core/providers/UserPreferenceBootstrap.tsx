@@ -8,12 +8,18 @@ type ThemePreference = "system" | "light" | "dark";
 
 const THEME_STORAGE_KEY = "userThemePreference";
 
+const writeThemeCookie = (theme: ThemePreference) => {
+  document.cookie = `${THEME_STORAGE_KEY}=${encodeURIComponent(theme)}; path=/; max-age=31536000; samesite=lax`;
+};
+
 const applyTheme = (theme: ThemePreference) => {
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
 
   document.documentElement.classList.toggle("dark", shouldUseDark);
   document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = shouldUseDark ? "dark" : "light";
+  writeThemeCookie(theme);
 };
 
 const resolveStoredTheme = (value: string | null): ThemePreference => {
@@ -22,10 +28,13 @@ const resolveStoredTheme = (value: string | null): ThemePreference => {
 };
 
 const UserPreferenceBootstrap = () => {
-  const { user } = useUserContext();
+  const { user, isLoading } = useUserContext();
 
   useEffect(() => {
-    const savedTheme = user?.preferences?.theme || resolveStoredTheme(localStorage.getItem(THEME_STORAGE_KEY));
+    if (isLoading) return;
+
+    const storedTheme = resolveStoredTheme(localStorage.getItem(THEME_STORAGE_KEY));
+    const savedTheme = user?.preferences?.theme || storedTheme;
     applyTheme(savedTheme);
     localStorage.setItem(THEME_STORAGE_KEY, savedTheme);
 
@@ -37,7 +46,7 @@ const UserPreferenceBootstrap = () => {
 
     media.addEventListener("change", handleChange);
     return () => media.removeEventListener("change", handleChange);
-  }, [user?.preferences?.theme]);
+  }, [isLoading, user?.preferences?.theme]);
 
   useEffect(() => {
     document.documentElement.dataset.motion = user?.preferences?.reduceMotion ? "reduced" : "default";

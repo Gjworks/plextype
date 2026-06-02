@@ -8,7 +8,6 @@ const PageLayout = async ({ children }) => {
 
   return (
     <DefaultLayout
-      siteUrl={settings.data?.siteUrl}
       siteTitle={settings.data?.projectTitle}
     >
       {children}
