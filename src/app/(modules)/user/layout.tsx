@@ -36,7 +36,6 @@ export default async function PageLayout({ children }: { children: React.ReactNo
 
   return (
     <DefaultLayout
-      siteUrl={settings.data?.siteUrl}
       siteTitle={settings.data?.projectTitle}
     >
         {children}

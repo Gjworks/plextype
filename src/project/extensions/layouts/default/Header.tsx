@@ -165,7 +165,7 @@ const Header = ({
                 <div className="col-span-1 relative flex justify-center items-center gap-1">
                   <div className="group relative flex items-center gap-2">
                     <Link
-                      href="/"
+                      href={siteUrl || "/"}
                       className="flex items-center justify-center p-[1.5px]"
                     >
                       <Image
