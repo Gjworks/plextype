@@ -41,7 +41,7 @@ const FindHubPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 아이디 찾기 카드 */}
-        <Link href="/src@modules/auth/(views)/find/findAccountId">
+        <Link href="/auth/find/findAccountId">
           <motion.div
             variants={itemVariants}
             className="group relative p-8 bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-2xl shadow-sm hover:shadow-md hover:border-gray-950 dark:hover:border-dark-300 transition-all cursor-pointer h-full flex flex-col items-center text-center"
@@ -62,7 +62,7 @@ const FindHubPage = () => {
         </Link>
 
         {/* 비밀번호 찾기 카드 */}
-        <Link href="/src@modules/auth/(views)/find/findPassword">
+        <Link href="/auth/find/findPassword">
           <motion.div
             variants={itemVariants}
             className="group relative p-8 bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-2xl shadow-sm hover:shadow-md hover:border-gray-950 dark:hover:border-dark-300 transition-all cursor-pointer h-full flex flex-col items-center text-center"

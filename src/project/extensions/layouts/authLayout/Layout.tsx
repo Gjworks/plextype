@@ -21,7 +21,7 @@ const Layout = ({ children, siteUrl }) => {
   // }, []); //
   return (
     <>
-      <div className="fixed inset-0 bg-[url('/assets/images/bg23.jpg')] bg-no-repeat bg-cover">
+      <div className="fixed inset-0 bg-[url('/assets/images/bg46.jpg')] bg-no-repeat bg-cover bg-center">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-950/40 via-gray-950/80 to-gray-950/95 dark:from-dark-950/40 dark:via-dark-950/80 dark:to-dark-950/95 z-10"></div>
       </div>
       <motion.div className="min-h-full">
