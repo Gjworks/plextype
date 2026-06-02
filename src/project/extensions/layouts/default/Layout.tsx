@@ -1,5 +1,6 @@
 import Header from "@extensions/layouts/default/Header";
 import Footer from "@extensions/layouts/default/Footer";
+import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 import { getPublicSiteNavigationAction } from "@/modules/admin/actions/sitemap.action";
 
 const DefaultLayout = async ({
@@ -18,22 +19,26 @@ const DefaultLayout = async ({
   //   }
   // }, []); // 빈 배열을 두 번째 인수로 전달하면 컴포넌트가 처음 마운트될 때만 실행됩니다.
   const [
+    siteSettingsResult,
     headerNavigationResult,
     footerNavigationResult,
     footerPartnersResult,
     footerDeveloperResult,
   ] = await Promise.all([
+    getPublicSiteSettingsAction(),
     getPublicSiteNavigationAction("header-main"),
     getPublicSiteNavigationAction("footer"),
     getPublicSiteNavigationAction("footer-partners"),
     getPublicSiteNavigationAction("footer-developer"),
   ]);
 
+  const resolvedSiteTitle = siteTitle === "지제이웍스" ? siteSettingsResult.data?.projectTitle || siteTitle : siteTitle;
+
   return (
     <>
       <Header
         siteUrl={siteUrl}
-        siteTitle={siteTitle}
+        siteTitle={resolvedSiteTitle}
         navigationItems={headerNavigationResult.data || []}
       />
       <main className="relative min-h-screen bg-white text-gray-950 dark:bg-dark-950 dark:text-dark-100">{children}</main>
@@ -42,7 +47,7 @@ const DefaultLayout = async ({
           footerItems={footerNavigationResult.data || []}
           partnerItems={footerPartnersResult.data || []}
           developerItems={footerDeveloperResult.data || []}
-          siteTitle={siteTitle}
+          siteTitle={resolvedSiteTitle}
         />
       </footer>
     </>

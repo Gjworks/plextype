@@ -14,7 +14,6 @@ export default async function PageLayout({
 
   return (
     <DefaultLayout
-      siteUrl={settings.data?.siteUrl}
       siteTitle={settings.data?.projectTitle}
     >
       {children}

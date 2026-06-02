@@ -169,6 +169,11 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
         return (
           <div
             className="prose prose-zinc max-w-none dark:prose-invert
+               prose-p:leading-8 prose-p:text-gray-700 dark:prose-p:text-dark-200
+               prose-headings:text-gray-950 dark:prose-headings:text-dark-100
+               prose-strong:text-gray-950 dark:prose-strong:text-dark-100
+               prose-li:text-gray-700 dark:prose-li:text-dark-200
+               prose-a:text-blue-600 dark:prose-a:text-sky-400
                prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0"
             dangerouslySetInnerHTML={{ __html: cleanHtml }}
           />
@@ -184,7 +189,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
 
       return (
         <div
-          className="prose prose-zinc max-w-none dark:prose-invert"
+          className="prose prose-zinc max-w-none dark:prose-invert prose-p:leading-8 prose-p:text-gray-700 dark:prose-p:text-dark-200 prose-headings:text-gray-950 dark:prose-headings:text-dark-100 prose-strong:text-gray-950 dark:prose-strong:text-dark-100 prose-li:text-gray-700 dark:prose-li:text-dark-200 prose-a:text-blue-600 dark:prose-a:text-sky-400"
           dangerouslySetInnerHTML={{ __html: cleanHtml }}
         />
       );
@@ -195,7 +200,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
       ADD_TAGS: ['mark']
     });
 
-    return <div dangerouslySetInnerHTML={{ __html: cleanHtml }} />;
+    return <div className="text-gray-700 dark:text-dark-200" dangerouslySetInnerHTML={{ __html: cleanHtml }} />;
   };
 
   if (!permissions.doRead) return <PostNotPermission />;
@@ -212,7 +217,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
           </div>
           <div className="flex justify-center pb-12 pt-12">
             <div
-              className="inline-block text-3xl md:text-4xl font-medium text-black dark:text-dark-100 leading-10"
+              className="inline-block text-3xl md:text-4xl font-bold text-black dark:text-dark-100 leading-10"
               style={{ lineHeight: "140%" }}
             >
               {document.title}
@@ -424,7 +429,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
         </div>
       </div>
 
-      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal text-gray-800 dark:text-dark-300 tracking-tight">
+      <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal leading-8 text-gray-800 dark:text-dark-200 tracking-tight">
         <style dangerouslySetInnerHTML={{ __html: `
       .plextype-shiki-block {
         display: block !important;

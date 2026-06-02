@@ -30,6 +30,10 @@ const fallbackFooterItems: Pick<SiteNavigationItem, "name" | "title" | "href" | 
 
 const THEME_STORAGE_KEY = "userThemePreference";
 
+const writeThemeCookie = (theme: UserThemePreference) => {
+  document.cookie = `${THEME_STORAGE_KEY}=${encodeURIComponent(theme)}; path=/; max-age=31536000; samesite=lax`;
+};
+
 const defaultUserPreference: UserPreferenceData = {
   theme: "system",
   notifyComments: true,
@@ -63,7 +67,9 @@ const applyThemePreference = (theme: UserThemePreference) => {
 
   document.documentElement.classList.toggle("dark", shouldUseDark);
   document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = shouldUseDark ? "dark" : "light";
   localStorage.setItem(THEME_STORAGE_KEY, theme);
+  writeThemeCookie(theme);
 };
 
 const Footer = ({
@@ -117,7 +123,7 @@ const Footer = ({
   };
 
   useEffect(() => {
-    const savedTheme = resolveThemePreference(user?.preferences?.theme || localStorage.getItem(THEME_STORAGE_KEY));
+    const savedTheme = resolveThemePreference(user?.preferences?.theme);
     setThemePreference(savedTheme);
   }, [user?.preferences?.theme]);
 

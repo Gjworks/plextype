@@ -64,7 +64,7 @@ const renderCommentContent = (content: string) => {
 
       return (
         <div
-	          className="prose prose-zinc prose-sm max-w-none dark:prose-invert prose-pre:bg-gray-50 prose-pre:text-gray-700 prose-img:rounded-xl prose-img:border prose-img:border-gray-100 dark:prose-pre:bg-dark-900 dark:prose-pre:text-dark-200 dark:prose-img:border-dark-800"
+	          className="prose prose-zinc prose-sm max-w-none dark:prose-invert dark:prose-p:text-dark-200 dark:prose-li:text-dark-200 prose-pre:bg-gray-50 prose-pre:text-gray-700 prose-img:rounded-xl prose-img:border prose-img:border-gray-100 dark:prose-pre:bg-dark-900 dark:prose-pre:text-dark-200 dark:prose-img:border-dark-800"
           dangerouslySetInnerHTML={{ __html: cleanHtml }}
         />
       );
@@ -163,7 +163,7 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
                   />
                 </div>
 
-	                <div className="mb-2 whitespace-pre-wrap text-[14px] leading-relaxed text-gray-700 dark:text-dark-300">
+	                <div className="mb-2 whitespace-pre-wrap text-[14px] leading-relaxed text-gray-700 dark:text-dark-200">
                   {comment.depth > 1 && parentUserName && (
 	                    <span className="mr-1.5 font-bold text-gray-500 opacity-80 dark:text-dark-200">@{parentUserName}</span>
                   )}

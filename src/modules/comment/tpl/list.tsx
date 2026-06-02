@@ -400,7 +400,7 @@ export default function CommentsList({
                   )}
                 </div>
 
-	                <div className="mb-2 text-[14px] leading-relaxed text-gray-700 dark:text-dark-300">
+	                <div className="mb-2 text-[14px] leading-relaxed text-gray-700 dark:text-dark-200">
                   {c.depth > 1 && parentUserName && (
 	                    <span className="mr-1.5 font-bold text-gray-500 opacity-80 dark:text-dark-200">@{parentUserName}</span>
                   )}

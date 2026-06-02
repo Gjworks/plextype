@@ -44,7 +44,9 @@ const applyClientTheme = (theme: UserThemePreference) => {
 
   document.documentElement.classList.toggle("dark", shouldUseDark);
   document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = shouldUseDark ? "dark" : "light";
   localStorage.setItem("userThemePreference", theme);
+  document.cookie = `userThemePreference=${encodeURIComponent(theme)}; path=/; max-age=31536000; samesite=lax`;
 };
 
 const PreferenceToggle = ({

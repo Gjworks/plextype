@@ -107,3 +107,15 @@ h4,
     @apply leading-7;
     @apply text-gray-600;
 }
+
+.dark .postContent p {
+    @apply text-dark-200;
+}
+
+.postContent a {
+    @apply text-blue-600 underline underline-offset-2 transition-colors;
+}
+
+.dark .postContent a {
+    @apply text-sky-300 decoration-sky-300/60 hover:text-sky-200;
+}
