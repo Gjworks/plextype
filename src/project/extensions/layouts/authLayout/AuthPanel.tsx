@@ -47,17 +47,17 @@ const Authpanel = ({ children, siteUrl }) => {
         initial="hidden"
         animate="enter"
         exit="exit"
-        className="lg:fixed right-0 bottom-0 top-0 flex justify-center items-center h-[calc(100vh-320px)] lg:h-screen"
+        className="lg:fixed right-0 bottom-0 top-0 flex w-full flex-col justify-center items-stretch h-[calc(100vh-320px)] lg:h-screen lg:w-auto lg:flex-row lg:items-center"
       >
-        <svg
-          className="hidden lg:block left-0 inset-y-0 h-full w-64 text-white fill-white dark:fill-dark-950 z-20 scale-x-[-1]"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
+        <div
           aria-hidden="true"
-        >
-          <polygon points="50,0 100,0 50,100 0,100"></polygon>
-        </svg>
-        <div className="relative ml-0 lg:-ml-32 flex-1 h-full z-30 bg-white dark:bg-dark-950 px-0 lg:px-20">
+          className="h-16 w-full flex-none bg-white/75 backdrop-blur-2xl backdrop-saturate-150 [clip-path:polygon(0_35%,100%_0,100%_100%,0_100%)] dark:bg-dark-950/75 lg:hidden"
+        />
+        <div
+          aria-hidden="true"
+          className="hidden h-full w-40 flex-none bg-white/75 backdrop-blur-2xl backdrop-saturate-150 [clip-path:polygon(0_0,100%_0,100%_100%)] dark:bg-dark-950/75 lg:block"
+        />
+        <div className="relative ml-0 flex-1 min-h-0 w-full z-30 bg-white/75 px-0 backdrop-blur-2xl backdrop-saturate-150 dark:bg-dark-950/75 lg:h-full lg:w-auto lg:px-20">
           <div className="lg:flex items-center h-full">
             <div className="absolute left-3 right-3 top-0">
               <motion.header
@@ -110,7 +110,7 @@ const Authpanel = ({ children, siteUrl }) => {
                 </div>
               </motion.header>
             </div>
-            <div className="w-full pt-10 lg:pt-0 lg:w-[32rem] px-3 overflow-hidden z-50 bg-white dark:bg-dark-950">
+            <div className="mx-auto w-full max-w-[32rem] pt-10 lg:pt-0 lg:w-[32rem] px-3 overflow-hidden z-50">
               <motion.div className="w-full">{children}</motion.div>
               <footer>
                 <div className="mx-auto max-w-screen-sm pb-10 pt-5">
