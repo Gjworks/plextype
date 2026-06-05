@@ -958,6 +958,28 @@ export const getPublicSiteSettingsAction = async (): Promise<ActionState<SiteSet
   }
 };
 
+export const getPublicSiteUrlAction = async (): Promise<ActionState<{ siteUrl: string }>> => {
+  try {
+    const records = await getSettingsByKeysQuery([SITE_SETTING_META.siteUrl.key]);
+    const siteUrl = records.find((record) => record.key === SITE_SETTING_META.siteUrl.key)?.value?.trim() || "";
+
+    return {
+      success: true,
+      type: "success",
+      message: "사이트 대표 URL을 불러왔습니다.",
+      data: { siteUrl },
+    };
+  } catch (error) {
+    console.error("getPublicSiteUrlAction Error:", error);
+    return {
+      success: false,
+      type: "error",
+      message: "사이트 대표 URL을 불러오지 못했습니다.",
+      data: { siteUrl: "" },
+    };
+  }
+};
+
 export const getUploadSettingsAdminAction = async (): Promise<ActionState<UploadSettingsData>> => {
   const sessionInfo = await getUserSessionAction();
 
