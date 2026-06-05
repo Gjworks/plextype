@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 
@@ -42,22 +41,23 @@ const Authpanel = ({ children, siteUrl }) => {
 
   return (
     <>
-      <motion.div
-        variants={fixedvar}
-        initial="hidden"
-        animate="enter"
-        exit="exit"
-        className="lg:fixed right-0 bottom-0 top-0 flex w-full flex-col justify-center items-stretch h-[calc(100vh-320px)] lg:h-screen lg:w-auto lg:flex-row lg:items-center"
-      >
-        <div
-          aria-hidden="true"
-          className="h-16 w-full flex-none bg-white/75 backdrop-blur-2xl backdrop-saturate-150 [clip-path:polygon(0_35%,100%_0,100%_100%,0_100%)] dark:bg-dark-950/75 lg:hidden"
-        />
-        <div
-          aria-hidden="true"
-          className="hidden h-full w-40 flex-none bg-white/75 backdrop-blur-2xl backdrop-saturate-150 [clip-path:polygon(0_0,100%_0,100%_100%)] dark:bg-dark-950/75 lg:block"
-        />
-        <div className="relative ml-0 flex-1 min-h-0 w-full z-30 bg-white/75 px-0 backdrop-blur-2xl backdrop-saturate-150 dark:bg-dark-950/75 lg:h-full lg:w-auto lg:px-20">
+      <div className="lg:fixed right-0 bottom-0 top-0 flex w-full flex-col justify-center items-stretch h-[calc(100vh-320px)] lg:h-screen lg:w-auto lg:flex-row lg:items-center">
+        <motion.div
+          variants={fixedvar}
+          initial="hidden"
+          animate="enter"
+          exit="exit"
+          className="relative flex h-full w-full flex-col items-stretch justify-center transform-gpu will-change-transform lg:w-auto lg:flex-row lg:items-center"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 z-0 bg-white backdrop-blur-2xl backdrop-saturate-150 [clip-path:polygon(0_4rem,100%_0,100%_100%,0_100%)] dark:bg-dark-950/75 lg:hidden"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-40 inset-y-0 right-0 z-0 hidden bg-white backdrop-blur-2xl backdrop-saturate-150 [clip-path:polygon(0_0,100%_0,100%_100%,10rem_100%)] dark:bg-dark-950/75 lg:block"
+          />
+          <div className="relative ml-0 flex-1 min-h-0 w-full z-30 px-0 lg:h-full lg:w-auto lg:px-20">
           <div className="lg:flex items-center h-full">
             <div className="absolute left-3 right-3 top-0">
               <motion.header
@@ -85,27 +85,25 @@ const Authpanel = ({ children, siteUrl }) => {
                         />
                       </svg>
                     </a>
-                    {siteUrl && (
-                      <Link
-                        href={siteUrl}
-                        className="dark:text-dark-400 cursor-pointer rounded-lg px-3 py-2 text-gray-500 hover:text-gray-900 dark:hover:text-white bg-gray-100 hover:bg-gray-200 dark:bg-dark-700 dark:hover:bg-dark-800"
+                    <Link
+                      href={siteUrl || "/"}
+                      className="dark:text-dark-400 cursor-pointer rounded-lg px-3 py-2 text-gray-500 hover:text-gray-900 dark:hover:text-white bg-gray-100 hover:bg-gray-200 dark:bg-dark-700 dark:hover:bg-dark-800"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="h-5 w-5"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="h-5 w-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-                          />
-                        </svg>
-                      </Link>
-                    )}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+                        />
+                      </svg>
+                    </Link>
                   </div>
                 </div>
               </motion.header>
@@ -158,7 +156,8 @@ const Authpanel = ({ children, siteUrl }) => {
             </div>
           </div>
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </>
   )
 }

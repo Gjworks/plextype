@@ -116,10 +116,10 @@ const DefaultList = ({ list, loggedInfo, callback }: DefaultListProps) => {
               href={item.route}
               onClick={() => handlerCallback(item.name)}
               className={`
-                group flex items-center justify-between w-full px-3 py-2 rounded-lg text-[13px] font-medium transition-all mb-1
+                group flex items-center justify-between w-full px-3 py-2 text-[13px] font-medium transition-all mb-1
                 ${isActive
-                ? "bg-zinc-100 text-zinc-950 dark:bg-dark-800 dark:text-dark-100"
-                : "text-zinc-600 hover:bg-black/[0.03] hover:text-black dark:text-dark-400 dark:hover:bg-white/[0.05] dark:hover:text-dark-100"}
+                ? "text-zinc-950 dark:text-dark-100"
+                : "rounded-lg text-zinc-600 hover:bg-black/[0.03] hover:text-black dark:text-dark-400 dark:hover:bg-white/[0.05] dark:hover:text-dark-100"}
               `}
             >
               <span>{item.title}</span>
