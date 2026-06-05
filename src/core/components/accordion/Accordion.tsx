@@ -6,7 +6,7 @@ import { ChevronRight } from "lucide-react";
 
 interface AccordionItem {
   id: string | number;
-  title: string;
+  title: React.ReactNode;
   content: React.ReactNode;
   isOpen?: boolean;
 }
@@ -15,13 +15,14 @@ interface AccordionProps {
   items: AccordionItem[];
   allowMultiple?: boolean; // 여러 개를 동시에 열 수 있는지 여부
   className?: string;
+  variant?: "default" | "nav";
 }
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => {
   return classes.filter(Boolean).join(" ");
 };
 
-const Accordion = ({ items, allowMultiple = false, className }: AccordionProps) => {
+const Accordion = ({ items, allowMultiple = false, className, variant = "default" }: AccordionProps) => {
   // 개별 아이템의 열림 상태 관리
   const [openIds, setOpenIds] = useState<(string | number)[]>(
     items.filter((item) => item.isOpen).map((item) => item.id)
@@ -45,6 +46,7 @@ const Accordion = ({ items, allowMultiple = false, className }: AccordionProps) 
           item={item}
           isOpen={openIds.includes(item.id)}
           onClick={() => toggleItem(item.id)}
+          variant={variant}
         />
       ))}
     </div>
@@ -55,9 +57,49 @@ interface AccordionRowProps {
   item: AccordionItem;
   isOpen: boolean;
   onClick: () => void;
+  variant: "default" | "nav";
 }
 
-const AccordionRow = ({ item, isOpen, onClick }: AccordionRowProps) => {
+const AccordionRow = ({ item, isOpen, onClick, variant }: AccordionRowProps) => {
+  if (variant === "nav") {
+    return (
+      <div className="group">
+        <button
+          type="button"
+          onClick={onClick}
+          className="flex w-full cursor-pointer items-center gap-2 text-left"
+        >
+          <span className="min-w-0 flex-1">
+            {item.title}
+          </span>
+          <motion.span
+            animate={{ rotate: isOpen ? 90 : 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="mr-3 flex size-3 shrink-0 items-center justify-center text-gray-950/35 dark:text-dark-400"
+          >
+            <ChevronRight className="size-3" />
+          </motion.span>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, y: -6 }}
+              animate={{ height: "auto", opacity: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: [0.04, 0.62, 0.23, 0.98] }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-1 pb-1">
+                {item.content}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   return (
     <div className="group">
       <button

@@ -7,7 +7,7 @@ import React from "react";
 
 const AuthLayout = ({
   children,
-  siteUrl = "/",
+  siteUrl,
   siteTitle = "Plextype",
 }: {
   children: React.ReactNode;
@@ -22,12 +22,14 @@ const AuthLayout = ({
         <section className="relative hidden overflow-hidden bg-gray-950 text-white lg:block">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.18),transparent_28%),radial-gradient(circle_at_75%_70%,rgba(255,87,34,0.35),transparent_30%)]" />
           <div className="relative flex min-h-screen flex-col justify-between p-10">
-            <Link href={siteUrl || "/"} className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-md bg-white text-sm font-bold text-gray-950">
-                {siteTitle.trim().charAt(0).toUpperCase() || "P"}
-              </span>
-              <span className="text-base font-semibold">{siteTitle}</span>
-            </Link>
+            {siteUrl && (
+              <Link href={siteUrl} className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-md bg-white text-sm font-bold text-gray-950">
+                  {siteTitle.trim().charAt(0).toUpperCase() || "P"}
+                </span>
+                <span className="text-base font-semibold">{siteTitle}</span>
+              </Link>
+            )}
 
             <div className="max-w-xl">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white/75 backdrop-blur">
@@ -65,24 +67,28 @@ const AuthLayout = ({
               <ArrowLeft size={16} />
               Back
             </button>
-            <Link
-              href={siteUrl || "/"}
-              className="inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm text-gray-500 transition-colors hover:bg-white hover:text-gray-950 dark:text-dark-300 dark:hover:bg-dark-900 dark:hover:text-white"
-            >
-              <Home size={16} />
-              Home
-            </Link>
+            {siteUrl && (
+              <Link
+                href={siteUrl}
+                className="inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm text-gray-500 transition-colors hover:bg-white hover:text-gray-950 dark:text-dark-300 dark:hover:bg-dark-900 dark:hover:text-white"
+              >
+                <Home size={16} />
+                Home
+              </Link>
+            )}
           </header>
 
           <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
             <div className="w-full max-w-md rounded-md border border-gray-200 bg-white p-6 shadow-sm shadow-gray-200/70 dark:border-dark-800 dark:bg-dark-900 dark:shadow-none">
               <div className="mb-8 lg:hidden">
-                <Link href={siteUrl || "/"} className="flex items-center gap-2">
-                  <span className="grid h-9 w-9 place-items-center rounded-md bg-gray-950 text-xs font-bold text-white dark:bg-white dark:text-gray-950">
-                    {siteTitle.trim().charAt(0).toUpperCase() || "P"}
-                  </span>
-                  <span className="text-sm font-semibold">{siteTitle}</span>
-                </Link>
+                {siteUrl && (
+                  <Link href={siteUrl} className="flex items-center gap-2">
+                    <span className="grid h-9 w-9 place-items-center rounded-md bg-gray-950 text-xs font-bold text-white dark:bg-white dark:text-gray-950">
+                      {siteTitle.trim().charAt(0).toUpperCase() || "P"}
+                    </span>
+                    <span className="text-sm font-semibold">{siteTitle}</span>
+                  </Link>
+                )}
               </div>
               {children}
             </div>

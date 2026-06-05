@@ -1,10 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import ContentListWidget from "@widgets/content/ContentListWidget";
 
 export default function MainIntro() {
+  const [activeCardIndex, setActiveCardIndex] = useState(3);
+  const swipeStartXRef = useRef<number | null>(null);
+  const didSwipeRef = useRef(false);
+
   const parentVariants = {
     onscreen: {
       transition: { staggerChildren: 0.05 },
@@ -25,6 +29,74 @@ export default function MainIntro() {
       y: 25,
       opacity: 0,
     },
+  };
+  const cardTransition = {
+    type: "spring" as const,
+    stiffness: 96,
+    damping: 20,
+    mass: 0.9,
+  };
+  const cardCount = 7;
+  const getCircularOffset = (index: number) => {
+    let offset = index - activeCardIndex;
+    if (offset > Math.floor(cardCount / 2)) offset -= cardCount;
+    if (offset < -Math.floor(cardCount / 2)) offset += cardCount;
+    return offset;
+  };
+  const getCardState = (index: number) => {
+    const offset = getCircularOffset(index);
+    const distance = Math.abs(offset);
+    const yByDistance = [0, 28, 108, 228];
+
+    return {
+      x: offset * 286,
+      y: yByDistance[distance] ?? 96,
+      rotate: offset * 9,
+      scale: 1,
+      opacity: 1 - Math.min(distance * 0.11, 0.4),
+    };
+  };
+  const getCardZIndex = (index: number) => 30 - Math.abs(getCircularOffset(index));
+  const moveCard = (direction: 1 | -1) => {
+    setActiveCardIndex((current) => (current + direction + cardCount) % cardCount);
+  };
+  const handleCarouselPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    swipeStartXRef.current = event.clientX;
+    didSwipeRef.current = false;
+  };
+  const handleCarouselPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (swipeStartXRef.current === null) return;
+
+    const swipePower = event.clientX - swipeStartXRef.current;
+    swipeStartXRef.current = null;
+
+    if (swipePower < -50) {
+      didSwipeRef.current = true;
+      moveCard(1);
+      window.setTimeout(() => {
+        didSwipeRef.current = false;
+      }, 120);
+      return;
+    }
+
+    if (swipePower > 50) {
+      didSwipeRef.current = true;
+      moveCard(-1);
+      window.setTimeout(() => {
+        didSwipeRef.current = false;
+      }, 120);
+    }
+  };
+  const handleCarouselPointerCancel = () => {
+    swipeStartXRef.current = null;
+  };
+  const handleCardSelect = (index: number) => {
+    if (didSwipeRef.current) {
+      didSwipeRef.current = false;
+      return;
+    }
+
+    setActiveCardIndex(index);
   };
 
   return (
@@ -117,152 +189,268 @@ export default function MainIntro() {
           </div>
         </div>
       </div>
-      <div className="-mt-32 pt-6">
-        <div className="max-w-screen-xl mx-auto px-3">
-          <div className="flex justify-center gap-6 md:gap-12 px-3">
-            <div className="relative w-44 md:w-64 flex-none -rotate-[24deg] translate-y-52">
-              <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-80 hover:shadow-lg hover:shadow-gray-950/10">
-                <div className="grid place-content-between h-full gap-4">
-                  <div className="text-xl font-light text-gray-400 dark:text-dark-400">
-                    Build modular{" "}
-                    <span className="font-semibold text-gray-950 dark:text-white">
-                      platforms
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-dark-400">
-                    Plextype Core
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative w-44 md:w-64 flex-none -rotate-[16deg] translate-y-24">
-              <div className="relative h-60 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50 md:h-80">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(145deg,rgba(20,184,166,0.22),transparent_42%),linear-gradient(315deg,rgba(99,102,241,0.18),transparent_38%)]" />
-                <div className="relative flex h-full flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="h-2 w-16 rounded-full bg-white/40" />
-                    <div className="h-2 w-24 rounded-full bg-white/20" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[0, 1, 2, 3, 4, 5].map((item) => (
-                      <div key={item} className="h-10 rounded-lg border border-white/10 bg-white/[0.06] backdrop-blur" />
-                    ))}
-                  </div>
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.35em] text-white/40">Admin</div>
-                      <div className="mt-1 text-lg font-semibold leading-tight text-white">Control Layer</div>
+      <div className="-mt-40 pt-6">
+        <div className="mx-auto max-w-screen-xl px-3">
+          <motion.div
+            className="relative -mx-3 h-[440px] overflow-hidden px-3 touch-pan-y select-none md:mx-0 md:h-[420px] md:overflow-visible md:px-0"
+            onPointerDown={handleCarouselPointerDown}
+            onPointerUp={handleCarouselPointerUp}
+            onPointerCancel={handleCarouselPointerCancel}
+          >
+            <motion.div
+              className="absolute left-1/2 top-8 w-64 cursor-pointer"
+              style={{ marginLeft: -128, zIndex: getCardZIndex(0) }}
+              animate={getCardState(0)}
+              transition={cardTransition}
+              onClick={() => handleCardSelect(0)}
+            >
+              <div className="relative rounded-2xl bg-gray-50 p-5 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/10 h-80 dark:bg-dark-800">
+                <div className="flex h-full flex-col justify-between gap-4">
+                  <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm shadow-gray-200/60 dark:border-dark-700 dark:bg-dark-900 dark:shadow-black/20">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="h-2 w-16 rounded-full bg-gray-300 dark:bg-dark-600" />
+                      <div className="h-5 w-5 rounded-md bg-gray-950 dark:bg-dark-100" />
                     </div>
-                    <div className="h-10 w-10 rounded-full border border-white/15 bg-white/10" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative w-44 md:w-64 flex-none -rotate-[10deg] translate-y-6">
-              <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
-                <div className="grid place-content-between h-full gap-4">
-                  <div className="text-xl font-light text-gray-400 dark:text-dark-400">
-                    Design flexible{" "}
-                    <span className="font-semibold text-gray-950 dark:text-white">
-                      systems
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-dark-400">
-                    Extension Ready
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative w-44 md:w-64 flex-none">
-              <div className="relative h-60 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50 md:h-80">
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.14),transparent_30%),radial-gradient(circle_at_70%_30%,rgba(14,165,233,0.24),transparent_32%),radial-gradient(circle_at_35%_75%,rgba(244,63,94,0.16),transparent_30%)]" />
-                <div className="absolute inset-x-5 top-8 h-px bg-white/15" />
-                <div className="absolute bottom-6 left-6 top-12 w-px bg-white/15" />
-                <div className="relative grid place-content-between h-full gap-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-white/70" />
-                      <div className="h-2 w-28 rounded-full bg-white/25" />
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="h-12 rounded-lg bg-gray-100 dark:bg-dark-800" />
+                      <div className="h-12 rounded-lg bg-gray-100 dark:bg-dark-800" />
+                      <div className="h-12 rounded-lg bg-gray-100 dark:bg-dark-800" />
                     </div>
-                    <div className="ml-4 rounded-xl border border-white/10 bg-white/[0.06] p-3">
-                      <div className="h-2 w-20 rounded-full bg-white/40" />
-                      <div className="mt-2 h-2 w-28 rounded-full bg-white/15" />
-                    </div>
-                    <div className="ml-12 rounded-xl border border-white/10 bg-white/[0.06] p-3">
-                      <div className="h-2 w-16 rounded-full bg-white/40" />
-                      <div className="mt-2 h-2 w-24 rounded-full bg-white/15" />
+                    <div className="mt-3 space-y-2">
+                      <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-dark-700" />
+                      <div className="h-2 w-3/4 rounded-full bg-gray-200 dark:bg-dark-700" />
                     </div>
                   </div>
                   <div>
-                    <div className="text-xl font-light text-white/70">
-                      smarter <span className="font-semibold text-white">flows</span>
+                    <div className="text-xl font-light text-gray-400 dark:text-dark-400">
+                      Admin{" "}
+                      <span className="font-semibold text-gray-950 dark:text-white">
+                        dashboard
+                      </span>
                     </div>
-                    <div className="mt-1 text-xs text-white/50">Practical Automation</div>
+                    <div className="mt-2 text-xs text-gray-600 dark:text-dark-400">
+                      Site control and realtime overview
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="relative w-44 md:w-64 flex-none rotate-[10deg] translate-y-6">
-              <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
-                <div className="grid place-content-between h-full gap-4">
-                  <div className="text-xl font-light text-gray-400 dark:text-dark-400">
-                    ship{" "}
-                    <span className="font-semibold text-gray-950 dark:text-white">
-                      better
-                    </span>{" "}
-                    ideas
+            </motion.div>
+            <motion.div
+              className="absolute left-1/2 top-8 w-64 cursor-pointer"
+              style={{ marginLeft: -128, zIndex: getCardZIndex(1) }}
+              animate={getCardState(1)}
+              transition={cardTransition}
+              onClick={() => handleCardSelect(1)}
+            >
+              <div className="relative h-80 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.16),transparent_28%),linear-gradient(145deg,rgba(20,184,166,0.18),transparent_42%),linear-gradient(315deg,rgba(99,102,241,0.16),transparent_38%)]" />
+                <div className="relative flex h-full flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/35">Board</div>
+                      <div className="rounded-full bg-white/10 px-2 py-1 text-[9px] font-bold text-white/50">LIVE</div>
+                    </div>
+                    {["Notice", "Updates", "Ideas"].map((item, index) => (
+                      <div key={item} className="rounded-xl border border-white/10 bg-white/[0.06] p-3 backdrop-blur">
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="h-2 w-16 rounded-full bg-white/35" />
+                          <div className={`h-2 w-2 rounded-full ${index === 0 ? "bg-cyan-300" : index === 1 ? "bg-violet-300" : "bg-emerald-300"}`} />
+                        </div>
+                        <div className="h-2 w-24 rounded-full bg-white/15" />
+                      </div>
+                    ))}
                   </div>
-                  <div className="text-xs text-gray-600 dark:text-dark-400">
-                    Gjworks Lab
+                  <div>
+                    <div className="text-xl font-light text-white/70">
+                      board <span className="font-semibold text-white">system</span>
+                    </div>
+                    <div className="mt-1 text-xs text-white/50">Posts, comments, categories</div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="relative w-44 md:w-64 flex-none rotate-[16deg] translate-y-24">
-              <div className="relative h-60 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50 md:h-80">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.16),transparent_24%),linear-gradient(160deg,rgba(34,197,94,0.16),transparent_36%),linear-gradient(330deg,rgba(251,146,60,0.16),transparent_36%)]" />
+            </motion.div>
+            <motion.div
+              className="absolute left-1/2 top-8 w-64 cursor-pointer"
+              style={{ marginLeft: -128, zIndex: getCardZIndex(2) }}
+              animate={getCardState(2)}
+              transition={cardTransition}
+              onClick={() => handleCardSelect(2)}
+            >
+              <div className="relative h-80 rounded-2xl bg-gray-50 p-5 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/10 dark:bg-dark-800">
+                <div className="flex h-full flex-col justify-between gap-4">
+                  <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900">
+                    <div className="mb-3 flex items-center gap-2 border-b border-gray-100 pb-3 dark:border-dark-700">
+                      {["B", "I", "U"].map((item) => (
+                        <div key={item} className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-[10px] font-bold text-gray-500 dark:bg-dark-800 dark:text-dark-300">{item}</div>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-2 w-full rounded-full bg-gray-300 dark:bg-dark-600" />
+                      <div className="h-2 w-5/6 rounded-full bg-gray-200 dark:bg-dark-700" />
+                      <div className="h-2 w-3/5 rounded-full bg-gray-200 dark:bg-dark-700" />
+                    </div>
+                    <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-950">
+                      <div className="h-2 w-20 rounded-full bg-gray-300 dark:bg-dark-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-light text-gray-400 dark:text-dark-400">
+                      Tiptap{" "}
+                      <span className="font-semibold text-gray-950 dark:text-white">
+                        editor
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-600 dark:text-dark-400">
+                      Writing, uploads, thumbnails
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              className="absolute left-1/2 top-8 w-64 cursor-pointer"
+              style={{ marginLeft: -128, zIndex: getCardZIndex(3) }}
+              animate={getCardState(3)}
+              transition={cardTransition}
+              onClick={() => handleCardSelect(3)}
+            >
+              <div className="relative h-80 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50">
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_30%),radial-gradient(circle_at_70%_30%,rgba(14,165,233,0.22),transparent_32%),radial-gradient(circle_at_35%_75%,rgba(244,63,94,0.14),transparent_30%)]" />
+                <div className="relative flex h-full flex-col justify-between gap-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    {["layout", "page", "skin", "action"].map((item) => (
+                      <div key={item} className="rounded-xl border border-white/10 bg-white/[0.06] p-3">
+                        <div className="mb-3 h-6 w-6 rounded-lg bg-white/10" />
+                        <div className="h-2 w-16 rounded-full bg-white/25" />
+                        <div className="mt-2 h-2 w-10 rounded-full bg-white/10" />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <div className="text-xl font-light text-white/70">
+                      extension <span className="font-semibold text-white">layer</span>
+                    </div>
+                    <div className="mt-1 text-xs text-white/50">Customize without touching core</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              className="absolute left-1/2 top-8 w-64 cursor-pointer"
+              style={{ marginLeft: -128, zIndex: getCardZIndex(4) }}
+              animate={getCardState(4)}
+              transition={cardTransition}
+              onClick={() => handleCardSelect(4)}
+            >
+              <div className="relative h-80 rounded-2xl bg-gray-50 p-5 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/10 dark:bg-dark-800">
+                <div className="flex h-full flex-col justify-between gap-4">
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900">
+                      <div className="h-2 w-20 rounded-full bg-gray-300 dark:bg-dark-600" />
+                      <div className="mt-2 h-2 w-28 rounded-full bg-gray-200 dark:bg-dark-700" />
+                    </div>
+                    <div className="ml-8 rounded-2xl border border-gray-200 bg-gray-950 p-3 text-white dark:border-dark-700">
+                      <div className="h-2 w-24 rounded-full bg-white/45" />
+                      <div className="mt-2 h-2 w-16 rounded-full bg-white/20" />
+                    </div>
+                    <div className="rounded-full border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-500 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300">
+                      local assistant
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-light text-gray-400 dark:text-dark-400">
+                      AI{" "}
+                      <span className="font-semibold text-gray-950 dark:text-white">
+                        assistant
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-600 dark:text-dark-400">
+                      Docs-aware local support
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              className="absolute left-1/2 top-8 w-64 cursor-pointer"
+              style={{ marginLeft: -128, zIndex: getCardZIndex(5) }}
+              animate={getCardState(5)}
+              transition={cardTransition}
+              onClick={() => handleCardSelect(5)}
+            >
+              <div className="relative h-80 overflow-hidden rounded-2xl bg-dark-950 p-5 ring-1 ring-white/10 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/50">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.16),transparent_24%),linear-gradient(160deg,rgba(34,197,94,0.14),transparent_36%),linear-gradient(330deg,rgba(251,146,60,0.14),transparent_36%)]" />
                 <div className="relative flex h-full flex-col justify-between">
                   <div className="rounded-xl border border-white/10 bg-black/20 p-3 font-mono text-[10px] leading-5 text-white/55">
                     <div><span className="text-white/30">$</span> npm run setup</div>
                     <div><span className="text-white/30">$</span> prisma sync</div>
                     <div><span className="text-white/30">$</span> deploy cleanly</div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-16 rounded-xl border border-white/10 bg-white/[0.06]" />
-                    <div className="h-16 rounded-xl border border-white/10 bg-white/[0.06]" />
+                  <div className="grid grid-cols-3 gap-2">
+                    {["DB", "Redis", "App"].map((item) => (
+                      <div key={item} className="rounded-xl border border-white/10 bg-white/[0.06] p-2">
+                        <div className="mb-2 h-5 w-5 rounded-md bg-white/10" />
+                        <div className="text-[9px] font-bold text-white/35">{item}</div>
+                      </div>
+                    ))}
                   </div>
                   <div>
                     <div className="text-xl font-light text-white/70">
-                      reliable <span className="font-semibold text-white">launches</span>
+                      deploy <span className="font-semibold text-white">flow</span>
                     </div>
-                    <div className="mt-1 text-xs text-white/50">Project Runtime</div>
+                    <div className="mt-1 text-xs text-white/50">Docker, Prisma, runtime</div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="relative w-44 md:w-64 flex-none rotate-[24deg] translate-y-52">
-              <div className="relative rounded-2xl p-5 bg-gray-50 dark:bg-dark-800 transition-all duration-700 hover:-translate-y-6 h-60 md:h-80 hover:shadow-lg hover:shadow-gray-950/10">
-                <div className="grid place-content-between h-full gap-4">
-                  <div className="text-xl font-light text-gray-400 dark:text-dark-400">
-                    Create lasting{" "}
-                    <span className="font-semibold text-gray-950 dark:text-white">
-                      services
-                    </span>
+            </motion.div>
+            <motion.div
+              className="absolute left-1/2 top-8 w-64 cursor-pointer"
+              style={{ marginLeft: -128, zIndex: getCardZIndex(6) }}
+              animate={getCardState(6)}
+              transition={cardTransition}
+              onClick={() => handleCardSelect(6)}
+            >
+              <div className="relative h-80 rounded-2xl bg-gray-50 p-5 transition-all duration-700 hover:-translate-y-6 hover:shadow-lg hover:shadow-gray-950/10 dark:bg-dark-800">
+                <div className="flex h-full flex-col justify-between gap-4">
+                  <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900">
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-dark-700" />
+                      <div>
+                        <div className="h-2 w-20 rounded-full bg-gray-300 dark:bg-dark-600" />
+                        <div className="mt-2 h-2 w-12 rounded-full bg-gray-200 dark:bg-dark-700" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="rounded-lg bg-gray-100 p-2 dark:bg-dark-800">
+                        <div className="h-2 w-24 rounded-full bg-gray-300 dark:bg-dark-600" />
+                      </div>
+                      <div className="rounded-lg bg-gray-100 p-2 dark:bg-dark-800">
+                        <div className="h-2 w-16 rounded-full bg-gray-300 dark:bg-dark-600" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-600 dark:text-dark-400">
-                    Developer First
+                  <div>
+                    <div className="text-xl font-light text-gray-400 dark:text-dark-400">
+                      user{" "}
+                      <span className="font-semibold text-gray-950 dark:text-white">
+                        workspace
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-600 dark:text-dark-400">
+                      Profile, timeline, notifications
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
       <div className="max-w-screen-xl mx-auto">
         <motion.div className="">
           <div className="grid grid-cols-12">
             <div className="col-span-12">
-              <div className="w-full md:w-2/5 mx-auto relative px-3 pt-6 md:pt-20 pb-8">
+              <div className="w-full md:w-2/5 mx-auto relative px-3 pt-6 md:pt-4 pb-8">
                 <motion.div
                   initial="offscreen"
                   whileInView="onscreen"
