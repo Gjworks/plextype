@@ -82,7 +82,7 @@ const AccountDropdown = () => {
         <Dropdown state={showDropdown} close={closeDropdown}>
           {user ? (
             <>
-              <div className="w-64 overflow-hidden rounded-xl border border-zinc-100 bg-white p-2 shadow-xl shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
+              <div className="w-max min-w-48 max-w-72 overflow-hidden rounded-xl border border-zinc-100 bg-white p-2 shadow-xl shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
                 <div className="border-b border-zinc-100 px-4 py-3 dark:border-dark-800">
                   <p className="text-sm font-bold text-zinc-900 dark:text-dark-100">{user?.nickName}님 환영합니다</p>
                 </div>
@@ -91,7 +91,7 @@ const AccountDropdown = () => {
             </>
           ) : (
             <>
-              <div className="w-64 overflow-hidden rounded-xl border border-zinc-100 bg-white p-2 shadow-xl shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
+              <div className="w-max min-w-48 max-w-72 overflow-hidden rounded-xl border border-zinc-100 bg-white p-2 shadow-xl shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
                 <DefaultList list={guestNav} callback={callbackName} />
               </div>
             </>

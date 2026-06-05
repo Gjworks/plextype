@@ -9,7 +9,8 @@ import Left from "@components/panel/Left";
 
 import AccountDropwdown from "@widgets/forms/AccountDropwdown";
 import SideNav from "@components/nav/SideNav";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { motion, Variants } from "framer-motion";
+import Dropdown from "@components/dropdown/Dropdown";
 
 import Right from "@components/panel/Right";
 import MymenuTemplate from "@widgets/forms/MymenuTemplate";
@@ -40,7 +41,6 @@ const Header = ({
   const pathname = usePathname();
 
   const [showLeft, setShowLeft] = useState(false);
-  const [subMenuState, setSubMenuState] = useState(false);
   const [showNavigation, setShowNavigation] = useState(false);
   const [currentPage, setCurrentPage] = useState<Inspage | undefined>();
   const [showRight, setShowRight] = useState(false);
@@ -65,7 +65,6 @@ const Header = ({
   };
   const handleClickOutside = () => {
     setShowNavigation(false);
-    setSubMenuState(false);
   };
   useEffect(() => {
     document.addEventListener("click", handleClickOutside, true);
@@ -73,36 +72,6 @@ const Header = ({
       document.removeEventListener("click", handleClickOutside, true);
     };
   }, []);
-
-  const handleMouseEnter = () => {
-    setSubMenuState(true);
-  };
-  const containerVariants: Variants = {
-    hidden: {
-      opacity: 0,
-      y: 10,
-      // transition 설정 시 에러 방지를 위해 visibility는 제거하거나
-      // transitionEnd로 옮기는 것이 좋습니다.
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.2,
-        ease: "easeOut", // 이제 Variants 타입 덕분에 string이 아닌 Easing 타입으로 인식됩니다.
-        when: "beforeChildren",
-        staggerChildren: 0.1,
-      }
-    },
-    exit: {
-      opacity: 0,
-      y: 10,
-      transition: {
-        duration: 0.2,
-        ease: "easeIn"
-      }
-    }
-  };
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, x: -10 },
@@ -258,44 +227,42 @@ const Header = ({
                           )}
                         </Link>
 
-                        {/* 2차 메뉴 영역 */}
-                        <AnimatePresence>
-                          {item.children.length > 0 && hoveredMenu === item.name && (
-                            <motion.div
-                              variants={containerVariants}
-                              initial="hidden"
-                              animate="visible"
-                              exit="exit"
-                              className="absolute left-0 top-full z-50 pt-2 w-48"
-                            >
-                              <div className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-lg shadow-gray-900/5 backdrop-blur-lg dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
-                                <div className="flex flex-col py-1">
-                                  {item.children.map((subItem) => (
-                                    <motion.div
-                                      key={subItem.name} variants={itemVariants}
-                                      whileHover={{ x: 6 }}
-                                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        {item.children.length > 0 && (
+                          <Dropdown
+                            state={hoveredMenu === item.name}
+                            close={(open) => {
+                              if (!open) setHoveredMenu(null);
+                            }}
+                            className="left-0 top-full min-w-48 max-w-72 pt-2"
+                          >
+                            <div className="w-max min-w-48 max-w-72 overflow-hidden rounded-lg border border-gray-100 bg-white shadow-lg shadow-gray-900/5 backdrop-blur-lg dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
+                              <div className="flex flex-col py-1">
+                                {item.children.map((subItem) => (
+                                  <motion.div
+                                    key={subItem.name}
+                                    variants={itemVariants}
+                                    whileHover={{ x: 6 }}
+                                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                  >
+                                    <Link
+                                      href={subItem.href}
+                                      target={subItem.target || undefined}
+                                      rel={subItem.target === "_blank" ? "noreferrer" : undefined}
+                                      className={
+                                        "block whitespace-nowrap px-4 py-3 text-[0.762rem] transition-colors " +
+                                        (isMenuActive(subItem)
+                                          ? "text-gray-900 font-medium dark:text-dark-100"
+                                          : "text-gray-600 hover:text-gray-950 dark:text-dark-300 dark:hover:text-white")
+                                      }
                                     >
-                                      <Link
-                                        href={subItem.href}
-                                        target={subItem.target || undefined}
-                                        rel={subItem.target === "_blank" ? "noreferrer" : undefined}
-                                        className={
-                                          "block px-4 py-3 text-[0.762rem] transition-colors " +
-                                          (isMenuActive(subItem)
-                                            ? "text-gray-900 font-medium dark:text-dark-100"
-                                            : "text-gray-600 hover:text-gray-950 dark:text-dark-300 dark:hover:text-white")
-                                        }
-                                      >
-                                        {subItem.title}
-                                      </Link>
-                                    </motion.div>
-                                  ))}
-                                </div>
+                                      {subItem.title}
+                                    </Link>
+                                  </motion.div>
+                                ))}
                               </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                            </div>
+                          </Dropdown>
+                        )}
                       </div>
                     ))}
                 </div>
@@ -365,21 +332,8 @@ const Header = ({
         </div>
       </motion.header>
 
-      <motion.div
-        initial={{ opacity: 0, visibility: "hidden" }}
-        animate={{
-          opacity: subMenuState ? 1 : 0,
-          visibility: subMenuState ? "visible" : "hidden",
-        }}
-        transition={{ duration: 0.8 }}
-        exit={{
-          opacity: 0,
-          visibility: "hidden",
-        }}
-        className="fixed top-0 left-0 right-0 bottom-0 bg-gray-950/30 z-90 backdrop-blur-sm"
-      ></motion.div>
       <Left state={showLeft} close={closeLeft} width="320px">
-        <SideNav />
+        <SideNav navigationItems={navigationItems} />
       </Left>
       <Right state={showRight} close={closeRight}>
         <MymenuTemplate />

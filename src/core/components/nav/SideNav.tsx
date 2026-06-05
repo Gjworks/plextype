@@ -1,13 +1,10 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import SideNavTemplate from '@widgets/nav/SideNavTemplate'
+import type { SiteNavigationItem } from '@/modules/admin/actions/_type'
 
-const SideNav = props => {
-  const pathname = usePathname()
-  console.log(pathname)
+const SideNav = ({ navigationItems = [] }: { navigationItems?: SiteNavigationItem[] }) => {
   const parentVariants = {
     onscreen: {
       transition: { staggerChildren: 0.1 },
@@ -27,7 +24,7 @@ const SideNav = props => {
           // initial={{ opacity: 0, x: "-50%" }}
           className="overflow-scroll-hide dark:bg-dark-900/80 absolute bottom-0 top-0 h-full w-[275px] overflow-y-auto bg-white/90 pb-[80px]"
         >
-          <SideNavTemplate />
+          <SideNavTemplate navigationItems={navigationItems} />
         </motion.div>
       </div>
     </>

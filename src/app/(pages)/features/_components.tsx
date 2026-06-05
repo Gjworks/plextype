@@ -10,7 +10,7 @@ import Bottom from "@/core/components/panel/Bottom";
 export const docsNav = [
   { href: "/features/getting-started", title: "시작하기", desc: "setup, DB 초기화, 개발 서버 실행" },
   { href: "/features/architecture", title: "프로젝트 구조", desc: "코어와 개인 확장 영역" },
-  { href: "/features/extensions", title: "Extensions", desc: "index.tsx, trigger, capability 등록" },
+  { href: "/features/extensions", title: "Extensions", desc: "index.tsx, admin registry, trigger 등록" },
   { href: "/features/layouts", title: "Layouts & Page", desc: "기본 레이아웃과 홈 페이지 교체" },
   { href: "/features/project-api", title: "Project API", desc: "proxy, Prisma, 배포판 확장 규칙" },
   { href: "/features/posts", title: "Posts", desc: "게시판 스킨과 issuetracker 구조" },
