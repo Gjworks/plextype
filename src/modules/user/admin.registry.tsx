@@ -10,6 +10,7 @@ export const userAdminMenus: AdminMenuItem[] = [
     order: 20,
     items: [
       { label: "회원 목록", href: "/admin/user/list" },
+      { label: "로그인 된 회원", href: "/admin/user/active" },
       { label: "가입 대기 회원", href: "/admin/user/pending" },
       { label: "로그인 잠금", href: "/admin/user/login-locks" },
       { label: "회원 추가", href: "/admin/user/create" },
