@@ -25,6 +25,7 @@ interface PostWriteProps {
     content: string | null;
     thumbnail?: string | null;
     extraFieldData?: any;
+    isSecrets?: boolean | null;
   } | null;
 }
 
@@ -37,12 +38,14 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
   const editorRef = useRef<any>(null);
   const titleRef = useRef<HTMLInputElement | null>(null);
   const categoryRef = useRef<HTMLSelectElement | null>(null);
+  const secretPasswordRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const [title, setTitle] = useState(existingPost?.title || "");
   const [content, setContent] = useState(existingPost?.content || "");
   const [thumbnail, setThumbnail] = useState(existingPost?.thumbnail || "");
+  const [isSecrets, setIsSecrets] = useState(Boolean(existingPost?.isSecrets));
   const [extraData, setExtraData] = useState<any>({
     ...(existingPost?.extraFieldData || {}),
     notificationEnabled: existingPost?.extraFieldData?.notificationEnabled ?? true,
@@ -63,6 +66,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
     setFieldErrors(null);
     try {
       const formData = new FormData(form);
+      formData.set("isSecrets", isSecrets ? "true" : "false");
 
       // Tiptap 에디터에서 JSON 추출 (혹은 getHTML())
       const jsonContent = editorRef.current.getJSON();
@@ -90,6 +94,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
 
           if (res.fieldErrors.title) titleRef.current?.focus();
           else if (res.fieldErrors.categoryId) categoryRef.current?.focus();
+          else if (res.fieldErrors.secretPassword || res.fieldErrors.isSecrets) secretPasswordRef.current?.focus();
           else if (res.fieldErrors.content) editorRef.current?.commands?.focus?.();
         } else {
           setFormMessage(res.message || "저장에 실패했습니다.");
@@ -196,6 +201,38 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
             value={extraData}
             onChange={(newData) => setExtraData(newData)}
           />
+        </div>
+      )}
+
+      {postInfo.config?.secretPost && (
+        <div className="rounded-md border border-gray-100 bg-white p-4 dark:border-dark-700 dark:bg-dark-900/80">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={isSecrets}
+              onChange={(event) => setIsSecrets(event.target.checked)}
+              className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-gray-800 dark:text-dark-100">비밀글로 작성</span>
+              <span className="mt-1 block text-xs leading-5 text-gray-400 dark:text-dark-400">
+                작성자와 관리자, 비밀번호를 입력한 사용자만 본문과 댓글을 볼 수 있습니다.
+              </span>
+            </span>
+          </label>
+
+          {isSecrets && (
+            <div className="mt-4">
+              <InputField
+                ref={secretPasswordRef}
+                inputTitle="비밀글 비밀번호"
+                type="password"
+                name="secretPassword"
+                placeholder={existingPost?.isSecrets ? "변경할 때만 새 비밀번호를 입력하세요." : "비밀글 비밀번호를 입력해주세요."}
+                error={fieldErrors?.secretPassword || fieldErrors?.isSecrets}
+              />
+            </div>
+          )}
         </div>
       )}
 

@@ -3,6 +3,7 @@
 
 import { cookies } from "next/headers";
 import { verify } from "@utils/auth/jwtAuth";
+import crypto from "crypto";
 import dayjs from "dayjs";
 import * as query from "./document.query";
 import { revalidatePath } from "next/cache";
@@ -14,6 +15,7 @@ import {withTrigger} from "@utils/trigger/triggerWrapper";
 import {CommentWithChildren} from "@/modules/comment/actions/_type";
 import { nanoid } from "nanoid";
 import { getPostSkinCapability } from "@/modules/posts/actions/skinCapability";
+import { hashedPassword, verifyPassword } from "@/core/utils/auth/password";
 
 // 내부 유틸: 로그인 유저 확인
 async function getLoggedInfo() {
@@ -23,6 +25,41 @@ async function getLoggedInfo() {
   const verified = await verify(accessToken);
   if (!verified?.id) return null;
   return { id: verified.id, isAdmin: Boolean(verified.isAdmin) };
+}
+
+const SECRET_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+
+function getSecretCookieName(slug: string) {
+  return `post_secret_${slug}`;
+}
+
+function createSecretCookieValue(slug: string) {
+  const secret = process.env.SECRET_KEY || process.env.JWT_SECRET || "plextype-secret";
+  return crypto.createHmac("sha256", secret).update(`post:${slug}`).digest("hex");
+}
+
+async function hasDocumentSecretAccess(document: any, loggedInfo?: { id: number; isAdmin: boolean } | null) {
+  if (!document?.isSecrets) return true;
+  if (document.userId && document.userId === loggedInfo?.id) return true;
+  if (loggedInfo?.isAdmin) return true;
+
+  const cookieStore = await cookies();
+  return cookieStore.get(getSecretCookieName(document.slug))?.value === createSecretCookieValue(document.slug);
+}
+
+function sanitizeDocument(document: any) {
+  if (!document) return document;
+  const { authorPassword, ...safeDocument } = document;
+  return safeDocument;
+}
+
+function toLockedDocument(document: any) {
+  return {
+    ...sanitizeDocument(document),
+    content: null,
+    thumbnail: null,
+    _secretLocked: true,
+  };
 }
 
 export async function getDocument(id: number): Promise<ActionState<DocumentInfo>> {
@@ -107,6 +144,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
       thumbnail: formData.get("thumbnail"),
       isNotice: formData.get("isNotice"),
       isSecrets: formData.get("isSecrets"),
+      secretPassword: formData.get("secretPassword"),
       moduleId: postInfo.id,
       moduleType: "posts",
       tempId: formData.get("tempId"),
@@ -121,6 +159,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
     const thumbnail = data.thumbnail || extractFirstImageFromContent(data.content) || null;
     const postSkinCapability = getPostSkinCapability(postInfo.config);
     const defaultDocumentStatus = postSkinCapability.documentStatus?.defaultStatus;
+    const useSecretPost = Boolean((postInfo.config as any)?.secretPost);
 
     let resultData: any;
 
@@ -131,6 +170,30 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
         return { success: false, type: "error", message: "수정 권한이 없습니다." };
       }
 
+      let authorPassword = (existing as any).authorPassword || null;
+      if (!useSecretPost && data.isSecrets) {
+        return {
+          success: false,
+          type: "error",
+          message: "이 게시판은 비밀글을 사용할 수 없습니다.",
+          fieldErrors: { isSecrets: "이 게시판은 비밀글을 사용할 수 없습니다." },
+        };
+      }
+      if (data.isSecrets) {
+        const secretPassword = String(data.secretPassword || "").trim();
+        if (secretPassword) authorPassword = await hashedPassword(secretPassword);
+        if (!authorPassword) {
+          return {
+            success: false,
+            type: "error",
+            message: "비밀글 비밀번호를 입력해주세요.",
+            fieldErrors: { secretPassword: "비밀글 비밀번호를 입력해주세요." },
+          };
+        }
+      } else {
+        authorPassword = null;
+      }
+
       // 🌟 업데이트 시 extraFieldData 포함
       const updated = await documentQuery.updateDocument(data.id, {
         title: data.title,
@@ -139,12 +202,35 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
         categoryId: data.categoryId,
         isNotice: data.isNotice,
         isSecrets: data.isSecrets,
+        authorPassword,
         extraFieldData: data.extraFieldData, // 추가
         updatedAt: new Date()
       });
 
       resultData = { ...updated, _isNew: false };
     } else {
+      let authorPassword: string | null = null;
+      if (!useSecretPost && data.isSecrets) {
+        return {
+          success: false,
+          type: "error",
+          message: "이 게시판은 비밀글을 사용할 수 없습니다.",
+          fieldErrors: { isSecrets: "이 게시판은 비밀글을 사용할 수 없습니다." },
+        };
+      }
+      if (data.isSecrets) {
+        const secretPassword = String(data.secretPassword || "").trim();
+        if (!secretPassword) {
+          return {
+            success: false,
+            type: "error",
+            message: "비밀글 비밀번호를 입력해주세요.",
+            fieldErrors: { secretPassword: "비밀글 비밀번호를 입력해주세요." },
+          };
+        }
+        authorPassword = await hashedPassword(secretPassword);
+      }
+
       // 🌟 신규 등록 시 extraFieldData 포함
       const created = await documentQuery.insertDocument({
         moduleType: data.moduleType,
@@ -156,6 +242,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
         categoryId: data.categoryId,
         isNotice: data.isNotice,
         isSecrets: data.isSecrets,
+        authorPassword,
         status: defaultDocumentStatus,
         extraFieldData: data.extraFieldData, // 추가
         slug: nanoid(10),
@@ -316,11 +403,14 @@ export async function getDocumentList(
       : undefined;
 
     const formattedItems = items.map((doc: any) => {
+      const secretLocked = Boolean(doc.isSecrets) &&
+        doc.userId !== loggedInfo?.id &&
+        !loggedInfo?.isAdmin;
       let previewContent = "";
       let thumbnail: string | null = doc.thumbnail || null;
 
       // --- 기존 컨텐츠 파싱 로직 (유지) ---
-      if (doc.content) {
+      if (!secretLocked && doc.content) {
         try {
           let rawContent = doc.content;
           if (rawContent.startsWith('"') && rawContent.endsWith('"')) rawContent = rawContent.slice(1, -1);
@@ -383,10 +473,12 @@ export async function getDocumentList(
 
       return {
         ...doc,
-        content: previewContent,
-        thumbnail,
+        title: secretLocked ? "비밀글입니다." : doc.title,
+        content: secretLocked ? "비밀번호가 필요한 글입니다." : previewContent,
+        thumbnail: secretLocked ? null : thumbnail,
         extraFieldData,
-        latestComment
+        latestComment: secretLocked ? null : latestComment,
+        _secretLocked: secretLocked,
       };
     });
 
@@ -484,13 +576,67 @@ export async function getDocumentBySlugAction(slug: string): Promise<ActionState
       return { success: false, type: "error", message: "게시글을 조회할 권한이 없습니다." };
     }
 
+    if (!(await hasDocumentSecretAccess(document, loggedInfo))) {
+      return {
+        success: true,
+        type: "warning",
+        message: "비밀글입니다.",
+        data: toLockedDocument(document) as DocumentInfo,
+      };
+    }
+
     return {
       success: true,
       type: "success",
       message: "게시글 조회 성공",
-      data: document as DocumentInfo
+      data: sanitizeDocument(document) as DocumentInfo
     };
   } catch (error) {
     return { success: false, type: "error", message: "조회 중 오류 발생" };
+  }
+}
+
+export async function unlockDocumentSecretAction(slug: string, password: string): Promise<ActionState<null>> {
+  try {
+    const document = await documentQuery.findDocumentBySlug(slug);
+    if (!document) return { success: false, type: "error", message: "존재하지 않는 게시글입니다." };
+    if (!document.isSecrets) return { success: true, type: "success", message: "비밀글이 아닙니다." };
+
+    const inputPassword = String(password || "").trim();
+    if (!inputPassword) {
+      return {
+        success: false,
+        type: "error",
+        message: "비밀번호를 입력해주세요.",
+        fieldErrors: { password: "비밀번호를 입력해주세요." },
+      };
+    }
+
+    if (!document.authorPassword) {
+      return { success: false, type: "error", message: "비밀글 비밀번호가 설정되어 있지 않습니다." };
+    }
+
+    const isValid = await verifyPassword(inputPassword, document.authorPassword);
+    if (!isValid) {
+      return {
+        success: false,
+        type: "error",
+        message: "비밀번호가 일치하지 않습니다.",
+        fieldErrors: { password: "비밀번호가 일치하지 않습니다." },
+      };
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set(getSecretCookieName(slug), createSecretCookieValue(slug), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: SECRET_COOKIE_MAX_AGE,
+    });
+
+    return { success: true, type: "success", message: "비밀글 열람이 허용되었습니다." };
+  } catch (error) {
+    return { success: false, type: "error", message: "비밀글 확인 중 오류가 발생했습니다." };
   }
 }

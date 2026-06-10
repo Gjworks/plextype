@@ -190,6 +190,13 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors })
             <span className="text-sm text-gray-600 dark:text-dark-400">작성자 전용 목록</span>
           </div>
         </FieldRow>
+
+        <FieldRow label="비밀글 사용" description="작성자가 비밀번호를 설정한 글은 작성자, 관리자, 비밀번호를 아는 사용자만 열람할 수 있습니다.">
+          <div className="flex items-center gap-3">
+            <Toggle checked={Boolean(value.config.secretPost)} onChange={(checked) => onChange({ secretPost: checked })} />
+            <span className="text-sm text-gray-600 dark:text-dark-400">비밀글 허용</span>
+          </div>
+        </FieldRow>
       </SectionShell>
     </>
   );

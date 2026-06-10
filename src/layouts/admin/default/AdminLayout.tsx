@@ -3,9 +3,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChevronDown, LogOut, Search, Settings, UserRound } from 'lucide-react'
+import { ChevronDown, LogOut, Menu, Search, Settings, UserRound } from 'lucide-react'
 
 import Dropdown from '@/core/components/dropdown/Dropdown'
+import Left from '@/core/components/panel/Left'
 import NotificationBell from '@/core/components/bell/bell'
 import { useUserContext } from '@/core/providers/UserProvider'
 import { getAdminBreadcrumbRegistry, getAdminMenuRegistry, type AdminMenuItem } from '@/core/registry/adminRegistry'
@@ -59,11 +60,122 @@ const getMenuActive = (pathname: string, menu: AdminMenuItem) => {
   return menu.items?.some((item) => isAdminPathActive(pathname, item.href)) ?? false
 }
 
+type AdminSideNavProps = {
+  appName: string;
+  appInitial: string;
+  normalizedPathname: string;
+  openMenus: Record<string, boolean>;
+  setOpenMenus: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  onNavigate?: () => void;
+  onSignOut: () => void;
+}
+
+const AdminSideNav = ({
+  appName,
+  appInitial,
+  normalizedPathname,
+  openMenus,
+  setOpenMenus,
+  onNavigate,
+  onSignOut,
+}: AdminSideNavProps) => {
+  return (
+    <div className="flex h-full flex-col">
+      <Link href="/" onClick={onNavigate} className="flex h-16 shrink-0 items-center gap-3 border-b border-gray-100 px-5 dark:border-dark-800">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-950 text-sm font-black text-white dark:bg-dark-100 dark:text-dark-950">
+          {appInitial}
+        </span>
+        <span className="truncate text-sm font-bold tracking-tight">{appName}</span>
+      </Link>
+
+      <nav className="flex-1 overflow-y-auto px-3 py-5">
+        <div className="space-y-1">
+          {MENU_CONFIG.map((menu) => {
+            const active = getMenuActive(normalizedPathname, menu)
+            const opened = openMenus[menu.id] ?? active
+
+            if (menu.href) {
+              return (
+                <Link
+                  key={menu.id}
+                  href={menu.href}
+                  onClick={onNavigate}
+                  className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors ${
+                    active
+                      ? 'bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950'
+                      : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950 dark:text-dark-400 dark:hover:bg-dark-900 dark:hover:text-dark-100'
+                  }`}
+                >
+                  <span className="flex h-5 w-5 items-center justify-center">{menu.icon}</span>
+                  <span>{menu.label}</span>
+                </Link>
+              )
+            }
+
+            return (
+              <div key={menu.id}>
+                <button
+                  type="button"
+                  onClick={() => setOpenMenus((prev) => ({ ...prev, [menu.id]: !opened }))}
+                  className={`flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-colors ${
+                    active
+                      ? 'bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950'
+                      : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950 dark:text-dark-400 dark:hover:bg-dark-900 dark:hover:text-dark-100'
+                  }`}
+                >
+                  <span className="flex h-5 w-5 items-center justify-center">{menu.icon}</span>
+                  <span className="min-w-0 flex-1 truncate">{menu.label}</span>
+                  <ChevronDown size={15} className={`transition-transform ${opened ? 'rotate-180' : ''}`} />
+                </button>
+
+                {opened && (
+                  <div className="ml-8 mt-1 space-y-1 border-l border-gray-200 pl-3 dark:border-dark-800">
+                    {menu.items?.map((item) => {
+                      const itemActive = isAdminPathActive(normalizedPathname, item.href)
+
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={onNavigate}
+                          className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                            itemActive
+                              ? 'font-bold text-gray-950 dark:text-dark-50'
+                              : 'text-gray-500 hover:text-gray-950 dark:text-dark-400 dark:hover:text-dark-100'
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </nav>
+
+      <div className="shrink-0 border-t border-gray-100 p-4 dark:border-dark-800">
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gray-100 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-950 dark:bg-dark-900 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-dark-100"
+        >
+          <LogOut size={14} />
+          로그아웃
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const AdminLayout = ({ children, appName, adminSessionGuard }: AdminLayoutProps) => {
   const pathname = usePathname()
   const normalizedPathname = cleanAdminPath(pathname ?? '/admin')
   const breadcrumbs = useMemo(() => getAdminBreadcrumbs(normalizedPathname), [normalizedPathname])
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const { user, isLoading, refetch } = useUserContext()
   const appInitial = appName.trim().charAt(0).toUpperCase() || 'P'
@@ -146,104 +258,48 @@ const AdminLayout = ({ children, appName, adminSessionGuard }: AdminLayoutProps)
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-950 dark:bg-dark-950 dark:text-dark-100">
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-[264px] flex-col border-r border-gray-200 bg-white/90 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/90">
-        <Link href="/" className="flex h-16 items-center gap-3 border-b border-gray-100 px-5 dark:border-dark-800">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-950 text-sm font-black text-white dark:bg-dark-100 dark:text-dark-950">
-            {appInitial}
-          </span>
-          <span className="truncate text-sm font-bold tracking-tight">{appName}</span>
-        </Link>
-
-        <nav className="flex-1 overflow-y-auto px-3 py-5">
-          <div className="space-y-1">
-            {MENU_CONFIG.map((menu) => {
-              const active = getMenuActive(normalizedPathname, menu)
-              const opened = openMenus[menu.id] ?? active
-
-              if (menu.href) {
-                return (
-                  <Link
-                    key={menu.id}
-                    href={menu.href}
-                    className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors ${
-                      active
-                        ? 'bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950'
-                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950 dark:text-dark-400 dark:hover:bg-dark-900 dark:hover:text-dark-100'
-                    }`}
-                  >
-                    <span className="flex h-5 w-5 items-center justify-center">{menu.icon}</span>
-                    <span>{menu.label}</span>
-                  </Link>
-                )
-              }
-
-              return (
-                <div key={menu.id}>
-                  <button
-                    type="button"
-                    onClick={() => setOpenMenus((prev) => ({ ...prev, [menu.id]: !opened }))}
-                    className={`flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-colors ${
-                      active
-                        ? 'bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950'
-                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950 dark:text-dark-400 dark:hover:bg-dark-900 dark:hover:text-dark-100'
-                    }`}
-                  >
-                    <span className="flex h-5 w-5 items-center justify-center">{menu.icon}</span>
-                    <span className="min-w-0 flex-1 truncate">{menu.label}</span>
-                    <ChevronDown size={15} className={`transition-transform ${opened ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {opened && (
-                    <div className="ml-8 mt-1 space-y-1 border-l border-gray-200 pl-3 dark:border-dark-800">
-                      {menu.items?.map((item) => {
-                        const itemActive = isAdminPathActive(normalizedPathname, item.href)
-
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-                              itemActive
-                                ? 'font-bold text-gray-950 dark:text-dark-50'
-                                : 'text-gray-500 hover:text-gray-950 dark:text-dark-400 dark:hover:text-dark-100'
-                            }`}
-                          >
-                            {item.label}
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </nav>
-
-        <div className="border-t border-gray-100 p-4 dark:border-dark-800">
-          <button
-            type="button"
-            onClick={async () => {
-              await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-              window.location.href = '/'
-            }}
-            className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gray-100 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-950 dark:bg-dark-900 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-dark-100"
-          >
-            <LogOut size={14} />
-            로그아웃
-          </button>
-        </div>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] flex-col border-r border-gray-200 bg-white/90 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/90 lg:flex">
+        <AdminSideNav
+          appName={appName}
+          appInitial={appInitial}
+          normalizedPathname={normalizedPathname}
+          openMenus={openMenus}
+          setOpenMenus={setOpenMenus}
+          onSignOut={handleSignOut}
+        />
       </aside>
 
-      <div className="min-h-screen pl-[264px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-gray-50/80 px-8 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/80">
-          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em] text-gray-400 dark:text-dark-500">
+      <Left state={showMobileMenu} close={setShowMobileMenu} width={275}>
+        <AdminSideNav
+          appName={appName}
+          appInitial={appInitial}
+          normalizedPathname={normalizedPathname}
+          openMenus={openMenus}
+          setOpenMenus={setOpenMenus}
+          onNavigate={() => setShowMobileMenu(false)}
+          onSignOut={handleSignOut}
+        />
+      </Left>
+
+      <div className="min-h-screen lg:pl-[264px]">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/80 md:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu(true)}
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-950 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-700 dark:hover:text-dark-100 lg:hidden"
+              aria-label="관리자 메뉴 열기"
+            >
+              <Menu size={17} />
+            </button>
+            <div className="flex min-w-0 items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em] text-gray-400 dark:text-dark-500">
             {breadcrumbs.map((item, index) => (
               <React.Fragment key={`${item}-${index}`}>
                 <span className={index === breadcrumbs.length - 1 ? 'text-gray-950 dark:text-dark-100' : ''}>{item}</span>
                 {index < breadcrumbs.length - 1 && <span>/</span>}
               </React.Fragment>
             ))}
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -313,7 +369,7 @@ const AdminLayout = ({ children, appName, adminSessionGuard }: AdminLayoutProps)
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-4rem)] px-6 py-6">
+        <main className="min-h-[calc(100vh-4rem)] px-4 py-5 md:px-6 md:py-6">
           {children}
         </main>
       </div>

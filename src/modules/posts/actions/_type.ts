@@ -128,6 +128,7 @@ export interface PostInfoData {
     pageCount: number;
     documentLike: boolean;
     consultingState: boolean;
+    secretPost?: boolean;
   };
   permissions: {
     listPermissions: any[];
