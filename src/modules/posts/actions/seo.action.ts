@@ -33,6 +33,15 @@ export async function getPostReadMetadata(
     return await getSeoMetadata({ title: "존재하지 않는 게시글입니다." });
   }
 
+  if ((doc as any)._secretLocked || doc.isSecrets) {
+    return await getSeoMetadata({
+      title: "비밀글입니다.",
+      description: "비밀번호가 필요한 게시글입니다.",
+      url: `/posts/${mid}/${slug}`,
+      type: "article",
+    });
+  }
+
   const postTitle = doc.title ?? "제목 없음";
   const description = doc.content
     ?.replace(/<[^>]+>/g, "")

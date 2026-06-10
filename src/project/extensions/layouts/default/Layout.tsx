@@ -41,7 +41,7 @@ const DefaultLayout = async ({
         siteTitle={resolvedSiteTitle}
         navigationItems={headerNavigationResult.data || []}
       />
-      <main className="relative min-h-screen bg-white text-gray-950 dark:bg-dark-950 dark:text-dark-100">{children}</main>
+      <main className="relative bg-white text-gray-950 dark:bg-dark-950 dark:text-dark-100">{children}</main>
       <footer className="relative bg-white dark:bg-dark-950">
         <Footer
           footerItems={footerNavigationResult.data || []}

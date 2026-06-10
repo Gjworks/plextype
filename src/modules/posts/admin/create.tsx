@@ -38,6 +38,7 @@ const DashboardPostCreate = ({
         pageCount: 10,
         documentLike: false,
         consultingState: false,
+        secretPost: false,
       },
       permissions: initialData.permissions || {
         listPermissions: [],
@@ -60,6 +61,7 @@ const DashboardPostCreate = ({
         "pageCount",
         "documentLike",
         "consultingState",
+        "secretPost",
       ];
 
       Object.entries(val).forEach(([key, value]) => {

@@ -27,6 +27,7 @@ export const DocumentUpsertSchema = z.object({
   // 💡 체크박스 값("true" / "false")을 완벽하게 boolean으로 파싱
   isNotice: z.preprocess((val) => val === "true" || val === true, z.boolean()).optional().default(false),
   isSecrets: z.preprocess((val) => val === "true" || val === true, z.boolean()).optional().default(false),
+  secretPassword: z.string().optional().nullable(),
 
   moduleId: z.coerce.number(),
   moduleType: z.string().default("posts"),
@@ -48,4 +49,3 @@ export interface DocumentInfo extends Omit<PrismaDocumentWithRelations, 'authorP
 export interface ExtraFieldData {
   [key: string]: string | string[] | number | boolean | null | any;
 }
-

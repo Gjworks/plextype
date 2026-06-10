@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { verify } from "@utils/auth/jwtAuth";
 import {nanoid} from "nanoid";
 import { upsertSettingsQuery } from "@/modules/admin/actions/settings.query";
+import crypto from "crypto";
 
 
 async function getLoggedInfo() {
@@ -24,15 +25,39 @@ function isOwnerOnlyBoard(config: any) {
   return Boolean(config?.consultingState);
 }
 
+function getSecretCookieName(slug: string) {
+  return `post_secret_${slug}`;
+}
+
+function createSecretCookieValue(slug: string) {
+  const secret = process.env.SECRET_KEY || process.env.JWT_SECRET || "plextype-secret";
+  return crypto.createHmac("sha256", secret).update(`post:${slug}`).digest("hex");
+}
+
+async function hasSecretDocumentCookie(slug: string) {
+  const cookieStore = await cookies();
+  return cookieStore.get(getSecretCookieName(slug))?.value === createSecretCookieValue(slug);
+}
+
 async function canAccessDocumentComments(documentId: number) {
   const document = await query.findDocumentCommentAccessInfo(documentId);
   if (!document) return { allowed: false, message: "존재하지 않는 게시글입니다." };
+
+  const loggedInfo = await getLoggedInfo();
+
+  if (
+    document.isSecrets &&
+    document.userId !== loggedInfo?.id &&
+    !loggedInfo?.isAdmin &&
+    !(await hasSecretDocumentCookie(document.slug))
+  ) {
+    return { allowed: false, message: "비밀글 댓글을 조회할 권한이 없습니다." };
+  }
 
   if (!isOwnerOnlyBoard(document.module?.config)) {
     return { allowed: true, document };
   }
 
-  const loggedInfo = await getLoggedInfo();
   if (document.userId === loggedInfo?.id || loggedInfo?.isAdmin) {
     return { allowed: true, document };
   }

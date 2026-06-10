@@ -28,6 +28,7 @@ import DefaultListSkin from "@/modules/posts/tpl/default/list";
 import DefaultReadSkin from "@/modules/posts/tpl/default/read";
 import DefaultCommentsSkin from "@/modules/comment/tpl/list";
 import DefaultWriteSkin from "@/modules/posts/tpl/default/write";
+import SecretUnlock from "@/modules/posts/tpl/default/secretUnlock";
 import CommentListStatic from "@/modules/comment/tpl/commentListStatic";
 import { normalizeSkinName, postSkinRegistry } from "@/modules/posts/tpl/skinRegistry";
 import { getPostSkinCapability } from "@/modules/posts/actions/skinCapability";
@@ -141,6 +142,10 @@ async function PostRead({
   ]);
 
   if (!infoRes.success || !docRes.success || !docRes.data) return null;
+  if ((docRes.data as any)._secretLocked) {
+    return <SecretUnlock slug={slug} title={docRes.data.title} />;
+  }
+
   const numericId = docRes.data.id;
   const participantsRes = await getParticipantsAction(numericId);
   const permissions = await checkPermissionsAction(
@@ -177,6 +182,7 @@ async function PostComments({
 }) {
   const docRes = await getDocumentBySlugAction(slug);
   if (!docRes.data) return null;
+  if ((docRes.data as any)._secretLocked) return null;
   const id = docRes.data.id;
 
   const [infoRes, user, commentsRes] = await Promise.all([
