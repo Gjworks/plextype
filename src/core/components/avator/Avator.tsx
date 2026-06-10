@@ -12,6 +12,7 @@ interface AvatorProps {
 const Avator = ({ username, isLoggedIn, tokenExpiryTime, profileImage }: AvatorProps) => {
   const [status, setStatus] = useState("online");
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const displayName = username == null ? "" : String(username);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -79,11 +80,11 @@ const Avator = ({ username, isLoggedIn, tokenExpiryTime, profileImage }: AvatorP
           {profileImage ? (
             <img
               src={profileImage}
-              alt={username || "프로필 이미지"}
+              alt={displayName || "프로필 이미지"}
               className="h-full w-full object-cover"
             />
           ) : (
-            isLoggedIn && (username?.slice(0, 1).toUpperCase() || "?")
+            isLoggedIn && (displayName.slice(0, 1).toUpperCase() || "?")
           )}
           {isLoggedIn && (
             <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-900 transition-colors duration-500 ${statusColor[status]}`}></div>
@@ -93,7 +94,7 @@ const Avator = ({ username, isLoggedIn, tokenExpiryTime, profileImage }: AvatorP
       {isLoggedIn && (
         <div className="hidden lg:flex flex-col leading-none">
           <div className="text-left text-[12px] font-bold tracking-tight text-zinc-800 dark:text-dark-100">
-            {username}
+            {displayName}
           </div>
           <span className={`hidden text-[9px] font-bold uppercase mt-0.5 transition-colors ${status === 'online' ? 'text-green-500' : 'text-zinc-400'}`}>
             {status === 'online' ? 'Active' : status === 'away' ? 'Away' : 'Expired'}

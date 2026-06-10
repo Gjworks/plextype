@@ -91,6 +91,13 @@ const SITE_SETTING_META = {
     fallback: "",
     isPublic: true,
   },
+  adminLayout: {
+    key: "site.adminLayout",
+    env: "ADMIN_LAYOUT",
+    label: "관리자 레이아웃",
+    fallback: "default",
+    isPublic: false,
+  },
 } as const;
 
 const SITE_SETTING_KEYS = Object.values(SITE_SETTING_META).map((item) => item.key);
@@ -331,6 +338,7 @@ const mapRecordsToSiteSettings = (records: Awaited<ReturnType<typeof getSettings
     logoPath: values.get(SITE_SETTING_META.logoPath.key) || getEnvFallback("logoPath"),
     faviconPath: values.get(SITE_SETTING_META.faviconPath.key) || getEnvFallback("faviconPath"),
     defaultOgImage: values.get(SITE_SETTING_META.defaultOgImage.key) || getEnvFallback("defaultOgImage"),
+    adminLayout: values.get(SITE_SETTING_META.adminLayout.key) || getEnvFallback("adminLayout"),
   };
 };
 
@@ -560,6 +568,14 @@ const toSettingSeeds = (data: SiteSettingsData): SettingSeed[] => {
       label: SITE_SETTING_META.defaultOgImage.label,
       description: "공유 메타 태그에 사용할 기본 OG 이미지 경로입니다.",
       isPublic: SITE_SETTING_META.defaultOgImage.isPublic,
+    },
+    {
+      key: SITE_SETTING_META.adminLayout.key,
+      value: data.adminLayout || SITE_SETTING_META.adminLayout.fallback,
+      group: "site",
+      label: SITE_SETTING_META.adminLayout.label,
+      description: "관리자 화면에서 사용할 레이아웃 스킨입니다.",
+      isPublic: SITE_SETTING_META.adminLayout.isPublic,
     },
   ];
 };
@@ -1219,6 +1235,7 @@ export const updateSiteSettingsAdminAction = async (formData: FormData): Promise
     logoPath: formData.get("logoPath"),
     faviconPath: formData.get("faviconPath"),
     defaultOgImage: formData.get("defaultOgImage"),
+    adminLayout: formData.get("adminLayout"),
   };
 
   const validation = validateForm(SiteSettingsSchema, formPayload);
