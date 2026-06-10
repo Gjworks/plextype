@@ -17,7 +17,7 @@ description: Gjworks는 코어 업데이트와 개인 커스텀을 분리하기 
 - `src/app/(extensions)`: 개인 프로젝트가 추가 라우트를 만들 때 사용하는 영역입니다. git 제외 대상입니다.
 - `src/modules`: 비즈니스 모듈입니다. UI는 action을 통해 데이터에 접근하고 query를 직접 호출하지 않습니다.
 - `src/layouts`: 코어가 제공하는 기본 레이아웃입니다.
-- `src/page`: 코어가 제공하는 기본 페이지 템플릿입니다.
+- `src/core/registry/defaultHomePage.tsx`: 코어 fallback으로 제공되는 기본 홈 페이지입니다.
 - `src/core/registry`: extensions가 없을 때 사용하는 fallback registry입니다.
 - `src/extensions`: 프로젝트별 커스텀 영역입니다.
 

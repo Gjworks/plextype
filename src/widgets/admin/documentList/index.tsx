@@ -1,136 +1,135 @@
-import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { getDocumentListAll } from './document'
+"use client";
 
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import 'dayjs/locale/ko'
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, FileText } from "lucide-react";
 
-dayjs.extend(relativeTime)
-dayjs.locale('ko')
+import { getDocumentListAll } from "./document";
 
-function extractTextFromTiptap(content: unknown) {
-  if (!content) return ''
+type DocumentItem = Awaited<ReturnType<typeof getDocumentListAll>>[number];
 
-  let json: any = content
+const extractTextFromTiptap = (content: unknown) => {
+  if (!content) return "";
 
-  if (typeof content === 'string') {
+  let json: any = content;
+
+  if (typeof content === "string") {
     try {
-      json = JSON.parse(content)
+      json = JSON.parse(content);
     } catch {
-      return content
+      return content;
     }
   }
 
-  const texts: string[] = []
+  const texts: string[] = [];
 
   const walk = (node: any) => {
-    if (!node) return
+    if (!node) return;
+    if (node.type === "text" && node.text) texts.push(node.text);
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
 
-    if (node.type === 'text' && node.text) {
-      texts.push(node.text)
-    }
+  walk(json);
 
-    if (Array.isArray(node.content)) {
-      node.content.forEach(walk)
-    }
-  }
+  return texts.join(" ").replace(/\s+/g, " ").trim();
+};
 
-  walk(json)
+const formatDate = (value: Date | string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
 
-  return texts.join(' ').trim()
-}
+  return new Intl.DateTimeFormat("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
 
-const DocumentList = ({ mid, count = 5 }: any) => {
-  const [mounted, setMounted] = useState(false)
-  const [items, setItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+const DocumentList = ({ count = 6 }: { mid?: string; count?: number }) => {
+  const [items, setItems] = useState<DocumentItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true)
+    let mounted = true;
 
     const loadData = async () => {
       try {
-        setLoading(true)
-        const documents = await getDocumentListAll(count)
-        setItems(documents || [])
+        setLoading(true);
+        const documents = await getDocumentListAll(count);
+        if (mounted) setItems(documents || []);
       } catch (error) {
-        console.error('게시글 로드 실패:', error)
+        console.error("게시글 로드 실패:", error);
       } finally {
-        setLoading(false)
+        if (mounted) setLoading(false);
       }
-    }
+    };
 
-    loadData()
-  }, [mid, count])
+    void loadData();
 
-  if (!mounted) {
-	    return <div className="h-[240px] w-full border-t border-slate-100 dark:border-dark-800" />
-  }
+    return () => {
+      mounted = false;
+    };
+  }, [count]);
 
   if (loading) {
     return (
-      <div className="space-y-5">
+      <div className="divide-y divide-gray-100 dark:divide-dark-800">
         {Array.from({ length: count }).map((_, index) => (
-          <div
-            key={index}
-	            className="h-4 w-full animate-pulse rounded bg-gray-100 dark:bg-dark-800"
-          />
+          <div key={index} className="flex items-center gap-3 py-4">
+            <div className="h-9 w-9 animate-pulse rounded-lg bg-gray-100 dark:bg-dark-800" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="h-3 w-2/3 animate-pulse rounded bg-gray-100 dark:bg-dark-800" />
+              <div className="h-3 w-1/2 animate-pulse rounded bg-gray-100 dark:bg-dark-800" />
+            </div>
+          </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (items.length === 0) {
     return (
-	      <div className="text-[12px] text-gray-400 dark:text-dark-500">
+      <div className="flex min-h-44 items-center justify-center rounded-xl border border-dashed border-gray-200 text-sm font-medium text-gray-400 dark:border-dark-800 dark:text-dark-500">
         최근 게시글이 없습니다.
       </div>
-    )
+    );
   }
 
   return (
-    <div className="space-y-5">
+    <div className="divide-y divide-gray-100 dark:divide-dark-800">
       {items.map((item) => {
-        const module = item.module
-        const preview = extractTextFromTiptap(item.content)
+        const module = item.module;
+        if (!module) return null;
 
-        if (!module) {
-          return null
-        }
+        const preview = extractTextFromTiptap(item.content);
 
         return (
           <Link
-            href={`/posts/${module.mid}/${item.slug}`}
             key={item.id}
-	            className="group block cursor-pointer"
+            href={`/posts/${module.mid}/${item.slug}`}
+            className="group flex items-start gap-3 py-4"
           >
-	            <div className="flex items-start justify-between gap-4">
-	              <div className="min-w-0">
-	                <div className="truncate text-[12px] text-gray-600 transition-colors group-hover:text-gray-900 dark:text-dark-300 dark:group-hover:text-dark-100">
-	                  [{module.moduleName}] {item.title || '제목 없음'}
-	                </div>
-	
-	                <div className="mt-1 line-clamp-1 text-[11px] text-gray-400 dark:text-dark-500">
-	                  {preview}
-	                </div>
-	              </div>
-	
-	              <div className="flex shrink-0 items-center gap-2">
-	                <span className="text-[11px] font-medium text-gray-800 dark:text-dark-200">
-	                  {item.user?.nickName || item.authorName || '비회원'}
-	                </span>
-	
-	                <span className="text-[11px] font-medium text-gray-400 dark:text-dark-500">
-	                  {dayjs(item.createdAt).fromNow()}
-	                </span>
-              </div>
-            </div>
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 transition-colors group-hover:bg-gray-950 group-hover:text-white dark:bg-dark-800 dark:text-dark-300 dark:group-hover:bg-dark-100 dark:group-hover:text-dark-950">
+              <FileText size={15} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="truncate text-sm font-bold text-gray-900 dark:text-dark-100">{item.title || "제목 없음"}</span>
+                <ArrowUpRight size={13} className="shrink-0 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-dark-600" />
+              </span>
+              <span className="mt-1 line-clamp-1 text-xs leading-5 text-gray-400 dark:text-dark-500">
+                {preview || module.moduleName || "내용 없음"}
+              </span>
+            </span>
+            <span className="shrink-0 text-right text-[11px] font-semibold text-gray-400 dark:text-dark-500">
+              {formatDate(item.createdAt)}
+            </span>
           </Link>
-        )
+        );
       })}
     </div>
-  )
-}
+  );
+};
 
-export default DocumentList
+export default DocumentList;

@@ -4,7 +4,7 @@ const previewItems = [
   {
     href: "/previews/page/home",
     title: "Home Page",
-    description: "src/page/home.tsx",
+    description: "src/core/registry/defaultHomePage.tsx",
   },
   {
     href: "/previews/layouts/default",
