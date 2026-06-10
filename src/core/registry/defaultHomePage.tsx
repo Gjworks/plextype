@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const HomePage = () => {
+const DefaultHomePage = () => {
   return (
     <section className="mx-auto max-w-screen-xl px-3 py-20">
       <div className="max-w-2xl">
@@ -30,4 +30,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default DefaultHomePage;

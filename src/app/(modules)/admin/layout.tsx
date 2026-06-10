@@ -1,4 +1,4 @@
-import AdminLayoutClient from './AdminLayoutClient'
+import { AdminLayout as FallbackAdminLayoutClient, adminLayouts } from '@project/extensions'
 import { getAuthSettingsAdminAction, getPublicSiteSettingsAction } from '@/modules/admin/actions/settings.action'
 
 const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
@@ -7,6 +7,8 @@ const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
     getAuthSettingsAdminAction(),
   ])
   const appName = settings.data?.appName || 'Gjworks'
+  const adminLayoutKey = settings.data?.adminLayout || 'project'
+  const AdminLayoutClient = adminLayouts[adminLayoutKey] || FallbackAdminLayoutClient
 
   return (
     <AdminLayoutClient

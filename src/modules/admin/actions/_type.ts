@@ -14,6 +14,7 @@ export const SiteSettingsSchema = z.object({
   logoPath: z.string().trim().max(500, "로고 이미지 경로가 너무 깁니다.").optional().or(z.literal("")),
   faviconPath: z.string().trim().max(500, "파비콘 경로가 너무 깁니다.").optional().or(z.literal("")),
   defaultOgImage: z.string().trim().max(500, "기본 OG 이미지 경로가 너무 깁니다.").optional().or(z.literal("")),
+  adminLayout: z.string().trim().min(1, "관리자 레이아웃을 선택해주세요.").max(80, "관리자 레이아웃 키가 너무 깁니다."),
 });
 
 export type SiteSettingsParams = z.infer<typeof SiteSettingsSchema>;

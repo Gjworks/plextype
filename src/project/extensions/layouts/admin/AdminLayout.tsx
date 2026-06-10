@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useRef, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation' // ✅ useRouter 추가
 import { motion, AnimatePresence } from 'framer-motion'
-import pkg from '../../../../package.json'
+import pkg from '../../../../../package.json'
 import { Search, ChevronRight, ChevronDown, Monitor, Moon, Sun } from 'lucide-react'
 import Link from 'next/link'
 import DefaultList from '@/core/components/nav/DefaultList'

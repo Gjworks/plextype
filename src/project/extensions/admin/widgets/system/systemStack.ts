@@ -1,7 +1,7 @@
 'use server'
 
 import { execSync } from 'child_process'
-import pkg from '../../../../package.json'
+import pkg from '../../../../../../package.json'
 
 function getPackageVersion(name: string) {
   const dependencies = pkg.dependencies || {}

@@ -1,4 +1,4 @@
-import HomePage from "@/page/home";
+import HomePage from "@/core/registry/defaultHomePage";
 
 const HomePreviewPage = () => {
   return <HomePage />;

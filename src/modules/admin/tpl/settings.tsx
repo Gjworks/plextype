@@ -14,6 +14,7 @@ import {
 
 import { AuthSettingsData, NotificationSettingsData, SeoSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
 import { updateAuthSettingsAdminAction, updateNotificationSettingsAdminAction, updateSeoSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
+import { adminLayoutOptions } from "@project/extensions";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 
@@ -345,6 +346,7 @@ const defaultSiteSettings: SiteSettingsData = {
   logoPath: "",
   faviconPath: "",
   defaultOgImage: "",
+  adminLayout: "default",
 };
 
 const defaultUploadSettings: UploadSettingsData = {
@@ -451,6 +453,13 @@ const Settings = ({
   const retentionDaysRef = useRef<HTMLInputElement>(null);
 
   const handleSiteChange = (field: keyof SiteSettingsData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSiteSettings((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+  };
+
+  const handleSiteSelectChange = (field: keyof SiteSettingsData) => (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSiteSettings((prev) => ({
       ...prev,
       [field]: e.target.value,
@@ -835,6 +844,27 @@ const Settings = ({
                 />
               </div>
             </FieldRow>
+          </SectionShell>
+
+          <SectionShell icon={<ShieldCheck size={13} />} title="관리자 화면" description="관리자 페이지에서 사용할 레이아웃 스킨을 선택합니다.">
+            <InlineField title="관리자 레이아웃" description="저장 후 관리자 페이지를 새로고침하면 선택한 레이아웃이 적용됩니다." settingKey="site.adminLayout">
+              <select
+                name="adminLayout"
+                value={siteSettings.adminLayout}
+                onChange={handleSiteSelectChange("adminLayout")}
+                className={selectClass}
+              >
+                {adminLayoutOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-2 text-xs leading-5 text-gray-400">
+                {adminLayoutOptions.find((option) => option.key === siteSettings.adminLayout)?.description || "등록된 관리자 레이아웃입니다."}
+              </div>
+              {fieldErrors?.adminLayout && <div className="mt-2 text-xs text-red-500">{fieldErrors.adminLayout}</div>}
+            </InlineField>
           </SectionShell>
         </>
       )}
