@@ -60,18 +60,25 @@ const settings = [
   },
 ];
 
-const runExtensionSeed = async (client) => {
-  const extensionSeedPath = path.join(process.cwd(), "src", "extensions", "prisma", "seed.js");
-  if (!fs.existsSync(extensionSeedPath)) return;
+const runAdditionalSeed = async (client, seedPath) => {
+  if (!fs.existsSync(seedPath)) return;
 
-  const extensionSeed = require(extensionSeedPath);
-  const seedFn = extensionSeed.seed || extensionSeed.default || extensionSeed;
+  const seedModule = require(seedPath);
+  const seedFn = seedModule.seed || seedModule.default || seedModule;
 
   if (typeof seedFn !== "function") {
-    throw new Error("src/extensions/prisma/seed.js must export a seed function.");
+    throw new Error(`${path.relative(process.cwd(), seedPath)} must export a seed function.`);
   }
 
   await seedFn({ client, bcrypt });
+};
+
+const runExtensionSeed = async (client) => {
+  await runAdditionalSeed(client, path.join(process.cwd(), "src", "extensions", "prisma", "seed.js"));
+};
+
+const runProjectSeed = async (client) => {
+  await runAdditionalSeed(client, path.join(process.cwd(), "src", "project", "prisma", "seed.js"));
 };
 
 async function main() {
@@ -164,6 +171,7 @@ async function main() {
     }
 
     await runExtensionSeed(client);
+    await runProjectSeed(client);
 
     await client.query("COMMIT");
     console.log(`Seed completed. Admin ID: ${adminId}`);
