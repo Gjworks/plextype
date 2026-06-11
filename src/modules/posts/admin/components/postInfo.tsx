@@ -5,6 +5,7 @@ import { FileText, Heart, Layers, ListChecks, MessageSquareLock } from "lucide-r
 
 import InputField from "@components/form/InputField";
 import type { PostInfoData } from "@/modules/posts/actions/_type";
+import { postLayoutOptions, postSkinOptions } from "@project/extensions";
 
 type PostInfoProps = {
   id?: string;
@@ -85,14 +86,21 @@ const Toggle = ({
   );
 };
 
+const selectClass =
+  "w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800 shadow-md shadow-gray-100 outline-none transition-all hover:border-gray-300 focus:border-gray-300 focus:ring-4 focus:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:shadow-none dark:hover:border-dark-600 dark:focus:border-dark-600 dark:focus:ring-dark-800";
+
 const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value: inputValue, type } = e.target;
     onChange({ [name]: type === "number" ? Number(inputValue) : inputValue } as any);
   };
 
-  const handleSkinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ skin: e.target.value.trim() || "default" });
+  const handleSkinChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange({ skin: e.target.value || "default" });
+  };
+
+  const handleLayoutChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange({ layout: e.target.value || "default" });
   };
 
   return (
@@ -141,17 +149,43 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors })
         </FieldRow>
       </SectionShell>
 
-      <SectionShell icon={<Layers size={13} />} title="목록 설정" description="목록 화면의 스킨과 페이지 표시 기준입니다.">
-        <FieldRow label="목록 스킨" description="default 또는 extensions에서 등록한 스킨 이름을 입력합니다.">
-          <InputField
-            inputTitle="목록 스킨"
+      <SectionShell icon={<Layers size={13} />} title="화면 설정" description="게시판을 감싸는 레이아웃과 목록 화면의 스킨입니다.">
+        <FieldRow label="게시판 레이아웃" description="게시판 전체 영역을 감싸는 레이아웃입니다.">
+          <select
+            id="layout"
+            name="layout"
+            value={value.config.layout || "default"}
+            onChange={handleLayoutChange}
+            className={selectClass}
+          >
+            {postLayoutOptions.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2 text-xs leading-5 text-gray-400">
+            {postLayoutOptions.find((option) => option.key === (value.config.layout || "default"))?.description || "등록된 게시판 레이아웃입니다."}
+          </div>
+        </FieldRow>
+
+        <FieldRow label="목록 스킨" description="게시글 목록을 렌더링하는 스킨입니다.">
+          <select
+            id="skin"
             name="skin"
-            type="text"
-            placeholder="default"
             value={value.config.skin || "default"}
             onChange={handleSkinChange}
-            hideLabel
-          />
+            className={selectClass}
+          >
+            {postSkinOptions.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2 text-xs leading-5 text-gray-400">
+            {postSkinOptions.find((option) => option.key === (value.config.skin || "default"))?.description || "등록된 게시판 목록 스킨입니다."}
+          </div>
         </FieldRow>
 
         <FieldRow label="목록/페이지 수" description="한 페이지의 게시글 수와 페이지 네비게이션 개수입니다.">

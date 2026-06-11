@@ -55,7 +55,7 @@ package-lock.json
 
 /files
 /storage
-/src/extensions/
+/src/extensions/ollama/
 /src/app/(extensions)/
 
 Dockerfile
