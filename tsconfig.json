@@ -38,35 +38,28 @@
         "./src/modules/*"
       ],
       "@extensions/*": [
-        "./src/project/extensions/*",
         "./src/extensions/*"
       ],
       "@extensions/trigger": [
-        "./src/project/extensions/trigger/index.ts",
         "./src/extensions/trigger/index.ts"
       ],
       "@project/extensions": [
-        "./src/project/extensions/index.tsx",
         "./src/extensions/index.tsx",
         "./src/core/registry/defaultRegistry.tsx"
       ],
       "@project/extensions/style.css": [
-        "./src/project/extensions/styles/style.css",
         "./src/extensions/styles/style.css",
         "./src/core/registry/empty.css"
       ],
       "@project/triggers": [
-        "./src/project/extensions/triggerRegistry.ts",
         "./src/extensions/triggerRegistry.ts",
         "./src/core/registry/defaultTriggerRegistry.ts"
       ],
       "@project/post-capabilities": [
-        "./src/project/extensions/postCapabilities.ts",
         "./src/extensions/postCapabilities.ts",
         "./src/core/registry/defaultPostCapabilities.ts"
       ],
       "@project/proxy": [
-        "./src/project/extensions/proxy.ts",
         "./src/extensions/proxy.ts",
         "./src/core/proxy/defaultProxy.ts"
       ],

@@ -15,10 +15,13 @@ const Page = async () => {
     moduleName: "",
     moduleDesc: "",
     config: {
+      skin: "default",
+      layout: "default",
       listCount: 20,
       pageCount: 10,
       documentLike: false,
       consultingState: false,
+      secretPost: false,
     },
     permissions: {
       listPermissions: [],

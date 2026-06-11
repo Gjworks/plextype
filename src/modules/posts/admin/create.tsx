@@ -27,18 +27,23 @@ const DashboardPostCreate = ({
     message: string;
   } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
+  const defaultPostConfig = {
+    skin: "default",
+    layout: "default",
+    listCount: 20,
+    pageCount: 10,
+    documentLike: false,
+    consultingState: false,
+    secretPost: false,
+  };
 
   // 💡 유저 UpsertForm처럼 서버에서 받은 데이터로 즉시 상태 초기화!
   const [formData, setFormData] = useState<{ postInfo: PostInfoData }>({
     postInfo: {
       ...initialData,
-      config: initialData.config || {
-        skin: "default",
-        listCount: 20,
-        pageCount: 10,
-        documentLike: false,
-        consultingState: false,
-        secretPost: false,
+      config: {
+        ...defaultPostConfig,
+        ...(initialData.config || {}),
       },
       permissions: initialData.permissions || {
         listPermissions: [],
@@ -57,6 +62,7 @@ const DashboardPostCreate = ({
       const nextInfo = { ...prev.postInfo };
       const configKeys = [
         "skin",
+        "layout",
         "listCount",
         "pageCount",
         "documentLike",
