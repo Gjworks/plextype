@@ -12,7 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import HeaderUser from "@/modules/user/tpl/default/header";
+import HeaderUser from "./header";
 import { ActionState } from "@/modules/user/actions/_type";
 import {
   getUserTimelineAction,
@@ -159,7 +159,7 @@ const TimelineCard = ({
 }) => {
   const meta = kindMeta[item.kind];
   const card = (
-    <article className="group rounded-md border border-gray-200 bg-white p-5 shadow-sm shadow-gray-100 transition-all duration-200 hover:border-gray-300 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20 dark:hover:border-dark-700">
+    <article className="group rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm shadow-gray-100 transition-all duration-200 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/70 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20 dark:hover:border-dark-700 dark:hover:shadow-black/30">
       <div className="flex items-start gap-3">
         <TimelineAvatar imageUrl={user.profileImage} name={user.nickName} />
 
@@ -363,10 +363,10 @@ const Timeline = ({
 
   if (!data) {
     return (
-      <div className={`${embedded ? "bg-transparent" : "min-h-screen bg-gray-50 dark:bg-dark-950"}`}>
+      <div className={`${embedded ? "bg-transparent" : "min-h-screen bg-white dark:bg-dark-950"}`}>
         {showHeader && <HeaderUser />}
-        <div className={`${embedded ? "px-4 pb-16 pt-2" : "mx-auto max-w-screen-xl px-3 py-6 md:px-6 md:py-8"}`}>
-          <div className="mx-auto flex min-h-80 max-w-3xl items-center justify-center rounded-md border border-gray-200 bg-white text-sm font-semibold text-gray-400 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500">
+        <div className={`${embedded ? "px-4 pb-16 pt-2" : "mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10"}`}>
+          <div className="mx-auto flex min-h-80 max-w-2xl items-center justify-center rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-400 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500">
             <Loader2 size={18} className="mr-2 animate-spin" />
             타임라인을 불러오는 중
           </div>
@@ -376,11 +376,11 @@ const Timeline = ({
   }
 
   return (
-    <div className={`${embedded ? "bg-transparent" : "min-h-screen bg-gray-50 dark:bg-dark-950"}`}>
+    <div className={`${embedded ? "bg-transparent" : "min-h-screen bg-white dark:bg-dark-950"}`}>
       {showHeader && <HeaderUser />}
 
-      <div className={`${embedded ? "px-4 pb-16 pt-2" : "mx-auto max-w-screen-xl px-3 py-6 md:px-6 md:py-8"}`}>
-        <section className="rounded-md border border-gray-200 bg-white p-5 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+      <div className={`${embedded ? "px-4 pb-16 pt-2" : "mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10"}`}>
+        <section className="mx-auto max-w-2xl">
           <div className="flex flex-col gap-5 border-b border-gray-200 pb-5 md:flex-row md:items-end md:justify-between dark:border-dark-800">
             <div className="flex items-end gap-4">
               <div className="h-20 w-20 overflow-hidden rounded-full bg-gray-200 ring-4 ring-white shadow-sm shadow-gray-200 dark:bg-dark-800 dark:ring-dark-900 dark:shadow-black/30">
@@ -406,13 +406,13 @@ const Timeline = ({
               </div>
             </div>
 
-            <div className="inline-flex w-fit items-center gap-2 rounded-md bg-gray-950 px-3 py-2 text-xs font-bold text-white dark:bg-dark-100 dark:text-dark-950">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-gray-950 px-3 py-2 text-xs font-bold text-white">
               <ShieldCheck size={15} />
               {totalActivity} activities
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2 overflow-x-auto">
+          <div className="mt-4 flex gap-2 overflow-x-auto border-b border-gray-200 pb-4 dark:border-dark-800">
             {filterTabs.map((tab) => {
               const active = activeFilter === tab.key;
 
@@ -433,9 +433,9 @@ const Timeline = ({
           </div>
         </section>
 
-        <section className="mt-5">
+        <section className="mt-8">
           {items.length > 0 ? (
-            <div className="space-y-8">
+            <div className="mx-auto max-w-2xl space-y-8">
               {Object.entries(groupedItems).map(([date, dateItems]) => (
                 <div key={date} className="space-y-4">
                   <div className="sticky top-14 z-10 flex md:top-16">

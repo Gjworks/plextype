@@ -5,7 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { Bell, Check, Eye, Monitor, Moon, Settings2, Sun, Type, Wand2 } from "lucide-react";
 
 import Button from "@/core/components/button/Button";
-import HeaderUser from "@/modules/user/tpl/default/header";
+import HeaderUser from "./header";
 import {
   UserFontScalePreference,
   UserPreferenceData,
@@ -124,9 +124,9 @@ const Preferences = ({ initialPreference }: PreferencesProps) => {
 	  return (
 	    <>
 	      <HeaderUser />
-	      <div className="min-h-screen bg-gray-50 dark:bg-dark-950 dark:text-dark-100">
-	        <div className="mx-auto max-w-screen-xl px-3 py-6 md:px-6 md:py-8">
-	          <div className="mx-auto max-w-3xl rounded-md border border-gray-200 bg-white p-5 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+	      <div className="min-h-screen bg-white dark:bg-dark-950 dark:text-dark-100">
+	        <div className="mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10">
+	          <div className="mx-auto max-w-2xl">
 	            <section className="border-b border-gray-200 pb-6 dark:border-dark-800">
 	              <div className="flex items-end justify-between gap-4">
 	                <div>
@@ -270,7 +270,7 @@ const Preferences = ({ initialPreference }: PreferencesProps) => {
 	              </div>
 	            </section>
 	
-	            <div className="sticky bottom-0 mt-6 flex items-center justify-end border-t border-gray-200 bg-white/90 py-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-900/90">
+	            <div className="sticky bottom-0 mt-6 flex items-center justify-end border-t border-gray-200 bg-white/90 py-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/90">
 	              <Button
 	                type="button"
 	                onClick={handleSubmit}
