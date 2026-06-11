@@ -1,14 +1,21 @@
 import { redirect } from "next/navigation";
 
-import Timeline from "@/modules/user/tpl/default/timeline";
 import { getUserTimelineAction } from "@/modules/user/actions/timeline.action";
+import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
+import { userLayouts } from "@project/extensions";
 
 const Page = async () => {
-  const result = await getUserTimelineAction();
+  const [result, settings] = await Promise.all([
+    getUserTimelineAction(),
+    getPublicSiteSettingsAction(),
+  ]);
 
   if (!result.success || !result.data) {
     redirect("/auth/signin");
   }
+
+  const userLayoutKey = settings.data?.userLayout || "default";
+  const Timeline = userLayouts[userLayoutKey]?.timeline || userLayouts.default.timeline;
 
   return <Timeline initialData={result.data} />;
 };

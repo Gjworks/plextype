@@ -4,11 +4,19 @@ import ProjectAdminLayout from "./layouts/admin/AdminLayout";
 import ProjectAdminDashboard from "./admin/Dashboard";
 import DefaultAdminLayout from "@/layouts/admin/default/AdminLayout";
 import DefaultAdminDashboard from "@/layouts/admin/default/Dashboard";
-import type { AdminDashboardMap, AdminLayoutMap, AdminLayoutOption } from "@/core/registry/defaultRegistry";
+import type { AdminDashboardMap, AdminLayoutMap, AdminLayoutOption, UserLayoutMap, UserLayoutOption } from "@/core/registry/defaultRegistry";
 import AuthLayout from "./layouts/authLayout/Layout";
 import DefaultLayout from "./layouts/default/Layout";
 import HomePage from "./pages/MainIntro";
 import IssueTrackerListSkin from "./posts/tpl/issuetracker/list";
+import DefaultUserTimeline from "@/modules/user/tpl/default/timeline";
+import DefaultUserUpdate from "@/modules/user/tpl/default/update";
+import DefaultUserPreferences from "@/modules/user/tpl/default/preferences";
+import DefaultUserDelete from "@/modules/user/tpl/default/delete";
+import GjworksUserTimeline from "./user/gjworks/timeline";
+import GjworksUserUpdate from "./user/gjworks/update";
+import GjworksUserPreferences from "./user/gjworks/preferences";
+import GjworksUserDelete from "./user/gjworks/delete";
 
 export type PostSkinMap = Record<string, React.ComponentType<any>>;
 
@@ -26,6 +34,21 @@ export const adminDashboards: AdminDashboardMap = {
   default: DefaultAdminDashboard,
 };
 
+export const userLayouts: UserLayoutMap = {
+  gjworks: {
+    timeline: GjworksUserTimeline,
+    update: GjworksUserUpdate,
+    preferences: GjworksUserPreferences,
+    delete: GjworksUserDelete,
+  },
+  default: {
+    timeline: DefaultUserTimeline,
+    update: DefaultUserUpdate,
+    preferences: DefaultUserPreferences,
+    delete: DefaultUserDelete,
+  },
+};
+
 export const adminLayoutOptions: AdminLayoutOption[] = [
   {
     key: "project",
@@ -36,6 +59,19 @@ export const adminLayoutOptions: AdminLayoutOption[] = [
     key: "default",
     label: "기본 관리자",
     description: "Plextype 배포판에 포함되는 기본 관리자 화면입니다.",
+  },
+];
+
+export const userLayoutOptions: UserLayoutOption[] = [
+  {
+    key: "gjworks",
+    label: "Gjworks 사용자",
+    description: "현재 gjworks 프로젝트에서 사용하는 개인 맞춤 사용자 화면입니다.",
+  },
+  {
+    key: "default",
+    label: "기본 사용자",
+    description: "Plextype 배포판에 포함되는 기본 사용자 화면입니다.",
   },
 ];
 
