@@ -98,6 +98,13 @@ const SITE_SETTING_META = {
     fallback: "default",
     isPublic: false,
   },
+  userLayout: {
+    key: "site.userLayout",
+    env: "USER_LAYOUT",
+    label: "사용자 레이아웃",
+    fallback: "default",
+    isPublic: false,
+  },
 } as const;
 
 const SITE_SETTING_KEYS = Object.values(SITE_SETTING_META).map((item) => item.key);
@@ -339,6 +346,7 @@ const mapRecordsToSiteSettings = (records: Awaited<ReturnType<typeof getSettings
     faviconPath: values.get(SITE_SETTING_META.faviconPath.key) || getEnvFallback("faviconPath"),
     defaultOgImage: values.get(SITE_SETTING_META.defaultOgImage.key) || getEnvFallback("defaultOgImage"),
     adminLayout: values.get(SITE_SETTING_META.adminLayout.key) || getEnvFallback("adminLayout"),
+    userLayout: values.get(SITE_SETTING_META.userLayout.key) || getEnvFallback("userLayout"),
   };
 };
 
@@ -576,6 +584,14 @@ const toSettingSeeds = (data: SiteSettingsData): SettingSeed[] => {
       label: SITE_SETTING_META.adminLayout.label,
       description: "관리자 화면에서 사용할 레이아웃 스킨입니다.",
       isPublic: SITE_SETTING_META.adminLayout.isPublic,
+    },
+    {
+      key: SITE_SETTING_META.userLayout.key,
+      value: data.userLayout || SITE_SETTING_META.userLayout.fallback,
+      group: "site",
+      label: SITE_SETTING_META.userLayout.label,
+      description: "사용자 마이페이지에서 사용할 레이아웃 스킨입니다.",
+      isPublic: SITE_SETTING_META.userLayout.isPublic,
     },
   ];
 };
@@ -1236,6 +1252,7 @@ export const updateSiteSettingsAdminAction = async (formData: FormData): Promise
     faviconPath: formData.get("faviconPath"),
     defaultOgImage: formData.get("defaultOgImage"),
     adminLayout: formData.get("adminLayout"),
+    userLayout: formData.get("userLayout"),
   };
 
   const validation = validateForm(SiteSettingsSchema, formPayload);

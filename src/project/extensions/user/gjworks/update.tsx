@@ -8,7 +8,7 @@ import { ArrowLeft, AtSign, Camera, KeyRound, Mail, Save, UserRound, X } from "l
 import Popup from "@components/modal/Popup";
 import Alert from "@components/message/Alert";
 import ChangePassword from "./changePassword";
-import HeaderUser from "@/modules/user/tpl/default/header";
+import HeaderUser from "./header";
 
 import Button from "@components/button/Button"; // 💡 공용 버튼
 // 💡 1. InputField 임포트 추가! (경로가 다르면 수정해주세요)
@@ -117,9 +117,9 @@ const UpdateUser = ({ initialUser }: Props) => {
   return (
     <>
       <HeaderUser />
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-950">
-        <div className="mx-auto max-w-screen-xl px-3 py-6 md:px-6 md:py-8">
-          <form onSubmit={handleUserInfoSubmit} className="mx-auto max-w-3xl rounded-md border border-gray-200 bg-white p-5 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+      <div className="min-h-screen bg-white dark:bg-dark-950">
+        <div className="mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10">
+          <form onSubmit={handleUserInfoSubmit} className="mx-auto max-w-2xl">
             {error && (
               <div className="mb-5">
                 <Alert message={error.message} type={error.type} />
@@ -247,7 +247,7 @@ const UpdateUser = ({ initialUser }: Props) => {
               </div>
             </section>
 
-            <div className="sticky bottom-0 mt-6 flex items-center justify-between gap-3 border-t border-gray-200 bg-white/90 py-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-900/90">
+            <div className="sticky bottom-0 mt-6 flex items-center justify-between gap-3 border-t border-gray-200 bg-white/90 py-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/90">
               <button
                 type="button"
                 onClick={() => router.back()}

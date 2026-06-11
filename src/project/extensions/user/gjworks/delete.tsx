@@ -8,7 +8,7 @@ import { ArrowLeft, CircleAlert, KeyRound, ShieldAlert, Trash2, UserRound } from
 import Alert from "@components/message/Alert";
 import InputField from "@components/form/InputField";
 import Button from "@components/button/Button";
-import HeaderUser from "@/modules/user/tpl/default/header";
+import HeaderUser from "./header";
 
 // 🌟 비밀번호 확인 액션과, 탈퇴 액션을 모두 불러옵니다.
 import { removeMyAccount, verifyMyPassword } from "@/modules/user/actions/user.action";
@@ -95,9 +95,9 @@ const UserDelete = ({ initialUser }: Props) => {
   return (
     <>
       <HeaderUser />
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-950 dark:text-dark-100">
-        <div className="mx-auto max-w-screen-xl px-3 py-6 md:px-6 md:py-8">
-          <form ref={formRef} onSubmit={handlerUserDeleteSubmit} className="mx-auto max-w-3xl rounded-md border border-gray-200 bg-white p-5 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+      <div className="min-h-screen bg-white dark:bg-dark-950 dark:text-dark-100">
+        <div className="mx-auto max-w-screen-lg px-3 py-8 md:px-5 md:py-10">
+          <form ref={formRef} onSubmit={handlerUserDeleteSubmit} className="mx-auto max-w-2xl">
             <section className="border-b border-gray-200 pb-6 dark:border-dark-800">
               <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                 <div className="flex items-end gap-4">
@@ -187,7 +187,7 @@ const UserDelete = ({ initialUser }: Props) => {
               </div>
             </section>
 
-            <div className="sticky bottom-0 mt-6 flex items-center justify-between gap-3 border-t border-gray-200 bg-white/90 py-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-900/90">
+            <div className="sticky bottom-0 mt-6 flex items-center justify-between gap-3 border-t border-gray-200 bg-white/90 py-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/90">
               <button
                 type="button"
                 onClick={() => router.back()}

@@ -14,7 +14,7 @@ import {
 
 import { AuthSettingsData, NotificationSettingsData, SeoSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
 import { updateAuthSettingsAdminAction, updateNotificationSettingsAdminAction, updateSeoSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
-import { adminLayoutOptions } from "@project/extensions";
+import { adminLayoutOptions, userLayoutOptions } from "@project/extensions";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 
@@ -347,6 +347,7 @@ const defaultSiteSettings: SiteSettingsData = {
   faviconPath: "",
   defaultOgImage: "",
   adminLayout: "default",
+  userLayout: "default",
 };
 
 const defaultUploadSettings: UploadSettingsData = {
@@ -540,6 +541,10 @@ const Settings = ({
     setFieldErrors(null);
     setFormMessage(null);
     setAuthSettings(initialAuthSettings);
+    setSiteSettings((prev) => ({
+      ...prev,
+      userLayout: initialSiteSettings.userLayout,
+    }));
   };
 
   const resetSeoSettings = () => {
@@ -621,8 +626,30 @@ const Settings = ({
     setFormMessage(null);
 
     const formData = new FormData(e.currentTarget);
+    const siteFormData = new FormData();
+    siteFormData.set("appName", siteSettings.appName);
+    siteFormData.set("projectName", siteSettings.projectName);
+    siteFormData.set("projectTitle", siteSettings.projectTitle);
+    siteFormData.set("siteUrl", siteSettings.siteUrl);
+    siteFormData.set("apiBaseUrl", siteSettings.apiBaseUrl || "");
+    siteFormData.set("logoPath", siteSettings.logoPath || "");
+    siteFormData.set("faviconPath", siteSettings.faviconPath || "");
+    siteFormData.set("defaultOgImage", siteSettings.defaultOgImage || "");
+    siteFormData.set("adminLayout", siteSettings.adminLayout);
+    siteFormData.set("userLayout", siteSettings.userLayout);
 
     startTransition(async () => {
+      const siteResult = await updateSiteSettingsAdminAction(siteFormData);
+
+      if (!siteResult.success) {
+        if (siteResult.fieldErrors) {
+          setFieldErrors(siteResult.fieldErrors);
+        } else {
+          setFormMessage({ type: "error", message: siteResult.message });
+        }
+        return;
+      }
+
       const result = await updateAuthSettingsAdminAction(formData);
 
       if (!result.success) {
@@ -641,6 +668,7 @@ const Settings = ({
         return;
       }
 
+      if (siteResult.data) setSiteSettings(siteResult.data);
       if (result.data) setAuthSettings(result.data);
       setFormMessage({ type: "success", message: result.message });
     });
@@ -974,6 +1002,27 @@ const Settings = ({
 
       {activeSection === "auth" && (
         <>
+          <SectionShell icon={<UserRound size={13} />} title="user 모듈 스킨 설정" description="/user 마이페이지 영역에서 사용할 user 모듈 스킨을 선택합니다.">
+            <InlineField title="user 모듈 스킨" description="저장 후 /user 화면을 새로고침하면 선택한 user 모듈 스킨이 적용됩니다." settingKey="site.userLayout">
+              <select
+                name="userLayout"
+                value={siteSettings.userLayout}
+                onChange={handleSiteSelectChange("userLayout")}
+                className={selectClass}
+              >
+                {userLayoutOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-2 text-xs leading-5 text-gray-400">
+                {userLayoutOptions.find((option) => option.key === siteSettings.userLayout)?.description || "등록된 user 모듈 스킨입니다."}
+              </div>
+              {fieldErrors?.userLayout && <div className="mt-2 text-xs text-red-500">{fieldErrors.userLayout}</div>}
+            </InlineField>
+          </SectionShell>
+
           <SectionShell icon={<UserRound size={13} />} title="회원가입" description="신규 회원이 들어오는 방식과 가입 직후 사용할 계정 상태를 정합니다.">
             <FieldRow label="회원가입 허용" description="꺼두면 회원가입 페이지 접근과 공개 회원가입 API 요청이 모두 차단됩니다. 관리자가 관리자 화면에서 직접 회원을 추가하는 기능은 유지됩니다.">
               <Toggle name="registrationEnabled" checked={authSettings.registrationEnabled} onChange={handleAuthToggleChange("registrationEnabled")} />
