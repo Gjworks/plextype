@@ -1,6 +1,8 @@
 "use server";
 
 import { mkdir, writeFile } from "fs/promises";
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import path from "path";
 import { getUserSessionAction } from "@/modules/user/actions/user.action";
 import { validateForm } from "@utils/validation/formValidator";
@@ -1276,6 +1278,15 @@ export const updateSiteSettingsAdminAction = async (formData: FormData): Promise
 
     await upsertSettingsQuery(toSettingSeeds(nextSettings));
     await writeSiteSettingsCache(nextSettings);
+    const cookieStore = await cookies();
+    cookieStore.set("pending-admin-layout", nextSettings.adminLayout, {
+      path: "/admin",
+      maxAge: 60,
+      sameSite: "lax",
+    });
+    revalidatePath("/admin", "layout");
+    revalidatePath("/admin");
+    revalidatePath("/admin/settings");
 
     return {
       success: true,

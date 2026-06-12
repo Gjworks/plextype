@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bell,
   Globe2,
@@ -14,7 +15,6 @@ import {
 
 import { AuthSettingsData, NotificationSettingsData, SeoSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
 import { updateAuthSettingsAdminAction, updateNotificationSettingsAdminAction, updateSeoSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
-import { adminLayoutOptions, userLayoutOptions } from "@project/extensions";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 
@@ -27,6 +27,14 @@ type SettingsProps = {
   initialAuthSettings?: AuthSettingsData;
   initialSeoSettings?: SeoSettingsData;
   initialNotificationSettings?: NotificationSettingsData;
+  adminLayoutOptions?: RegistryOption[];
+  userLayoutOptions?: RegistryOption[];
+};
+
+type RegistryOption = {
+  key: string;
+  label: string;
+  description: string;
 };
 
 const sectionMeta: Record<SettingsSection, {
@@ -350,6 +358,22 @@ const defaultSiteSettings: SiteSettingsData = {
   userLayout: "default",
 };
 
+const defaultAdminLayoutOptions: RegistryOption[] = [
+  {
+    key: "default",
+    label: "기본 관리자",
+    description: "Plextype 배포판에 포함되는 기본 관리자 화면입니다.",
+  },
+];
+
+const defaultUserLayoutOptions: RegistryOption[] = [
+  {
+    key: "default",
+    label: "기본 사용자",
+    description: "Plextype 배포판에 포함되는 기본 사용자 화면입니다.",
+  },
+];
+
 const defaultUploadSettings: UploadSettingsData = {
   maxUploadSizeMb: 20,
   userStorageLimitMb: 1024,
@@ -417,7 +441,10 @@ const Settings = ({
   initialAuthSettings = defaultAuthSettings,
   initialSeoSettings = defaultSeoSettings,
   initialNotificationSettings = defaultNotificationSettings,
+  adminLayoutOptions = defaultAdminLayoutOptions,
+  userLayoutOptions = defaultUserLayoutOptions,
 }: SettingsProps) => {
+  const router = useRouter();
   const activeSection = sectionMeta[section] ? section : "site";
   const meta = useMemo(() => sectionMeta[activeSection], [activeSection]);
   const [isPending, startTransition] = useTransition();
@@ -564,7 +591,11 @@ const Settings = ({
     setFieldErrors(null);
     setFormMessage(null);
 
+    const currentAdminLayout = siteSettings.adminLayout;
     const formData = new FormData(e.currentTarget);
+    const selectedAdminLayout = siteSettings.adminLayout;
+    formData.set("adminLayout", selectedAdminLayout);
+    formData.set("userLayout", siteSettings.userLayout);
 
     startTransition(async () => {
       const result = await updateSiteSettingsAdminAction(formData);
@@ -586,6 +617,11 @@ const Settings = ({
 
       if (result.data) setSiteSettings(result.data);
       setFormMessage({ type: "success", message: result.message });
+      if (selectedAdminLayout !== currentAdminLayout) {
+        window.location.assign("/admin");
+        return;
+      }
+      router.refresh();
     });
   };
 
@@ -671,6 +707,7 @@ const Settings = ({
       if (siteResult.data) setSiteSettings(siteResult.data);
       if (result.data) setAuthSettings(result.data);
       setFormMessage({ type: "success", message: result.message });
+      router.refresh();
     });
   };
 
