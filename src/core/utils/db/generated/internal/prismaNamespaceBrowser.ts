@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Profile: 'Profile',
+  UserPreference: 'UserPreference',
   UserGroup: 'UserGroup',
   UserGroupUser: 'UserGroupUser',
   Document: 'Document',
@@ -113,6 +114,25 @@ export const ProfileScalarFieldEnum = {
 } as const
 
 export type ProfileScalarFieldEnum = (typeof ProfileScalarFieldEnum)[keyof typeof ProfileScalarFieldEnum]
+
+
+export const UserPreferenceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  theme: 'theme',
+  notifyComments: 'notifyComments',
+  notifyReplies: 'notifyReplies',
+  notifyAdmin: 'notifyAdmin',
+  showProfileImage: 'showProfileImage',
+  showNickname: 'showNickname',
+  editorCompact: 'editorCompact',
+  reduceMotion: 'reduceMotion',
+  fontScale: 'fontScale',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserPreferenceScalarFieldEnum = (typeof UserPreferenceScalarFieldEnum)[keyof typeof UserPreferenceScalarFieldEnum]
 
 
 export const UserGroupScalarFieldEnum = {

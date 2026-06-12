@@ -283,6 +283,7 @@ export type UserWhereInput = {
   Comment?: Prisma.CommentListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   profile?: Prisma.XOR<Prisma.ProfileNullableScalarRelationFilter, Prisma.ProfileWhereInput> | null
+  preference?: Prisma.XOR<Prisma.UserPreferenceNullableScalarRelationFilter, Prisma.UserPreferenceWhereInput> | null
   userGroups?: Prisma.UserGroupUserListRelationFilter
   Attachment?: Prisma.AttachmentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
@@ -305,6 +306,7 @@ export type UserOrderByWithRelationInput = {
   Comment?: Prisma.CommentOrderByRelationAggregateInput
   documents?: Prisma.DocumentOrderByRelationAggregateInput
   profile?: Prisma.ProfileOrderByWithRelationInput
+  preference?: Prisma.UserPreferenceOrderByWithRelationInput
   userGroups?: Prisma.UserGroupUserOrderByRelationAggregateInput
   Attachment?: Prisma.AttachmentOrderByRelationAggregateInput
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
@@ -330,6 +332,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   Comment?: Prisma.CommentListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   profile?: Prisma.XOR<Prisma.ProfileNullableScalarRelationFilter, Prisma.ProfileWhereInput> | null
+  preference?: Prisma.XOR<Prisma.UserPreferenceNullableScalarRelationFilter, Prisma.UserPreferenceWhereInput> | null
   userGroups?: Prisma.UserGroupUserListRelationFilter
   Attachment?: Prisma.AttachmentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
@@ -391,6 +394,7 @@ export type UserCreateInput = {
   Comment?: Prisma.CommentCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
@@ -413,6 +417,7 @@ export type UserUncheckedCreateInput = {
   Comment?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserUncheckedCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentUncheckedCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
@@ -434,6 +439,7 @@ export type UserUpdateInput = {
   Comment?: Prisma.CommentUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
@@ -456,6 +462,7 @@ export type UserUncheckedUpdateInput = {
   Comment?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUncheckedUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUncheckedUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
@@ -612,6 +619,20 @@ export type UserUpdateOneRequiredWithoutProfileNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutProfileInput, Prisma.UserUpdateWithoutProfileInput>, Prisma.UserUncheckedUpdateWithoutProfileInput>
 }
 
+export type UserCreateNestedOneWithoutPreferenceInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPreferenceInput, Prisma.UserUncheckedCreateWithoutPreferenceInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPreferenceInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPreferenceNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPreferenceInput, Prisma.UserUncheckedCreateWithoutPreferenceInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPreferenceInput
+  upsert?: Prisma.UserUpsertWithoutPreferenceInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPreferenceInput, Prisma.UserUpdateWithoutPreferenceInput>, Prisma.UserUncheckedUpdateWithoutPreferenceInput>
+}
+
 export type UserCreateNestedOneWithoutUserGroupsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutUserGroupsInput, Prisma.UserUncheckedCreateWithoutUserGroupsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutUserGroupsInput
@@ -703,6 +724,7 @@ export type UserCreateWithoutProfileInput = {
   status?: string | null
   Comment?: Prisma.CommentCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+  preference?: Prisma.UserPreferenceCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
@@ -724,6 +746,7 @@ export type UserUncheckedCreateWithoutProfileInput = {
   status?: string | null
   Comment?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+  preference?: Prisma.UserPreferenceUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserUncheckedCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentUncheckedCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
@@ -760,6 +783,7 @@ export type UserUpdateWithoutProfileInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Comment?: Prisma.CommentUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
@@ -781,6 +805,109 @@ export type UserUncheckedUpdateWithoutProfileInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Comment?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUserUncheckedUpdateManyWithoutUserNestedInput
+  Attachment?: Prisma.AttachmentUncheckedUpdateManyWithoutUploadedByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutPreferenceInput = {
+  slug: string
+  uuid?: string
+  accountId: string
+  email_address: string
+  nickName: string
+  password: string
+  refreshToken?: string | null
+  createdAt?: Date | string
+  updateAt?: Date | string
+  isAdmin?: boolean | null
+  isManagers?: boolean | null
+  status?: string | null
+  Comment?: Prisma.CommentCreateNestedManyWithoutUserInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+  profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupUserCreateNestedManyWithoutUserInput
+  Attachment?: Prisma.AttachmentCreateNestedManyWithoutUploadedByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPreferenceInput = {
+  id?: number
+  slug: string
+  uuid?: string
+  accountId: string
+  email_address: string
+  nickName: string
+  password: string
+  refreshToken?: string | null
+  createdAt?: Date | string
+  updateAt?: Date | string
+  isAdmin?: boolean | null
+  isManagers?: boolean | null
+  status?: string | null
+  Comment?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+  profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupUserUncheckedCreateNestedManyWithoutUserInput
+  Attachment?: Prisma.AttachmentUncheckedCreateNestedManyWithoutUploadedByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPreferenceInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPreferenceInput, Prisma.UserUncheckedCreateWithoutPreferenceInput>
+}
+
+export type UserUpsertWithoutPreferenceInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPreferenceInput, Prisma.UserUncheckedUpdateWithoutPreferenceInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPreferenceInput, Prisma.UserUncheckedCreateWithoutPreferenceInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPreferenceInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPreferenceInput, Prisma.UserUncheckedUpdateWithoutPreferenceInput>
+}
+
+export type UserUpdateWithoutPreferenceInput = {
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  uuid?: Prisma.StringFieldUpdateOperationsInput | string
+  accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  email_address?: Prisma.StringFieldUpdateOperationsInput | string
+  nickName?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updateAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isAdmin?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isManagers?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  Comment?: Prisma.CommentUpdateManyWithoutUserNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+  profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUserUpdateManyWithoutUserNestedInput
+  Attachment?: Prisma.AttachmentUpdateManyWithoutUploadedByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPreferenceInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  uuid?: Prisma.StringFieldUpdateOperationsInput | string
+  accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  email_address?: Prisma.StringFieldUpdateOperationsInput | string
+  nickName?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updateAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isAdmin?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isManagers?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  Comment?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
+  profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUncheckedUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUncheckedUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
@@ -802,6 +929,7 @@ export type UserCreateWithoutUserGroupsInput = {
   Comment?: Prisma.CommentCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceCreateNestedOneWithoutUserInput
   Attachment?: Prisma.AttachmentCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
@@ -823,6 +951,7 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   Comment?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceUncheckedCreateNestedOneWithoutUserInput
   Attachment?: Prisma.AttachmentUncheckedCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
@@ -859,6 +988,7 @@ export type UserUpdateWithoutUserGroupsInput = {
   Comment?: Prisma.CommentUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUpdateOneWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
@@ -880,6 +1010,7 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   Comment?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUncheckedUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -899,6 +1030,7 @@ export type UserCreateWithoutDocumentsInput = {
   status?: string | null
   Comment?: Prisma.CommentCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
@@ -920,6 +1052,7 @@ export type UserUncheckedCreateWithoutDocumentsInput = {
   status?: string | null
   Comment?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserUncheckedCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentUncheckedCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
@@ -956,6 +1089,7 @@ export type UserUpdateWithoutDocumentsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Comment?: Prisma.CommentUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
@@ -977,6 +1111,7 @@ export type UserUncheckedUpdateWithoutDocumentsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Comment?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUncheckedUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUncheckedUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
@@ -997,6 +1132,7 @@ export type UserCreateWithoutCommentInput = {
   status?: string | null
   documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
@@ -1018,6 +1154,7 @@ export type UserUncheckedCreateWithoutCommentInput = {
   status?: string | null
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserUncheckedCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentUncheckedCreateNestedManyWithoutUploadedByInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
@@ -1054,6 +1191,7 @@ export type UserUpdateWithoutCommentInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
@@ -1075,6 +1213,7 @@ export type UserUncheckedUpdateWithoutCommentInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUncheckedUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUncheckedUpdateManyWithoutUploadedByNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
@@ -1096,6 +1235,7 @@ export type UserCreateWithoutAttachmentInput = {
   Comment?: Prisma.CommentCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
@@ -1117,6 +1257,7 @@ export type UserUncheckedCreateWithoutAttachmentInput = {
   Comment?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserUncheckedCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
@@ -1153,6 +1294,7 @@ export type UserUpdateWithoutAttachmentInput = {
   Comment?: Prisma.CommentUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
@@ -1174,6 +1316,7 @@ export type UserUncheckedUpdateWithoutAttachmentInput = {
   Comment?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUncheckedUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -1194,6 +1337,7 @@ export type UserCreateWithoutNotificationsInput = {
   Comment?: Prisma.CommentCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentCreateNestedManyWithoutUploadedByInput
 }
@@ -1215,6 +1359,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   Comment?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  preference?: Prisma.UserPreferenceUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUserUncheckedCreateNestedManyWithoutUserInput
   Attachment?: Prisma.AttachmentUncheckedCreateNestedManyWithoutUploadedByInput
 }
@@ -1251,6 +1396,7 @@ export type UserUpdateWithoutNotificationsInput = {
   Comment?: Prisma.CommentUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUpdateManyWithoutUploadedByNestedInput
 }
@@ -1272,6 +1418,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   Comment?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  preference?: Prisma.UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUserUncheckedUpdateManyWithoutUserNestedInput
   Attachment?: Prisma.AttachmentUncheckedUpdateManyWithoutUploadedByNestedInput
 }
@@ -1360,6 +1507,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   Comment?: boolean | Prisma.User$CommentArgs<ExtArgs>
   documents?: boolean | Prisma.User$documentsArgs<ExtArgs>
   profile?: boolean | Prisma.User$profileArgs<ExtArgs>
+  preference?: boolean | Prisma.User$preferenceArgs<ExtArgs>
   userGroups?: boolean | Prisma.User$userGroupsArgs<ExtArgs>
   Attachment?: boolean | Prisma.User$AttachmentArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
@@ -1419,6 +1567,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   Comment?: boolean | Prisma.User$CommentArgs<ExtArgs>
   documents?: boolean | Prisma.User$documentsArgs<ExtArgs>
   profile?: boolean | Prisma.User$profileArgs<ExtArgs>
+  preference?: boolean | Prisma.User$preferenceArgs<ExtArgs>
   userGroups?: boolean | Prisma.User$userGroupsArgs<ExtArgs>
   Attachment?: boolean | Prisma.User$AttachmentArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
@@ -1433,6 +1582,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     Comment: Prisma.$CommentPayload<ExtArgs>[]
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     profile: Prisma.$ProfilePayload<ExtArgs> | null
+    preference: Prisma.$UserPreferencePayload<ExtArgs> | null
     userGroups: Prisma.$UserGroupUserPayload<ExtArgs>[]
     Attachment: Prisma.$AttachmentPayload<ExtArgs>[]
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
@@ -1848,6 +1998,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   Comment<T extends Prisma.User$CommentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$CommentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   documents<T extends Prisma.User$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   profile<T extends Prisma.User$profileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$profileArgs<ExtArgs>>): Prisma.Prisma__ProfileClient<runtime.Types.Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  preference<T extends Prisma.User$preferenceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$preferenceArgs<ExtArgs>>): Prisma.Prisma__UserPreferenceClient<runtime.Types.Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   userGroups<T extends Prisma.User$userGroupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$userGroupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserGroupUserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Attachment<T extends Prisma.User$AttachmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$AttachmentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2350,6 +2501,25 @@ export type User$profileArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    */
   include?: Prisma.ProfileInclude<ExtArgs> | null
   where?: Prisma.ProfileWhereInput
+}
+
+/**
+ * User.preference
+ */
+export type User$preferenceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserPreference
+   */
+  select?: Prisma.UserPreferenceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserPreference
+   */
+  omit?: Prisma.UserPreferenceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserPreferenceInclude<ExtArgs> | null
+  where?: Prisma.UserPreferenceWhereInput
 }
 
 /**

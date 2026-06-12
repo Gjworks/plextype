@@ -10,6 +10,7 @@
  */
 export type * from './models/User'
 export type * from './models/Profile'
+export type * from './models/UserPreference'
 export type * from './models/UserGroup'
 export type * from './models/UserGroupUser'
 export type * from './models/Document'
