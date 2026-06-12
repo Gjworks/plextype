@@ -1,5 +1,6 @@
 import type React from "react";
 import type { UserLayoutComponents } from "@/core/registry/defaultRegistry";
+import type { AdminBreadcrumbRegistry, AdminMenuItem } from "@/core/registry/adminRegistry";
 
 export type RegistryOption = {
   key: string;
@@ -22,13 +23,26 @@ export type AdminLayoutRegistration = RegistryOption & {
 
 export type UserSkinRegistration = RegistryOption & UserLayoutComponents;
 
-export type ExtensionRegistryConfig = {
+export type ModuleRegistration = RegistryOption & {
+  admin?: {
+    menu?: AdminMenuItem | AdminMenuItem[];
+    breadcrumbs?: AdminBreadcrumbRegistry;
+  };
   postSkins?: PostSkinRegistration[];
   postLayouts?: PostLayoutRegistration[];
   adminLayouts?: AdminLayoutRegistration[];
   userSkins?: UserSkinRegistration[];
 };
 
+export type ExtensionRegistryConfig = {
+  modules?: ModuleRegistration[];
+  postSkins?: PostSkinRegistration[];
+  postLayouts?: PostLayoutRegistration[];
+  adminLayouts?: AdminLayoutRegistration[];
+  userSkins?: UserSkinRegistration[];
+};
+
+export const defineModule = (config: ModuleRegistration) => config;
 export const definePostSkin = (config: PostSkinRegistration) => config;
 export const definePostLayout = (config: PostLayoutRegistration) => config;
 export const defineAdminLayout = (config: AdminLayoutRegistration) => config;
