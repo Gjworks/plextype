@@ -9,16 +9,15 @@ import Dropdown from '@/core/components/dropdown/Dropdown'
 import Left from '@/core/components/panel/Left'
 import NotificationBell from '@/core/components/bell/bell'
 import { useUserContext } from '@/core/providers/UserProvider'
-import { getAdminBreadcrumbRegistry, getAdminMenuRegistry, type AdminMenuItem } from '@/core/registry/adminRegistry'
+import type { AdminBreadcrumbRegistry, AdminMenuItem } from '@/core/registry/adminRegistry'
 
 type AdminLayoutProps = {
   children: React.ReactNode;
   appName: string;
   adminSessionGuard: boolean;
+  adminMenus: AdminMenuItem[];
+  adminBreadcrumbs: AdminBreadcrumbRegistry;
 };
-
-const MENU_CONFIG = getAdminMenuRegistry()
-const ADMIN_BREADCRUMB_LABELS = getAdminBreadcrumbRegistry()
 
 const cleanAdminPath = (path: string) => {
   if (!path || path === '/') return path
@@ -37,7 +36,7 @@ const isAdminPathActive = (pathname: string, href: string) => {
   return cleanedPath.startsWith(`${cleanedHref}/`)
 }
 
-const getAdminBreadcrumbs = (pathname: string) => {
+const getAdminBreadcrumbs = (pathname: string, adminBreadcrumbs: AdminBreadcrumbRegistry) => {
   const segments = pathname.split('/').filter(Boolean)
   const section = segments[1]
 
@@ -46,7 +45,7 @@ const getAdminBreadcrumbs = (pathname: string) => {
   const sectionLabel = section === 'user' ? 'USER' : section.toUpperCase()
   const lastSegment = segments[segments.length - 1]
   const candidate = !lastSegment || !Number.isNaN(Number(lastSegment)) ? 'index' : lastSegment
-  const mapped = ADMIN_BREADCRUMB_LABELS[section]?.[candidate]
+  const mapped = adminBreadcrumbs[section]?.[candidate]
 
   if (mapped) return [sectionLabel, mapped]
 
@@ -66,6 +65,7 @@ type AdminSideNavProps = {
   normalizedPathname: string;
   openMenus: Record<string, boolean>;
   setOpenMenus: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  menuConfig: AdminMenuItem[];
   onNavigate?: () => void;
   onSignOut: () => void;
 }
@@ -76,6 +76,7 @@ const AdminSideNav = ({
   normalizedPathname,
   openMenus,
   setOpenMenus,
+  menuConfig,
   onNavigate,
   onSignOut,
 }: AdminSideNavProps) => {
@@ -90,7 +91,7 @@ const AdminSideNav = ({
 
       <nav className="flex-1 overflow-y-auto px-3 py-5">
         <div className="space-y-1">
-          {MENU_CONFIG.map((menu) => {
+          {menuConfig.map((menu) => {
             const active = getMenuActive(normalizedPathname, menu)
             const opened = openMenus[menu.id] ?? active
 
@@ -170,10 +171,11 @@ const AdminSideNav = ({
   )
 }
 
-const AdminLayout = ({ children, appName, adminSessionGuard }: AdminLayoutProps) => {
+const AdminLayout = ({ children, appName, adminSessionGuard, adminMenus, adminBreadcrumbs }: AdminLayoutProps) => {
   const pathname = usePathname()
   const normalizedPathname = cleanAdminPath(pathname ?? '/admin')
-  const breadcrumbs = useMemo(() => getAdminBreadcrumbs(normalizedPathname), [normalizedPathname])
+  const menuConfig = useMemo(() => adminMenus, [adminMenus])
+  const breadcrumbs = useMemo(() => getAdminBreadcrumbs(normalizedPathname, adminBreadcrumbs), [adminBreadcrumbs, normalizedPathname])
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
@@ -190,13 +192,13 @@ const AdminLayout = ({ children, appName, adminSessionGuard }: AdminLayoutProps)
   }
 
   useEffect(() => {
-    const nextOpenMenus = MENU_CONFIG.reduce<Record<string, boolean>>((acc, menu) => {
+    const nextOpenMenus = menuConfig.reduce<Record<string, boolean>>((acc, menu) => {
       acc[menu.id] = getMenuActive(normalizedPathname, menu)
       return acc
     }, {})
 
     setOpenMenus((prev) => ({ ...nextOpenMenus, ...prev }))
-  }, [normalizedPathname])
+  }, [menuConfig, normalizedPathname])
 
   useEffect(() => {
     if (isLoading) return
@@ -265,6 +267,7 @@ const AdminLayout = ({ children, appName, adminSessionGuard }: AdminLayoutProps)
           normalizedPathname={normalizedPathname}
           openMenus={openMenus}
           setOpenMenus={setOpenMenus}
+          menuConfig={menuConfig}
           onSignOut={handleSignOut}
         />
       </aside>
@@ -276,6 +279,7 @@ const AdminLayout = ({ children, appName, adminSessionGuard }: AdminLayoutProps)
           normalizedPathname={normalizedPathname}
           openMenus={openMenus}
           setOpenMenus={setOpenMenus}
+          menuConfig={menuConfig}
           onNavigate={() => setShowMobileMenu(false)}
           onSignOut={handleSignOut}
         />
