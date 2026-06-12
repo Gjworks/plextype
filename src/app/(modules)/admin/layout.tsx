@@ -1,4 +1,4 @@
-import { AdminLayout as FallbackAdminLayoutClient, adminLayouts } from '@project/extensions'
+import { AdminLayout as FallbackAdminLayoutClient, adminBreadcrumbs, adminLayouts, adminMenus } from '@project/extensions'
 import { getAuthSettingsAdminAction, getPublicSiteSettingsAction } from '@/modules/admin/actions/settings.action'
 
 const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
@@ -14,6 +14,8 @@ const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
     <AdminLayoutClient
       appName={appName}
       adminSessionGuard={authSettings.data?.adminSessionGuard ?? true}
+      adminMenus={adminMenus}
+      adminBreadcrumbs={adminBreadcrumbs}
     >
       {children}
     </AdminLayoutClient>

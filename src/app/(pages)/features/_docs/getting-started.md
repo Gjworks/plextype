@@ -137,5 +137,9 @@ Plextype를 받아간 프로젝트에서 AI 도구나 코딩 에이전트를 함
 - 코어 파일을 수정해야 할 것 같다면 먼저 extensions, trigger, registry, capability로 해결 가능한지 확인합니다.
 - 새 페이지는 `src/app/(extensions)/[route]/page.tsx`에 둡니다.
 - 새 레이아웃은 `src/extensions/layouts/[name]/Layout.tsx`에 둡니다.
-- 게시판 스킨은 `src/extensions/posts/tpl/[skin]/list.tsx`에 둡니다.
+- 새 모듈은 자기 폴더 안에 `registry.tsx`를 두고 `defineModule()`로 관리자 메뉴, breadcrumb, 관련 스킨을 함께 등록합니다.
+- 게시판 스킨은 `src/extensions/posts/tpl/[skin]/list.tsx`와 `src/extensions/posts/tpl/[skin]/registry.tsx`를 함께 둡니다.
+- user 스킨, 관리자 레이아웃, 게시판 레이아웃도 각 폴더에 `registry.tsx`를 두고 `defineUserSkin()`, `defineAdminLayout()`, `definePostLayout()`로 등록합니다.
+- `src/extensions/registry.tsx`는 각 모듈/스킨의 registry를 import해서 조립만 합니다.
+- 다른 프로젝트로 넘길 모듈이나 스킨은 컴포넌트, action/query, prisma 조각, registry를 같은 폴더 단위로 유지합니다.
 ```

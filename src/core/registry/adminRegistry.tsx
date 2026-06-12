@@ -1,8 +1,7 @@
 import type React from "react";
 
-import { adminAdminBreadcrumbs, adminAdminMenus } from "@/modules/admin/admin.registry";
-import { postsAdminBreadcrumbs, postsAdminMenus } from "@/modules/posts/admin.registry";
-import { userAdminBreadcrumbs, userAdminMenus } from "@/modules/user/admin.registry";
+import { buildExtensionRegistry } from "@/core/registry/build";
+import { coreRegistry } from "@/core/registry/coreRegistry";
 
 export type AdminMenuChild = {
   label: string;
@@ -20,20 +19,10 @@ export type AdminMenuItem = {
 
 export type AdminBreadcrumbRegistry = Record<string, Record<string, string>>;
 
-const defaultAdminMenus: AdminMenuItem[] = [
-  ...adminAdminMenus,
-  ...userAdminMenus,
-  ...postsAdminMenus,
-];
-
-const defaultAdminBreadcrumbs: AdminBreadcrumbRegistry = {
-  ...adminAdminBreadcrumbs,
-  ...userAdminBreadcrumbs,
-  ...postsAdminBreadcrumbs,
-};
+const { adminMenus: defaultAdminMenus, adminBreadcrumbs: defaultAdminBreadcrumbs } = buildExtensionRegistry(coreRegistry);
 
 export const getAdminMenuRegistry = (): AdminMenuItem[] => {
-  return [...defaultAdminMenus].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  return defaultAdminMenus;
 };
 
 export const getAdminBreadcrumbRegistry = (): AdminBreadcrumbRegistry => {

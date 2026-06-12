@@ -38,6 +38,6 @@ tsx 컴포넌트 -> prisma.document.findMany()
 
 ## 코어와 확장의 경계
 
-새 페이지가 필요하면 `src/app/(extensions)`에 라우트를 추가합니다. 새 게시판 스킨이 필요하면 `src/extensions/posts/tpl/[skin]`에 컴포넌트를 두고 `src/extensions/index.tsx`에서 등록합니다. 새 DB 모델이 필요하면 `src/extensions/prisma/schema/*.prisma`에 모델 조각을 추가합니다.
+새 페이지가 필요하면 `src/app/(extensions)`에 라우트를 추가합니다. 새 게시판 스킨이 필요하면 `src/extensions/posts/tpl/[skin]`에 컴포넌트와 `registry.tsx`를 두고 `src/extensions/registry.tsx`에서 조립합니다. 새 모듈이 필요하면 모듈 폴더 안에 `registry.tsx`를 두어 관리자 메뉴, breadcrumb, 관련 스킨을 함께 등록합니다. 새 DB 모델이 필요하면 `src/extensions/prisma/schema/*.prisma`에 모델 조각을 추가합니다.
 
 반대로 코어의 인증, 게시판, 댓글, 첨부파일 같은 공통 기능을 수정해야 할 때는 먼저 trigger, capability, extension 라우트로 해결 가능한지 확인합니다.

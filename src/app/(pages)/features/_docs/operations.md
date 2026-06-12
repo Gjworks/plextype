@@ -69,6 +69,10 @@ src/app/(extensions)/*
 - Plextype 코어 파일(src/core, src/modules, src/app/(modules))은 가능한 한 수정하지 않는다.
 - 사이트별 기능은 src/extensions 또는 src/app/(extensions)에 구현한다.
 - DB 모델 추가는 src/extensions/prisma/schema/*.prisma에 작성한다.
+- 모듈은 자기 폴더의 registry.tsx에서 defineModule()로 관리자 메뉴, breadcrumb, 관련 스킨을 함께 등록한다.
+- 스킨과 레이아웃은 각 폴더의 registry.tsx에서 definePostSkin(), definePostLayout(), defineAdminLayout(), defineUserSkin()으로 등록한다.
+- src/extensions/registry.tsx는 각 모듈/스킨 registry를 import해서 조립만 한다.
+- 다른 프로젝트로 배포할 모듈이나 스킨은 registry.tsx를 포함한 폴더 단위로 유지한다.
 - 원본 패치 반영 전후로 npm run prisma:sync, npm run prisma:generate, npm run build를 실행한다.
 - 코어 수정이 필요하면 먼저 extension hook, registry, action wrapper로 해결 가능한지 검토한다.
 ```
