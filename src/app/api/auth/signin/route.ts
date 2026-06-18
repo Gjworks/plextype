@@ -8,6 +8,7 @@ import redisClient from "@/core/utils/redis/redis";
 import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
+import { createLoginNotificationAction } from "@/modules/notification/actions/notification.action";
 
 
 
@@ -15,6 +16,7 @@ import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-setti
 const LoginSchema = z.object({
   accountId: z.string().min(1, { message: "계정 아이디를 입력해주세요." }),
   password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
+  client: z.string().optional(),
 });
 
 const getClientIp = (request: Request) => {
@@ -104,6 +106,7 @@ export async function POST(request: Request): Promise<Response> {
     const rawData = {
       accountId: formData.get("accountId")?.toString(),
       password: formData.get("password")?.toString(),
+      client: formData.get("client")?.toString(),
     };
 
     // ✅ 2. Zod 유효성 검사
@@ -271,6 +274,15 @@ export async function POST(request: Request): Promise<Response> {
       );
     } catch (redisError) {
       console.error("Login Redis Cache Error:", redisError);
+    }
+
+    if (validation.data.client !== "mobile") {
+      createLoginNotificationAction({
+        userId: userInfo.id,
+        source: "web",
+      }).catch((error) => {
+        console.error("Login Notification Error:", error);
+      });
     }
 
     return response;

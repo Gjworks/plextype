@@ -6,9 +6,11 @@ import { ActionResponse } from '@/core/types/actions'
 import { useRouter } from 'next/navigation'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
+import { QrCode, RefreshCw, Smartphone } from 'lucide-react'
 
 import InputField from '@components/form/InputField'
 import Button from '@components/button/Button'
+import { useToastStore } from '@/core/store/useToastStore'
 
 interface SignData {
   type: string
@@ -29,6 +31,7 @@ interface SignData {
 const Signin = () => {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const addToast = useToastStore(state => state.addToast)
   // const dispatch = store.dispatch;
 
   const [user, setUser] = useState<SignData>()
@@ -91,6 +94,10 @@ const Signin = () => {
         setUser(res)
       }
       await queryClient.invalidateQueries({ queryKey: ['user'] })
+      addToast('웹에서 로그인되었습니다.', 'info', {
+        title: '로그인 알림',
+        linkUrl: '/user/notifications',
+      })
 
       router.replace('/')
     },
@@ -171,37 +178,42 @@ const Signin = () => {
             </div>
           )}
           <motion.div variants={parentVariants}>
-            {/* Account ID Input */}
-            <div className="mb-5">
-              <InputField
-                inputTitle="Account ID"
-                name="accountId"
-                type="text"
-                placeholder="아이디를 입력하세요"
-                icon={UserIcon}
-                ref={refInputUserId} // 이제 이 ref가 정상적으로 작동합니다.
-                error={fieldErrors?.accountId}
-              />
-            </div>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_210px] xl:grid-cols-[minmax(0,1fr)_220px]">
+              <div>
+                {/* Account ID Input */}
+                <div className="mb-5">
+                  <InputField
+                    inputTitle="Account ID"
+                    name="accountId"
+                    type="text"
+                    placeholder="아이디를 입력하세요"
+                    icon={UserIcon}
+                    ref={refInputUserId} // 이제 이 ref가 정상적으로 작동합니다.
+                    error={fieldErrors?.accountId}
+                  />
+                </div>
 
-            {/* 💡 비밀번호 입력 필드 */}
-            <div className="mb-5">
-              <InputField
-                inputTitle="Password"
-                name="password"
-                type="password"
-                placeholder="비밀번호를 입력하세요"
-                icon={LockIcon}
-                ref={refInputPassword}
-                error={fieldErrors?.password}
-              />
-            </div>
+                {/* 💡 비밀번호 입력 필드 */}
+                <div className="mb-5">
+                  <InputField
+                    inputTitle="Password"
+                    name="password"
+                    type="password"
+                    placeholder="비밀번호를 입력하세요"
+                    icon={LockIcon}
+                    ref={refInputPassword}
+                    error={fieldErrors?.password}
+                  />
+                </div>
 
-            {/* Submit Button */}
-            <div className="mb-4 flex">
-              <Button isLoading={mutation.isPending} icon={SignInIcon} type="submit" fullWidth={true} className="!py-3">
-                Sign In
-              </Button>
+                {/* Submit Button */}
+                <div className="mb-4 flex">
+                  <Button isLoading={mutation.isPending} icon={SignInIcon} type="submit" fullWidth={true} className="!py-3">
+                    Sign In
+                  </Button>
+                </div>
+              </div>
+              <QrLoginPanel />
             </div>
           </motion.div>
         </form>
@@ -273,6 +285,171 @@ const Signin = () => {
         </motion.div>
       </motion.div>
     </>
+  )
+}
+
+type QrLoginSession = {
+  sessionId: string
+  expiresAt: string
+  ttlSeconds: number
+  qrDataUrl: string
+}
+
+const QrLoginPanel = () => {
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const [session, setSession] = useState<QrLoginSession | null>(null)
+  const [statusMessage, setStatusMessage] = useState('QR을 불러오는 중입니다.')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isExpired, setIsExpired] = useState(false)
+  const [qrRefreshKey, setQrRefreshKey] = useState(0)
+  const sessionIdRef = useRef<string | null>(null)
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const expireTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const createSession = async () => {
+      setIsLoading(true)
+      setIsExpired(false)
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current)
+      if (expireTimerRef.current) clearTimeout(expireTimerRef.current)
+
+      try {
+        const response = await fetch('/api/auth/qr', {
+          method: 'POST',
+          cache: 'no-store',
+          credentials: 'include',
+        })
+        const data = await response.json()
+
+        if (!isMounted) return
+
+        if (!response.ok || !data.success) {
+          setStatusMessage(data.message || 'QR을 만들지 못했습니다.')
+          setSession(null)
+          return
+        }
+
+        sessionIdRef.current = data.sessionId
+        const expiresAtMs = new Date(data.expiresAt).getTime()
+        setSession({
+          sessionId: data.sessionId,
+          expiresAt: data.expiresAt,
+          ttlSeconds: data.ttlSeconds,
+          qrDataUrl: data.qrDataUrl,
+        })
+        setStatusMessage('앱 인증기에서 QR을 스캔하세요.')
+        expireTimerRef.current = setTimeout(() => {
+          if (!isMounted) return
+          sessionIdRef.current = null
+          setIsExpired(true)
+          setStatusMessage('QR이 만료되었습니다. 다시 발급해주세요.')
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current)
+        }, Math.max(expiresAtMs - Date.now(), 0))
+      } catch {
+        if (isMounted) {
+          setStatusMessage('QR 서버에 연결하지 못했습니다.')
+          setSession(null)
+        }
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+
+    const pollSession = async () => {
+      const sessionId = sessionIdRef.current
+      if (!sessionId) return
+
+      try {
+        const response = await fetch(`/api/auth/qr/status?sessionId=${encodeURIComponent(sessionId)}`, {
+          method: 'GET',
+          cache: 'no-store',
+          credentials: 'include',
+        })
+        const data = await response.json()
+
+        if (!isMounted) return
+
+        if (response.ok && data.status === 'approved') {
+          setStatusMessage('승인되었습니다. 이동합니다.')
+          const userResponse = await fetch('/api/auth/me', {
+            method: 'GET',
+            cache: 'no-store',
+            credentials: 'include',
+          })
+          const userData = await userResponse.json()
+
+          if (userData?.isLoggedIn) {
+            queryClient.setQueryData(['user'], userData)
+          }
+
+          await queryClient.invalidateQueries({ queryKey: ['user'] })
+          await queryClient.refetchQueries({ queryKey: ['user'], exact: true })
+          router.refresh()
+          router.replace('/')
+          return
+        }
+
+        if (data.status === 'expired') {
+          sessionIdRef.current = null
+          setIsExpired(true)
+          setStatusMessage('QR이 만료되었습니다. 다시 발급해주세요.')
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current)
+        }
+      } catch {
+        if (isMounted) setStatusMessage('QR 상태 확인을 다시 시도합니다.')
+      }
+    }
+
+    void createSession()
+    pollTimerRef.current = setInterval(pollSession, 2000)
+
+    return () => {
+      isMounted = false
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current)
+      if (expireTimerRef.current) clearTimeout(expireTimerRef.current)
+    }
+  }, [queryClient, qrRefreshKey, router])
+
+  return (
+    <div className="self-start rounded-xl border border-gray-200 bg-gray-50/80 p-3 dark:border-dark-700 dark:bg-dark-900/40">
+      <div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-gray-600 dark:text-dark-300">
+        <div className="flex items-center gap-2">
+          <Smartphone className="h-4 w-4" />
+          App QR Login
+        </div>
+        {isLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+      </div>
+      <div className="relative flex h-32 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-dark-700 dark:bg-white">
+        {session?.qrDataUrl ? (
+          <img src={session.qrDataUrl} alt="앱 인증기 로그인 QR 코드" className={`h-24 w-24 rounded-md transition ${isExpired ? 'opacity-15 blur-[1px]' : ''}`} />
+        ) : (
+          <div className="flex flex-col items-center gap-1 text-gray-400 dark:text-dark-500">
+            <QrCode className="h-16 w-16" strokeWidth={1.35} />
+            <span className="text-[11px] font-medium">QR 준비 영역</span>
+          </div>
+        )}
+        {isExpired && (
+          <button
+            type="button"
+            onClick={() => {
+              setQrRefreshKey(key => key + 1)
+            }}
+            className="absolute inset-0 flex items-center justify-center"
+            aria-label="QR 다시 발급"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-lg shadow-gray-950/10 transition hover:bg-gray-50 dark:border-gray-200 dark:bg-white dark:text-gray-800">
+              <RefreshCw className="h-5 w-5" />
+            </span>
+          </button>
+        )}
+      </div>
+      <div className="mt-2 text-center text-[11px] leading-5 text-gray-500 dark:text-dark-400">
+        {statusMessage}
+      </div>
+    </div>
   )
 }
 
