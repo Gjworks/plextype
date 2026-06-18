@@ -6,6 +6,7 @@ import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/se
 import { getSettingsByKeysQuery } from "@/modules/admin/actions/settings.query";
 import { notificationEvents } from "@/core/utils/trigger/notificationEvents";
 import { findUserPreferenceByUserId } from "@/modules/user/actions/preference.query";
+import { sendPushNotificationAction } from "./push.action";
 
 function extractTiptapText(nodes: any[]): string {
   return nodes
@@ -175,9 +176,66 @@ export const dispatchNotificationAction = async (data: any, context?: any) => {
       });
     }
 
+    sendPushNotificationAction({
+      userId: notification.userId,
+      uuid: notification.uuid,
+      type: notification.type,
+      title: notification.title,
+      content: notification.content,
+      linkUrl: notification.linkUrl,
+    }).catch((error) => {
+      console.error("sendPushNotificationAction Error:", error);
+    });
+
     return notification;
   } catch (error) {
     console.error("dispatchNotificationAction Error:", error);
+    return null;
+  }
+};
+
+export const createLoginNotificationAction = async ({
+  userId,
+  source = "web",
+}: {
+  userId: number;
+  source?: "web" | "mobile" | "qr";
+}) => {
+  const sourceLabel = source === "mobile" ? "앱" : source === "qr" ? "QR 로그인" : "웹";
+
+  try {
+    const notification = await saveNotification({
+      userId,
+      type: "info",
+      title: "로그인 알림",
+      content: `${sourceLabel}에서 로그인되었습니다.`,
+      linkUrl: "/user/notifications",
+      metadata: {
+        subType: "login",
+        source,
+      },
+    });
+
+    notificationEvents.emit("new-notification", {
+      ...notification,
+      showToast: true,
+      imageUrl: null,
+    });
+
+    sendPushNotificationAction({
+      userId: notification.userId,
+      uuid: notification.uuid,
+      type: notification.type,
+      title: notification.title,
+      content: notification.content,
+      linkUrl: notification.linkUrl,
+    }).catch((error) => {
+      console.error("sendPushNotificationAction Error:", error);
+    });
+
+    return notification;
+  } catch (error) {
+    console.error("createLoginNotificationAction Error:", error);
     return null;
   }
 };
