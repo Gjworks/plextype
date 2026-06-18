@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import React from "react";
-import { DefaultLayout } from "@project/extensions";
+import { DefaultLayout } from "@extensions";
 import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 
 export default async function PageLayout({

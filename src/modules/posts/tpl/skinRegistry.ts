@@ -1,6 +1,6 @@
 import type React from "react";
 
-import { postLayouts, postSkins } from "@project/extensions";
+import { postLayouts, postSkins } from "@extensions";
 
 type PostSkinRegistry = {
   list: Record<string, React.ComponentType<any>>;

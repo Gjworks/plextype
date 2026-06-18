@@ -1,4 +1,4 @@
-import { DefaultLayout, HomePage } from "@project/extensions";
+import { DefaultLayout, HomePage } from "@extensions";
 
 export default function Page() {
   return (

@@ -1,1 +1,1 @@
-export { proxy } from "@project/proxy";
+export { proxy } from "@core/proxy/defaultProxy";

@@ -1,4 +1,4 @@
-import { adminDashboards } from "@project/extensions";
+import { adminDashboards } from "@extensions";
 import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 
 const Page = async () => {

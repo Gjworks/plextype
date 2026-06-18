@@ -5,7 +5,7 @@ import { FileText, Heart, Layers, ListChecks, MessageSquareLock } from "lucide-r
 
 import InputField from "@components/form/InputField";
 import type { PostInfoData } from "@/modules/posts/actions/_type";
-import { postLayoutOptions, postSkinOptions } from "@project/extensions";
+import { postLayoutOptions, postSkinOptions } from "@extensions";
 
 type PostInfoProps = {
   id?: string;

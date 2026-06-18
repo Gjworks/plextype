@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import { AuthLayout } from "@project/extensions";
+import { AuthLayout } from "@extensions";
 import { getPublicSiteUrlAction } from '@/modules/admin/actions/settings.action';
 
 const PageLayout = async ({ children }) => {
