@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getMyPreferenceAction } from "@/modules/user/actions/preference.action";
 import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
-import { userLayouts } from "@project/extensions";
+import { userLayouts } from "@extensions";
 
 const Page = async () => {
   const [result, settings] = await Promise.all([

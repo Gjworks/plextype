@@ -1,7 +1,7 @@
 // src/utils/trigger/triggerHub.ts
 import coreConfig from "@/core/res/config/trigger.json";
 import * as coreHandlers from "./triggerHandler";
-import { triggerConfig, triggerHandlers } from "@project/triggers";
+import { triggerConfig, triggerHandlers } from "@extensions/triggerRegistry";
 
 // 🌟 전역 캐시
 let cachedHandlers: any = null;

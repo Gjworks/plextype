@@ -1,4 +1,4 @@
-import { AdminLayout as FallbackAdminLayoutClient, adminBreadcrumbs, adminLayouts, adminMenus } from '@project/extensions'
+import { AdminLayout as FallbackAdminLayoutClient, adminBreadcrumbs, adminLayouts, adminMenus } from '@extensions'
 import { getAuthSettingsAdminAction, getPublicSiteSettingsAction } from '@/modules/admin/actions/settings.action'
 import { cookies } from 'next/headers'
 

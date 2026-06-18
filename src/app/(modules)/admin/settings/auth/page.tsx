@@ -1,6 +1,6 @@
 import Admin from "@/modules/admin";
 import { getAuthSettingsAdminAction, getSiteSettingsAdminAction } from "@/modules/admin/actions/settings.action";
-import { adminLayoutOptions, userLayoutOptions } from "@project/extensions";
+import { adminLayoutOptions, userLayoutOptions } from "@extensions";
 
 const Page = async () => {
   const [authResult, siteResult] = await Promise.all([

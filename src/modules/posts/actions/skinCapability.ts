@@ -1,4 +1,4 @@
-import { postSkinCapabilities } from "@project/post-capabilities";
+import { postSkinCapabilities } from "@extensions/postCapabilities";
 
 export function getPostSkinCapability(config: unknown) {
   const skin = typeof (config as any)?.skin === "string"
