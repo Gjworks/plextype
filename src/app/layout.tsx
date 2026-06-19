@@ -20,13 +20,12 @@ const themeInitScript = `
     var storageKey = "userThemePreference";
     var cookieMatch = document.cookie.match(/(?:^|; )userThemePreference=([^;]*)/);
     var cookieTheme = cookieMatch ? decodeURIComponent(cookieMatch[1]) : "";
-    var theme = cookieTheme || localStorage.getItem(storageKey) || "system";
-    if (theme !== "light" && theme !== "dark" && theme !== "system") {
-      theme = "system";
+    var theme = cookieTheme || localStorage.getItem(storageKey) || "light";
+    if (theme !== "light" && theme !== "dark") {
+      theme = "light";
     }
 
-    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
+    var shouldUseDark = theme === "dark";
     var root = document.documentElement;
 
     root.classList.toggle("dark", shouldUseDark);
@@ -34,14 +33,14 @@ const themeInitScript = `
     root.style.colorScheme = shouldUseDark ? "dark" : "light";
     localStorage.setItem(storageKey, theme);
   } catch (error) {
-    document.documentElement.dataset.theme = "system";
+    document.documentElement.dataset.theme = "light";
   }
 })();
 `;
 
-const resolveThemePreference = (value?: string): "system" | "light" | "dark" => {
+const resolveThemePreference = (value?: string): "light" | "dark" => {
   if (value === "light" || value === "dark") return value;
-  return "system";
+  return "light";
 };
 
 export default async function RootLayout({ children }) {
