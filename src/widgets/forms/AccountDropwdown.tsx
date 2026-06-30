@@ -7,6 +7,7 @@ import Avator from "@/core/components/avator/Avator";
 import DefaultList from "@/core/components/nav/DefaultList";
 // 🌟 이제 엔진 대신 '파이프(Context)'를 연결합니다.
 import { useUserContext } from "@/core/providers/UserProvider";
+import { clearPwaAppBadge } from "@/core/utils/pwa/appBadge";
 
 interface Item {
   title: string;
@@ -50,6 +51,8 @@ const AccountDropdown = () => {
 
   const handleSignOut = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    await clearPwaAppBadge();
+    window.dispatchEvent(new Event("refresh-unread"));
     // 로그아웃 시엔 컨텍스트가 리셋되도록 페이지 전체를 새로고침하는 게 안전합니다.
     window.location.href = "/";
   };

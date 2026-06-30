@@ -1,6 +1,7 @@
 "use server";
 
 import { getFirebaseMessaging } from "@/core/utils/firebase/admin";
+import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
 import {
   disablePushTokenQuery,
   disablePushTokensQuery,
@@ -43,6 +44,9 @@ export const registerPushTokenAction = async ({
   platform,
   deviceName,
 }: RegisterPushTokenParams) => {
+  const settings = await getNotificationSettingsRuntimeAction();
+  if (!settings.fcmPushEnabled) return { success: false, skipped: "fcm_push_disabled" };
+
   await upsertPushTokenQuery({
     userId,
     token,
@@ -66,6 +70,9 @@ export const sendPushNotificationAction = async ({
   content,
   linkUrl,
 }: PushNotificationParams) => {
+  const settings = await getNotificationSettingsRuntimeAction();
+  if (!settings.fcmPushEnabled) return { success: false, skipped: "fcm_push_disabled" };
+
   const messaging = getFirebaseMessaging();
   if (!messaging) return { success: false, skipped: "firebase_not_configured" };
 
@@ -92,7 +99,7 @@ export const sendPushNotificationAction = async ({
       android: {
         priority: "high",
         notification: {
-          channelId: "gjworks_notifications",
+          channelId: process.env.FCM_ANDROID_CHANNEL_ID || "default_notifications",
         },
       },
     });

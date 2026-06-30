@@ -7,8 +7,10 @@ import {
   Globe2,
   Image,
   LockKeyhole,
+  RefreshCw,
   Search,
   ShieldCheck,
+  Smartphone,
   Upload,
   UserRound,
 } from "lucide-react";
@@ -35,6 +37,39 @@ type RegistryOption = {
   key: string;
   label: string;
   description: string;
+};
+
+type PwaRuntimeStatus = {
+  pwa: {
+    enabled: boolean;
+    manifest: boolean;
+    serviceWorker: boolean;
+    icons: boolean;
+    secureContext: boolean;
+  };
+  webPush: {
+    enabled: boolean;
+    configured: boolean;
+    publicKey: boolean;
+    privateKey: boolean;
+    subject: string;
+    activeSubscriptions: number;
+  };
+  fcmPush: {
+    enabled: boolean;
+    projectId: boolean;
+    credentials: boolean;
+  };
+};
+
+type BrowserPushState = {
+  checked: boolean;
+  serviceWorker: boolean;
+  pushManager: boolean;
+  notification: boolean;
+  badge: boolean;
+  permission: NotificationPermission | "unsupported";
+  subscribed: boolean;
 };
 
 const sectionMeta: Record<SettingsSection, {
@@ -74,6 +109,27 @@ const selectClass =
 
 const textareaClass =
   "w-full resize-y rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm leading-6 text-gray-700 outline-none transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:placeholder:text-dark-500";
+
+const urlBase64ToUint8Array = (value: string) => {
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(base64);
+  const output = new Uint8Array(raw.length);
+
+  for (let index = 0; index < raw.length; index += 1) {
+    output[index] = raw.charCodeAt(index);
+  }
+
+  return output;
+};
+
+const StatusPill = ({ ok, label }: { ok: boolean; label: string }) => {
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${ok ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-400"}`}>
+      {label}
+    </span>
+  );
+};
 
 const SectionShell = ({
   icon,
@@ -425,6 +481,9 @@ const defaultNotificationSettings: NotificationSettingsData = {
   replyNotificationsEnabled: true,
   adminContentNotificationsEnabled: true,
   forceLogoutNotificationsEnabled: true,
+  pwaEnabled: true,
+  webPushEnabled: true,
+  fcmPushEnabled: true,
   excludeSelfNotifications: true,
   realtimeNotificationsEnabled: true,
   toastNotificationsEnabled: true,
@@ -455,6 +514,17 @@ const Settings = ({
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettingsData>(initialNotificationSettings);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [pwaStatus, setPwaStatus] = useState<PwaRuntimeStatus | null>(null);
+  const [pwaStatusLoading, setPwaStatusLoading] = useState(false);
+  const [browserPushState, setBrowserPushState] = useState<BrowserPushState>({
+    checked: false,
+    serviceWorker: false,
+    pushManager: false,
+    notification: false,
+    badge: false,
+    permission: "unsupported",
+    subscribed: false,
+  });
   const appNameRef = useRef<HTMLInputElement>(null);
   const projectNameRef = useRef<HTMLInputElement>(null);
   const projectTitleRef = useRef<HTMLInputElement>(null);
@@ -479,6 +549,154 @@ const Settings = ({
   const unreadPreviewLimitRef = useRef<HTMLInputElement>(null);
   const historyPageSizeRef = useRef<HTMLInputElement>(null);
   const retentionDaysRef = useRef<HTMLInputElement>(null);
+
+  const refreshBrowserPushState = async () => {
+    if (typeof window === "undefined" || typeof navigator === "undefined") return;
+
+    const serviceWorker = "serviceWorker" in navigator;
+    const pushManager = "PushManager" in window;
+    const notification = "Notification" in window;
+    const badge = "setAppBadge" in navigator || "clearAppBadge" in navigator;
+    let subscribed = false;
+
+    if (serviceWorker && pushManager) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        subscribed = Boolean(subscription);
+      } catch {
+        subscribed = false;
+      }
+    }
+
+    setBrowserPushState({
+      checked: true,
+      serviceWorker,
+      pushManager,
+      notification,
+      badge,
+      permission: notification ? Notification.permission : "unsupported",
+      subscribed,
+    });
+  };
+
+  const refreshPwaStatus = async () => {
+    setPwaStatusLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/settings/notification/pwa-status", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const result = await response.json();
+
+      if (result?.success) {
+        setPwaStatus(result.status);
+      }
+    } catch (error) {
+      console.error("PWA status load failed:", error);
+    } finally {
+      setPwaStatusLoading(false);
+    }
+  };
+
+  const handleEnableWebPush = async () => {
+    setFormMessage(null);
+
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+        setFormMessage({ type: "error", message: "현재 브라우저는 Web Push를 지원하지 않습니다." });
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        await refreshBrowserPushState();
+        setFormMessage({ type: "error", message: "브라우저 알림 권한이 허용되지 않았습니다." });
+        return;
+      }
+
+      const keyResponse = await fetch("/api/web-push/vapid-public-key", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const keyResult = await keyResponse.json();
+
+      if (!keyResponse.ok || !keyResult?.publicKey) {
+        setFormMessage({ type: "error", message: keyResult?.message || "Web Push 공개 키가 설정되지 않았습니다." });
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      const current = await registration.pushManager.getSubscription();
+      const subscription = current || await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(keyResult.publicKey),
+      });
+
+      const saveResponse = await fetch("/api/web-push/subscriptions", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(subscription.toJSON()),
+      });
+      const saveResult = await saveResponse.json();
+
+      if (!saveResponse.ok || !saveResult?.success) {
+        setFormMessage({ type: "error", message: saveResult?.message || "브라우저 푸시 구독 저장에 실패했습니다." });
+        return;
+      }
+
+      await refreshBrowserPushState();
+      await refreshPwaStatus();
+      setFormMessage({ type: "success", message: "현재 브라우저의 Web Push 구독을 등록했습니다." });
+    } catch (error) {
+      console.error("Web Push enable failed:", error);
+      setFormMessage({ type: "error", message: "Web Push 구독 등록 중 오류가 발생했습니다." });
+    }
+  };
+
+  const handleDisableWebPush = async () => {
+    setFormMessage(null);
+
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        await refreshBrowserPushState();
+        return;
+      }
+
+      await fetch("/api/web-push/subscriptions", {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      });
+      await subscription.unsubscribe();
+
+      await refreshBrowserPushState();
+      await refreshPwaStatus();
+      setFormMessage({ type: "success", message: "현재 브라우저의 Web Push 구독을 해제했습니다." });
+    } catch (error) {
+      console.error("Web Push disable failed:", error);
+      setFormMessage({ type: "error", message: "Web Push 구독 해제 중 오류가 발생했습니다." });
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection !== "notification") return;
+
+    refreshPwaStatus();
+    refreshBrowserPushState();
+  }, [activeSection]);
 
   const handleSiteChange = (field: keyof SiteSettingsData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setSiteSettings((prev) => ({
@@ -1432,6 +1650,140 @@ const Settings = ({
                   checked={notificationSettings.showNotificationThumbnails}
                   onChange={handleNotificationToggleChange("showNotificationThumbnails")}
                 />
+              </div>
+            </FieldRow>
+          </SectionShell>
+
+          <SectionShell icon={<Smartphone size={13} />} title="전달 채널" description="설치형 웹앱, 브라우저 푸시, 모바일 앱 푸시를 서비스별로 켜고 끕니다. 키와 secret은 환경변수/서버 secret에서 관리합니다.">
+            <FieldRow label="채널 사용 여부" description="plextype core는 기능 엔진만 제공하고, 실제 서비스에서는 필요한 채널만 활성화합니다.">
+              <div className="grid gap-4 md:grid-cols-3">
+                <UploadTogglePolicy
+                  title="PWA 사용"
+                  description="manifest, service worker, 앱 설치 버튼, 앱 배지 동기화를 사용합니다."
+                  name="pwaEnabled"
+                  checked={notificationSettings.pwaEnabled}
+                  onChange={handleNotificationToggleChange("pwaEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="Web Push 사용"
+                  description="브라우저 구독 등록과 Web Push 발송을 허용합니다. VAPID 키가 필요합니다."
+                  name="webPushEnabled"
+                  checked={notificationSettings.webPushEnabled}
+                  onChange={handleNotificationToggleChange("webPushEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="FCM 모바일 푸시"
+                  description="모바일 앱 토큰 등록과 Firebase 발송을 허용합니다. Firebase secret이 필요합니다."
+                  name="fcmPushEnabled"
+                  checked={notificationSettings.fcmPushEnabled}
+                  onChange={handleNotificationToggleChange("fcmPushEnabled")}
+                />
+              </div>
+            </FieldRow>
+          </SectionShell>
+
+          <SectionShell icon={<Smartphone size={13} />} title="PWA / Web Push" description="설치형 웹앱과 브라우저 푸시가 실제 사용자 환경에서 동작 가능한지 확인합니다.">
+            <FieldRow label="서버 준비 상태" description="배포 환경에서는 HTTPS와 VAPID 키가 모두 준비되어야 브라우저 푸시가 발송됩니다.">
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900 dark:text-dark-50">PWA 리소스</div>
+                      <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-dark-400">매니페스트, 서비스워커, 앱 아이콘 라우트 상태입니다.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={refreshPwaStatus}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 dark:border-dark-700 dark:text-dark-300 dark:hover:bg-dark-800"
+                      aria-label="PWA 상태 새로고침"
+                    >
+                      <RefreshCw size={14} className={pwaStatusLoading ? "animate-spin" : ""} />
+                    </button>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <StatusPill ok={Boolean(pwaStatus?.pwa.enabled)} label="Enabled" />
+                    <StatusPill ok={Boolean(pwaStatus?.pwa.manifest)} label="Manifest" />
+                    <StatusPill ok={Boolean(pwaStatus?.pwa.serviceWorker)} label="Service Worker" />
+                    <StatusPill ok={Boolean(pwaStatus?.pwa.icons)} label="Icons" />
+                    <StatusPill ok={Boolean(pwaStatus?.pwa.secureContext)} label="HTTPS/localhost" />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-dark-50">Web Push 서버</div>
+                    <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-dark-400">VAPID 환경변수와 현재 활성 브라우저 구독 수입니다.</p>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <StatusPill ok={Boolean(pwaStatus?.webPush.enabled)} label="Enabled" />
+                    <StatusPill ok={Boolean(pwaStatus?.webPush.configured)} label="VAPID configured" />
+                    <StatusPill ok={Boolean(pwaStatus?.webPush.publicKey)} label="Public key" />
+                    <StatusPill ok={Boolean(pwaStatus?.webPush.privateKey)} label="Private key" />
+                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-600 dark:bg-dark-800 dark:text-dark-300">
+                      구독 {pwaStatus?.webPush.activeSubscriptions ?? 0}개
+                    </span>
+                  </div>
+                  <p className="mt-3 text-[11px] leading-5 text-gray-400 dark:text-dark-500">
+                    Subject: {pwaStatus?.webPush.subject || "환경변수 확인 전"}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-800 dark:bg-dark-900 lg:col-span-2">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-dark-50">FCM 모바일 푸시</div>
+                    <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-dark-400">Firebase 프로젝트 ID와 Admin SDK secret 연결 상태입니다.</p>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <StatusPill ok={Boolean(pwaStatus?.fcmPush.enabled)} label="Enabled" />
+                    <StatusPill ok={Boolean(pwaStatus?.fcmPush.projectId)} label="Project ID" />
+                    <StatusPill ok={Boolean(pwaStatus?.fcmPush.credentials)} label="Admin SDK secret" />
+                  </div>
+                </div>
+              </div>
+            </FieldRow>
+
+            <FieldRow label="현재 브라우저" description="이 브라우저를 테스트 구독으로 등록해 실제 푸시 수신 준비 상태를 확인합니다.">
+              <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-dark-50">브라우저 푸시 구독</div>
+                    <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-dark-400">
+                      권한: {browserPushState.permission} · 상태: {browserPushState.subscribed ? "구독됨" : "미구독"}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={refreshBrowserPushState}
+                      className="rounded-full border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-dark-700 dark:text-dark-300 dark:hover:bg-dark-800"
+                    >
+                      상태 확인
+                    </button>
+                    {browserPushState.subscribed ? (
+                      <button
+                        type="button"
+                        onClick={handleDisableWebPush}
+                        className="rounded-full bg-gray-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-dark-100"
+                      >
+                        구독 해제
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleEnableWebPush}
+                        className="rounded-full bg-gray-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-dark-100"
+                      >
+                        브라우저 알림 켜기
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <StatusPill ok={browserPushState.serviceWorker} label="Service Worker" />
+                  <StatusPill ok={browserPushState.pushManager} label="Push Manager" />
+                  <StatusPill ok={browserPushState.notification} label="Notification API" />
+                  <StatusPill ok={browserPushState.badge} label="App Badge" />
+                </div>
               </div>
             </FieldRow>
           </SectionShell>

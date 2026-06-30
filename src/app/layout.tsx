@@ -8,11 +8,18 @@ import { ToastContainer } from "@/core/components/toast/toast";
 import RealtimeNotificationListener from "@/core/components/toast/RealtimeNotificationListener";
 import { getSeoMetadata } from "@/core/utils/helper/matadata";
 import UserPreferenceBootstrap from "@/core/providers/UserPreferenceBootstrap";
+import PwaWebPushBootstrap from "@/core/providers/PwaWebPushBootstrap";
 import { cookies } from "next/headers";
+import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
 
 export async function generateMetadata() {
   return getSeoMetadata({});
 }
+
+const APP_THEME_COLORS = {
+  light: "#ffffff",
+  dark: "#070a10",
+} as const;
 
 const themeInitScript = `
 (function () {
@@ -32,6 +39,23 @@ const themeInitScript = `
     root.dataset.theme = theme;
     root.style.colorScheme = shouldUseDark ? "dark" : "light";
     localStorage.setItem(storageKey, theme);
+
+    var themeColor = shouldUseDark ? "${APP_THEME_COLORS.dark}" : "${APP_THEME_COLORS.light}";
+    var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeColorMeta) {
+      themeColorMeta = document.createElement("meta");
+      themeColorMeta.setAttribute("name", "theme-color");
+      document.head.appendChild(themeColorMeta);
+    }
+    themeColorMeta.setAttribute("content", themeColor);
+
+    var tileColorMeta = document.querySelector('meta[name="msapplication-TileColor"]');
+    if (!tileColorMeta) {
+      tileColorMeta = document.createElement("meta");
+      tileColorMeta.setAttribute("name", "msapplication-TileColor");
+      document.head.appendChild(tileColorMeta);
+    }
+    tileColorMeta.setAttribute("content", themeColor);
   } catch (error) {
     document.documentElement.dataset.theme = "light";
   }
@@ -50,6 +74,7 @@ export default async function RootLayout({ children }) {
 
   const cookieStore = await cookies();
   const themePreference = resolveThemePreference(cookieStore.get("userThemePreference")?.value);
+  const notificationSettings = await getNotificationSettingsRuntimeAction();
 
   return (
     <html
@@ -57,12 +82,15 @@ export default async function RootLayout({ children }) {
       data-theme={themePreference}
       className={`${themePreference === "dark" ? "dark " : ""}break-keep selection:bg-black selection:text-white dark:selection:bg-primary-400 dark:selection:text-white`}>
       <head>
+        <meta name="theme-color" content={themePreference === "dark" ? APP_THEME_COLORS.dark : APP_THEME_COLORS.light} />
+        <meta name="msapplication-TileColor" content={themePreference === "dark" ? APP_THEME_COLORS.dark : APP_THEME_COLORS.light} />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
         <ReactQueryProvider>
           <UserProvider>
             <UserPreferenceBootstrap />
+            <PwaWebPushBootstrap enabled={notificationSettings.pwaEnabled} />
             <RealtimeNotificationListener />
 
             {children}

@@ -76,6 +76,7 @@ const ToastItem = ({
         flex items-start gap-3.5 px-4 py-4
         bg-white/90 backdrop-blur-xl border border-zinc-200/50 rounded-[22px]
         shadow-[0_15px_45px_rgba(0,0,0,0.08)]
+        dark:border-dark-800/80 dark:bg-dark-900/92 dark:shadow-[0_18px_48px_rgba(0,0,0,0.34)]
         min-w-[360px] w-max max-w-[440px]
       `}>
         {/* 아이콘/이미지 영역 */}
@@ -84,10 +85,10 @@ const ToastItem = ({
             <img
               src={toast.imageUrl}
               alt="toast-icon"
-              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-black/5"
+              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-black/5 dark:border-white/10"
             />
           ) : (
-            <div className="w-10 h-10 bg-zinc-50 rounded-xl flex items-center justify-center border border-zinc-100 shadow-sm">
+            <div className="w-10 h-10 bg-zinc-50 rounded-xl flex items-center justify-center border border-zinc-100 shadow-sm dark:border-dark-700 dark:bg-dark-800">
               <StatusIcon type={toast.type} />
             </div>
           )}
@@ -95,10 +96,10 @@ const ToastItem = ({
 
         {/* 텍스트 영역 */}
         <div className="flex-1 min-w-0 flex flex-col gap-0.5 pr-2">
-          <div className="text-[14px] font-bold text-zinc-900 tracking-tight leading-tight">
+          <div className="text-[14px] font-bold text-zinc-900 tracking-tight leading-tight dark:text-dark-50">
             {toast.title || "알림"}
           </div>
-          <p className="text-[13px] font-medium text-zinc-500 leading-snug break-words">
+          <p className="text-[13px] font-medium text-zinc-500 leading-snug break-words dark:text-dark-300">
             {toast.message}
           </p>
         </div>
@@ -109,7 +110,7 @@ const ToastItem = ({
             e.stopPropagation(); // 🌟 중요: 닫기 버튼 클릭 시 게시글 이동 방지
             removeToast(toast.id);
           }}
-          className="text-zinc-300 hover:text-zinc-900 p-1 transition-colors pt-0.5"
+          className="text-zinc-300 hover:text-zinc-900 p-1 transition-colors pt-0.5 dark:text-dark-500 dark:hover:text-dark-100"
         >
           <X size={16} strokeWidth={2.5} />
         </button>
@@ -176,7 +177,7 @@ const StatusIcon = ({ type }: { type: any }) => {
     success: <CheckCircle2 size={18} className="text-blue-500 stroke-[2.5px]" />,
     error: <AlertCircle size={18} className="text-red-500 stroke-[2.5px]" />,
     warning: <AlertTriangle size={18} className="text-amber-500 stroke-[2.5px]" />,
-    info: <Info size={18} className="text-zinc-400 stroke-[2.5px]" />,
+    info: <Info size={18} className="text-zinc-400 stroke-[2.5px] dark:text-dark-300" />,
   };
   return icons[type as keyof typeof icons] || icons.info;
 };

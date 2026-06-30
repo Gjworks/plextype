@@ -9,6 +9,7 @@ import Dropdown from '@/core/components/dropdown/Dropdown'
 import Left from '@/core/components/panel/Left'
 import NotificationBell from '@/core/components/bell/bell'
 import { useUserContext } from '@/core/providers/UserProvider'
+import { clearPwaAppBadge } from '@/core/utils/pwa/appBadge'
 import type { AdminBreadcrumbRegistry, AdminMenuItem } from '@/core/registry/adminRegistry'
 
 type AdminLayoutProps = {
@@ -188,6 +189,8 @@ const AdminLayout = ({ children, appName, adminSessionGuard, adminMenus, adminBr
 
   const handleSignOut = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    await clearPwaAppBadge()
+    window.dispatchEvent(new Event('refresh-unread'))
     window.location.href = '/'
   }
 

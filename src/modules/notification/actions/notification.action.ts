@@ -7,6 +7,7 @@ import { getSettingsByKeysQuery } from "@/modules/admin/actions/settings.query";
 import { notificationEvents } from "@/core/utils/trigger/notificationEvents";
 import { findUserPreferenceByUserId } from "@/modules/user/actions/preference.query";
 import { sendPushNotificationAction } from "./push.action";
+import { sendWebPushNotificationAction } from "./web-push.action";
 
 function extractTiptapText(nodes: any[]): string {
   return nodes
@@ -187,6 +188,18 @@ export const dispatchNotificationAction = async (data: any, context?: any) => {
       console.error("sendPushNotificationAction Error:", error);
     });
 
+    sendWebPushNotificationAction({
+      userId: notification.userId,
+      uuid: notification.uuid,
+      type: notification.type,
+      title: notification.title,
+      content: notification.content,
+      linkUrl: notification.linkUrl,
+      imageUrl: notification.imageUrl,
+    }).catch((error) => {
+      console.error("sendWebPushNotificationAction Error:", error);
+    });
+
     return notification;
   } catch (error) {
     console.error("dispatchNotificationAction Error:", error);
@@ -231,6 +244,18 @@ export const createLoginNotificationAction = async ({
       linkUrl: notification.linkUrl,
     }).catch((error) => {
       console.error("sendPushNotificationAction Error:", error);
+    });
+
+    sendWebPushNotificationAction({
+      userId: notification.userId,
+      uuid: notification.uuid,
+      type: notification.type,
+      title: notification.title,
+      content: notification.content,
+      linkUrl: notification.linkUrl,
+      imageUrl: notification.imageUrl,
+    }).catch((error) => {
+      console.error("sendWebPushNotificationAction Error:", error);
     });
 
     return notification;

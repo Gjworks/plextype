@@ -33,6 +33,7 @@ model User {
   Attachment    Attachment[]
   notifications Notification[]
   pushTokens    PushToken[]
+  webPushSubscriptions WebPushSubscription[]
 
   @@index([email_address], map: "idx_user_email")
   @@index([isAdmin], map: "idx_user_isAdmin")
@@ -54,9 +55,6 @@ model UserPreference {
   notifyComments   Boolean  @default(true)
   notifyReplies    Boolean  @default(true)
   notifyAdmin      Boolean  @default(true)
-  showProfileImage Boolean  @default(true)
-  showNickname     Boolean  @default(true)
-  editorCompact    Boolean  @default(true)
   reduceMotion     Boolean  @default(false)
   fontScale         String   @default("normal") @db.VarChar(20)
   createdAt        DateTime @default(now())
@@ -293,6 +291,24 @@ model PushToken {
 
   @@index([userId], map: "idx_push_token_user")
   @@index([isActive], map: "idx_push_token_active")
+}
+
+model WebPushSubscription {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint     String   @unique @db.Text
+  p256dh       String?  @db.Text
+  auth         String?  @db.Text
+  userAgent    String?  @db.Text
+  isActive     Boolean  @default(true)
+  failureCount Int      @default(0)
+  lastSeenAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId], map: "idx_web_push_subscription_user")
+  @@index([isActive], map: "idx_web_push_subscription_active")
 }
 
 model AppSetting {
