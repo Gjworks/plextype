@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { useUserContext } from "@/core/providers/UserProvider";
+import { syncThemeColorMeta } from "@/core/utils/theme/themeColor";
 
 type ThemePreference = "light" | "dark";
 
@@ -18,6 +19,7 @@ const applyTheme = (theme: ThemePreference) => {
   document.documentElement.classList.toggle("dark", shouldUseDark);
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = shouldUseDark ? "dark" : "light";
+  syncThemeColorMeta(shouldUseDark ? "dark" : "light");
   writeThemeCookie(theme);
 };
 

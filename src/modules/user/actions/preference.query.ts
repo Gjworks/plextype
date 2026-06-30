@@ -8,9 +8,6 @@ export type UserPreferenceData = {
   notifyComments: boolean;
   notifyReplies: boolean;
   notifyAdmin: boolean;
-  showProfileImage: boolean;
-  showNickname: boolean;
-  editorCompact: boolean;
   reduceMotion: boolean;
   fontScale: UserFontScalePreference;
 };
@@ -20,9 +17,6 @@ export const DEFAULT_USER_PREFERENCE: UserPreferenceData = {
   notifyComments: true,
   notifyReplies: true,
   notifyAdmin: true,
-  showProfileImage: true,
-  showNickname: true,
-  editorCompact: true,
   reduceMotion: false,
   fontScale: "normal",
 };
@@ -44,9 +38,6 @@ const ensureUserPreferenceTable = async () => {
       "notifyComments" BOOLEAN NOT NULL DEFAULT true,
       "notifyReplies" BOOLEAN NOT NULL DEFAULT true,
       "notifyAdmin" BOOLEAN NOT NULL DEFAULT true,
-      "showProfileImage" BOOLEAN NOT NULL DEFAULT true,
-      "showNickname" BOOLEAN NOT NULL DEFAULT true,
-      "editorCompact" BOOLEAN NOT NULL DEFAULT true,
       "reduceMotion" BOOLEAN NOT NULL DEFAULT false,
       "fontScale" VARCHAR(20) NOT NULL DEFAULT 'normal',
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -91,9 +82,6 @@ export async function findUserPreferenceByUserId(userId: number): Promise<UserPr
         "notifyComments",
         "notifyReplies",
         "notifyAdmin",
-        "showProfileImage",
-        "showNickname",
-        "editorCompact",
         "reduceMotion",
         "fontScale"
       FROM "UserPreference"
@@ -117,9 +105,6 @@ export async function upsertUserPreference(userId: number, data: UserPreferenceD
       "notifyComments",
       "notifyReplies",
       "notifyAdmin",
-      "showProfileImage",
-      "showNickname",
-      "editorCompact",
       "reduceMotion",
       "fontScale",
       "updatedAt"
@@ -130,9 +115,6 @@ export async function upsertUserPreference(userId: number, data: UserPreferenceD
       ${data.notifyComments},
       ${data.notifyReplies},
       ${data.notifyAdmin},
-      ${data.showProfileImage},
-      ${data.showNickname},
-      ${data.editorCompact},
       ${data.reduceMotion},
       ${data.fontScale},
       NOW()
@@ -143,9 +125,6 @@ export async function upsertUserPreference(userId: number, data: UserPreferenceD
       "notifyComments" = EXCLUDED."notifyComments",
       "notifyReplies" = EXCLUDED."notifyReplies",
       "notifyAdmin" = EXCLUDED."notifyAdmin",
-      "showProfileImage" = EXCLUDED."showProfileImage",
-      "showNickname" = EXCLUDED."showNickname",
-      "editorCompact" = EXCLUDED."editorCompact",
       "reduceMotion" = EXCLUDED."reduceMotion",
       "fontScale" = EXCLUDED."fontScale",
       "updatedAt" = NOW()
@@ -154,9 +133,6 @@ export async function upsertUserPreference(userId: number, data: UserPreferenceD
       "notifyComments",
       "notifyReplies",
       "notifyAdmin",
-      "showProfileImage",
-      "showNickname",
-      "editorCompact",
       "reduceMotion",
       "fontScale"
   `;

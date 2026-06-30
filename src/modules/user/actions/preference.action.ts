@@ -57,9 +57,6 @@ export async function saveMyPreferenceAction(formData: FormData): Promise<Action
     notifyComments: readBoolean(formData, "notifyComments"),
     notifyReplies: readBoolean(formData, "notifyReplies"),
     notifyAdmin: readBoolean(formData, "notifyAdmin"),
-    showProfileImage: readBoolean(formData, "showProfileImage"),
-    showNickname: readBoolean(formData, "showNickname"),
-    editorCompact: readBoolean(formData, "editorCompact"),
     reduceMotion: readBoolean(formData, "reduceMotion"),
     fontScale: fontScaleOptions.includes(fontScale) ? fontScale : DEFAULT_USER_PREFERENCE.fontScale,
   };
