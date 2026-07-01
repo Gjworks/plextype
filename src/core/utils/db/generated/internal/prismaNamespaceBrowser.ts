@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Profile: 'Profile',
+  UserPreference: 'UserPreference',
   UserGroup: 'UserGroup',
   UserGroupUser: 'UserGroupUser',
   Document: 'Document',
@@ -64,6 +65,8 @@ export const ModelName = {
   DocumentViewLog: 'DocumentViewLog',
   Attachment: 'Attachment',
   Notification: 'Notification',
+  PushToken: 'PushToken',
+  WebPushSubscription: 'WebPushSubscription',
   AppSetting: 'AppSetting',
   SiteNavigationGroup: 'SiteNavigationGroup',
   SiteNavigation: 'SiteNavigation'
@@ -113,6 +116,22 @@ export const ProfileScalarFieldEnum = {
 } as const
 
 export type ProfileScalarFieldEnum = (typeof ProfileScalarFieldEnum)[keyof typeof ProfileScalarFieldEnum]
+
+
+export const UserPreferenceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  theme: 'theme',
+  notifyComments: 'notifyComments',
+  notifyReplies: 'notifyReplies',
+  notifyAdmin: 'notifyAdmin',
+  reduceMotion: 'reduceMotion',
+  fontScale: 'fontScale',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserPreferenceScalarFieldEnum = (typeof UserPreferenceScalarFieldEnum)[keyof typeof UserPreferenceScalarFieldEnum]
 
 
 export const UserGroupScalarFieldEnum = {
@@ -292,6 +311,38 @@ export const NotificationScalarFieldEnum = {
 } as const
 
 export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+export const PushTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  token: 'token',
+  platform: 'platform',
+  deviceName: 'deviceName',
+  isActive: 'isActive',
+  lastSeenAt: 'lastSeenAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PushTokenScalarFieldEnum = (typeof PushTokenScalarFieldEnum)[keyof typeof PushTokenScalarFieldEnum]
+
+
+export const WebPushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  userAgent: 'userAgent',
+  isActive: 'isActive',
+  failureCount: 'failureCount',
+  lastSeenAt: 'lastSeenAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebPushSubscriptionScalarFieldEnum = (typeof WebPushSubscriptionScalarFieldEnum)[keyof typeof WebPushSubscriptionScalarFieldEnum]
 
 
 export const AppSettingScalarFieldEnum = {

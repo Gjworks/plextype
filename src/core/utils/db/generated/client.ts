@@ -52,6 +52,11 @@ export type User = Prisma.UserModel
  */
 export type Profile = Prisma.ProfileModel
 /**
+ * Model UserPreference
+ * 
+ */
+export type UserPreference = Prisma.UserPreferenceModel
+/**
  * Model UserGroup
  * 
  */
@@ -106,6 +111,16 @@ export type Attachment = Prisma.AttachmentModel
  * 
  */
 export type Notification = Prisma.NotificationModel
+/**
+ * Model PushToken
+ * 
+ */
+export type PushToken = Prisma.PushTokenModel
+/**
+ * Model WebPushSubscription
+ * 
+ */
+export type WebPushSubscription = Prisma.WebPushSubscriptionModel
 /**
  * Model AppSetting
  * 
