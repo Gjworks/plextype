@@ -82,6 +82,12 @@ export default async function RootLayout({ children }) {
       data-theme={themePreference}
       className={`${themePreference === "dark" ? "dark " : ""}break-keep selection:bg-black selection:text-white dark:selection:bg-primary-400 dark:selection:text-white`}>
       <head>
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="gjworks" />
+        <meta name="apple-mobile-web-app-status-bar-style" content={themePreference === "dark" ? "black-translucent" : "default"} />
         <meta name="theme-color" content={themePreference === "dark" ? APP_THEME_COLORS.dark : APP_THEME_COLORS.light} />
         <meta name="msapplication-TileColor" content={themePreference === "dark" ? APP_THEME_COLORS.dark : APP_THEME_COLORS.light} />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

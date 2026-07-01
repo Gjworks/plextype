@@ -32,8 +32,6 @@ const PwaInstallButton = ({ className = "" }: { className?: string }) => {
   }, []);
 
   useEffect(() => {
-    if (!enabled) return;
-
     const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
     if (standalone) {
       setInstalled(true);
@@ -57,7 +55,7 @@ const PwaInstallButton = ({ className = "" }: { className?: string }) => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
-  }, [enabled]);
+  }, []);
 
   const handleInstall = async () => {
     if (!promptEvent) {

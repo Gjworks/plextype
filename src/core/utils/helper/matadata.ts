@@ -40,6 +40,7 @@ export async function getSeoMetadata({
     metadataBase: new URL(baseUrl),
     title: fullTitle,
     description: metaDescription,
+    manifest: "/manifest.webmanifest",
     keywords,
     alternates: {
       canonical: fullUrl,
