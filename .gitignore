@@ -56,7 +56,6 @@ package-lock.json
 /files
 /storage
 /src/extensions/ollama/
-/src/app/(extensions)/
 
 Dockerfile
 .dockerignore
