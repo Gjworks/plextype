@@ -53,6 +53,10 @@
         "./src/extensions/postCapabilities.ts",
         "./src/core/registry/defaultPostCapabilities.ts"
       ],
+      "@extensions/searchProviders": [
+        "./src/extensions/searchProviders.ts",
+        "./src/core/search/defaultExtensionProviders.ts"
+      ],
       "@extensions/*": [
         "./src/extensions/*"
       ],

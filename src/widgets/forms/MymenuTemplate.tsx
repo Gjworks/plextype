@@ -154,12 +154,12 @@ const MymenuTemplate = () => {
                   const displayItems = isExpanded ? items : [items[0]];
 
                   return (
-                    <div key={groupKey} className="relative">
+                    <div key={groupKey} className="relative isolate">
                       {/* 🌟 3. 스택 효과 디자인 (겹쳐 보이기) */}
                       {!isExpanded && items.length > 1 && (
                         <>
-                          <div className="absolute -bottom-1.5 left-3 right-3 h-12 bg-gray-50 dark:bg-white/5 border border-white/60 shadow-sm rounded-[24px] -z-1 scale-[0.97] blur-[0.5px]" />
-                          <div className="absolute -bottom-3 left-6 right-6 h-12 bg-gray-100 dark:bg-white/5 border border-white/40 shadow-sm rounded-[24px] -z-10 scale-[0.94] blur-[0.2px]" />
+                          <div className="pointer-events-none absolute -bottom-2.5 left-3 right-3 -z-10 h-12 scale-[0.97] rounded-[24px] border border-gray-200/70 bg-gray-50 shadow-sm blur-[0.5px] dark:border-white/[0.09] dark:bg-[#15171a] dark:shadow-[0_8px_20px_rgba(0,0,0,0.55)] dark:blur-[0.8px]" />
+                          <div className="pointer-events-none absolute -bottom-5 left-6 right-6 -z-20 h-12 scale-[0.94] rounded-[24px] border border-gray-200/50 bg-gray-100 shadow-sm blur-[0.2px] dark:border-white/[0.06] dark:bg-[#101215] dark:shadow-[0_12px_26px_rgba(0,0,0,0.65)] dark:blur-[1.2px]" />
                           {/*<div className="absolute -bottom-3 left-6 right-6 h-12 bg-white/10 dark:bg-white/5 border border-white/10 -z-20 scale-[0.94] blur-[1px]" />*/}
                         </>
                       )}
@@ -184,7 +184,7 @@ const MymenuTemplate = () => {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
-                                className="group relative bg-white dark:bg-white/5 backdrop-blur-xl border border-white/80 dark:border-white/10 rounded-[24px] p-4 shadow-md hover:shadow-md transition-all active:scale-[0.99] cursor-pointer"
+                                className="group relative z-0 bg-white dark:bg-[#181a1d] backdrop-blur-xl border border-white/80 dark:border-white/[0.1] rounded-[24px] p-4 shadow-md shadow-gray-950/5 dark:shadow-[0_16px_34px_rgba(0,0,0,0.42)] hover:shadow-md transition-all active:scale-[0.99] cursor-pointer"
                               >
                                 <div className="flex gap-4" onClick={() => isExpanded ? null : toggleGroup(groupKey)}>
                                   <div className="shrink-0">

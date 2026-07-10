@@ -7,7 +7,7 @@ import type { Variants } from "framer-motion";
 import { X } from "lucide-react";
 import BottomPortal from "@/core/components/panel/BottomPortal";
 
-const Bottom = ({ children, closeHref }: { children: React.ReactNode; closeHref?: string }) => {
+const Bottom = ({ children, closeHref, onClose }: { children: React.ReactNode; closeHref?: string; onClose?: () => void }) => {
   const router = useRouter();
   const [panelState, setPanelState] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -63,13 +63,18 @@ const Bottom = ({ children, closeHref }: { children: React.ReactNode; closeHref?
   };
 
   const goBack = useCallback(() => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+
     if (closeHref) {
       router.push(closeHref);
       return;
     }
 
     router.back();
-  }, [closeHref, router]);
+  }, [closeHref, onClose, router]);
 
   const handleClosePanel = useCallback(() => {
     setPanelState(false);

@@ -36,6 +36,8 @@ const AccountDropdown = () => {
 
   const userNav: Array<Item> = [
     { title: "내 정보", name: "user", route: "/user" },
+    { title: "나의 스토어", name: "my-store", route: "/user/store" },
+    { title: "서비스 관리", name: "service", route: "/service" },
     { title: "개인 설정", name: "preferences", route: "/user/preferences" },
     {
       title: "관리자",

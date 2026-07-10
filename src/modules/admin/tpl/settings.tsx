@@ -15,12 +15,12 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { AuthSettingsData, NotificationSettingsData, SeoSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
-import { updateAuthSettingsAdminAction, updateNotificationSettingsAdminAction, updateSeoSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
+import { AuthSettingsData, NotificationSettingsData, SearchSettingsData, SeoSettingsData, SiteSettingsData, UploadSettingsData } from "@/modules/admin/actions/_type";
+import { updateAuthSettingsAdminAction, updateNotificationSettingsAdminAction, updateSearchSettingsAdminAction, updateSeoSettingsAdminAction, updateSiteSettingsAdminAction, updateUploadSettingsAdminAction } from "@/modules/admin/actions/settings.action";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 
-type SettingsSection = "site" | "seo" | "auth" | "upload" | "notification";
+type SettingsSection = "site" | "seo" | "auth" | "upload" | "notification" | "search";
 
 type SettingsProps = {
   section?: SettingsSection;
@@ -29,6 +29,7 @@ type SettingsProps = {
   initialAuthSettings?: AuthSettingsData;
   initialSeoSettings?: SeoSettingsData;
   initialNotificationSettings?: NotificationSettingsData;
+  initialSearchSettings?: SearchSettingsData;
   adminLayoutOptions?: RegistryOption[];
   userLayoutOptions?: RegistryOption[];
 };
@@ -101,6 +102,11 @@ const sectionMeta: Record<SettingsSection, {
     label: "알림 설정",
     eyebrow: "Signal",
     description: "댓글, 답글, 실시간 알림의 기본 정책입니다.",
+  },
+  search: {
+    label: "통합검색 설정",
+    eyebrow: "Search",
+    description: "검색 대상, 민감 정보 노출, 확장 모듈 연동 정책을 관리합니다.",
   },
 };
 
@@ -493,6 +499,18 @@ const defaultNotificationSettings: NotificationSettingsData = {
   retentionDays: 90,
 };
 
+const defaultSearchSettings: SearchSettingsData = {
+  integratedSearchEnabled: true,
+  documentSearchEnabled: true,
+  commentSearchEnabled: true,
+  attachmentSearchEnabled: true,
+  userSearchEnabled: false,
+  extensionSearchEnabled: true,
+  includeUserEmail: false,
+  defaultResultLimit: 6,
+  minSearchLength: 2,
+};
+
 const Settings = ({
   section = "site",
   initialSiteSettings = defaultSiteSettings,
@@ -500,6 +518,7 @@ const Settings = ({
   initialAuthSettings = defaultAuthSettings,
   initialSeoSettings = defaultSeoSettings,
   initialNotificationSettings = defaultNotificationSettings,
+  initialSearchSettings = defaultSearchSettings,
   adminLayoutOptions = defaultAdminLayoutOptions,
   userLayoutOptions = defaultUserLayoutOptions,
 }: SettingsProps) => {
@@ -512,6 +531,7 @@ const Settings = ({
   const [authSettings, setAuthSettings] = useState<AuthSettingsData>(initialAuthSettings);
   const [seoSettings, setSeoSettings] = useState<SeoSettingsData>(initialSeoSettings);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettingsData>(initialNotificationSettings);
+  const [searchSettings, setSearchSettings] = useState<SearchSettingsData>(initialSearchSettings);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [pwaStatus, setPwaStatus] = useState<PwaRuntimeStatus | null>(null);
@@ -549,6 +569,8 @@ const Settings = ({
   const unreadPreviewLimitRef = useRef<HTMLInputElement>(null);
   const historyPageSizeRef = useRef<HTMLInputElement>(null);
   const retentionDaysRef = useRef<HTMLInputElement>(null);
+  const defaultResultLimitRef = useRef<HTMLInputElement>(null);
+  const minSearchLengthRef = useRef<HTMLInputElement>(null);
 
   const refreshBrowserPushState = async () => {
     if (typeof window === "undefined" || typeof navigator === "undefined") return;
@@ -770,6 +792,20 @@ const Settings = ({
     }));
   };
 
+  const handleSearchInputChange = (field: keyof SearchSettingsData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchSettings((prev) => ({
+      ...prev,
+      [field]: Number(e.target.value),
+    }));
+  };
+
+  const handleSearchToggleChange = (field: keyof SearchSettingsData) => (checked: boolean) => {
+    setSearchSettings((prev) => ({
+      ...prev,
+      [field]: checked,
+    }));
+  };
+
   const resetSiteSettings = () => {
     setFieldErrors(null);
     setFormMessage(null);
@@ -802,6 +838,12 @@ const Settings = ({
     setFieldErrors(null);
     setFormMessage(null);
     setNotificationSettings(initialNotificationSettings);
+  };
+
+  const resetSearchSettings = () => {
+    setFieldErrors(null);
+    setFormMessage(null);
+    setSearchSettings(initialSearchSettings);
   };
 
   const handleSiteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -986,8 +1028,35 @@ const Settings = ({
     });
   };
 
-  const handleSubmit = activeSection === "site" ? handleSiteSubmit : activeSection === "upload" ? handleUploadSubmit : activeSection === "auth" ? handleAuthSubmit : activeSection === "seo" ? handleSeoSubmit : activeSection === "notification" ? handleNotificationSubmit : undefined;
-  const handleReset = activeSection === "site" ? resetSiteSettings : activeSection === "upload" ? resetUploadSettings : activeSection === "auth" ? resetAuthSettings : activeSection === "seo" ? resetSeoSettings : activeSection === "notification" ? resetNotificationSettings : undefined;
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFieldErrors(null);
+    setFormMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const result = await updateSearchSettingsAdminAction(formData);
+
+      if (!result.success) {
+        if (result.fieldErrors) {
+          setFieldErrors(result.fieldErrors);
+
+          if (result.fieldErrors.defaultResultLimit) defaultResultLimitRef.current?.focus();
+          else if (result.fieldErrors.minSearchLength) minSearchLengthRef.current?.focus();
+        } else {
+          setFormMessage({ type: "error", message: result.message });
+        }
+        return;
+      }
+
+      if (result.data) setSearchSettings(result.data);
+      setFormMessage({ type: "success", message: result.message });
+    });
+  };
+
+  const handleSubmit = activeSection === "site" ? handleSiteSubmit : activeSection === "upload" ? handleUploadSubmit : activeSection === "auth" ? handleAuthSubmit : activeSection === "seo" ? handleSeoSubmit : activeSection === "notification" ? handleNotificationSubmit : activeSection === "search" ? handleSearchSubmit : undefined;
+  const handleReset = activeSection === "site" ? resetSiteSettings : activeSection === "upload" ? resetUploadSettings : activeSection === "auth" ? resetAuthSettings : activeSection === "seo" ? resetSeoSettings : activeSection === "notification" ? resetNotificationSettings : activeSection === "search" ? resetSearchSettings : undefined;
 
   return (
     <form className="max-w-screen-2xl mx-auto px-3 py-10 dark:text-dark-100" onSubmit={handleSubmit}>
@@ -1823,6 +1892,99 @@ const Settings = ({
                   onChange={handleNotificationInputChange("retentionDays")}
                   error={fieldErrors?.retentionDays}
                   placeholder="90"
+                />
+              </div>
+            </FieldRow>
+          </SectionShell>
+        </>
+      )}
+
+      {activeSection === "search" && (
+        <>
+          <SectionShell icon={<Search size={13} />} title="통합검색 엔진" description="헤더 검색 오버레이와 /api/search에서 사용할 기본 동작을 정합니다.">
+            <FieldRow label="기본 동작" description="통합검색을 끄면 검색 API는 빈 결과를 반환합니다. 최소 검색어 길이는 너무 짧게 잡으면 DB 부하가 커질 수 있습니다.">
+              <div className="grid gap-4 md:grid-cols-3">
+                <UploadTogglePolicy
+                  title="통합검색 사용"
+                  description="헤더 검색과 /api/search 결과 생성을 허용합니다."
+                  name="integratedSearchEnabled"
+                  checked={searchSettings.integratedSearchEnabled}
+                  onChange={handleSearchToggleChange("integratedSearchEnabled")}
+                />
+                <UploadNumberField
+                  refObject={minSearchLengthRef}
+                  title="최소 검색어"
+                  description="이 글자 수 이상일 때만 검색을 실행합니다."
+                  unit="자"
+                  name="minSearchLength"
+                  value={searchSettings.minSearchLength}
+                  onChange={handleSearchInputChange("minSearchLength")}
+                  error={fieldErrors?.minSearchLength}
+                  placeholder="2"
+                />
+                <UploadNumberField
+                  refObject={defaultResultLimitRef}
+                  title="그룹별 결과"
+                  description="각 검색 그룹이 기본으로 가져올 결과 수입니다."
+                  unit="개"
+                  name="defaultResultLimit"
+                  value={searchSettings.defaultResultLimit}
+                  onChange={handleSearchInputChange("defaultResultLimit")}
+                  error={fieldErrors?.defaultResultLimit}
+                  placeholder="6"
+                />
+              </div>
+            </FieldRow>
+          </SectionShell>
+
+          <SectionShell icon={<Search size={13} />} title="검색 대상" description="문서, 댓글, 첨부파일, 회원 검색을 서비스 정책에 맞게 켜고 끕니다.">
+            <FieldRow label="Core provider" description="기본 모듈에서 제공하는 검색 대상입니다. 회원 검색은 개인정보 노출 가능성이 있어 기본값은 꺼져 있습니다.">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <UploadTogglePolicy
+                  title="문서"
+                  description="게시글 제목과 본문을 검색합니다. 비밀글은 제외됩니다."
+                  name="documentSearchEnabled"
+                  checked={searchSettings.documentSearchEnabled}
+                  onChange={handleSearchToggleChange("documentSearchEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="댓글"
+                  description="댓글 내용을 검색합니다. 삭제/비밀 댓글은 제외됩니다."
+                  name="commentSearchEnabled"
+                  checked={searchSettings.commentSearchEnabled}
+                  onChange={handleSearchToggleChange("commentSearchEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="첨부파일"
+                  description="원본 파일명, 저장 파일명, MIME 타입을 검색합니다."
+                  name="attachmentSearchEnabled"
+                  checked={searchSettings.attachmentSearchEnabled}
+                  onChange={handleSearchToggleChange("attachmentSearchEnabled")}
+                />
+                <UploadTogglePolicy
+                  title="회원"
+                  description="닉네임과 이메일 기준으로 회원을 검색합니다. 공개 서비스에서는 신중히 사용합니다."
+                  name="userSearchEnabled"
+                  checked={searchSettings.userSearchEnabled}
+                  onChange={handleSearchToggleChange("userSearchEnabled")}
+                />
+              </div>
+            </FieldRow>
+            <FieldRow label="민감 정보" description="회원 검색을 켠 경우에도 결과에 어떤 정보를 보여줄지 별도로 제한합니다.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <UploadTogglePolicy
+                  title="회원 이메일 노출"
+                  description="회원 검색 결과 카드에 이메일을 표시합니다. 끄면 검색 조건에는 사용하더라도 결과에는 숨깁니다."
+                  name="includeUserEmail"
+                  checked={searchSettings.includeUserEmail}
+                  onChange={handleSearchToggleChange("includeUserEmail")}
+                />
+                <UploadTogglePolicy
+                  title="확장 모듈 검색"
+                  description="extensions에서 등록한 search provider를 통합검색 결과에 포함합니다."
+                  name="extensionSearchEnabled"
+                  checked={searchSettings.extensionSearchEnabled}
+                  onChange={handleSearchToggleChange("extensionSearchEnabled")}
                 />
               </div>
             </FieldRow>

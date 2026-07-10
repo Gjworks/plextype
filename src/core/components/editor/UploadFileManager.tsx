@@ -15,6 +15,12 @@ interface Attachment {
 interface UploadFileManagerProps {
   onUploadSuccess: () => void;
   onFileClick: (file: any) => void;
+  onFileDelete?: (file?: Attachment) => void;
+  multiple?: boolean;
+  maxFiles?: number;
+  currentFileCount?: number;
+  imageOnly?: boolean;
+  accept?: string;
 }
 
 interface UploadFileStatus {
@@ -27,6 +33,12 @@ interface UploadFileStatus {
 export default function UploadFileManager({
                                             onUploadSuccess,
                                             onFileClick,
+                                            onFileDelete,
+                                            multiple = true,
+                                            maxFiles,
+                                            currentFileCount = 0,
+                                            imageOnly = false,
+                                            accept,
                                           }: UploadFileManagerProps) {
   const [files, setFiles] = useState<UploadFileStatus[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -37,8 +49,10 @@ export default function UploadFileManager({
 
   // 파일 업로드 처리
   const handleFiles = async (selectedFiles: FileList) => {
-    const allowedExts = ["png", "jpg", "jpeg", "gif", "mp3", "mp4", "avif", "webm", "webp", "mov", "ogg", "zip"];
-    const allowedMimeTypes = [
+    const imageExts = ["png", "jpg", "jpeg", "gif", "avif", "webp"];
+    const imageMimeTypes = ["image/png", "image/jpeg", "image/gif", "image/avif", "image/webp"];
+    const allowedExts = imageOnly ? imageExts : [...imageExts, "mp3", "mp4", "webm", "mov", "ogg", "zip"];
+    const allowedMimeTypes = imageOnly ? imageMimeTypes : [
       "image/png", "image/jpeg", "image/gif", "image/avif", "image/webp",
       "audio/mpeg", "audio/ogg",
       "video/mp4", "video/webm", "video/quicktime",
@@ -54,13 +68,25 @@ export default function UploadFileManager({
 
     if (validFiles.length === 0) return;
 
-    const newFiles: UploadFileStatus[] = validFiles.map((file) => ({
+    const remaining = typeof maxFiles === "number" ? Math.max(maxFiles - currentFileCount, 0) : validFiles.length;
+    const uploadableFiles = (multiple ? validFiles : validFiles.slice(0, 1)).slice(0, remaining);
+
+    if (uploadableFiles.length === 0) {
+      setErrorData({ message: `최대 ${maxFiles}개까지 업로드할 수 있습니다.`, type: "error" });
+      return;
+    }
+
+    if (uploadableFiles.length < validFiles.length) {
+      setErrorData({ message: multiple ? `최대 ${maxFiles}개까지만 업로드됩니다.` : "1개 파일만 업로드할 수 있습니다.", type: "error" });
+    }
+
+    const newFiles: UploadFileStatus[] = uploadableFiles.map((file) => ({
       file,
       progress: 0,
       status: "uploading",
     }));
 
-    setFiles((prev) => [...prev, ...newFiles]);
+    setFiles((prev) => (multiple ? [...prev, ...newFiles] : newFiles));
 
     for (const fileStatus of newFiles) {
       // 진행률 가짜 애니메이션 (필요시 그대로 유지)
@@ -145,9 +171,6 @@ export default function UploadFileManager({
 
   // 파일 삭제
   const handleDelete = async (fileStatus: UploadFileStatus) => {
-    const confirmed = confirm("파일을 삭제하시겠습니까?");
-    if (!confirmed) return;
-
     if (fileStatus.uploadedAttachment) {
       const res = await fetch(
         `/api/attachments?fileId=${fileStatus.uploadedAttachment.id}`,
@@ -160,12 +183,13 @@ export default function UploadFileManager({
     }
 
     setFiles((prev) => prev.filter((f) => f !== fileStatus));
+    onFileDelete?.(fileStatus.uploadedAttachment);
   };
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <div
-        className={`mb-8 cursor-pointer rounded-xl border border-dashed p-8 text-center transition-colors ${
+        className={`mb-8 min-w-0 cursor-pointer rounded-xl border border-dashed p-5 text-center transition-colors sm:p-8 ${
           isDragging
             ? "border-gray-500 bg-gray-100 dark:border-dark-500 dark:bg-dark-800"
             : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100 dark:border-dark-700 dark:bg-dark-900 dark:hover:border-dark-500 dark:hover:bg-dark-800"
@@ -192,10 +216,10 @@ export default function UploadFileManager({
       {files.length > 0 && (
         <div className="space-y-2 mt-4">
           {files.map((f, idx) => (
-            <div key={idx} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-dark-700 dark:bg-dark-900">
-              <div className="flex-1 mr-4">
-                <div className="flex justify-between mb-1">
-                  <span className="max-w-[200px] truncate text-xs font-medium text-gray-700 dark:text-dark-200">{f.file.name}</span>
+            <div key={idx} className="flex min-w-0 items-center justify-between rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+              <div className="mr-3 min-w-0 flex-1 sm:mr-4">
+                <div className="mb-1 flex min-w-0 justify-between gap-2">
+                  <span className="min-w-0 flex-1 truncate text-xs font-medium text-gray-700 dark:text-dark-200">{f.file.name}</span>
                   <span className="text-[10px] text-gray-400 dark:text-dark-400">{f.progress}%</span>
                 </div>
                 {/* 프로그레스 바 */}
@@ -207,6 +231,7 @@ export default function UploadFileManager({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); handleDelete(f); }}
                 className="text-gray-400 hover:text-red-500 dark:text-dark-400 dark:hover:text-red-400"
               >
@@ -220,7 +245,8 @@ export default function UploadFileManager({
       <input
         ref={inputRef}
         type="file"
-        multiple
+        multiple={multiple}
+        accept={accept}
         onChange={handleInputChange}
         className="hidden"
       />

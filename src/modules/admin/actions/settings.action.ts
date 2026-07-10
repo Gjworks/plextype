@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import path from "path";
 import { getUserSessionAction } from "@/modules/user/actions/user.action";
 import { validateForm } from "@utils/validation/formValidator";
-import { ActionState, AuthSettingsData, AuthSettingsSchema, NotificationSettingsData, NotificationSettingsSchema, SeoSettingsData, SeoSettingsSchema, SiteSettingsData, SiteSettingsSchema, UploadSettingsData, UploadSettingsSchema } from "./_type";
+import { ActionState, AuthSettingsData, AuthSettingsSchema, NotificationSettingsData, NotificationSettingsSchema, SearchSettingsData, SearchSettingsSchema, SeoSettingsData, SeoSettingsSchema, SiteSettingsData, SiteSettingsSchema, UploadSettingsData, UploadSettingsSchema } from "./_type";
 import { getPublicPageSitemapEntriesQuery, getPublicPostSitemapEntriesQuery, getSettingsByKeysQuery, SettingSeed, upsertSettingsQuery } from "./settings.query";
 import redisClient from "@utils/redis/redis";
 import { v4 as uuidv4 } from "uuid";
@@ -23,6 +23,7 @@ const SITE_SETTINGS_CACHE_KEY = "app:settings:site";
 const UPLOAD_SETTINGS_CACHE_KEY = "app:settings:upload";
 const SEO_SETTINGS_CACHE_KEY = "app:settings:seo";
 const NOTIFICATION_SETTINGS_CACHE_KEY = "app:settings:notification";
+const SEARCH_SETTINGS_CACHE_KEY = "app:settings:search";
 const SITE_SETTINGS_CACHE_TTL = 60 * 60 * 24;
 const SITE_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
 const SITE_IMAGE_ALLOWED_EXTS = new Set([".png", ".jpg", ".jpeg", ".gif", ".avif", ".webp", ".ico"]);
@@ -348,6 +349,65 @@ const NOTIFICATION_SETTING_META = {
 
 const NOTIFICATION_SETTING_KEYS = Object.values(NOTIFICATION_SETTING_META).map((item) => item.key);
 
+const SEARCH_SETTING_META = {
+  integratedSearchEnabled: {
+    key: "search.integratedSearchEnabled",
+    label: "통합검색 사용",
+    fallback: "true",
+    isPublic: true,
+  },
+  documentSearchEnabled: {
+    key: "search.documentSearchEnabled",
+    label: "문서 검색",
+    fallback: "true",
+    isPublic: true,
+  },
+  commentSearchEnabled: {
+    key: "search.commentSearchEnabled",
+    label: "댓글 검색",
+    fallback: "true",
+    isPublic: true,
+  },
+  attachmentSearchEnabled: {
+    key: "search.attachmentSearchEnabled",
+    label: "첨부파일 검색",
+    fallback: "true",
+    isPublic: true,
+  },
+  userSearchEnabled: {
+    key: "search.userSearchEnabled",
+    label: "회원 검색",
+    fallback: "false",
+    isPublic: false,
+  },
+  extensionSearchEnabled: {
+    key: "search.extensionSearchEnabled",
+    label: "확장 모듈 검색",
+    fallback: "true",
+    isPublic: false,
+  },
+  includeUserEmail: {
+    key: "search.includeUserEmail",
+    label: "회원 이메일 노출",
+    fallback: "false",
+    isPublic: false,
+  },
+  defaultResultLimit: {
+    key: "search.defaultResultLimit",
+    label: "그룹별 결과 수",
+    fallback: "6",
+    isPublic: true,
+  },
+  minSearchLength: {
+    key: "search.minSearchLength",
+    label: "최소 검색어 길이",
+    fallback: "2",
+    isPublic: true,
+  },
+} as const;
+
+const SEARCH_SETTING_KEYS = Object.values(SEARCH_SETTING_META).map((item) => item.key);
+
 const getEnvFallback = (name: keyof typeof SITE_SETTING_META) => {
   const meta = SITE_SETTING_META[name];
   return process.env[meta.env] || meta.fallback;
@@ -418,6 +478,18 @@ const readNotificationSettingsCache = async (): Promise<NotificationSettingsData
   }
 };
 
+const readSearchSettingsCache = async (): Promise<SearchSettingsData | null> => {
+  try {
+    const cached = await redisClient.get(SEARCH_SETTINGS_CACHE_KEY);
+    if (!cached) return null;
+
+    return SearchSettingsSchema.parse(JSON.parse(cached));
+  } catch (error) {
+    console.warn("readSearchSettingsCache Warning:", error);
+    return null;
+  }
+};
+
 const writeSiteSettingsCache = async (data: SiteSettingsData) => {
   try {
     await redisClient.set(
@@ -470,6 +542,19 @@ const writeNotificationSettingsCache = async (data: NotificationSettingsData) =>
   }
 };
 
+const writeSearchSettingsCache = async (data: SearchSettingsData) => {
+  try {
+    await redisClient.set(
+      SEARCH_SETTINGS_CACHE_KEY,
+      JSON.stringify(data),
+      "EX",
+      SITE_SETTINGS_CACHE_TTL,
+    );
+  } catch (error) {
+    console.warn("writeSearchSettingsCache Warning:", error);
+  }
+};
+
 const toBool = (value: string | null | undefined, fallback: boolean) => {
   if (value === "true") return true;
   if (value === "false") return false;
@@ -511,6 +596,22 @@ const mapRecordsToNotificationSettings = (records: Awaited<ReturnType<typeof get
     unreadPreviewLimit: Number(values.get(NOTIFICATION_SETTING_META.unreadPreviewLimit.key) || NOTIFICATION_SETTING_META.unreadPreviewLimit.fallback),
     historyPageSize: Number(values.get(NOTIFICATION_SETTING_META.historyPageSize.key) || NOTIFICATION_SETTING_META.historyPageSize.fallback),
     retentionDays: Number(values.get(NOTIFICATION_SETTING_META.retentionDays.key) || NOTIFICATION_SETTING_META.retentionDays.fallback),
+  };
+};
+
+const mapRecordsToSearchSettings = (records: Awaited<ReturnType<typeof getSettingsByKeysQuery>>): SearchSettingsData => {
+  const values = new Map(records.map((record) => [record.key, record.value || ""]));
+
+  return {
+    integratedSearchEnabled: toBool(values.get(SEARCH_SETTING_META.integratedSearchEnabled.key), true),
+    documentSearchEnabled: toBool(values.get(SEARCH_SETTING_META.documentSearchEnabled.key), true),
+    commentSearchEnabled: toBool(values.get(SEARCH_SETTING_META.commentSearchEnabled.key), true),
+    attachmentSearchEnabled: toBool(values.get(SEARCH_SETTING_META.attachmentSearchEnabled.key), true),
+    userSearchEnabled: toBool(values.get(SEARCH_SETTING_META.userSearchEnabled.key), false),
+    extensionSearchEnabled: toBool(values.get(SEARCH_SETTING_META.extensionSearchEnabled.key), true),
+    includeUserEmail: toBool(values.get(SEARCH_SETTING_META.includeUserEmail.key), false),
+    defaultResultLimit: Number(values.get(SEARCH_SETTING_META.defaultResultLimit.key) || SEARCH_SETTING_META.defaultResultLimit.fallback),
+    minSearchLength: Number(values.get(SEARCH_SETTING_META.minSearchLength.key) || SEARCH_SETTING_META.minSearchLength.fallback),
   };
 };
 
@@ -930,6 +1031,20 @@ const toNotificationSettingSeeds = (data: NotificationSettingsData): SettingSeed
   ];
 };
 
+const toSearchSettingSeeds = (data: SearchSettingsData): SettingSeed[] => {
+  return (Object.keys(SEARCH_SETTING_META) as Array<keyof typeof SEARCH_SETTING_META>).map((name) => {
+    const meta = SEARCH_SETTING_META[name];
+    return {
+      key: meta.key,
+      value: String(data[name]),
+      group: "search",
+      label: meta.label,
+      description: "통합검색 동작 정책입니다.",
+      isPublic: meta.isPublic,
+    };
+  });
+};
+
 const isFileLike = (value: FormDataEntryValue | null): value is File => {
   return typeof value === "object" && value !== null && "arrayBuffer" in value && "size" in value && "name" in value;
 };
@@ -1195,6 +1310,40 @@ export const getNotificationSettingsAdminAction = async (): Promise<ActionState<
   }
 };
 
+export const getSearchSettingsAdminAction = async (): Promise<ActionState<SearchSettingsData>> => {
+  const sessionInfo = await getUserSessionAction();
+
+  if (!sessionInfo?.data?.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  try {
+    const cached = await readSearchSettingsCache();
+    if (cached) {
+      return {
+        success: true,
+        type: "success",
+        message: "검색 설정을 불러왔습니다.",
+        data: cached,
+      };
+    }
+
+    const records = await getSettingsByKeysQuery(SEARCH_SETTING_KEYS);
+    const data = mapRecordsToSearchSettings(records);
+    await writeSearchSettingsCache(data);
+
+    return {
+      success: true,
+      type: "success",
+      message: "검색 설정을 불러왔습니다.",
+      data,
+    };
+  } catch (error) {
+    console.error("getSearchSettingsAdminAction Error:", error);
+    return { success: false, type: "error", message: "검색 설정을 불러오지 못했습니다." };
+  }
+};
+
 export const getUploadSettingsRuntimeAction = async (): Promise<UploadSettingsData> => {
   const cached = await readUploadSettingsCache();
   if (cached) return cached;
@@ -1235,6 +1384,22 @@ export const getNotificationSettingsRuntimeAction = async (): Promise<Notificati
   } catch (error) {
     console.error("getNotificationSettingsRuntimeAction Error:", error);
     return mapRecordsToNotificationSettings([]);
+  }
+};
+
+export const getSearchSettingsRuntimeAction = async (): Promise<SearchSettingsData> => {
+  const cached = await readSearchSettingsCache();
+  if (cached) return cached;
+
+  try {
+    const records = await getSettingsByKeysQuery(SEARCH_SETTING_KEYS);
+    const data = mapRecordsToSearchSettings(records);
+    await writeSearchSettingsCache(data);
+
+    return data;
+  } catch (error) {
+    console.error("getSearchSettingsRuntimeAction Error:", error);
+    return mapRecordsToSearchSettings([]);
   }
 };
 
@@ -1428,6 +1593,44 @@ export const updateNotificationSettingsAdminAction = async (formData: FormData):
   } catch (error) {
     console.error("updateNotificationSettingsAdminAction Error:", error);
     return { success: false, type: "error", message: "알림 설정 저장에 실패했습니다." };
+  }
+};
+
+export const updateSearchSettingsAdminAction = async (formData: FormData): Promise<ActionState<SearchSettingsData>> => {
+  const sessionInfo = await getUserSessionAction();
+
+  if (!sessionInfo?.data?.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  const formPayload = {
+    integratedSearchEnabled: formData.has("integratedSearchEnabled"),
+    documentSearchEnabled: formData.has("documentSearchEnabled"),
+    commentSearchEnabled: formData.has("commentSearchEnabled"),
+    attachmentSearchEnabled: formData.has("attachmentSearchEnabled"),
+    userSearchEnabled: formData.has("userSearchEnabled"),
+    extensionSearchEnabled: formData.has("extensionSearchEnabled"),
+    includeUserEmail: formData.has("includeUserEmail"),
+    defaultResultLimit: formData.get("defaultResultLimit"),
+    minSearchLength: formData.get("minSearchLength"),
+  };
+
+  const validation = validateForm(SearchSettingsSchema, formPayload);
+  if (!validation.isValid) return validation.errorResponse;
+
+  try {
+    await upsertSettingsQuery(toSearchSettingSeeds(validation.data));
+    await writeSearchSettingsCache(validation.data);
+
+    return {
+      success: true,
+      type: "success",
+      message: "검색 설정이 저장되었습니다.",
+      data: validation.data,
+    };
+  } catch (error) {
+    console.error("updateSearchSettingsAdminAction Error:", error);
+    return { success: false, type: "error", message: "검색 설정 저장에 실패했습니다." };
   }
 };
 

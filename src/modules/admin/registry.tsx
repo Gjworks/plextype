@@ -1,4 +1,4 @@
-import { FileText, Globe, LayoutGrid, Map, Settings } from "lucide-react";
+import { FileText, LayoutGrid, Map, Settings } from "lucide-react";
 
 import { defineAdminLayout, defineModule } from "@/core/registry/define";
 import AdminDashboard from "@/layouts/admin/default/Dashboard";
@@ -42,21 +42,15 @@ export const adminModule = defineModule({
         id: "settings",
         icon: <Settings size={18} />,
         label: "Settings",
-        order: 60,
+        order: 9999,
         items: [
           { label: "사이트 기본정보", href: "/admin/settings" },
           { label: "SEO 기본설정", href: "/admin/settings/seo" },
+          { label: "통합검색 설정", href: "/admin/settings/search" },
           { label: "회원/인증 설정", href: "/admin/settings/auth" },
           { label: "업로드 설정", href: "/admin/settings/upload" },
           { label: "알림 설정", href: "/admin/settings/notification" },
         ],
-      },
-      {
-        id: "infra",
-        href: "/infra",
-        icon: <Globe size={18} />,
-        label: "Infrastructure",
-        order: 70,
       },
     ],
     breadcrumbs: {
@@ -72,6 +66,7 @@ export const adminModule = defineModule({
       settings: {
         index: "GENERAL",
         seo: "SEO",
+        search: "SEARCH",
         auth: "AUTH",
         upload: "UPLOAD",
         notification: "NOTIFICATION",

@@ -70,38 +70,6 @@ html[data-motion="reduced"] *::after {
     transition-duration: 0.01ms !important;
 }
 
-h1,
-.h1 {
-    @apply text-3xl;
-    @apply font-bold;
-    @apply mt-10;
-    @apply mb-8;
-}
-
-h2,
-.h2 {
-    @apply text-2xl;
-    @apply font-bold;
-    @apply mt-8;
-    @apply mb-6;
-}
-
-h3,
-.h3 {
-    @apply text-xl;
-    @apply font-bold;
-    @apply mt-5;
-    @apply mb-4;
-}
-
-h4,
-.h4 {
-    @apply text-lg;
-    @apply font-bold;
-    @apply mt-4;
-    @apply mb-3;
-}
-
 .postContent p {
     @apply mb-3;
     @apply leading-7;
@@ -118,4 +86,55 @@ h4,
 
 .dark .postContent a {
     @apply text-sky-300 decoration-sky-300/60 hover:text-sky-200;
+}
+
+.postContent h1,
+.tiptap h1 {
+    @apply mt-10 mb-6 text-3xl font-bold leading-tight tracking-normal text-gray-950;
+    @apply dark:text-dark-100;
+}
+
+.postContent h2,
+.tiptap h2 {
+    @apply mt-9 mb-5 text-2xl font-bold leading-tight tracking-normal text-gray-950;
+    @apply dark:text-dark-100;
+}
+
+.postContent h3,
+.tiptap h3 {
+    @apply mt-8 mb-4 text-xl font-bold leading-snug tracking-normal text-gray-900;
+    @apply dark:text-dark-100;
+}
+
+.postContent h4,
+.tiptap h4 {
+    @apply mt-6 mb-3 text-lg font-bold leading-snug tracking-normal text-gray-900;
+    @apply dark:text-dark-100;
+}
+
+.postContent h5,
+.tiptap h5 {
+    @apply mt-5 mb-2 text-base font-bold leading-snug tracking-normal text-gray-800;
+    @apply dark:text-dark-200;
+}
+
+.postContent h6,
+.tiptap h6 {
+    @apply mt-5 mb-2 text-sm font-bold uppercase leading-snug tracking-widest text-gray-500;
+    @apply dark:text-dark-400;
+}
+
+.postContent h1:first-child,
+.postContent h2:first-child,
+.postContent h3:first-child,
+.postContent h4:first-child,
+.postContent h5:first-child,
+.postContent h6:first-child,
+.tiptap h1:first-child,
+.tiptap h2:first-child,
+.tiptap h3:first-child,
+.tiptap h4:first-child,
+.tiptap h5:first-child,
+.tiptap h6:first-child {
+    @apply mt-0;
 }

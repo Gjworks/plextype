@@ -66,6 +66,22 @@ export type NotificationSettingsParams = z.infer<typeof NotificationSettingsSche
 
 export type NotificationSettingsData = NotificationSettingsParams;
 
+export const SearchSettingsSchema = z.object({
+  integratedSearchEnabled: z.boolean(),
+  documentSearchEnabled: z.boolean(),
+  commentSearchEnabled: z.boolean(),
+  attachmentSearchEnabled: z.boolean(),
+  userSearchEnabled: z.boolean(),
+  extensionSearchEnabled: z.boolean(),
+  includeUserEmail: z.boolean(),
+  defaultResultLimit: z.coerce.number().int().min(3, "기본 결과 수는 3개 이상이어야 합니다.").max(20, "기본 결과 수는 20개 이하로 입력해주세요."),
+  minSearchLength: z.coerce.number().int().min(1, "최소 검색어 길이는 1자 이상이어야 합니다.").max(10, "최소 검색어 길이가 너무 깁니다."),
+});
+
+export type SearchSettingsParams = z.infer<typeof SearchSettingsSchema>;
+
+export type SearchSettingsData = SearchSettingsParams;
+
 export const UploadSettingsSchema = z.object({
   maxUploadSizeMb: z.coerce.number().int().min(1, "파일당 용량은 1MB 이상이어야 합니다.").max(500, "파일당 용량은 500MB 이하로 입력해주세요."),
   userStorageLimitMb: z.coerce.number().int().min(1, "사용자별 용량은 1MB 이상이어야 합니다.").max(102400, "사용자별 용량이 너무 큽니다."),

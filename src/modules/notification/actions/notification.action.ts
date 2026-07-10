@@ -137,12 +137,17 @@ const isNotificationTypeEnabled = async (data: any) => {
     if (userPreference && !userPreference.notifyAdmin) return { enabled: false, settings };
   }
 
+  if (subType === "service-support") {
+    if (userPreference && !userPreference.notifyAdmin) return { enabled: false, settings };
+  }
+
   if (subType === "force-logout") {
     if (!settings.forceLogoutNotificationsEnabled) return { enabled: false, settings };
     if (userPreference && !userPreference.notifyAdmin) return { enabled: false, settings };
   }
 
-  if (settings.excludeSelfNotifications && data.actorId && data.userId && String(data.actorId) === String(data.userId)) {
+  const allowSelfNotification = data?.metadata?.allowSelfNotification === true;
+  if (!allowSelfNotification && settings.excludeSelfNotifications && data.actorId && data.userId && String(data.actorId) === String(data.userId)) {
     return { enabled: false, settings };
   }
 
