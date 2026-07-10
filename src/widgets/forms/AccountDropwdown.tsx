@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Dropdown from "@/core/components/dropdown/Dropdown";
 import Avator from "@/core/components/avator/Avator";
@@ -23,9 +23,41 @@ interface Item {
 const AccountDropdown = () => {
   const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [canAccessService, setCanAccessService] = useState(false);
 
   // 🌟 useUser() 대신 컨텍스트 사용
   const { user, isLoading } = useUserContext();
+
+  useEffect(() => {
+    if (!user) {
+      setCanAccessService(false);
+      return;
+    }
+
+    let mounted = true;
+
+    const loadServiceAccess = async () => {
+      try {
+        const response = await fetch("/api/partners/service-access", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const payload = await response.json();
+
+        if (mounted) {
+          setCanAccessService(Boolean(payload?.data?.canAccessService));
+        }
+      } catch {
+        if (mounted) setCanAccessService(false);
+      }
+    };
+
+    loadServiceAccess();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
 
   const closeDropdown = (close: boolean) => setShowDropdown(close);
 
@@ -37,7 +69,12 @@ const AccountDropdown = () => {
   const userNav: Array<Item> = [
     { title: "내 정보", name: "user", route: "/user" },
     { title: "나의 스토어", name: "my-store", route: "/user/store" },
-    { title: "서비스 관리", name: "service", route: "/service" },
+    {
+      title: "서비스 관리",
+      name: "service",
+      route: "/service",
+      condition: { operation: "equals", name: "canAccessService", variable: true },
+    },
     { title: "개인 설정", name: "preferences", route: "/user/preferences" },
     {
       title: "관리자",
@@ -91,7 +128,7 @@ const AccountDropdown = () => {
                 <div className="border-b border-zinc-100 px-4 py-3 dark:border-dark-800">
                   <p className="text-sm font-bold text-zinc-900 dark:text-dark-100">{user?.nickName}님 환영합니다</p>
                 </div>
-                <DefaultList list={userNav} loggedInfo={user} callback={callbackName} />
+                <DefaultList list={userNav} loggedInfo={{ ...user, canAccessService }} callback={callbackName} />
               </div>
             </>
           ) : (
