@@ -86,7 +86,7 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
-  output: 'standalone', // Docker 빌드를 위해
+  ...(isDev ? {} : { output: "standalone" }), // Docker 프로덕션 빌드에서만 사용
   reactStrictMode: true,
   images: {
     remotePatterns: imageRemotePatterns,
