@@ -166,19 +166,20 @@ const Signin = () => {
     <>
       <motion.div initial="hidden" animate="onscreen" variants={parentVariants} exit="offscreen">
         <form onSubmit={submitHandler}>
-          <motion.div className="py-10" variants={parentVariants}>
-            <div className="dark:text-dark-50 text-2xl font-semibold text-gray-700 text-center">Request Access</div>
-            <div className="dark:text-dark-500 pt-10 text-sm text-gray-600 text-center">
-              소셜로그인은 추후에 지원 됩니다. <br></br>일반 회원가입을 이용하셔도 모든 서비스를 이용 할 수 있습니다.
+          <motion.div className="pb-9" variants={parentVariants}>
+            <div className="text-[12px] font-medium uppercase tracking-[0.16em] text-gray-500 dark:text-dark-400">Welcome back</div>
+            <div className="mt-3 text-[32px] font-semibold leading-tight tracking-[-0.045em] text-gray-950 dark:text-white">로그인</div>
+            <div className="mt-5 text-sm leading-6 tracking-[-0.02em] text-gray-500 dark:text-dark-300">
+              등록된 계정으로 로그인해 주세요.
             </div>
           </motion.div>
           {formMessage && (
-            <div className="mb-5 rounded-md bg-red-50 px-3 py-2 text-sm leading-6 text-red-500">
+            <div className="mb-5 rounded-lg bg-red-50 px-3 py-2 text-sm leading-6 text-red-500 dark:bg-red-500/10 dark:text-red-300">
               {formMessage}
             </div>
           )}
           <motion.div variants={parentVariants}>
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_210px] xl:grid-cols-[minmax(0,1fr)_220px]">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_190px] xl:grid-cols-[minmax(0,1fr)_200px]">
               <div>
                 {/* Account ID Input */}
                 <div className="mb-5">
@@ -208,7 +209,7 @@ const Signin = () => {
 
                 {/* Submit Button */}
                 <div className="mb-4 flex">
-                  <Button isLoading={mutation.isPending} icon={SignInIcon} type="submit" fullWidth={true} className="!py-3">
+                  <Button isLoading={mutation.isPending} icon={SignInIcon} type="submit" fullWidth={true} className="!rounded-xl !bg-black !py-3.5 !text-white hover:!bg-gray-800 dark:!bg-white dark:!text-black dark:hover:!bg-gray-200">
                     Sign In
                   </Button>
                 </div>
@@ -218,18 +219,18 @@ const Signin = () => {
           </motion.div>
         </form>
         <motion.div className="divider" variants={parentVariants}>
-          <div className="relative py-4">
+          <div className="relative py-5">
             <div className="absolute inset-0 flex items-center">
-              <div className="dark:via-dark-600 h-px w-full bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-white/10"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="px-4 text-xs text-gray-400 bg-white dark:bg-dark-950 backdrop-blur-sm">OR</span>
+              <span className="bg-white px-4 text-xs text-gray-400 backdrop-blur-sm dark:bg-[#050505] dark:text-dark-500">OR</span>
             </div>
           </div>
         </motion.div>
-        <motion.div className="pb-8 pt-5" variants={parentVariants}>
+        <motion.div className="pb-8 pt-3" variants={parentVariants}>
           <div className="grid grid-cols-2 gap-2">
-            <button className="dark:bg-dark-700/25 dark:hover:bg-dark-600/25 dark:text-dark-400 group col-span-2 flex cursor-pointer items-center justify-center rounded-md bg-gray-100 px-3 py-2 hover:bg-gray-200 sm:col-span-1 dark:hover:text-white">
+            <button className="group col-span-2 flex cursor-pointer items-center justify-center rounded-xl bg-gray-100 px-3 py-2.5 transition-colors hover:bg-gray-200 sm:col-span-1 dark:bg-white/10 dark:hover:bg-white/15 dark:hover:text-white">
               <div className="pr-3">
                 <svg xmlns="http://www.w3.org/2000/svg" className="dark:fill-dark-400 h-5 w-5 fill-gray-500 stroke-1 group-hover:fill-gray-700 dark:group-hover:fill-white" width="512" height="512" viewBox="0 0 512 512">
                   <title>ionicons-v5_logos</title>
@@ -237,48 +238,48 @@ const Signin = () => {
                   <path d="M340.25,32c-24,1.63-52,16.91-68.4,36.86-14.88,18.08-27.12,44.9-22.32,70.91h1.92c25.56,0,51.72-15.39,67-35.11C333.17,85.89,344.33,59.29,340.25,32Z" />
                 </svg>
               </div>
-              <div className="dark:text-dark-400 text-xs text-gray-500 group-hover:text-gray-700 dark:group-hover:text-white">Apple</div>
+              <div className="text-xs text-gray-500 group-hover:text-gray-700 dark:text-dark-400 dark:group-hover:text-white">Apple</div>
             </button>
-            <button className="dark:bg-dark-700/25 dark:hover:bg-dark-600/25 dark:text-dark-400 group col-span-2 flex cursor-pointer items-center justify-center rounded-md bg-gray-100 px-3 py-2 hover:bg-gray-200 sm:col-span-1 dark:hover:text-white">
+            <button className="group col-span-2 flex cursor-pointer items-center justify-center rounded-xl bg-gray-100 px-3 py-2.5 transition-colors hover:bg-gray-200 sm:col-span-1 dark:bg-white/10 dark:hover:bg-white/15 dark:hover:text-white">
               <div className="pr-3">
                 <svg xmlns="http://www.w3.org/2000/svg" className="dark:fill-dark-400 h-5 w-5 fill-gray-500 stroke-1 group-hover:fill-gray-700 dark:group-hover:fill-white" width="512" height="512" viewBox="0 0 512 512">
                   <title>ionicons-v5_logos</title>
                   <path d="M256,32C132.3,32,32,134.9,32,261.7c0,101.5,64.2,187.5,153.2,217.9a17.56,17.56,0,0,0,3.8.4c8.3,0,11.5-6.1,11.5-11.4,0-5.5-.2-19.9-.3-39.1a102.4,102.4,0,0,1-22.6,2.7c-43.1,0-52.9-33.5-52.9-33.5-10.2-26.5-24.9-33.6-24.9-33.6-19.5-13.7-.1-14.1,1.4-14.1h.1c22.5,2,34.3,23.8,34.3,23.8,11.2,19.6,26.2,25.1,39.6,25.1a63,63,0,0,0,25.6-6c2-14.8,7.8-24.9,14.2-30.7-49.7-5.8-102-25.5-102-113.5,0-25.1,8.7-45.6,23-61.6-2.3-5.8-10-29.2,2.2-60.8a18.64,18.64,0,0,1,5-.5c8.1,0,26.4,3.1,56.6,24.1a208.21,208.21,0,0,1,112.2,0c30.2-21,48.5-24.1,56.6-24.1a18.64,18.64,0,0,1,5,.5c12.2,31.6,4.5,55,2.2,60.8,14.3,16.1,23,36.6,23,61.6,0,88.2-52.4,107.6-102.3,113.3,8,7.1,15.2,21.1,15.2,42.5,0,30.7-.3,55.5-.3,63,0,5.4,3.1,11.5,11.4,11.5a19.35,19.35,0,0,0,4-.4C415.9,449.2,480,363.1,480,261.7,480,134.9,379.7,32,256,32Z" />
                 </svg>
               </div>
-              <div className="dark:text-dark-400 text-xs text-gray-500 group-hover:text-gray-700 dark:group-hover:text-white">Github</div>
+              <div className="text-xs text-gray-500 group-hover:text-gray-700 dark:text-dark-400 dark:group-hover:text-white">Github</div>
             </button>
-            <button className="dark:bg-dark-700/25 dark:hover:bg-dark-600/25 dark:text-dark-400 group col-span-2 flex cursor-pointer items-center justify-center rounded-md bg-gray-100 px-3 py-2 hover:bg-gray-200 sm:col-span-1 dark:hover:text-white">
+            <button className="group col-span-2 flex cursor-pointer items-center justify-center rounded-xl bg-gray-100 px-3 py-2.5 transition-colors hover:bg-gray-200 sm:col-span-1 dark:bg-white/10 dark:hover:bg-white/15 dark:hover:text-white">
               <div className="pr-3">
                 <svg xmlns="http://www.w3.org/2000/svg" className="dark:fill-dark-400 h-5 w-5 fill-gray-500 stroke-1 group-hover:fill-gray-700 dark:group-hover:fill-white" width="512" height="512" viewBox="0 0 512 512">
                   <title>ionicons-v5_logos</title>
                   <path d="M496,109.5a201.8,201.8,0,0,1-56.55,15.3,97.51,97.51,0,0,0,43.33-53.6,197.74,197.74,0,0,1-62.56,23.5A99.14,99.14,0,0,0,348.31,64c-54.42,0-98.46,43.4-98.46,96.9a93.21,93.21,0,0,0,2.54,22.1,280.7,280.7,0,0,1-203-101.3A95.69,95.69,0,0,0,36,130.4C36,164,53.53,193.7,80,211.1A97.5,97.5,0,0,1,35.22,199v1.2c0,47,34,86.1,79,95a100.76,100.76,0,0,1-25.94,3.4,94.38,94.38,0,0,1-18.51-1.8c12.51,38.5,48.92,66.5,92.05,67.3A199.59,199.59,0,0,1,39.5,405.6,203,203,0,0,1,16,404.2,278.68,278.68,0,0,0,166.74,448c181.36,0,280.44-147.7,280.44-275.8,0-4.2-.11-8.4-.31-12.5A198.48,198.48,0,0,0,496,109.5Z" />
                 </svg>
               </div>
-              <div className="dark:text-dark-400 text-xs text-gray-500 group-hover:text-gray-700 dark:group-hover:text-white">Twitter</div>
+              <div className="text-xs text-gray-500 group-hover:text-gray-700 dark:text-dark-400 dark:group-hover:text-white">Twitter</div>
             </button>
-            <button className="dark:bg-dark-700/25 dark:hover:bg-dark-600/25 dark:text-dark-400 group col-span-2 flex cursor-pointer items-center justify-center rounded-md bg-gray-100 px-3 py-2 hover:bg-gray-200 sm:col-span-1 dark:hover:text-white">
+            <button className="group col-span-2 flex cursor-pointer items-center justify-center rounded-xl bg-gray-100 px-3 py-2.5 transition-colors hover:bg-gray-200 sm:col-span-1 dark:bg-white/10 dark:hover:bg-white/15 dark:hover:text-white">
               <div className="pr-3">
                 <svg xmlns="http://www.w3.org/2000/svg" className="dark:fill-dark-400 h-5 w-5 fill-gray-500 stroke-1 group-hover:fill-gray-700 dark:group-hover:fill-white" width="512" height="512" viewBox="0 0 512 512">
                   <path d="M473.16,221.48l-2.26-9.59H262.46v88.22H387c-12.93,61.4-72.93,93.72-121.94,93.72-35.66,0-73.25-15-98.13-39.11a140.08,140.08,0,0,1-41.8-98.88c0-37.16,16.7-74.33,41-98.78s61-38.13,97.49-38.13c41.79,0,71.74,22.19,82.94,32.31l62.69-62.36C390.86,72.72,340.34,32,261.6,32h0c-60.75,0-119,23.27-161.58,65.71C58,139.5,36.25,199.93,36.25,256S56.83,369.48,97.55,411.6C141.06,456.52,202.68,480,266.13,480c57.73,0,112.45-22.62,151.45-63.66,38.34-40.4,58.17-96.3,58.17-154.9C475.75,236.77,473.27,222.12,473.16,221.48Z" />
                 </svg>
               </div>
-              <div className="dark:text-dark-400 text-xs text-gray-500 group-hover:text-gray-700 dark:group-hover:text-white">Google</div>
+              <div className="text-xs text-gray-500 group-hover:text-gray-700 dark:text-dark-400 dark:group-hover:text-white">Google</div>
             </button>
           </div>
         </motion.div>
         <motion.div className="pb-10" variants={parentVariants}>
           <div className="flex flex-wrap">
             <div className="w-full">
-              <Link href="/auth/register" className="text-dark-500 group text-sm">
+              <Link href="/auth/register" className="group text-sm text-gray-500 dark:text-dark-400">
                 회원가입을 하시려면
-                <span className="dark:text-dark-200 dark:hover:text-dark-400 text-gray-500 underline hover:text-gray-600 group-hover:text-gray-600">회원가입 하기</span>
+                <span className="pl-1 text-gray-700 underline hover:text-gray-950 group-hover:text-gray-950 dark:text-dark-200 dark:hover:text-white dark:group-hover:text-white">회원가입 하기</span>
               </Link>
             </div>
             <div className="w-full">
-              <Link href="/auth/find" className="text-dark-500 group text-sm">
+              <Link href="/auth/find" className="group text-sm text-gray-500 dark:text-dark-400">
                 계정ID와 비밀번호를 잊어버리 셨나요?
-                <span className="dark:text-dark-200 dark:hover:text-dark-400 text-gray-500 underline hover:text-gray-600 group-hover:text-gray-600">계정ID / 비밀번호 찾기</span>
+                <span className="pl-1 text-gray-700 underline hover:text-gray-950 group-hover:text-gray-950 dark:text-dark-200 dark:hover:text-white dark:group-hover:text-white">계정ID / 비밀번호 찾기</span>
               </Link>
             </div>
           </div>
@@ -414,7 +415,7 @@ const QrLoginPanel = () => {
   }, [queryClient, qrRefreshKey, router])
 
   return (
-    <div className="self-start rounded-xl border border-gray-200 bg-gray-50/80 p-3 dark:border-dark-700 dark:bg-dark-900/40">
+    <div className="self-start rounded-2xl border border-gray-200 bg-white p-3 shadow-sm shadow-gray-200/60 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none">
       <div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-gray-600 dark:text-dark-300">
         <div className="flex items-center gap-2">
           <Smartphone className="h-4 w-4" />
@@ -422,7 +423,7 @@ const QrLoginPanel = () => {
         </div>
         {isLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
       </div>
-      <div className="relative flex h-32 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-dark-700 dark:bg-white">
+      <div className="relative flex h-32 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white">
         {session?.qrDataUrl ? (
           <img src={session.qrDataUrl} alt="앱 인증기 로그인 QR 코드" className={`h-24 w-24 rounded-md transition ${isExpired ? 'opacity-15 blur-[1px]' : ''}`} />
         ) : (

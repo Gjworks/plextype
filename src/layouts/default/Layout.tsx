@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CircleUserRound, Menu, Search } from "lucide-react";
+import { ArrowRight, Bell, CircleUserRound, LayoutGrid, Menu, Search } from "lucide-react";
 import React from "react";
 import { getPublicSiteNavigationAction } from "@/modules/admin/actions/sitemap.action";
 import type { SiteNavigationItem } from "@/modules/admin/actions/_type";
@@ -110,15 +110,20 @@ const DefaultLayout = async ({
   const footerItems = footerNavigationResult.data?.length ? footerNavigationResult.data : fallbackFooterItems;
 
   return (
-    <div className="min-h-screen bg-white text-gray-950 dark:bg-dark-950 dark:text-white">
-      <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/85 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/85">
-        <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-3">
+    <div className="min-h-screen bg-[#f5f6f3] text-gray-950 dark:bg-[#050505] dark:text-white">
+      <header className="sticky top-0 z-50 border-b border-black/10 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-black/85">
+        <div className="mx-auto flex h-[70px] max-w-screen-xl items-center justify-between px-4">
           <div className="flex items-center gap-8">
             <Link href={siteUrl || "/"} className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-md bg-gray-950 text-xs font-bold text-white dark:bg-white dark:text-gray-950">
-                {siteTitle.trim().charAt(0).toUpperCase() || "P"}
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-black text-white dark:bg-white dark:text-black">
+                <LayoutGrid size={16} strokeWidth={2} />
               </span>
-              <span className="text-sm font-semibold tracking-normal">{siteTitle}</span>
+              <span>
+                <span className="block text-[10px] font-medium uppercase tracking-[0.28em] text-gray-400 dark:text-dark-400">
+                  Plextype
+                </span>
+                <span className="block text-sm font-semibold tracking-[-0.02em]">{siteTitle}</span>
+              </span>
             </Link>
 
             <nav className="hidden items-center gap-1 md:flex">
@@ -128,19 +133,19 @@ const DefaultLayout = async ({
                     href={item.href}
                     target={item.target || undefined}
                     rel={item.target === "_blank" ? "noreferrer" : undefined}
-                    className="block rounded-md px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-dark-900 dark:hover:text-white"
+                    className="block rounded-full px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
                   >
                     {item.title}
                   </Link>
                   {item.children.length > 0 && (
-                    <div className="invisible absolute left-0 top-full min-w-44 translate-y-2 rounded-md border border-gray-100 bg-white/95 p-2 opacity-0 shadow-xl shadow-gray-200/60 backdrop-blur-xl transition-all group-hover:visible group-hover:translate-y-1 group-hover:opacity-100 dark:border-dark-800 dark:bg-dark-900/95">
+                    <div className="invisible absolute left-0 top-full min-w-44 translate-y-2 rounded-xl border border-gray-100 bg-white/95 p-2 opacity-0 shadow-xl shadow-gray-200/60 backdrop-blur-xl transition-all group-hover:visible group-hover:translate-y-1 group-hover:opacity-100 dark:border-white/10 dark:bg-black/95">
                       {item.children.map((child) => (
                         <Link
                           key={child.id || child.href}
                           href={child.href}
                           target={child.target || undefined}
                           rel={child.target === "_blank" ? "noreferrer" : undefined}
-                          className="block rounded px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-dark-800 dark:hover:text-white"
+                          className="block rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
                         >
                           {child.title}
                         </Link>
@@ -155,28 +160,35 @@ const DefaultLayout = async ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="hidden h-9 w-9 place-items-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-950 md:grid dark:hover:bg-dark-900 dark:hover:text-white"
+              className="hidden h-10 w-10 place-items-center rounded-xl border border-black/10 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 md:grid dark:border-white/10 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
               aria-label="검색"
             >
               <Search size={17} />
             </button>
+            <button
+              type="button"
+              className="hidden h-10 w-10 place-items-center rounded-xl border border-black/10 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 md:grid dark:border-white/10 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
+              aria-label="알림"
+            >
+              <Bell size={17} />
+            </button>
             <Link
               href="/auth/signin"
-              className="hidden items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-950 md:flex dark:border-dark-700 dark:text-dark-300 dark:hover:text-white"
+              className="hidden items-center gap-2 rounded-xl border border-black/10 px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-950 md:flex dark:border-white/10 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
             >
               <CircleUserRound size={16} />
               Sign in
             </Link>
             <Link
               href="/auth/register"
-              className="hidden items-center gap-2 rounded-md bg-gray-950 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 md:flex dark:bg-white dark:text-gray-950"
+              className="hidden items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 md:flex dark:bg-white dark:text-black dark:hover:bg-gray-200"
             >
               Get started
               <ArrowRight size={15} />
             </Link>
             <button
               type="button"
-              className="grid h-9 w-9 place-items-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 md:hidden dark:text-dark-300 dark:hover:bg-dark-900 dark:hover:text-white"
+              className="grid h-10 w-10 place-items-center rounded-xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 md:hidden dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
               aria-label="메뉴"
             >
               <Menu size={19} />
@@ -187,12 +199,12 @@ const DefaultLayout = async ({
 
       <main className="relative min-h-[calc(100vh-17rem)]">{children}</main>
 
-      <footer className="border-t border-gray-100 bg-gray-50/80 dark:border-dark-800 dark:bg-dark-950">
+      <footer className="border-t border-black/10 bg-white dark:border-white/10 dark:bg-black">
         <div className="mx-auto grid max-w-screen-xl gap-8 px-3 py-10 md:grid-cols-[1.2fr_2fr]">
           <div>
             <Link href={siteUrl || "/"} className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-md bg-gray-950 text-xs font-bold text-white dark:bg-white dark:text-gray-950">
-                {siteTitle.trim().charAt(0).toUpperCase() || "P"}
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-black text-white dark:bg-white dark:text-black">
+                <LayoutGrid size={14} />
               </span>
               <span className="text-sm font-semibold">{siteTitle}</span>
             </Link>
@@ -235,10 +247,10 @@ const DefaultLayout = async ({
           </div>
         </div>
 
-        <div className="border-t border-gray-100 dark:border-dark-800">
+        <div className="border-t border-black/10 dark:border-white/10">
           <div className="mx-auto flex max-w-screen-xl flex-col gap-2 px-3 py-5 text-xs text-gray-400 md:flex-row md:items-center md:justify-between">
             <span>© {new Date().getFullYear()} {siteTitle}. All rights reserved.</span>
-            <span>Built with Gjworks</span>
+            <span>Built with Plextype</span>
           </div>
         </div>
       </footer>
