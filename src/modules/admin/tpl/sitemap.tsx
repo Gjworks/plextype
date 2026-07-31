@@ -143,6 +143,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
   const [items, setItems] = useState(initialData?.items || []);
   const [selectedGroupKey, setSelectedGroupKey] = useState(groups[0]?.key || "header-main");
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
+  const [isCreatingMenu, setIsCreatingMenu] = useState(false);
   const [menuFormState, setMenuFormState] = useState<MenuFormState>(defaultMenuFormState(selectedGroupKey));
   const [groupFormState, setGroupFormState] = useState<GroupFormState>(defaultGroupFormState);
   const [showGroupModal, setShowGroupModal] = useState(false);
@@ -220,6 +221,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
   const resetMenuForm = (groupKey = selectedGroupKey) => {
     setSelectedMenuId(null);
+    setIsCreatingMenu(false);
     setMenuFormState(defaultMenuFormState(groupKey));
     setFieldErrors(undefined);
   };
@@ -237,6 +239,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
   const handleSelectMenu = (item: SiteNavigationItem) => {
     setSelectedMenuId(item.id);
+    setIsCreatingMenu(false);
     setMenuFormState({
       id: item.id,
       groupKey: item.groupKey,
@@ -256,6 +259,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
   const handleCreateMenu = () => {
     setSelectedMenuId(null);
+    setIsCreatingMenu(true);
     setMenuFormState(defaultMenuFormState(selectedGroupKey));
     setFieldErrors(undefined);
     setMessage(null);
@@ -318,6 +322,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
       setFieldErrors(undefined);
       setMessage({ type: "success", text: result.message || "사이트맵이 저장되었습니다." });
       setSelectedMenuId(null);
+      setIsCreatingMenu(false);
       setMenuFormState(defaultMenuFormState(selectedGroupKey));
     });
   };
@@ -657,7 +662,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
           </div>
 
           <form onSubmit={handleSubmitMenu} className="p-4">
-            {!isMenuEditing && selectedGroupItems.length > 0 ? (
+            {!isCreatingMenu && !isMenuEditing && selectedGroupItems.length > 0 ? (
               <div className="flex min-h-[420px] items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50 px-6 text-center dark:border-dark-700 dark:bg-dark-950">
                 <div>
                   <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-white text-gray-300 shadow-sm dark:bg-dark-900 dark:text-dark-500">
