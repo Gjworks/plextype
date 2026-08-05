@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
+import { readFile } from "fs/promises";
+import path from "path";
 
-export function GET(request: Request) {
-  return NextResponse.redirect(new URL("/icon-192.png", request.url), 308);
+export async function GET() {
+  const favicon = await readFile(path.join(process.cwd(), "public", "favicon.ico"));
+
+  return new NextResponse(favicon, {
+    headers: {
+      "Content-Type": "image/x-icon",
+      "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+    },
+  });
 }
