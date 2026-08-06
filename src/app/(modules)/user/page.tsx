@@ -14,7 +14,7 @@ const Page = async () => {
     redirect("/auth/signin");
   }
 
-  const userLayoutKey = settings.data?.userLayout || "default";
+  const userLayoutKey = settings.data?.userLayout && settings.data.userLayout !== "default" ? settings.data.userLayout : "gjworks";
   const Timeline = userLayouts[userLayoutKey]?.timeline || userLayouts.default.timeline;
 
   return <Timeline initialData={result.data} />;

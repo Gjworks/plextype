@@ -8,10 +8,9 @@ import {
   findUserTimelineAttachmentsQuery,
   findUserTimelineCommentsQuery,
   findUserTimelineDocumentsQuery,
-  findUserTimelineNotificationsQuery,
 } from "./timeline.query";
 
-export type UserTimelineKind = "document" | "comment" | "attachment" | "notification";
+export type UserTimelineKind = "document" | "comment" | "attachment";
 export type UserTimelineFilter = "all" | UserTimelineKind;
 
 export interface UserTimelineItem {
@@ -38,8 +37,6 @@ export interface UserTimelineData {
     documentCount: number;
     commentCount: number;
     attachmentCount: number;
-    notificationCount: number;
-    unreadNotificationCount: number;
   };
   items: UserTimelineItem[];
   nextCursor: string | null;
@@ -131,14 +128,12 @@ const getTimelineData = async ({
   const shouldLoadDocuments = filter === "all" || filter === "document";
   const shouldLoadComments = filter === "all" || filter === "comment";
   const shouldLoadAttachments = filter === "all" || filter === "attachment";
-  const shouldLoadNotifications = filter === "all" || filter === "notification";
 
-  const [summary, documents, comments, attachments, notifications] = await Promise.all([
+  const [summary, documents, comments, attachments] = await Promise.all([
     countUserTimelineSummaryQuery(userId),
     shouldLoadDocuments ? findUserTimelineDocumentsQuery(userId, queryTake, cursorDate) : Promise.resolve([]),
     shouldLoadComments ? findUserTimelineCommentsQuery(userId, queryTake, cursorDate) : Promise.resolve([]),
     shouldLoadAttachments ? findUserTimelineAttachmentsQuery(userId, queryTake, cursorDate) : Promise.resolve([]),
-    shouldLoadNotifications ? findUserTimelineNotificationsQuery(userId, queryTake, cursorDate) : Promise.resolve([]),
   ]);
 
   const documentItems: UserTimelineItem[] = documents.map((document) => ({
@@ -179,23 +174,10 @@ const getTimelineData = async ({
     status: attachment.mimeType,
   }));
 
-  const notificationItems: UserTimelineItem[] = notifications.map((notification) => ({
-    id: `notification-${notification.id}`,
-    kind: "notification",
-    title: notification.title || "알림",
-    description: trimPreview(notification.content || "알림 내용이 없습니다."),
-    href: notification.linkUrl,
-    imageUrl: notification.imageUrl,
-    createdAt: notification.createdAt,
-    meta: notification.isRead ? "읽은 알림" : "읽지 않은 알림",
-    status: notification.type,
-  }));
-
   const items = [
     ...documentItems,
     ...commentItems,
     ...attachmentItems,
-    ...notificationItems,
   ]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 

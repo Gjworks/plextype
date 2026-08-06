@@ -3,20 +3,16 @@ import prisma from "@utils/db/prisma";
 const createdBefore = (cursor?: Date | null) => cursor ? { lt: cursor } : undefined;
 
 export const countUserTimelineSummaryQuery = async (userId: number) => {
-  const [documentCount, commentCount, attachmentCount, notificationCount, unreadNotificationCount] = await Promise.all([
+  const [documentCount, commentCount, attachmentCount] = await Promise.all([
     prisma.document.count({ where: { userId } }),
     prisma.comment.count({ where: { userId } }),
     prisma.attachment.count({ where: { userId } }),
-    prisma.notification.count({ where: { userId } }),
-    prisma.notification.count({ where: { userId, isRead: false } }),
   ]);
 
   return {
     documentCount,
     commentCount,
     attachmentCount,
-    notificationCount,
-    unreadNotificationCount,
   };
 };
 
@@ -85,25 +81,6 @@ export const findUserTimelineAttachmentsQuery = async (userId: number, take: num
       mimeType: true,
       size: true,
       path: true,
-      createdAt: true,
-    },
-  });
-};
-
-export const findUserTimelineNotificationsQuery = async (userId: number, take: number, cursor?: Date | null) => {
-  return prisma.notification.findMany({
-    where: { userId, createdAt: createdBefore(cursor) },
-    orderBy: { createdAt: "desc" },
-    take,
-    select: {
-      id: true,
-      uuid: true,
-      type: true,
-      title: true,
-      content: true,
-      imageUrl: true,
-      linkUrl: true,
-      isRead: true,
       createdAt: true,
     },
   });

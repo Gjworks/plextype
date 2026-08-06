@@ -13,7 +13,7 @@ const Page = async () => {
     redirect("/auth/signin");
   }
 
-  const userLayoutKey = settings.data?.userLayout || "default";
+  const userLayoutKey = settings.data?.userLayout && settings.data.userLayout !== "default" ? settings.data.userLayout : "gjworks";
   const UserDelete = userLayouts[userLayoutKey]?.delete || userLayouts.default.delete;
 
   return <UserDelete initialUser={userRes.data} />;

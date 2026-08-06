@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
-  Bell,
   Clock3,
   FileText,
   Loader2,
@@ -58,12 +57,6 @@ const kindMeta: Record<UserTimelineKind, {
     color: "bg-emerald-50 text-emerald-600 ring-emerald-100",
     marker: "bg-emerald-500 shadow-emerald-200",
     icon: <Paperclip size={16} />,
-  },
-  notification: {
-    label: "알림",
-    color: "bg-amber-50 text-amber-600 ring-amber-100",
-    marker: "bg-amber-500 shadow-amber-200",
-    icon: <Bell size={16} />,
   },
 };
 
@@ -235,7 +228,7 @@ const Timeline = ({
   const groupedItems = useMemo(() => groupTimelineItems(items), [items]);
   const summary = data?.summary;
   const totalActivity = summary
-    ? summary.documentCount + summary.commentCount + summary.attachmentCount + summary.notificationCount
+    ? summary.documentCount + summary.commentCount + summary.attachmentCount
     : 0;
   const filterTabs: Array<{
     key: UserTimelineFilter;
@@ -247,7 +240,6 @@ const Timeline = ({
     { key: "document", label: "게시글", count: summary?.documentCount || 0, activeClass: "bg-cyan-500 text-white" },
     { key: "comment", label: "댓글", count: summary?.commentCount || 0, activeClass: "bg-violet-500 text-white" },
     { key: "attachment", label: "파일", count: summary?.attachmentCount || 0, activeClass: "bg-emerald-500 text-white" },
-    { key: "notification", label: "알림", count: summary?.notificationCount || 0, activeClass: "bg-amber-500 text-white" },
   ];
 
   useEffect(() => {
