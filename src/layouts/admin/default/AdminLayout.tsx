@@ -263,7 +263,7 @@ const AdminLayout = ({ children, appName, adminSessionGuard, adminMenus, adminBr
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-950 dark:bg-dark-950 dark:text-dark-100">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] flex-col border-r border-gray-200 bg-white/90 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/90 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] flex-col border-r border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950 lg:flex">
         <AdminSideNav
           appName={appName}
           appInitial={appInitial}
@@ -289,7 +289,7 @@ const AdminLayout = ({ children, appName, adminSessionGuard, adminMenus, adminBr
       </Left>
 
       <div className="min-h-screen lg:pl-[264px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 backdrop-blur-xl dark:border-dark-800 dark:bg-dark-950/80 md:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-gray-50 px-4 dark:border-dark-800 dark:bg-dark-950 md:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"

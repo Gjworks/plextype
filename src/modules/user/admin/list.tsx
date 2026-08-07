@@ -191,7 +191,7 @@ const AdminUserList = ({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+      <div className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/25">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px]">
             <thead>
