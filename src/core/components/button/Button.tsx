@@ -21,8 +21,8 @@ const Button = ({
                   ...props
                 }: ButtonProps) => {
 
-  const baseClasses = "relative inline-flex items-center justify-center rounded px-5 py-2 text-xs font-medium transition-colors duration-200 focus:outline-none disabled:cursor-not-allowed cursor-pointer outline-none overflow-hidden";
-  const themeClasses = "bg-gray-100 text-gray-700 hover:bg-gray-800 hover:text-gray-200 disabled:bg-gray-200 disabled:text-gray-400 dark:bg-dark-800 dark:text-dark-100 dark:hover:bg-dark-700 dark:hover:text-white dark:disabled:bg-dark-900 dark:disabled:text-dark-600";
+  const baseClasses = "relative inline-flex min-h-10 transform-gpu items-center justify-center overflow-hidden rounded-xl border px-5 py-2 text-xs font-medium outline-none transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-100/80 disabled:cursor-not-allowed disabled:ring-0 dark:focus-visible:ring-dark-800/45 cursor-pointer";
+  const themeClasses = "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-950 hover:ring-4 hover:ring-gray-100/70 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-100 dark:hover:ring-dark-800/35 dark:disabled:border-dark-800 dark:disabled:bg-dark-900 dark:disabled:text-dark-600";
   const widthClass = fullWidth ? "w-full" : "w-auto";
 
   return (
@@ -30,14 +30,14 @@ const Button = ({
       type={type}
       disabled={isLoading || disabled}
 
-      // 🎯 애니메이션 핵심 설정
       initial={{ scale: 1 }}
-      whileHover={{ scale: 0.98 }} // 호버 시 아주 살짝 작아짐
-      whileTap={{ scale: 0.94 }}   // 클릭 시 더 쫀득하게 작아짐
+      whileHover={disabled || isLoading ? { scale: 1, y: 0 } : { scale: 1.01, y: -1 }}
+      whileTap={disabled || isLoading ? { scale: 1, y: 0 } : { scale: 0.97, y: 0 }}
       transition={{
         type: "spring",
-        stiffness: 400, // 강성 (높을수록 팽팽함)
-        damping: 17     // 감쇠 (낮을수록 더 많이 튕김)
+        stiffness: 520,
+        damping: 30,
+        mass: 0.55,
       }}
 
       className={`${baseClasses} ${themeClasses} ${widthClass} ${className}`}
