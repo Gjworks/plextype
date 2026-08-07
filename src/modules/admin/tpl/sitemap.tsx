@@ -111,6 +111,20 @@ const defaultGroupFormState: GroupFormState = {
 
 const selectClass = "w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 shadow-md shadow-gray-100 outline-none transition-all hover:border-gray-300 focus:border-gray-300 focus:ring-4 focus:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:shadow-black/20 dark:hover:border-dark-600 dark:focus:border-dark-600 dark:focus:ring-dark-800";
 
+const sitemapPrimaryButtonClass =
+  "border-primary-500/25 bg-white text-primary-600 ring-4 ring-primary-500/5 hover:border-primary-500/30 hover:bg-primary-500/5 active:bg-primary-500/10 hover:text-primary-600 hover:ring-primary-500/10 dark:border-primary-400/25 dark:bg-dark-900 dark:text-primary-300 dark:ring-primary-400/10 dark:hover:bg-primary-400/10 dark:active:bg-primary-400/15";
+
+const sitemapDangerButtonClass =
+  "border-red-500/20 bg-white text-red-500 hover:bg-red-500/5 hover:text-red-500 hover:ring-4 hover:ring-red-100/70 dark:border-red-400/20 dark:bg-dark-900 dark:text-red-300 dark:hover:bg-red-400/10 dark:hover:ring-red-400/10";
+
+const sitemapSmallButtonClass = "h-10 px-3.5";
+
+const sitemapSoftIconButtonClass =
+  "transition-all duration-200 hover:bg-gray-100 hover:text-gray-700 hover:ring-4 hover:ring-gray-100/70 dark:hover:bg-dark-800 dark:hover:text-dark-200 dark:hover:ring-dark-800/35";
+
+const sitemapSoftDangerIconButtonClass =
+  "transition-all duration-200 hover:bg-red-500/5 hover:text-red-500 hover:ring-4 hover:ring-red-100/70 dark:hover:bg-red-400/10 dark:hover:text-red-300 dark:hover:ring-red-400/10";
+
 const flattenNavigation = (items: SiteNavigationItem[]) => {
   const rows: SiteNavigationItem[] = [];
 
@@ -566,7 +580,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
       {message && (
         <div className={`mb-5 rounded-md px-3 py-2 text-sm ${
-          message.type === "success" ? "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-300" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-300"
+          message.type === "success" ? "bg-primary-50 text-primary-600 dark:bg-primary-400/10 dark:text-primary-300" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-300"
         }`}>
           {message.text}
         </div>
@@ -580,7 +594,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
                 <div className="text-sm font-bold text-gray-950 dark:text-dark-100">Menu groups</div>
                 <div className="mt-1 text-xs text-gray-400">레이아웃에서 호출하는 메뉴 묶음</div>
               </div>
-              <Button type="button" onClick={openCreateGroupModal} icon={<Plus size={14} />} className="!px-3">
+              <Button type="button" onClick={openCreateGroupModal} icon={<Plus size={14} />} className={sitemapSmallButtonClass}>
                 추가
               </Button>
             </div>
@@ -613,11 +627,11 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
               </div>
               <div className="flex gap-2">
                 {selectedGroup && (
-                  <Button type="button" onClick={() => openEditGroupModal(selectedGroup)} icon={<Edit3 size={14} />} className="!px-3">
+                  <Button type="button" onClick={() => openEditGroupModal(selectedGroup)} icon={<Edit3 size={14} />} className={sitemapSmallButtonClass}>
                     그룹
                   </Button>
                 )}
-                <Button type="button" onClick={handleCreateMenu} icon={<Plus size={14} />} className="!px-3 !bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white">
+                <Button type="button" onClick={handleCreateMenu} icon={<Plus size={14} />} className={`${sitemapSmallButtonClass} ${sitemapPrimaryButtonClass}`}>
                   메뉴
                 </Button>
               </div>
@@ -655,7 +669,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
               </div>
             </div>
             {selectedMenu && (
-              <Button type="button" onClick={() => handleRemoveMenu(selectedMenu)} icon={<Trash2 size={14} />} className="!bg-red-50 !text-red-500 hover:!bg-red-500 hover:!text-white">
+              <Button type="button" onClick={() => handleRemoveMenu(selectedMenu)} icon={<Trash2 size={14} />} className={sitemapDangerButtonClass}>
                 삭제
               </Button>
             )}
@@ -670,7 +684,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
                   </div>
                   <div className="text-sm font-bold text-gray-500">수정할 메뉴를 선택하세요.</div>
                   <p className="mt-2 text-xs leading-5 text-gray-400">왼쪽 메뉴 목록에서 항목을 누르면 상세 정보가 표시됩니다.</p>
-                  <Button type="button" onClick={handleCreateMenu} icon={<Plus size={14} />} className="mt-5 !bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white">
+                  <Button type="button" onClick={handleCreateMenu} icon={<Plus size={14} />} className={`mt-5 ${sitemapPrimaryButtonClass}`}>
                     새 메뉴 추가
                   </Button>
                 </div>
@@ -718,12 +732,12 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
                     <span className="block text-sm font-bold text-gray-900 dark:text-dark-100">메뉴 사용</span>
                     <span className="mt-1 block text-xs text-gray-500">꺼두면 공개 레이아웃 메뉴에서 숨겨집니다.</span>
                   </span>
-                  <input type="checkbox" name="isActive" checked={menuFormState.isActive} onChange={handleMenuChange("isActive")} className="h-4 w-4 rounded border-gray-300 text-blue-600" />
+                  <input type="checkbox" name="isActive" checked={menuFormState.isActive} onChange={handleMenuChange("isActive")} className="h-4 w-4 rounded border-gray-300 text-primary-600" />
                 </label>
 
                 <div className="mt-6 flex justify-end gap-2">
                   <Button type="button" onClick={() => resetMenuForm()}>초기화</Button>
-                  <Button type="submit" isLoading={isPending} icon={menuFormState.id ? <CheckCircle2 size={15} /> : <Plus size={15} />} className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white">
+                  <Button type="submit" isLoading={isPending} icon={menuFormState.id ? <CheckCircle2 size={15} /> : <Plus size={15} />} className={sitemapPrimaryButtonClass}>
                     {menuFormState.id ? "수정하기" : "추가하기"}
                   </Button>
                 </div>
@@ -741,7 +755,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
               <div className="text-base font-bold text-gray-950 dark:text-dark-100">{groupFormState.id ? "메뉴 그룹 수정" : "메뉴 그룹 추가"}</div>
               <p className="mt-1 text-xs leading-5 text-gray-500">레이아웃에서 호출할 메뉴 묶음을 관리합니다.</p>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-950 text-white dark:bg-cyan-500 dark:text-dark-950">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-950 text-white dark:bg-primary-400 dark:text-dark-950">
               <FolderTree size={16} />
             </div>
           </div>
@@ -771,7 +785,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
                 <span className="block text-sm font-bold text-gray-900 dark:text-dark-100">그룹 사용</span>
                 <span className="mt-1 block text-xs text-gray-500">꺼두면 공개 메뉴 조회에서 제외됩니다.</span>
               </span>
-              <input type="checkbox" name="groupIsActive" checked={groupFormState.isActive} onChange={handleGroupChange("isActive")} className="h-4 w-4 rounded border-gray-300 text-blue-600" />
+              <input type="checkbox" name="groupIsActive" checked={groupFormState.isActive} onChange={handleGroupChange("isActive")} className="h-4 w-4 rounded border-gray-300 text-primary-600" />
             </label>
           </div>
 
@@ -783,13 +797,13 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
                   const targetGroup = groups.find((group) => group.id === groupFormState.id);
                   if (targetGroup) handleRemoveGroup(targetGroup);
                 }}
-                className="!bg-red-50 !text-red-500 hover:!bg-red-500 hover:!text-white"
+                className={sitemapDangerButtonClass}
               >
                 삭제
               </Button>
             )}
             <Button type="button" onClick={() => setShowGroupModal(false)}>닫기</Button>
-            <Button type="submit" isLoading={isPending} icon={groupFormState.id ? <CheckCircle2 size={15} /> : <Plus size={15} />} className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white">
+            <Button type="submit" isLoading={isPending} icon={groupFormState.id ? <CheckCircle2 size={15} /> : <Plus size={15} />} className={sitemapPrimaryButtonClass}>
               {groupFormState.id ? "수정" : "추가"}
             </Button>
           </div>
@@ -840,17 +854,17 @@ const SortableGroupButton = ({
         isDragging
           ? "bg-white text-gray-400 opacity-60 dark:bg-dark-900 dark:text-dark-500"
           : isOver
-          ? "bg-blue-50 text-blue-600 dark:bg-cyan-500/10 dark:text-cyan-300"
+          ? "bg-primary-500/5 text-primary-600 ring-4 ring-primary-500/10 dark:bg-primary-400/10 dark:text-primary-300 dark:ring-primary-400/10"
           : isSelected
-            ? "bg-gray-950 text-white shadow-lg shadow-gray-950/10 dark:bg-cyan-500 dark:text-dark-950 dark:shadow-cyan-950/20"
-            : "text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-dark-400 dark:hover:bg-white/[0.04] dark:hover:text-dark-100"
+            ? "bg-gray-950 text-white shadow-lg shadow-gray-950/10 dark:bg-dark-100 dark:text-dark-950 dark:shadow-black/20"
+            : "text-gray-500 hover:bg-gray-100 hover:text-gray-900 hover:ring-4 hover:ring-gray-100/70 dark:text-dark-400 dark:hover:bg-white/[0.04] dark:hover:text-dark-100 dark:hover:ring-dark-800/35"
       }`}
     >
       <span
         {...attributes}
         {...listeners}
         className={`grid h-8 w-5 shrink-0 cursor-grab place-items-center rounded-md active:cursor-grabbing ${
-          isSelected ? "text-white/45 hover:bg-white/10 dark:text-dark-950/55" : "text-gray-300 hover:bg-white hover:text-gray-500 dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-300"
+          isSelected ? "text-white/45 hover:bg-white/10 dark:text-dark-950/55" : `text-gray-300 dark:text-dark-600 ${sitemapSoftIconButtonClass}`
         }`}
       >
         <GripVertical size={14} />
@@ -874,7 +888,7 @@ const SortableGroupButton = ({
       </button>
       <div className="ml-1 flex shrink-0 items-center gap-0.5">
         <span className={`grid h-7 min-w-7 place-items-center rounded-md px-2 text-[10px] font-bold ${
-          isSelected ? "bg-white text-gray-950 dark:bg-dark-950 dark:text-cyan-300" : "bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300"
+            isSelected ? "bg-white text-gray-950 dark:bg-dark-950 dark:text-dark-100" : "bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300"
         }`}>
           {count}
         </span>
@@ -884,8 +898,8 @@ const SortableGroupButton = ({
             event.stopPropagation();
             onEdit();
           }}
-          className={`grid h-7 w-7 cursor-pointer place-items-center rounded-md transition-colors ${
-            isSelected ? "text-white/45 hover:bg-white/10 hover:text-white dark:text-dark-950/60 dark:hover:bg-dark-950/15 dark:hover:text-dark-950" : "text-gray-300 hover:bg-white hover:text-blue-500 dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-cyan-400"
+          className={`grid h-7 w-7 cursor-pointer place-items-center rounded-md ${
+            isSelected ? "text-white/45 transition-colors hover:bg-white/10 hover:text-white dark:text-dark-950/60 dark:hover:bg-dark-950/15 dark:hover:text-dark-950" : `text-gray-300 dark:text-dark-600 ${sitemapSoftIconButtonClass}`
           }`}
           aria-label={`${group.title} 그룹 수정`}
         >
@@ -897,8 +911,8 @@ const SortableGroupButton = ({
             event.stopPropagation();
             onDelete();
           }}
-          className={`grid h-7 w-7 cursor-pointer place-items-center rounded-md transition-colors ${
-            isSelected ? "text-white/45 hover:bg-white/10 hover:text-white dark:text-dark-950/60 dark:hover:bg-dark-950/15 dark:hover:text-dark-950" : "text-gray-300 hover:bg-red-50 hover:text-red-500 dark:text-dark-600 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+          className={`grid h-7 w-7 cursor-pointer place-items-center rounded-md ${
+            isSelected ? "text-white/45 transition-colors hover:bg-white/10 hover:text-white dark:text-dark-950/60 dark:hover:bg-dark-950/15 dark:hover:text-dark-950" : `text-gray-300 dark:text-dark-600 ${sitemapSoftDangerIconButtonClass}`
           }`}
           aria-label={`${group.title} 그룹 삭제`}
         >
@@ -924,7 +938,7 @@ const DroppableMenuList = ({
     <div
       ref={setNodeRef}
       className={`max-h-[650px] min-h-[180px] overflow-y-auto p-2 transition-colors ${
-        isOver ? "bg-blue-50/40 dark:bg-cyan-500/10" : ""
+        isOver ? "bg-primary-500/5 dark:bg-primary-400/10" : ""
       }`}
     >
       {children}
@@ -969,14 +983,14 @@ const SortableMenuItem = ({
       style={style}
       className={`relative mb-1.5 flex cursor-pointer items-center gap-2 overflow-hidden rounded-lg border px-3 py-2.5 text-left transition-colors ${
         isOver
-          ? "border-blue-200 bg-blue-50 text-blue-600 ring-2 ring-blue-100 dark:border-cyan-500/40 dark:bg-cyan-500/10 dark:text-cyan-300 dark:ring-cyan-500/10"
+          ? "border-primary-500/25 bg-primary-500/5 text-primary-600 ring-4 ring-primary-500/10 dark:border-primary-400/30 dark:bg-primary-400/10 dark:text-primary-300 dark:ring-primary-400/10"
           : isDragging
             ? "border-gray-200 bg-white text-gray-400 opacity-60 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500"
             : isSelected
-              ? "border-blue-200 bg-blue-50/70 text-blue-600 shadow-sm shadow-blue-50 dark:border-cyan-500/40 dark:bg-cyan-500/10 dark:text-cyan-300 dark:shadow-none"
+              ? "border-primary-500/25 bg-primary-500/5 text-primary-600 ring-4 ring-primary-500/10 dark:border-primary-400/30 dark:bg-primary-400/10 dark:text-primary-300 dark:ring-primary-400/10"
               : item.depth > 0
-                ? "border-gray-100 bg-gray-50/80 text-gray-700 hover:border-gray-200 hover:bg-white dark:border-dark-800 dark:bg-dark-950/70 dark:text-dark-300 dark:hover:border-dark-700 dark:hover:bg-dark-800"
-                : "border-gray-100 bg-white text-gray-700 hover:border-gray-200 hover:bg-gray-50 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-700 dark:hover:bg-dark-800"
+                ? "border-gray-100 bg-gray-50/80 text-gray-700 hover:border-gray-200 hover:bg-white hover:ring-4 hover:ring-gray-100/70 dark:border-dark-800 dark:bg-dark-950/70 dark:text-dark-300 dark:hover:border-dark-700 dark:hover:bg-dark-800 dark:hover:ring-dark-800/35"
+                : "border-gray-100 bg-white text-gray-700 hover:border-gray-200 hover:bg-gray-50 hover:ring-4 hover:ring-gray-100/70 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-700 dark:hover:bg-dark-800 dark:hover:ring-dark-800/35"
       }`}
     >
       {item.depth > 0 && (
@@ -999,7 +1013,7 @@ const SortableMenuItem = ({
         <span
           {...attributes}
           {...listeners}
-          className="grid h-6 w-5 cursor-grab place-items-center rounded-md text-gray-300 transition-colors hover:bg-white hover:text-gray-500 active:cursor-grabbing dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-300"
+          className="grid h-6 w-5 cursor-grab place-items-center rounded-md text-gray-300 transition-all duration-200 hover:bg-gray-100 hover:text-gray-500 hover:ring-4 hover:ring-gray-100/70 active:cursor-grabbing dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-300 dark:hover:ring-dark-800/35"
           onClick={(event) => event.stopPropagation()}
         >
           <GripVertical size={13} />
@@ -1020,9 +1034,9 @@ const SortableMenuItem = ({
       </span>
 
       <span className={`ml-2 flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${
-        item.isActive ? "bg-cyan-50 text-cyan-500 dark:bg-cyan-500/10 dark:text-cyan-300" : "bg-gray-100 text-gray-300 dark:bg-dark-800 dark:text-dark-500"
+        item.isActive ? "bg-primary-500/5 text-primary-600 dark:bg-primary-400/10 dark:text-primary-300" : "bg-gray-100 text-gray-300 dark:bg-dark-800 dark:text-dark-500"
       }`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${item.isActive ? "bg-cyan-400" : "bg-gray-300"}`} />
+        <span className={`h-1.5 w-1.5 rounded-full ${item.isActive ? "bg-primary-500" : "bg-gray-300"}`} />
         {item.isActive ? "ON" : "OFF"}
       </span>
     </button>

@@ -39,13 +39,13 @@ export default async function ExtraFieldPage({
             <ChevronRight size={12} />
             <span>게시판 설정</span>
             <ChevronRight size={12} />
-            <span className="text-blue-600 font-bold">확장 필드 빌더</span>
+            <span className="text-primary-600 font-bold">확장 필드 빌더</span>
           </nav>
 
           <div className="flex flex-col gap-1">
             <div className="text-2xl font-bold text-gray-900 flex items-center gap-3 dark:text-dark-100">
               {post.moduleName}
-              <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">
+              <span className="px-2.5 py-0.5 rounded-full bg-primary-50 text-primary-600 text-xs font-bold border border-primary-100 dark:border-primary-400/20 dark:bg-primary-400/10 dark:text-primary-300">
                 ID: {post.mid}
               </span>
             </div>

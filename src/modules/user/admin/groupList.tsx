@@ -15,6 +15,15 @@ type Props = {
   initialGroupList: GroupInfo[];
 };
 
+const adminActionButtonClass =
+  "inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-950 hover:ring-4 hover:ring-gray-100/70 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-100 dark:hover:ring-dark-800/35";
+
+const adminPrimaryButtonClass =
+  "border-primary-500/25 bg-white text-primary-600 ring-4 ring-primary-500/10 hover:border-primary-500/30 hover:bg-primary-500/5 active:bg-primary-500/10 hover:text-primary-600 hover:ring-primary-500/10 dark:border-primary-400/25 dark:bg-dark-900 dark:text-primary-300 dark:ring-primary-400/10 dark:hover:bg-primary-400/10 dark:active:bg-primary-400/15";
+
+const adminDangerButtonClass =
+  "inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/5 px-3.5 py-2 text-xs font-medium text-red-500 transition-all duration-200 hover:bg-red-500/10 hover:ring-4 hover:ring-red-100/70 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300 dark:hover:ring-red-400/10";
+
 const DashboardUserGroupList = ({ initialGroupList }: Props) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -118,7 +127,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
             type="button"
             onClick={openCreateModal}
             fullWidth={false}
-            className="!bg-blue-100 !text-blue-500 hover:!bg-blue-600 hover:!text-white"
+            className={adminPrimaryButtonClass}
             icon={<Plus size={15} />}
           >
             그룹 추가
@@ -161,7 +170,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
                             type="button"
                             onClick={() => openUpdateModal(group)}
                             disabled={isPending}
-                            className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white disabled:cursor-not-allowed disabled:text-gray-300 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-cyan-500 dark:hover:text-dark-950"
+                            className={`${adminActionButtonClass} cursor-pointer`}
                           >
                             <Edit3 size={13} />
                             수정
@@ -170,7 +179,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
                             type="button"
                             onClick={() => handleGroupDelete(group.id)}
                             disabled={isPending}
-                            className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold text-red-500 transition-colors hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:text-red-200"
+                            className={`${adminDangerButtonClass} cursor-pointer`}
                           >
                             <Trash2 size={13} />
                             삭제
@@ -282,7 +291,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
                 type="submit"
                 isLoading={isPending}
                 fullWidth={false}
-                className="!bg-cyan-500 !text-white hover:!bg-cyan-600 hover:!text-white"
+                className={adminPrimaryButtonClass}
               >
                 저장하기
               </Button>

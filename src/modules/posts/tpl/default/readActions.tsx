@@ -18,7 +18,7 @@ const ReadActions = ({ mid, slug, canEdit }: ReadActionsProps) => {
         type="button"
         fullWidth={false}
         onClick={() => router.push(`/posts/${mid}`)}
-        className="!bg-gray-50 !py-1.5 !px-6 !border-gray-100 !text-gray-800 hover:!bg-gray-100 dark:!border-dark-700 dark:!bg-dark-900 dark:!text-dark-200 dark:hover:!bg-dark-800 dark:hover:!text-dark-100"
+        className="min-w-20 !px-5 !py-2"
       >
         목록
       </Button>
@@ -29,7 +29,7 @@ const ReadActions = ({ mid, slug, canEdit }: ReadActionsProps) => {
             type="button"
             fullWidth={false}
             onClick={() => router.push(`/posts/${mid}/${slug}/edit`)}
-            className="!bg-blue-50 !py-1.5 !px-6 !border-blue-100 !text-blue-600 hover:!bg-blue-600 hover:!text-white transition-all dark:!border-dark-700 dark:!bg-dark-900 dark:!text-dark-200 dark:hover:!bg-dark-800 dark:hover:!text-dark-100"
+            className="min-w-20 border-primary-500/25 !px-5 !py-2 text-primary-600 hover:border-primary-500/35 hover:bg-primary-50 hover:text-primary-600 hover:ring-primary-100/70 dark:border-primary-400/20 dark:text-primary-300 dark:hover:bg-primary-400/10 dark:hover:ring-primary-400/10"
           >
             수정
           </Button>
@@ -37,7 +37,7 @@ const ReadActions = ({ mid, slug, canEdit }: ReadActionsProps) => {
             type="button"
             fullWidth={false}
             onClick={() => router.push(`/posts/${mid}/${slug}/delete`)}
-            className="!bg-red-50 !py-1.5 !px-6 !border-red-100 !text-red-500 hover:!bg-red-600 hover:!text-white transition-all dark:!border-red-900/40 dark:!bg-red-950/20 dark:!text-red-300 dark:hover:!bg-red-900/50 dark:hover:!text-red-100"
+            className="min-w-20 border-red-500/20 !px-5 !py-2 text-red-500 hover:bg-red-500/5 hover:ring-red-100/70 dark:border-red-400/20 dark:text-red-300 dark:hover:bg-red-400/10 dark:hover:ring-red-400/10"
           >
             삭제
           </Button>

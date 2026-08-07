@@ -73,6 +73,18 @@ type BrowserPushState = {
   subscribed: boolean;
 };
 
+const settingsPrimaryButtonClass =
+  "border-primary-500/25 bg-white text-primary-600 ring-4 ring-primary-500/5 hover:border-primary-500/30 hover:bg-primary-500/5 hover:text-primary-600 hover:ring-primary-500/10 active:bg-primary-500/10 disabled:border-gray-200 disabled:bg-white disabled:text-gray-300 disabled:ring-transparent dark:border-primary-400/25 dark:bg-dark-900 dark:text-primary-300 dark:ring-primary-400/10 dark:hover:bg-primary-400/10 dark:active:bg-primary-400/15 dark:disabled:border-dark-800 dark:disabled:bg-dark-900 dark:disabled:text-dark-600";
+
+const settingsGhostButtonClass =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-950 hover:ring-4 hover:ring-gray-100/70 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-100 dark:hover:ring-dark-800/35";
+
+const settingsDarkButtonClass =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-950 bg-gray-950 px-4 text-xs font-medium text-white ring-4 ring-gray-950/5 transition-all duration-200 hover:bg-gray-800 hover:ring-gray-950/10 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-100 dark:bg-dark-100 dark:text-gray-950 dark:ring-white/10 dark:hover:bg-white dark:hover:ring-white/15";
+
+const settingsIconButtonClass =
+  "inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-200 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-950 hover:ring-4 hover:ring-gray-100/70 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-100 dark:hover:ring-dark-800/35";
+
 const sectionMeta: Record<SettingsSection, {
   label: string;
   eyebrow: string;
@@ -238,7 +250,7 @@ const Toggle = ({
       <button
         type="button"
         onClick={handleClick}
-        className="relative block h-6 w-11 min-w-11 shrink-0 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-cyan-500 dark:bg-dark-700 dark:data-[checked=true]:bg-cyan-500"
+        className="relative block h-6 w-11 min-w-11 shrink-0 cursor-pointer rounded-full bg-gray-200 transition-colors data-[checked=true]:bg-primary-500 dark:bg-dark-700 dark:data-[checked=true]:bg-primary-400"
         data-checked={active}
         aria-pressed={active}
       >
@@ -319,7 +331,7 @@ const SiteImageUploadField = ({
       </div>
       <label
         htmlFor={inputId}
-        className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md bg-gray-950 px-3 text-xs font-bold text-white transition-colors hover:bg-blue-500"
+        className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-gray-950 bg-gray-950 px-4 text-xs font-medium text-white ring-4 ring-gray-950/5 transition-all duration-200 hover:bg-gray-800 hover:ring-gray-950/10 dark:border-dark-100 dark:bg-dark-100 dark:text-gray-950 dark:ring-white/10 dark:hover:bg-white dark:hover:ring-white/15"
       >
         <Upload size={13} />
         파일 선택
@@ -1072,7 +1084,7 @@ const Settings = ({
             type="button"
             disabled={!handleReset || isPending}
             onClick={handleReset}
-            className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:bg-white disabled:text-gray-400 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:bg-dark-800 dark:hover:text-white dark:disabled:bg-dark-900 dark:disabled:text-dark-600"
+            className="border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-950 hover:ring-4 hover:ring-gray-100/70 disabled:bg-white disabled:text-gray-300 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-100 dark:hover:ring-dark-800/35 dark:disabled:bg-dark-900 dark:disabled:text-dark-600"
           >
             초기화
           </Button>
@@ -1080,7 +1092,7 @@ const Settings = ({
             type="submit"
             isLoading={isPending}
             disabled={!handleSubmit}
-            className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white disabled:!bg-blue-100 disabled:!text-blue-300"
+            className={settingsPrimaryButtonClass}
           >
             저장하기
           </Button>
@@ -1089,7 +1101,7 @@ const Settings = ({
 
       {formMessage && (
         <div className={`mb-6 rounded-md px-3 py-2 text-sm leading-6 ${
-          formMessage.type === "success" ? "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-300" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-300"
+          formMessage.type === "success" ? "bg-primary-50 text-primary-600 dark:bg-primary-400/10 dark:text-primary-300" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-300"
         }`}>
           {formMessage.message}
         </div>
@@ -1562,7 +1574,7 @@ const Settings = ({
                   max={100}
                   value={uploadSettings.imageQuality}
                   onChange={handleUploadInputChange("imageQuality")}
-                  className="w-full accent-cyan-500"
+                  className="w-full accent-primary-500"
                 />
                 <InputField
                   ref={imageQualityRef}
@@ -1763,7 +1775,7 @@ const Settings = ({
                     <button
                       type="button"
                       onClick={refreshPwaStatus}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 dark:border-dark-700 dark:text-dark-300 dark:hover:bg-dark-800"
+                      className={settingsIconButtonClass}
                       aria-label="PWA 상태 새로고침"
                     >
                       <RefreshCw size={14} className={pwaStatusLoading ? "animate-spin" : ""} />
@@ -1824,7 +1836,7 @@ const Settings = ({
                     <button
                       type="button"
                       onClick={refreshBrowserPushState}
-                      className="rounded-full border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-dark-700 dark:text-dark-300 dark:hover:bg-dark-800"
+                      className={settingsGhostButtonClass}
                     >
                       상태 확인
                     </button>
@@ -1832,7 +1844,7 @@ const Settings = ({
                       <button
                         type="button"
                         onClick={handleDisableWebPush}
-                        className="rounded-full bg-gray-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-dark-100"
+                        className={settingsDarkButtonClass}
                       >
                         구독 해제
                       </button>
@@ -1840,7 +1852,7 @@ const Settings = ({
                       <button
                         type="button"
                         onClick={handleEnableWebPush}
-                        className="rounded-full bg-gray-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-dark-100"
+                        className={settingsDarkButtonClass}
                       >
                         브라우저 알림 켜기
                       </button>

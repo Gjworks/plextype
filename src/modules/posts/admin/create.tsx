@@ -11,6 +11,9 @@ import PostPermissions from "./components/postPermissions";
 import Button from "@components/button/Button";
 import Alert from "@components/message/Alert";
 
+const adminPrimaryButtonClass =
+  "border-primary-500/25 bg-white text-primary-600 ring-4 ring-primary-500/10 hover:border-primary-500/30 hover:bg-primary-500/5 active:bg-primary-500/10 hover:text-primary-600 hover:ring-primary-500/10 dark:border-primary-400/25 dark:bg-dark-900 dark:text-primary-300 dark:ring-primary-400/10 dark:hover:bg-primary-400/10 dark:active:bg-primary-400/15";
+
 const DashboardPostCreate = ({
   initialData,
   groupList,
@@ -172,7 +175,6 @@ const DashboardPostCreate = ({
             type="button"
             onClick={() => router.back()}
             fullWidth={false}
-            className="border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:bg-dark-800 dark:hover:text-white"
           >
             뒤로가기
           </Button>
@@ -181,7 +183,7 @@ const DashboardPostCreate = ({
             onClick={handleSubmit}
             isLoading={loading}
             fullWidth={false}
-            className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white"
+            className={adminPrimaryButtonClass}
           >
             {isUpdateMode ? "저장하기" : "생성하기"}
           </Button>

@@ -319,7 +319,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
         <Button
           type="button"
           onClick={() => router.back()}
-          className="bg-gray-100 text-gray-600"
+          className="min-w-24"
         >
           취소
         </Button>
@@ -327,7 +327,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
           type="button"
           isLoading={loading}
           onClick={() => handleSubmit(formRef.current)}
-          className="!bg-blue-100 !text-blue-500 hover:!bg-blue-500 hover:!text-white px-10"
+          className="min-w-28 border-primary-500/25 text-primary-600 hover:border-primary-500/35 hover:bg-primary-50 hover:text-primary-600 hover:ring-primary-100/70 dark:border-primary-400/20 dark:text-primary-300 dark:hover:bg-primary-400/10 dark:hover:ring-primary-400/10"
         >
           저장하기
         </Button>

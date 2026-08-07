@@ -13,6 +13,7 @@ import { CommentWithChildren } from "@/modules/comment/actions/_type";
 import TiptapEditor from "@components/editor/tiptap/tiptapEditor";
 import { Attachment } from "@/modules/attachment";
 import type { Attachment as IAttachment } from "@/modules/attachment/actions/_type";
+import NotificationToggle from "./NotificationToggle";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -541,15 +542,13 @@ export default function CommentsList({
 	                  <span className="font-mono text-[10px] tracking-tighter text-gray-300 dark:text-dark-500">
           {newContent.length} / 1000 characters
         </span>
-	                  <label className="mt-2 flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400 dark:text-dark-400">
-                    <input
-                      type="checkbox"
+	                  <div className="mt-2">
+                    <NotificationToggle
                       checked={newNotificationEnabled}
-                      onChange={(event) => setNewNotificationEnabled(event.target.checked)}
-	                      className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
+                      onChange={setNewNotificationEnabled}
+                      label="이 댓글의 답글 알림 받기"
                     />
-                    이 댓글의 답글 알림 받기
-                  </label>
+                  </div>
                 </div>
 
                 {/* 오른쪽: 등록 버튼 */}
@@ -558,9 +557,9 @@ export default function CommentsList({
                   isLoading={loading}
                   disabled={!newContent.trim()}
                   className={`
-          !py-2.5 !px-6 !rounded-xl !font-bold transition-all
+          min-w-28 border-primary-500/25 !px-5 !py-2.5 text-xs text-primary-600 transition-all dark:border-primary-400/20 dark:text-primary-300
           ${newContent.trim()
-	                    ? "!bg-gray-900 !text-white shadow-lg shadow-gray-900/20 dark:!bg-dark-100 dark:!text-dark-950 dark:shadow-black/30"
+	                    ? "hover:border-primary-500/35 hover:bg-primary-50 hover:text-primary-600 hover:ring-primary-100/70 dark:hover:bg-primary-400/10 dark:hover:ring-primary-400/10"
 	                    : "!bg-gray-100 !text-gray-400 dark:!bg-dark-800 dark:!text-dark-500"
                   }
         `}
@@ -695,15 +694,11 @@ export default function CommentsList({
                 {/* 입력창 하단: 툴바 스타일 */}
 	                <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2 dark:border-dark-800 dark:bg-dark-950/50">
                   {!isEditMode ? (
-	                    <label className="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-400 dark:text-dark-400">
-                      <input
-                        type="checkbox"
-                        checked={modalNotificationEnabled}
-                        onChange={(event) => setModalNotificationEnabled(event.target.checked)}
-	                        className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
-                      />
-                      답글 알림 받기
-                    </label>
+                    <NotificationToggle
+                      checked={modalNotificationEnabled}
+                      onChange={setModalNotificationEnabled}
+                      label="답글 알림 받기"
+                    />
                   ) : (
 	                    <span className="text-[10px] text-gray-300 dark:text-dark-500">댓글 내용을 수정합니다.</span>
                   )}
@@ -732,7 +727,7 @@ export default function CommentsList({
                   className={
                     isEditMode
 	                      ? "!bg-gray-100 !text-gray-700 hover:!bg-gray-900 hover:!text-white !px-7 !font-bold dark:!bg-dark-800 dark:!text-dark-200 dark:hover:!bg-dark-100 dark:hover:!text-dark-950"
-	                      : "!bg-gray-900 !text-white hover:!bg-gray-800 !px-7 !font-bold shadow-lg shadow-gray-900/20 dark:!bg-dark-100 dark:!text-dark-950 dark:hover:!bg-dark-200"
+	                      : "border-primary-500/25 !px-7 text-primary-600 hover:border-primary-500/35 hover:bg-primary-50 hover:text-primary-600 hover:ring-primary-100/70 dark:border-primary-400/20 dark:text-primary-300 dark:hover:bg-primary-400/10 dark:hover:ring-primary-400/10"
                   }
                   icon={!loading && (
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">

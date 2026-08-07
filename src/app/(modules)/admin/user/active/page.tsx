@@ -16,7 +16,7 @@ const UserRow = ({ user, onKick }: { user: any; onKick: (id: string, ip: string,
     <tr className="hover:bg-gray-50/30 transition-colors dark:hover:bg-white/[0.04]">
       <td className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] text-blue-600 font-bold">{user.nickName?.charAt(0)}</div>
+          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-[10px] text-primary-600 font-bold dark:bg-primary-400/10 dark:text-primary-300">{user.nickName?.charAt(0)}</div>
           <span className="text-sm font-medium text-gray-700 dark:text-dark-100">{user.nickName}</span>
         </div>
       </td>
@@ -24,9 +24,9 @@ const UserRow = ({ user, onKick }: { user: any; onKick: (id: string, ip: string,
       <td className="p-4 text-sm text-gray-400 font-mono">{user.ip}</td>
 
       {/* 🌟 2. 접속 시간 컬럼 데이터 */}
-      <td className="p-4 text-sm text-blue-500 font-medium">
+      <td className="p-4 text-sm text-primary-500 font-medium dark:text-primary-300">
         <div className="flex items-center gap-1">
-          <Clock size={12} className="text-blue-300" />
+          <Clock size={12} className="text-primary-300" />
           {timeAgo}
         </div>
       </td>

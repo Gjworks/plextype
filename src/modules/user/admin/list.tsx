@@ -28,6 +28,12 @@ type Props = {
 const checkboxClass =
   "h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500";
 
+const adminActionButtonClass =
+  "inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-950 hover:ring-4 hover:ring-gray-100/70 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-100 dark:hover:ring-dark-800/35";
+
+const adminPrimaryButtonClass =
+  "inline-flex items-center justify-center gap-2 rounded-xl border border-primary-500/25 bg-white px-5 py-2.5 text-xs font-medium text-primary-600 ring-4 ring-primary-500/10 transition-all duration-200 hover:border-primary-500/30 hover:bg-primary-500/5 active:bg-primary-500/10 hover:ring-primary-500/10 dark:border-primary-400/25 dark:bg-dark-900 dark:text-primary-300 dark:ring-primary-400/10 dark:hover:bg-primary-400/10 dark:active:bg-primary-400/15";
+
 const AdminUserTimelinePanel = ({ userId }: { userId: number }) => {
   const loadTimeline = useCallback((
     cursor?: string | null,
@@ -168,7 +174,7 @@ const AdminUserList = ({
             </button>
           </form>
 
-          <Link href="/admin/user/create" className="inline-flex w-auto items-center justify-center gap-2 rounded bg-blue-100 px-5 py-2 text-xs font-medium text-blue-500 transition-colors duration-200 hover:bg-blue-600 hover:text-white">
+          <Link href="/admin/user/create" className={adminPrimaryButtonClass}>
             <Plus size={15} />
             회원추가
           </Link>
@@ -232,7 +238,7 @@ const AdminUserList = ({
                                 type="button"
                                 onClick={() => handleStatusChange(item.id, "active")}
                                 disabled={isPending}
-                                className="cursor-pointer rounded-md bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                className="cursor-pointer rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1 text-[11px] font-medium text-emerald-600 transition-all hover:bg-emerald-500/10 hover:ring-4 hover:ring-emerald-100/60 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:ring-emerald-400/10"
                               >
                                 승인
                               </button>
@@ -245,14 +251,14 @@ const AdminUserList = ({
                       <button
                         type="button"
                         onClick={() => handleOpenTimeline(item.id)}
-                        className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-cyan-500 hover:text-white dark:bg-dark-800 dark:text-dark-300"
+                        className={`${adminActionButtonClass} cursor-pointer`}
                       >
                         <Activity size={13} />
                         보기
                       </button>
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <Link href={`/admin/user/update/${item.id}`} className="inline-flex items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-900 hover:text-white dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-cyan-500 dark:hover:text-dark-950">
+                      <Link href={`/admin/user/update/${item.id}`} className={adminActionButtonClass}>
                         <Edit3 size={13} />
                         수정
                       </Link>
