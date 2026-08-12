@@ -34,8 +34,8 @@ import {
   upsertSiteNavigationGroupsQuery,
 } from "./sitemap.query";
 
-const SITE_NAVIGATION_CACHE_PREFIX = "app:navigation";
-const SITE_NAVIGATION_CACHE_TTL = 60 * 60 * 24;
+const SITE_NAVIGATION_CACHE_PREFIX = "app:navigation:v2";
+const SITE_NAVIGATION_CACHE_TTL = 60 * 5;
 
 const DEFAULT_SITE_NAVIGATION_GROUPS: SiteNavigationGroupSeed[] = [
   {
@@ -272,6 +272,30 @@ const buildNavigationTree = (items: Awaited<ReturnType<typeof getSiteNavigationI
   return roots;
 };
 
+const dedupeNavigationTree = (items: SiteNavigationItem[]): SiteNavigationItem[] => {
+  const seen = new Set<string>();
+
+  return items.reduce<SiteNavigationItem[]>((result, item) => {
+    const key = [
+      item.parentId || "root",
+      item.groupKey,
+      item.name,
+      item.href,
+      item.title,
+    ].join(":");
+
+    if (seen.has(key)) return result;
+    seen.add(key);
+
+    result.push({
+      ...item,
+      children: dedupeNavigationTree(item.children),
+    });
+
+    return result;
+  }, []);
+};
+
 const ensureDefaultSiteNavigationAction = async () => {
   await ensureSiteNavigationTableQuery();
   await upsertSiteNavigationGroupsQuery(DEFAULT_SITE_NAVIGATION_GROUPS);
@@ -290,7 +314,7 @@ const readSiteNavigationCache = async (groupKey: string): Promise<SiteNavigation
     const cached = await redisClient.get(getNavigationCacheKey(groupKey));
     if (!cached) return null;
 
-    return JSON.parse(cached) as SiteNavigationItem[];
+    return dedupeNavigationTree(JSON.parse(cached) as SiteNavigationItem[]);
   } catch (error) {
     console.warn("readSiteNavigationCache Warning:", error);
     return null;
@@ -411,7 +435,7 @@ export const getPublicSiteNavigationAction = async (groupKey = "header-main"): P
 
     await ensureDefaultSiteNavigationAction();
     const items = await getSiteNavigationItemsQuery(groupKey, false);
-    const data = buildNavigationTree(items);
+    const data = dedupeNavigationTree(buildNavigationTree(items));
     await writeSiteNavigationCache(groupKey, data);
 
     return {
