@@ -2,6 +2,7 @@ require("dotenv/config");
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { Client } = require("pg");
 
@@ -93,6 +94,7 @@ async function main() {
   const adminEmail = getEnv("ADMIN_EMAIL", "admin@test.com");
   const adminNickname = getEnv("ADMIN_NICKNAME", "운영자");
   const adminSlug = slugify(adminId, "admin");
+  const adminUuid = crypto.randomUUID();
   const hashedAdminPassword = await bcrypt.hash(adminPw, 10);
 
   console.log("Seeding database...");
@@ -115,6 +117,7 @@ async function main() {
     await client.query(`
       INSERT INTO "User" (
         "slug",
+        "uuid",
         "accountId",
         "email_address",
         "nickName",
@@ -125,14 +128,15 @@ async function main() {
         "createdAt",
         "updateAt"
       )
-      VALUES ($1, $2, $3, $4, $5, TRUE, TRUE, 'active', NOW(), NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, 'active', NOW(), NOW())
       ON CONFLICT ("accountId")
       DO UPDATE SET
+        "uuid" = COALESCE("User"."uuid", EXCLUDED."uuid"),
         "isAdmin" = TRUE,
         "isManagers" = TRUE,
         "status" = COALESCE("User"."status", 'active'),
         "updateAt" = NOW()
-    `, [adminSlug, adminId, adminEmail, adminNickname, hashedAdminPassword]);
+    `, [adminSlug, adminUuid, adminId, adminEmail, adminNickname, hashedAdminPassword]);
 
     await client.query(`
       INSERT INTO "Modules" ("mid", "moduleName", "moduleDesc", "status", "createdAt", "updatedAt")
