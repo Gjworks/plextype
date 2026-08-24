@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MonitorSmartphone, RefreshCw, Smartphone, Trash2 } from "lucide-react";
+import { formatKstShortDateTime } from "@/core/utils/date/kst";
 
 type WebPushSubscriptionItem = {
   id: number;
@@ -88,12 +89,7 @@ const formatDateTime = (value?: string) => {
   if (!value) return "기록 없음";
 
   try {
-    return new Intl.DateTimeFormat("ko-KR", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(value));
+    return formatKstShortDateTime(value);
   } catch {
     return "기록 없음";
   }

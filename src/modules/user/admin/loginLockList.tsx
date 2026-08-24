@@ -6,18 +6,14 @@ import { LockKeyhole, RotateCcw, ShieldAlert } from "lucide-react";
 
 import Button from "@components/button/Button";
 import { unlockLoginUserAdminAction, type LoginLockInfo } from "@/modules/user/actions/user.action";
+import { formatKstShortDateTime } from "@/core/utils/date/kst";
 
 type Props = {
   items: LoginLockInfo[];
 };
 
 const formatDate = (date: string) => {
-  return new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
+  return formatKstShortDateTime(date);
 };
 
 const formatSeconds = (seconds: number) => {

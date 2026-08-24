@@ -1,12 +1,11 @@
 import React from "react";
 import DOMPurify from "isomorphic-dompurify";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import PostNotPermission from "@/modules/posts/tpl/default/notPermission";
 import Button from "@components/button/Button";
 import CodeBlockShiki from 'tiptap-extension-code-block-shiki'
 import ReadActions from "./readActions";
 import { codeToHtml } from "shiki";
+import { formatKstRelative, toKstDayjs } from "@/core/utils/date/kst";
 
 // ✅ TipTap 변환 관련 임포트 추가
 import { generateHTML } from "@tiptap/html";
@@ -23,8 +22,6 @@ import { Highlight } from "@tiptap/extension-highlight";
 import BulletList from "@tiptap/extension-bullet-list";
 import OrderedList from "@tiptap/extension-ordered-list";
 import ListItem from "@tiptap/extension-list-item";
-
-dayjs.extend(relativeTime);
 
 const SHIKI_THEME = 'slack-ochin';
 
@@ -263,7 +260,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
                     <span className="w-[3px] h-[3px] rounded-full bg-gray-400"></span>
                   </div>
                   <div className="dark:text-dark-400 text-sm text-gray-500">
-                    {dayjs(document.createdAt).fromNow()}
+                    {formatKstRelative(document.createdAt)}
                   </div>
                 </div>
               </div>
@@ -418,7 +415,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
                     <div key={field.name} className="grid grid-cols-2 gap-4 flex items-center justify-between border-b border-gray-200/40 bg-gray-50 dark:border-dark-700/50 dark:bg-dark-900/70">
                       <div className="px-3 py-3 text-xs font-medium text-gray-500 dark:text-dark-400">{field.label}</div>
                       <div className="px-3 py-3 bg-white text-sm font-bold text-gray-900 dark:bg-dark-950 dark:text-dark-100">
-                        {field.type === 'date' ? dayjs(value).format('YYYY-MM-DD') : String(value)}
+                        {field.type === 'date' ? toKstDayjs(value)?.format('YYYY-MM-DD') : String(value)}
                       </div>
                     </div>
                   );

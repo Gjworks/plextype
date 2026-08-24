@@ -16,6 +16,7 @@ import type {
   AdminCommentListData,
   AdminDocumentListData,
 } from "@/modules/admin/actions/content.action";
+import { formatKstShortDateTime } from "@/core/utils/date/kst";
 
 type ContentSection = "overview" | "documents" | "comments" | "attachments" | "reports";
 
@@ -94,12 +95,7 @@ const defaultNavigation = {
 };
 
 const formatDate = (date: Date | string) => {
-  return new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
+  return formatKstShortDateTime(date);
 };
 
 const formatFileSize = (bytes: number) => {

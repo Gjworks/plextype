@@ -4,15 +4,9 @@ import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Bell, Zap, Trash2, CheckCheck, Loader2, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import "dayjs/locale/ko";
 
 import { hasClientSession } from "@/core/utils/auth/clientAuth";
-
-// dayjs 설정
-dayjs.extend(relativeTime);
-dayjs.locale("ko");
+import { formatKstRelative, toKstDayjs } from "@/core/utils/date/kst";
 
 interface DBNotification {
   uuid: string;
@@ -131,7 +125,7 @@ const MymenuTemplate = () => {
           <div>
             <div className="text-[28px] font-extrabold text-black/90 dark:text-white/95 tracking-tight">알림 센터</div>
             <p className="text-[12px] font-bold text-black/30 dark:text-white/30 uppercase tracking-[0.2em] mt-1">
-              {dayjs().format('MMMM D일 dddd')}
+              {toKstDayjs(new Date())?.format('MMMM D일 dddd') || ""}
             </p>
           </div>
           <div className="flex gap-2">
@@ -200,7 +194,7 @@ const MymenuTemplate = () => {
                                     <div className="flex justify-between items-center mb-0.5">
                                       <span className="text-[13px] font-bold text-black/80 dark:text-white/90 truncate">{noti.title}</span>
                                       <span className="text-[10px] font-medium text-black/30 dark:text-white/30 whitespace-nowrap ml-2">
-                                    {dayjs(noti.createdAt).fromNow()}
+                                    {formatKstRelative(noti.createdAt)}
                                   </span>
                                     </div>
                                     <p className="text-[12px] text-black/60 dark:text-white/50 leading-snug line-clamp-2">{noti.content}</p>

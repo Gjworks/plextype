@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, MessageSquare } from "lucide-react";
 
 import { getCommentListAll } from "./comment";
+import { formatKstShortDateTime } from "@/core/utils/date/kst";
 
 type CommentItem = Awaited<ReturnType<typeof getCommentListAll>>[number];
 
@@ -38,15 +39,7 @@ const extractCommentPreview = (content?: string | null) => {
 };
 
 const formatDate = (value: Date | string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  return formatKstShortDateTime(value);
 };
 
 const CommentList = ({ count = 6 }: { mid?: string; count?: number }) => {

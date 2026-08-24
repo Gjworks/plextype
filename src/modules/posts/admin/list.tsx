@@ -3,14 +3,13 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import { Edit3, MessageSquareText, Plus, Search, Trash2 } from "lucide-react";
 
 import { removePostsAdminAction } from "@/modules/posts/actions/posts.action";
 import PageNavigation from "@components/nav/PageNavigation";
 import Alert from "@components/message/Alert";
 import Button from "@components/button/Button";
+import { formatKstRelative } from "@/core/utils/date/kst";
 
 interface PostListInfo {
   id: number;
@@ -30,9 +29,6 @@ interface PageNavigationInfo {
   page: number;
   listCount: number;
 }
-
-dayjs.extend(relativeTime);
-dayjs.locale("ko");
 
 const adminActionButtonClass =
   "inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-950 hover:ring-4 hover:ring-gray-100/70 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-100 dark:hover:ring-dark-800/35";
@@ -220,7 +216,7 @@ const AdminPostsList = ({
                       {item.moduleDesc && <div className="mt-1 text-xs text-gray-400">{item.moduleDesc}</div>}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-500 dark:text-dark-300">{item.config?.skin || "default"}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500 dark:text-dark-300">{dayjs(item.createdAt).fromNow()}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500 dark:text-dark-300">{formatKstRelative(item.createdAt)}</td>
                     <td className="px-4 py-4 text-center">
                       <Link href={`/admin/posts/${item.id}/update`} className={adminActionButtonClass}>
                         <Edit3 size={13} />

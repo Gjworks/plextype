@@ -1,6 +1,3 @@
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import "dayjs/locale/ko";
 import DOMPurify from "isomorphic-dompurify";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
@@ -14,9 +11,7 @@ import OrderedList from "@tiptap/extension-ordered-list";
 import ListItem from "@tiptap/extension-list-item";
 import { CommentWithChildren } from "@/modules/comment/actions/_type";
 import CommentItemActions from "./commentItemActions";
-
-dayjs.extend(relativeTime);
-dayjs.locale("ko");
+import { formatKstRelative } from "@/core/utils/date/kst";
 
 const commentExtensions = [
   StarterKit.configure({
@@ -149,7 +144,7 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
                     )}
 	                    <span className="text-[13px] font-bold text-gray-900 dark:text-dark-100">{comment.userName || "익명"}</span>
                     <time className="text-[10px] text-gray-400" dateTime={String(comment.createdAt)}>
-                      {dayjs(comment.createdAt).fromNow()}
+                      {formatKstRelative(comment.createdAt)}
                     </time>
                   </div>
 

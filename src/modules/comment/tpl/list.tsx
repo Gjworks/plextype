@@ -3,8 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
-import relativeTime from "dayjs/plugin/relativeTime";
-import "dayjs/locale/ko";
 import { useRouter } from "next/navigation";
 import Modal from "@components/modal/Modal";
 import Button from "@components/button/Button";
@@ -14,9 +12,7 @@ import TiptapEditor from "@components/editor/tiptap/tiptapEditor";
 import { Attachment } from "@/modules/attachment";
 import type { Attachment as IAttachment } from "@/modules/attachment/actions/_type";
 import NotificationToggle from "./NotificationToggle";
-
-dayjs.extend(relativeTime);
-dayjs.locale("ko");
+import { formatKstRelative } from "@/core/utils/date/kst";
 
 interface UpsertCommentArgs {
   documentId: number;
@@ -382,7 +378,7 @@ export default function CommentsList({
                       />
                     )}
 	                    <span className="text-[13px] font-bold text-gray-900 dark:text-dark-100">{c.userName || "익명"}</span>
-                    <span className="text-[10px] text-gray-400">{dayjs(c.createdAt).fromNow()}</span>
+                    <span className="text-[10px] text-gray-400">{formatKstRelative(c.createdAt)}</span>
                   </div>
 
                   {!c.isDeleted && (currentUser?.isAdmin || currentUser?.id === c.userId) && (
@@ -644,7 +640,7 @@ export default function CommentsList({
                   <div className="flex items-center gap-2 mb-2">
 	                    <span className="text-[11px] font-bold text-gray-700 dark:text-dark-100">@{modalParent.nickName}</span>
 	                    <span className="text-[10px] font-medium text-gray-400 dark:text-dark-500">
-      {dayjs(modalParent.createdAt).fromNow()}
+      {formatKstRelative(modalParent.createdAt)}
     </span>
                   </div>
 

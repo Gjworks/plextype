@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-
-dayjs.extend(relativeTime);
+import { formatKstRelative } from "@/core/utils/date/kst";
 
 const useRelativeTime = (date: string) => {
   const [timeAgo, setTimeAgo] = useState<string>("");
 
   useEffect(() => {
     if (date) {
-      setTimeAgo(dayjs(date).fromNow());
+      setTimeAgo(formatKstRelative(date));
     }
   }, [date]);
 

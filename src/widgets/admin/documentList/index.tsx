@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, FileText } from "lucide-react";
 
 import { getDocumentListAll } from "./document";
+import { formatKstShortDateTime } from "@/core/utils/date/kst";
 
 type DocumentItem = Awaited<ReturnType<typeof getDocumentListAll>>[number];
 
@@ -35,15 +36,7 @@ const extractTextFromTiptap = (content: unknown) => {
 };
 
 const formatDate = (value: Date | string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  return formatKstShortDateTime(value);
 };
 
 const DocumentList = ({ count = 6 }: { mid?: string; count?: number }) => {

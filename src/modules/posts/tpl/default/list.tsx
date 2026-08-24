@@ -5,16 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PostsHeader from "./header";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import { usePostContext } from "./PostProvider";
-import "dayjs/locale/ko";
+import { formatKstRelative } from "@/core/utils/date/kst";
 
 // 💡 1. 쓸모없어진 getPostsAction 대신 우리의 새 매니저를 불러옵니다!
 import { getDocumentList } from "@/modules/document/actions/document.action";
-
-dayjs.extend(relativeTime);
-dayjs.locale("ko");
 
 import PageNavigation from "@components/nav/PageNavigation";
 import Button from "@components/button/Button";
@@ -160,7 +155,7 @@ const PostsListClient = ({
                         <span>{doc.user?.nickName || "작성자"}</span>
                       </div>
                       <div className="relative text-gray-400 text-xs before:bg-gray-300">
-                        {dayjs(doc.createdAt).fromNow()}
+                        {formatKstRelative(doc.createdAt)}
                       </div>
                       <div className="relative flex gap-2 before:bg-gray-300 dark:before:bg-dark-700">
                         <div className="text-xs text-gray-400">댓글</div>
@@ -215,7 +210,7 @@ const PostsListClient = ({
                             </span>
                           </div>
                           <div className="text-gray-400 !text-[12px]">
-                            {dayjs(doc.latestComment?.createdAt).fromNow()}
+                            {formatKstRelative(doc.latestComment?.createdAt)}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 !text-[12px] text-gray-500 dark:text-dark-400">
