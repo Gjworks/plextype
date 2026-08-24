@@ -2,7 +2,7 @@ import DefaultLayout from "@/layouts/default/Layout";
 
 const DefaultLayoutPreviewPage = () => {
   return (
-    <DefaultLayout siteTitle="Plextype Preview" siteUrl="/previews">
+    <DefaultLayout siteTitle="Plextype" siteUrl="/previews">
       <section className="px-3 py-16">
         <div className="mx-auto max-w-screen-md">
           <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Default Layout</div>

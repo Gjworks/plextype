@@ -2,7 +2,7 @@ import AuthLayout from "@/layouts/auth/Layout";
 
 const AuthLayoutPreviewPage = () => {
   return (
-    <AuthLayout siteUrl="/previews" siteTitle="Plextype Preview">
+    <AuthLayout siteUrl="/previews" siteTitle="Plextype">
       <div>
         <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Auth Layout</div>
         <h1 className="mt-3 text-2xl font-semibold text-gray-950 dark:text-white">인증 레이아웃 미리보기</h1>

@@ -53,6 +53,28 @@ body {
     @apply dark:bg-dark-950 dark:text-dark-100;
 }
 
+.studio-shell {
+    font-family: Arial, Helvetica, sans-serif;
+    letter-spacing: -0.01em;
+}
+
+.studio-status-dot {
+    animation: studio-status 2s ease-in-out infinite;
+}
+
+@keyframes studio-status {
+    50% {
+        opacity: 0.45;
+        transform: scale(0.78);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .studio-status-dot {
+        animation: none;
+    }
+}
+
 html[data-font-scale="small"] body {
     font-size: 0.9375rem;
 }
