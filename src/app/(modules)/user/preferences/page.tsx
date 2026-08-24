@@ -14,7 +14,7 @@ const Page = async () => {
     redirect("/auth/signin?redirect=/user/preferences");
   }
 
-  const userLayoutKey = settings.data?.userLayout && settings.data.userLayout !== "default" ? settings.data.userLayout : "gjworks";
+  const userLayoutKey = settings.data?.userLayout || "default";
   const Preferences = userLayouts[userLayoutKey]?.preferences || userLayouts.default.preferences;
 
   return <Preferences initialPreference={result.data} />;
