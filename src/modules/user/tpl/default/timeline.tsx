@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import {
-  Clock3,
-  FileText,
-  Loader2,
-  MessageSquareText,
-  Paperclip,
-  ShieldCheck,
-} from "lucide-react";
+import { FileText, Loader2, MessageSquareText, Paperclip, UserRound } from "lucide-react";
 
 import HeaderUser from "@/modules/user/tpl/default/header";
 import { ActionState } from "@/modules/user/actions/_type";
@@ -34,33 +27,13 @@ type TimelineProps = {
   embedded?: boolean;
 };
 
-const kindMeta: Record<UserTimelineKind, {
-  label: string;
-  color: string;
-  marker: string;
-  icon: React.ReactNode;
-}> = {
-  document: {
-    label: "게시글",
-    color: "bg-cyan-50 text-cyan-600 ring-cyan-100",
-    marker: "bg-cyan-500 shadow-cyan-200",
-    icon: <FileText size={16} />,
-  },
-  comment: {
-    label: "댓글",
-    color: "bg-violet-50 text-violet-600 ring-violet-100",
-    marker: "bg-violet-500 shadow-violet-200",
-    icon: <MessageSquareText size={16} />,
-  },
-  attachment: {
-    label: "첨부파일",
-    color: "bg-emerald-50 text-emerald-600 ring-emerald-100",
-    marker: "bg-emerald-500 shadow-emerald-200",
-    icon: <Paperclip size={16} />,
-  },
-};
+const TIME_ZONE = "Asia/Seoul";
 
-const USER_TIMELINE_TIME_ZONE = "Asia/Seoul";
+const kindMeta: Record<UserTimelineKind, { label: string; icon: React.ReactNode }> = {
+  document: { label: "게시글", icon: <FileText size={15} /> },
+  comment: { label: "댓글", icon: <MessageSquareText size={15} /> },
+  attachment: { label: "파일", icon: <Paperclip size={15} /> },
+};
 
 const formatDate = (date: Date | string) => {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -69,145 +42,42 @@ const formatDate = (date: Date | string) => {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: USER_TIMELINE_TIME_ZONE,
+    timeZone: TIME_ZONE,
   }).format(new Date(date));
 };
 
-const formatRelativeDate = (date: Date | string) => {
-  const target = new Date(date).getTime();
-  const diff = Date.now() - target;
-  const minute = 1000 * 60;
-  const hour = minute * 60;
-  const day = hour * 24;
-
-  if (diff < minute) return "방금 전";
-  if (diff < hour) return `${Math.floor(diff / minute)}분 전`;
-  if (diff < day) return `${Math.floor(diff / hour)}시간 전`;
-  if (diff < day * 7) return `${Math.floor(diff / day)}일 전`;
-
-  return formatDate(date);
-};
-
-const groupTimelineItems = (items: UserTimelineItem[]) => {
-  return items.reduce<Record<string, UserTimelineItem[]>>((groups, item) => {
-    const date = new Date(item.createdAt);
-    const key = new Intl.DateTimeFormat("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "short",
-      timeZone: USER_TIMELINE_TIME_ZONE,
-    }).format(date);
-
-    groups[key] = groups[key] || [];
-    groups[key].push(item);
-    return groups;
-  }, {});
-};
-
-const TimelineImage = ({ item }: { item: UserTimelineItem }) => {
-  if (item.imageUrl) {
-    return (
-      <div className="mt-4 overflow-hidden rounded-xl bg-gray-100 ring-1 ring-gray-200 dark:bg-dark-900 dark:ring-dark-800">
-        <img src={item.imageUrl} alt={item.title} className="max-h-[420px] w-full object-cover" loading="lazy" />
-      </div>
-    );
-  }
-
-  if (item.kind !== "attachment") return null;
-
-  return (
-    <div className="mt-4 flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-gray-500 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-400">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-gray-400 ring-1 ring-gray-200 dark:bg-dark-800 dark:text-dark-300 dark:ring-dark-700">
-        <Paperclip size={18} />
-      </div>
-      <div className="min-w-0">
-        <div className="line-clamp-1 text-sm font-bold text-gray-800 dark:text-dark-100">{item.title}</div>
-        <div className="mt-0.5 text-xs font-semibold text-gray-400">{item.description}</div>
-      </div>
-    </div>
-  );
-};
-
-const TimelineAvatar = ({ imageUrl, name }: { imageUrl: string | null; name: string }) => {
-  return (
-    <div className="h-11 w-11 overflow-hidden rounded-full bg-gray-200 ring-1 ring-gray-200 dark:bg-dark-800 dark:ring-dark-700">
-      {imageUrl ? (
-        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-gray-500 dark:text-dark-300">
-          {name.slice(0, 1)}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const TimelineCard = ({
-  item,
-  user,
-}: {
-  item: UserTimelineItem;
-  user: UserTimelineData["user"];
-}) => {
+const TimelineItemCard = ({ item }: { item: UserTimelineItem }) => {
   const meta = kindMeta[item.kind];
-  const card = (
-    <article className="group rounded-md border border-gray-200 bg-white p-5 shadow-sm shadow-gray-100 transition-all duration-200 hover:border-gray-300 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20 dark:hover:border-dark-700">
-      <div className="flex items-start gap-3">
-        <TimelineAvatar imageUrl={user.profileImage} name={user.nickName} />
-
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <div className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-dark-100">{user.nickName}</div>
-                <span className="text-xs font-semibold text-gray-400">@{user.accountId}</span>
-                <span className="text-xs text-gray-300">·</span>
-                <span className="text-xs font-semibold text-gray-400" suppressHydrationWarning>{formatRelativeDate(item.createdAt)}</span>
-              </div>
-              <div className="mt-1 text-xs font-medium text-gray-400">{item.meta}</div>
-            </div>
-
-            <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${meta.color}`}>
-              {meta.icon}
-              {meta.label}
-            </span>
+  const content = (
+    <article className="rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-[0_14px_34px_rgba(15,23,42,0.05)] dark:border-dark-800 dark:bg-dark-900 dark:hover:border-dark-700">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+            {meta.icon}
+            {meta.label}
           </div>
-
-          <div className="mt-4">
-            <div className="line-clamp-2 text-[15px] font-bold leading-6 text-gray-900 dark:text-dark-100">{item.title}</div>
-            {item.kind !== "attachment" && (
-              <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-500 dark:text-dark-400">{item.description}</p>
-            )}
-          </div>
-
-          <TimelineImage item={item} />
-
-          <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs font-semibold text-gray-400 dark:border-dark-800 dark:text-dark-500">
-            <div className="inline-flex items-center gap-2">
-              <span className={`h-2 w-2 rounded-full ${meta.marker}`} />
-              <span>{item.status || meta.label}</span>
-            </div>
-            <div className="inline-flex items-center gap-1">
-              <Clock3 size={13} />
-              <span>{formatDate(item.createdAt)}</span>
-            </div>
-          </div>
+          <h3 className="line-clamp-2 text-base font-medium tracking-[-0.025em] text-gray-950 dark:text-dark-100">
+            {item.title}
+          </h3>
+          {item.description && item.kind !== "attachment" && (
+            <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-500 dark:text-dark-400">
+              {item.description}
+            </p>
+          )}
+          <div className="mt-3 text-xs text-gray-400 dark:text-dark-500">{item.meta}</div>
+        </div>
+        <div className="shrink-0 text-xs text-gray-400 dark:text-dark-500" suppressHydrationWarning>
+          {formatDate(item.createdAt)}
         </div>
       </div>
     </article>
   );
 
-  const body = item.href ? (
-    <Link href={item.href} className="block">
-      {card}
-    </Link>
-  ) : card;
-
+  if (!item.href) return content;
   return (
-    <div className="relative">
-      {body}
-    </div>
+    <Link href={item.href} className="block">
+      {content}
+    </Link>
   );
 };
 
@@ -225,120 +95,49 @@ const Timeline = ({
   const [isPending, startTransition] = useTransition();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const groupedItems = useMemo(() => groupTimelineItems(items), [items]);
   const summary = data?.summary;
-  const totalActivity = summary
-    ? summary.documentCount + summary.commentCount + summary.attachmentCount
-    : 0;
-  const filterTabs: Array<{
-    key: UserTimelineFilter;
-    label: string;
-    count: number;
-    activeClass: string;
-  }> = [
-    { key: "all", label: "전체", count: totalActivity, activeClass: "bg-gray-950 text-white" },
-    { key: "document", label: "게시글", count: summary?.documentCount || 0, activeClass: "bg-cyan-500 text-white" },
-    { key: "comment", label: "댓글", count: summary?.commentCount || 0, activeClass: "bg-violet-500 text-white" },
-    { key: "attachment", label: "파일", count: summary?.attachmentCount || 0, activeClass: "bg-emerald-500 text-white" },
-  ];
+  const total = summary ? summary.documentCount + summary.commentCount + summary.attachmentCount : 0;
+  const tabs = useMemo(() => [
+    { key: "all" as const, label: "전체", count: total },
+    { key: "document" as const, label: "게시글", count: summary?.documentCount || 0 },
+    { key: "comment" as const, label: "댓글", count: summary?.commentCount || 0 },
+    { key: "attachment" as const, label: "파일", count: summary?.attachmentCount || 0 },
+  ], [summary, total]);
 
   useEffect(() => {
-    setActiveFilter("all");
-
     if (initialData) {
       setData(initialData);
       setItems(initialData.items);
       setNextCursor(initialData.nextCursor);
       setHasMore(initialData.hasMore);
-      return;
     }
+  }, [initialData]);
 
-    let isMounted = true;
-
+  const load = (cursor: string | null, filter: UserTimelineFilter, append = false) => {
     startTransition(async () => {
-      try {
-        const result = await loadTimelineAction(null, 15, "all");
-        if (!isMounted) return;
-
-        if (!result.success || !result.data) {
-          setData(null);
-          setItems([]);
-          setNextCursor(null);
-          setHasMore(false);
-          return;
-        }
-
-        setData(result.data);
-        setItems(result.data.items);
-        setNextCursor(result.data.nextCursor);
-        setHasMore(result.data.hasMore);
-      } catch (error) {
-        console.error("loadTimelineInitial Error:", error);
-        if (!isMounted) return;
-        setData(null);
-        setItems([]);
-        setNextCursor(null);
+      const result = await loadTimelineAction(cursor, 15, filter);
+      if (!result.success || !result.data) {
+        if (!append) setItems([]);
         setHasMore(false);
+        return;
       }
-    });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [initialData, loadTimelineAction]);
-
-  const loadMore = () => {
-    if (!hasMore || isPending || !nextCursor) return;
-
-    startTransition(async () => {
-      try {
-        const result = await loadTimelineAction(nextCursor, 15, activeFilter);
-        if (!result.success || !result.data) {
-          setHasMore(false);
-          return;
-        }
-
-        const nextData = result.data;
-        setItems((prev) => {
-          const prevIds = new Set(prev.map((item) => item.id));
-          const nextItems = nextData.items.filter((item) => !prevIds.has(item.id));
-          return [...prev, ...nextItems];
-        });
-        setNextCursor(nextData.nextCursor);
-        setHasMore(nextData.hasMore);
-        setData(nextData);
-      } catch (error) {
-        console.error("loadMoreTimeline Error:", error);
-        setHasMore(false);
-      }
+      setData(result.data);
+      setNextCursor(result.data.nextCursor);
+      setHasMore(result.data.hasMore);
+      setItems((prev) => append ? [...prev, ...result.data!.items.filter((item) => !prev.some((old) => old.id === item.id))] : result.data!.items);
     });
   };
 
   const changeFilter = (filter: UserTimelineFilter) => {
     if (filter === activeFilter || isPending) return;
-
     setActiveFilter(filter);
-    startTransition(async () => {
-      try {
-        const result = await loadTimelineAction(null, 15, filter);
-        if (!result.success || !result.data) {
-          setItems([]);
-          setNextCursor(null);
-          setHasMore(false);
-          return;
-        }
+    load(null, filter);
+  };
 
-        setItems(result.data.items);
-        setNextCursor(result.data.nextCursor);
-        setHasMore(result.data.hasMore);
-        setData(result.data);
-      } catch (error) {
-        console.error("changeTimelineFilter Error:", error);
-        setItems([]);
-        setNextCursor(null);
-        setHasMore(false);
-      }
-    });
+  const loadMore = () => {
+    if (!hasMore || isPending || !nextCursor) return;
+    load(nextCursor, activeFilter, true);
   };
 
   useEffect(() => {
@@ -351,16 +150,16 @@ const Timeline = ({
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [hasMore, isPending, nextCursor]);
+  }, [hasMore, isPending, nextCursor, activeFilter]);
 
   if (!data) {
     return (
-      <div className={`${embedded ? "bg-transparent" : "min-h-screen bg-gray-50 dark:bg-dark-950"}`}>
+      <div className={embedded ? "bg-transparent" : "min-h-screen bg-white dark:bg-dark-950"}>
         {showHeader && <HeaderUser />}
-        <div className={`${embedded ? "px-4 pb-16 pt-2" : "mx-auto max-w-screen-xl px-3 py-6 md:px-6 md:py-8"}`}>
-          <div className="mx-auto flex min-h-80 max-w-3xl items-center justify-center rounded-md border border-gray-200 bg-white text-sm font-semibold text-gray-400 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500">
-            <Loader2 size={18} className="mr-2 animate-spin" />
-            타임라인을 불러오는 중
+        <div className="mx-auto max-w-screen-lg px-4 py-10">
+          <div className="flex min-h-72 items-center justify-center rounded-3xl border border-gray-200 bg-white text-sm text-gray-400 shadow-[0_18px_60px_rgba(15,23,42,0.06)] dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500">
+            <Loader2 size={17} className="mr-2 animate-spin" />
+            계정 정보를 불러오는 중
           </div>
         </div>
       </div>
@@ -368,112 +167,76 @@ const Timeline = ({
   }
 
   return (
-    <div className={`${embedded ? "bg-transparent" : "min-h-screen bg-gray-50 dark:bg-dark-950"}`}>
+    <div className={embedded ? "bg-transparent" : "min-h-screen bg-white dark:bg-dark-950"}>
       {showHeader && <HeaderUser />}
-
-      <div className={`${embedded ? "px-4 pb-16 pt-2" : "mx-auto max-w-screen-xl px-3 py-6 md:px-6 md:py-8"}`}>
-        <section className="rounded-md border border-gray-200 bg-white p-5 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
-          <div className="flex flex-col gap-5 border-b border-gray-200 pb-5 md:flex-row md:items-end md:justify-between dark:border-dark-800">
-            <div className="flex items-end gap-4">
-              <div className="h-20 w-20 overflow-hidden rounded-full bg-gray-200 ring-4 ring-white shadow-sm shadow-gray-200 dark:bg-dark-800 dark:ring-dark-900 dark:shadow-black/30">
+      <div className="mx-auto max-w-screen-lg px-4 py-10 md:py-14">
+        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] dark:border-dark-800 dark:bg-dark-900 md:p-8">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gray-100 text-gray-500 ring-1 ring-gray-200 dark:bg-dark-800 dark:text-dark-300 dark:ring-dark-700">
                 {data.user.profileImage ? (
                   <img src={data.user.profileImage} alt={data.user.nickName} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-gray-500 dark:text-dark-300">
-                    {data.user.nickName.slice(0, 1)}
-                  </div>
+                  <UserRound size={24} />
                 )}
               </div>
-              <div className="pb-1">
-                <div className="text-2xl font-black tracking-tight text-gray-950 dark:text-dark-100">{data.user.nickName}</div>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-400">
-                  <span>@{data.user.accountId}</span>
-                  {data.user.email && (
-                    <>
-                      <span className="text-gray-300">·</span>
-                      <span>{data.user.email}</span>
-                    </>
-                  )}
-                </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-gray-400 dark:text-dark-500">Timeline</div>
+                <h1 className="mt-2 text-2xl font-medium tracking-[-0.04em] text-gray-950 dark:text-dark-100">{data.user.nickName}</h1>
+                <p className="mt-1 text-sm text-gray-500 dark:text-dark-400">@{data.user.accountId}</p>
               </div>
             </div>
-
-            <div className="inline-flex w-fit items-center gap-2 rounded-md bg-gray-950 px-3 py-2 text-xs font-bold text-white dark:bg-dark-100 dark:text-dark-950">
-              <ShieldCheck size={15} />
-              {totalActivity} activities
+            <div className="rounded-2xl bg-gray-50 px-5 py-4 text-sm text-gray-500 ring-1 ring-gray-200 dark:bg-dark-950/40 dark:text-dark-300 dark:ring-dark-800">
+              <span className="block text-xs uppercase tracking-[0.18em] text-gray-400 dark:text-dark-500">Activity</span>
+              <span className="mt-1 block text-xl font-medium text-gray-950 dark:text-white">{total}</span>
             </div>
           </div>
+        </section>
 
-          <div className="mt-4 flex gap-2 overflow-x-auto">
-            {filterTabs.map((tab) => {
+        <section className="mt-4 rounded-3xl border border-gray-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.04)] dark:border-dark-800 dark:bg-dark-900">
+          <div className="mb-5 inline-flex max-w-full gap-1 overflow-x-auto rounded-full bg-gray-100 p-1 dark:bg-dark-950">
+            {tabs.map((tab) => {
               const active = activeFilter === tab.key;
-
               return (
                 <button
                   key={tab.key}
                   type="button"
                   onClick={() => changeFilter(tab.key)}
-                  className={`flex min-w-24 cursor-pointer items-center justify-between gap-3 rounded-full px-3 py-2 text-left text-xs font-bold transition-colors ${active ? tab.activeClass : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:bg-dark-900 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-dark-100"}`}
+                  className={`inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-full px-3.5 py-2 text-sm transition-all duration-200 ${
+                    active
+                      ? "bg-white text-gray-950 shadow-sm dark:bg-dark-800 dark:text-white"
+                      : "text-gray-500 hover:text-gray-950 dark:text-dark-400 dark:hover:text-white"
+                  }`}
                 >
-                  <span>{tab.label}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] ${active ? "bg-white/20 text-current" : "bg-white text-gray-400 dark:bg-dark-800 dark:text-dark-400"}`}>
-                    {tab.count}
-                  </span>
+                  {tab.label}
+                  <span className={active ? "text-white/70 dark:text-dark-950/70" : "text-gray-400"}>{tab.count}</span>
                 </button>
               );
             })}
           </div>
-        </section>
 
-        <section className="mt-5">
-          {items.length > 0 ? (
-            <div className="space-y-8">
-              {Object.entries(groupedItems).map(([date, dateItems]) => (
-                <div key={date} className="space-y-4">
-                  <div className="sticky top-14 z-10 flex md:top-16">
-                    <div className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-sm mx-auto text-gray-500 shadow-md shadow-gray-950/5 backdrop-blur-lg dark:border-dark-800 dark:bg-dark-900/90 dark:text-dark-300 dark:shadow-black/30">
-                      {date}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {dateItems.map((item) => (
-                      <TimelineCard key={item.id} item={item} user={data.user} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              <div ref={sentinelRef} className="flex min-h-16 items-center justify-center py-4">
-                {isPending ? (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-400 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-500 dark:shadow-black/20">
-                    <Loader2 size={14} className="animate-spin" />
-                    활동을 더 불러오는 중
-                  </div>
-                ) : hasMore ? (
-                  <button
-                    type="button"
-                    onClick={loadMore}
-                    className="cursor-pointer rounded-full border border-gray-100 bg-white px-4 py-2 text-xs font-semibold text-gray-500 shadow-sm shadow-gray-100 transition-colors hover:border-gray-200 hover:bg-gray-50 hover:text-gray-900 dark:border-dark-800 dark:bg-dark-900 dark:text-dark-400 dark:shadow-black/20 dark:hover:border-dark-700 dark:hover:bg-dark-800 dark:hover:text-dark-100"
-                  >
-                    더 보기
-                  </button>
-                ) : (
-                  <div className="rounded-full bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-400 dark:bg-dark-900 dark:text-dark-500">
-                    모든 활동을 확인했습니다.
-                  </div>
-                )}
+          <div className="space-y-3">
+            {items.length > 0 ? (
+              items.map((item) => <TimelineItemCard key={item.id} item={item} />)
+            ) : (
+              <div className="rounded-2xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-400 dark:border-dark-700 dark:text-dark-500">
+                아직 표시할 활동이 없습니다.
               </div>
-            </div>
-          ) : (
-            <div className="rounded-md border border-dashed border-gray-300 bg-white p-10 text-center dark:border-dark-700 dark:bg-dark-900">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-gray-100 text-gray-400 dark:bg-dark-800 dark:text-dark-400">
-                <Clock3 size={22} />
-              </div>
-              <div className="mt-4 text-sm font-bold text-gray-900 dark:text-dark-100">아직 기록된 활동이 없습니다.</div>
-              <p className="mt-2 text-sm text-gray-500 dark:text-dark-400">게시글, 댓글, 첨부파일 활동이 생기면 이곳에 시간순으로 표시됩니다.</p>
-            </div>
-          )}
+            )}
+          </div>
+
+          <div ref={sentinelRef} className="flex min-h-14 items-center justify-center pt-5">
+            {isPending ? (
+              <span className="inline-flex items-center gap-2 text-sm text-gray-400">
+                <Loader2 size={15} className="animate-spin" />
+                불러오는 중
+              </span>
+            ) : hasMore ? (
+              <button type="button" onClick={loadMore} className="cursor-pointer rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-500 transition-all hover:border-gray-300 hover:text-gray-950 hover:shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)] dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:text-white">
+                더 보기
+              </button>
+            ) : null}
+          </div>
         </section>
       </div>
     </div>

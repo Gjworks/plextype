@@ -1497,6 +1497,11 @@ export const updateSiteSettingsAdminAction = async (formData: FormData): Promise
     revalidatePath("/admin", "layout");
     revalidatePath("/admin");
     revalidatePath("/admin/settings");
+    revalidatePath("/user", "layout");
+    revalidatePath("/user");
+    revalidatePath("/user/userUpdate");
+    revalidatePath("/user/preferences");
+    revalidatePath("/user/userDelete");
 
     return {
       success: true,

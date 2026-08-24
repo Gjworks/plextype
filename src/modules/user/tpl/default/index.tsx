@@ -1,147 +1,85 @@
 "use client";
 
+import Link from "next/link";
+import { Bell, ChevronRight, Settings2, UserRound } from "lucide-react";
 
 import HeaderUser from "@/modules/user/tpl/default/header";
 
-const IndexUser = (props: any) => {
+const quickLinks = [
+  {
+    title: "회원 정보",
+    description: "계정 표시 정보와 프로필을 관리합니다.",
+    href: "/user/userUpdate",
+    icon: <UserRound size={18} />,
+  },
+  {
+    title: "개인 설정",
+    description: "테마, 글자 크기, 알림 방식을 저장합니다.",
+    href: "/user/preferences",
+    icon: <Settings2 size={18} />,
+  },
+  {
+    title: "알림센터",
+    description: "내 계정으로 도착한 알림을 확인합니다.",
+    href: "/user/notifications",
+    icon: <Bell size={18} />,
+  },
+];
 
-
+const IndexUser = () => {
   return (
     <>
       <HeaderUser />
-      <div className="flex flex-wrap gap-8 px-3 pt-10 pb-20 ">
-        <div className="w-full">
-          <div className="max-w-screen-md mx-auto">
-            <div className="w-full">
-              <div
-                className="relative w-full overflow-hidden rounded-xl border border-gray-200/75 bg-gray-100 dark:bg-dark-900/75 dark:border-dark-700/75 p-5 shadow-lg dark:shadow-black/75 shadow-gray-100/90 backdrop-blur-xl lg:p-10 h-full mb-6">
-                <div className="mb-8 font-semibold text-lg dark:text-white">
-                  사용중인 서비스
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="col-span-1">
-                    <div
-                      className="rounded-2xl p-5 bg-white shadow-sm hover:shadow-md shadow-gray-900/20 dark:bg-dark-700 dark:shadow-dark-950/70">
-                      <div className="text-black mb-8 font-bold dark:text-white">
-                        문자 & 카카오톡
-                      </div>
-                      <div className="text-black text-sm dark:text-dark-200">
-                        전일 대비 사용량 (84회)
-                      </div>
-                      <div className="flex items-center gap-8 pt-2 pb-4">
-                        <div className="relative flex-1">
-                          <div className="rounded-full h-2 w-full bg-blue-200/40"></div>
-                          <div
-                            className="absolute left-0 top-0 rounded-full h-2 hover:-top-1 hover:h-4 w-full bg-blue-400 transition-all"
-                            style={{width: "80%"}}
-                          ></div>
-                        </div>
-                        <div className="text-black text-xs dark:text-white">
-                          80%
-                        </div>
-                      </div>
-                      <div className="text-black text-sm dark:text-dark-200">
-                        남은 잔액
-                      </div>
-                      <div className="flex gap-2 justify-center items-end py-5">
-                        <div className="text-blue-400 text-3xl font-bold">
-                          18,320
-                        </div>
-                        <div className="text-black/70 dark:text-white/70">
-                          원
-                        </div>
-                      </div>
-                    </div>
+      <main className="min-h-screen bg-white dark:bg-dark-950">
+        <div className="mx-auto max-w-screen-lg px-4 py-10 md:py-14">
+          <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.06)] dark:border-dark-800 dark:bg-dark-900">
+            <div className="grid gap-0 md:grid-cols-[1.35fr_0.65fr]">
+              <div className="p-7 md:p-10">
+                <div className="text-xs uppercase tracking-[0.22em] text-gray-400 dark:text-dark-500">Account</div>
+                <h1 className="mt-5 text-[30px] font-medium leading-tight tracking-[-0.045em] text-gray-950 dark:text-white md:text-[38px]">
+                  계정의 기본 흐름을<br className="hidden sm:block" />
+                  한 곳에서 관리합니다.
+                </h1>
+                <p className="mt-5 max-w-xl text-sm leading-7 text-gray-500 dark:text-dark-400">
+                  회원 정보, 개인 설정, 알림을 기본 사용자 화면에서 조용하고 단순하게 확인합니다.
+                </p>
+              </div>
+              <div className="border-t border-gray-200 bg-gray-50 p-7 dark:border-dark-800 dark:bg-dark-950/40 md:border-l md:border-t-0 md:p-8">
+                <div className="flex h-full min-h-40 flex-col justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-950 text-white dark:bg-white dark:text-dark-950">
+                    <UserRound size={22} />
                   </div>
-                  <div className="col-span-1">
-                    <div
-                      className="rounded-2xl p-5 bg-white shadow-sm hover:shadow-md shadow-gray-900/20 dark:bg-dark-700 dark:shadow-dark-950/70">
-                      <div className="text-black mb-8 font-bold dark:text-white">
-                        홈페이지 수정
-                      </div>
-                      <div className="text-black text-sm dark:text-dark-200">
-                        전일 대비 사용량 (84회)
-                      </div>
-                      <div className="flex items-center gap-8 pt-2 pb-4">
-                        <div className="relative flex-1">
-                          <div className="rounded-full h-2 w-full bg-lime-200/40"></div>
-                          <div
-                            className="absolute left-0 top-0 rounded-full h-2 hover:-top-1 hover:h-4 w-full bg-lime-400 transition-all"
-                            style={{width: "80%"}}
-                          ></div>
-                        </div>
-                        <div className="text-black text-xs dark:text-white">
-                          80%
-                        </div>
-                      </div>
-                      <div className="text-black text-sm dark:text-dark-200">
-                        남은 잔액
-                      </div>
-                      <div className="flex gap-2 justify-center items-end py-5">
-                        <div className="text-lime-300 text-3xl font-bold">
-                          18,320
-                        </div>
-                        <div className="text-black/70 dark:text-white/70">
-                          원
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-span-1">
-                    <div
-                      className="rounded-2xl p-5 bg-white shadow-sm hover:shadow-md shadow-gray-900/20 dark:bg-dark-700 dark:shadow-dark-950/70">
-                      <div className="text-black mb-8 font-bold dark:text-white">
-                        Store 구매
-                      </div>
-                      <div className="text-black text-sm dark:text-dark-200">
-                        전일 대비 사용량 (84회)
-                      </div>
-                      <div className="flex items-center gap-8 pt-2 pb-4">
-                        <div className="relative flex-1">
-                          <div className="rounded-full h-2 w-full bg-rose-200/40"></div>
-                          <div
-                            className="absolute left-0 top-0 rounded-full h-2 hover:-top-1 hover:h-4 w-full bg-rose-400 transition-all"
-                            style={{width: "80%"}}
-                          ></div>
-                        </div>
-                        <div className="text-black text-xs dark:text-white">
-                          80%
-                        </div>
-                      </div>
-                      <div className="text-black text-sm dark:text-dark-200">
-                        남은 잔액
-                      </div>
-                      <div className="flex gap-2 justify-center items-end py-5">
-                        <div className="text-rose-200 text-3xl font-bold">
-                          18,320
-                        </div>
-                        <div className="text-black/70 dark:text-white/70">
-                          원
-                        </div>
-                      </div>
-                    </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-gray-400 dark:text-dark-500">Default skin</div>
+                    <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-dark-400">
+                      Plextype 기본 사용자 화면
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="col-span-7">
-              <div className="rounded-2xl p-8">
-                <div className="font-semibold text-lg dark:text-white">
-                  일일 사용량
+          </section>
+
+          <section className="mt-4 grid gap-4 md:grid-cols-3">
+            {quickLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-[0_16px_36px_rgba(15,23,42,0.06)] dark:border-dark-800 dark:bg-dark-900 dark:hover:border-dark-700"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gray-100 text-gray-700 transition-colors group-hover:bg-gray-950 group-hover:text-white dark:bg-dark-800 dark:text-dark-200 dark:group-hover:bg-white dark:group-hover:text-dark-950">
+                    {item.icon}
+                  </div>
+                  <ChevronRight size={16} className="mt-1 text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-gray-500 dark:text-dark-600 dark:group-hover:text-dark-300" />
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="col-span-1 rounded-2xl p-8 bg-purple-100 dark:bg-purple-300 mb-6">
-                  <div className="mb-8 font-semibold text-lg">활동 기록</div>
-                </div>
-                <div className="col-span-1 rounded-2xl p-8 bg-sky-100 dark:bg-sky-300 mb-6">
-                  <div className="mb-8 font-semibold text-lg">1:1문의</div>
-                </div>
-              </div>
-            </div>
-          </div>
+                <h2 className="mt-7 text-base font-medium tracking-[-0.025em] text-gray-950 dark:text-dark-100">{item.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-dark-400">{item.description}</p>
+              </Link>
+            ))}
+          </section>
         </div>
-      </div>
+      </main>
     </>
   );
 };

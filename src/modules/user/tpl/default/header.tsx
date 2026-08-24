@@ -1,26 +1,20 @@
 "use client";
 
-import ProfileWrapper from "@/modules/user/tpl/default/ProfileWrapper";
 import UserNavWrapper from "@/modules/user/tpl/default/UserNavWrapper";
 
 const HeaderUser = (props: any) => {
 
   const userNav = [
-    { title: "타임라인", route: "/user" },
-    { title: "나의 스토어", route: "/user/store" },
-    { title: "계정 프로필 설정", route: "/user/userUpdate" },
+    { title: "내 계정", route: "/user" },
+    { title: "알림센터", route: "/user/notifications" },
+    { title: "회원 정보", route: "/user/userUpdate" },
     { title: "개인 설정", route: "/user/preferences" },
-    { title: "회원탈퇴", route: "/user/userDelete" },
+    { title: "회원 탈퇴", route: "/user/userDelete" },
   ];
 
   return (
     <>
-      {/* ✅ 클라 전용 ProfileWrapper */}
-      {/*<ProfileWrapper currentUser={currentUser} />*/}
-
-      {/* ✅ 클라 전용 Nav */}
       <UserNavWrapper list={userNav} />
-
     </>
   );
 };

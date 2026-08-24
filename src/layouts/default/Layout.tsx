@@ -1,256 +1,82 @@
 import Link from "next/link";
-import { ArrowRight, Bell, CircleUserRound, LayoutGrid, Menu, Search } from "lucide-react";
-import React from "react";
+import { ArrowRight, Leaf, Menu, X } from "lucide-react";
+import type { ReactNode } from "react";
+
 import { getPublicSiteNavigationAction } from "@/modules/admin/actions/sitemap.action";
-import type { SiteNavigationItem } from "@/modules/admin/actions/_type";
 
-const fallbackNavItems: SiteNavigationItem[] = [
-  {
-    id: 0,
-    groupId: null,
-    groupKey: "header-main",
-    groupTitle: "기본 상단 메뉴",
-    groupArea: "header",
-    parentId: null,
-    name: "home",
-    title: "Home",
-    href: "/",
-    target: null,
-    icon: null,
-    order: 0,
-    depth: 0,
-    location: "header",
-    visibility: "public",
-    isActive: true,
-    children: [],
-  },
-  {
-    id: 1,
-    groupId: null,
-    groupKey: "header-main",
-    groupTitle: "기본 상단 메뉴",
-    groupArea: "header",
-    parentId: null,
-    name: "notice",
-    title: "Notice",
-    href: "/posts/notice",
-    target: null,
-    icon: null,
-    order: 10,
-    depth: 0,
-    location: "header",
-    visibility: "public",
-    isActive: true,
-    children: [],
-  },
-  {
-    id: 2,
-    groupId: null,
-    groupKey: "header-main",
-    groupTitle: "기본 상단 메뉴",
-    groupArea: "header",
-    parentId: null,
-    name: "features",
-    title: "Features",
-    href: "/features",
-    target: null,
-    icon: null,
-    order: 20,
-    depth: 0,
-    location: "header",
-    visibility: "public",
-    isActive: true,
-    children: [],
-  },
-  {
-    id: 3,
-    groupId: null,
-    groupKey: "header-main",
-    groupTitle: "기본 상단 메뉴",
-    groupArea: "header",
-    parentId: null,
-    name: "contact",
-    title: "Contact",
-    href: "/contact",
-    target: null,
-    icon: null,
-    order: 30,
-    depth: 0,
-    location: "header",
-    visibility: "public",
-    isActive: true,
-    children: [],
-  },
+const fallbackNavigation = [
+  { id: 1, title: "Home", href: "/", target: null },
+  { id: 2, title: "Features", href: "/features", target: null },
+  { id: 3, title: "Labs", href: "/previews", target: null },
+  { id: 4, title: "Supports", href: "/posts/notice", target: null },
+  { id: 5, title: "Contact", href: "/contact", target: null },
 ];
 
-const fallbackFooterItems: SiteNavigationItem[] = [
-  { ...fallbackNavItems[2], groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Features", href: "/features", name: "features-footer" },
-  { ...fallbackNavItems[2], id: 4, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Docs", href: "/features/getting-started", name: "docs-footer" },
-  { ...fallbackNavItems[1], id: 5, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Notice", href: "/posts/notice", name: "notice-footer" },
-  { ...fallbackNavItems[3], id: 6, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Contact", href: "/contact", name: "contact-footer" },
-  { ...fallbackNavItems[0], id: 7, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "License", href: "/license", name: "license-footer" },
-  { ...fallbackNavItems[0], id: 8, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Terms", href: "/terms", name: "terms-footer" },
-  { ...fallbackNavItems[0], id: 9, groupKey: "footer", groupTitle: "기본 푸터 메뉴", groupArea: "footer", location: "footer", title: "Privacy", href: "/privacy", name: "privacy-footer" },
-];
+type StudioLayoutProps = { children: ReactNode; siteUrl?: string; siteTitle?: string; useConfiguredNavigation?: boolean };
 
-const DefaultLayout = async ({
-  children,
-  siteUrl = "/",
-  siteTitle = "Plextype",
-}: {
-  children: React.ReactNode;
-  siteUrl?: string;
-  siteTitle?: string;
-}) => {
-  const [headerNavigationResult, footerNavigationResult] = await Promise.all([
-    getPublicSiteNavigationAction("header-main"),
-    getPublicSiteNavigationAction("footer"),
-  ]);
-  const navItems = headerNavigationResult.data?.length ? headerNavigationResult.data : fallbackNavItems;
-  const footerItems = footerNavigationResult.data?.length ? footerNavigationResult.data : fallbackFooterItems;
+const StudioLayout = async ({ children, siteUrl = "/", siteTitle = "Plextype", useConfiguredNavigation = true }: StudioLayoutProps) => {
+  const navigationResult = useConfiguredNavigation ? await getPublicSiteNavigationAction("header-main") : { data: [] };
+  const sourceNavigation = navigationResult.data?.length ? navigationResult.data : fallbackNavigation;
+  const navigation = Array.from(new Map(sourceNavigation.map((item) => [`${item.title}:${item.href}`, item] as const)).values());
 
   return (
-    <div className="min-h-screen bg-[#f5f6f3] text-gray-950 dark:bg-[#050505] dark:text-white">
-      <header className="sticky top-0 z-50 border-b border-black/10 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-black/85">
-        <div className="mx-auto flex h-[70px] max-w-screen-xl items-center justify-between px-4">
-          <div className="flex items-center gap-8">
-            <Link href={siteUrl || "/"} className="flex items-center gap-2">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-black text-white dark:bg-white dark:text-black">
-                <LayoutGrid size={16} strokeWidth={2} />
-              </span>
-              <span>
-                <span className="block text-[10px] font-medium uppercase tracking-[0.28em] text-gray-400 dark:text-dark-400">
-                  Plextype
-                </span>
-                <span className="block text-sm font-semibold tracking-[-0.02em]">{siteTitle}</span>
-              </span>
-            </Link>
+    <div className="studio-shell min-h-screen bg-white text-[#10251d] dark:bg-[#07120e] dark:text-white">
+      <div className="bg-[#0a3d2d] px-4 py-2.5 text-center text-xs font-medium text-white">
+        더 단순한 운영, 더 선명한 콘텐츠 경험
+        <Link href="/posts/notice" className="ml-2 inline-flex items-center gap-1 text-[#b8f3d5] hover:underline">새로운 소식 <ArrowRight size={12} /></Link>
+      </div>
 
-            <nav className="hidden items-center gap-1 md:flex">
-              {navItems.map((item) => (
-                <div key={item.id || item.href} className="group relative">
-                  <Link
-                    href={item.href}
-                    target={item.target || undefined}
-                    rel={item.target === "_blank" ? "noreferrer" : undefined}
-                    className="block rounded-full px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
-                  >
-                    {item.title}
-                  </Link>
-                  {item.children.length > 0 && (
-                    <div className="invisible absolute left-0 top-full min-w-44 translate-y-2 rounded-xl border border-gray-100 bg-white/95 p-2 opacity-0 shadow-xl shadow-gray-200/60 backdrop-blur-xl transition-all group-hover:visible group-hover:translate-y-1 group-hover:opacity-100 dark:border-white/10 dark:bg-black/95">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.id || child.href}
-                          href={child.href}
-                          target={child.target || undefined}
-                          rel={child.target === "_blank" ? "noreferrer" : undefined}
-                          className="block rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
-                        >
-                          {child.title}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </nav>
-          </div>
+      <header className="sticky top-0 z-50 border-b border-[#0a3d2d]/10 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07120e]/95">
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 lg:px-8">
+          <Link href={siteUrl || "/"} className="group flex items-center gap-2.5" aria-label={`${siteTitle} 홈`}>
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#0a3d2d] text-white transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3"><Leaf size={18} /></span>
+            <span className="text-lg font-semibold tracking-[-0.035em]">{siteTitle}</span>
+          </Link>
+
+          <nav className="hidden items-center gap-7 md:flex">
+            {navigation.slice(0, 5).map((item) => (
+              <Link key={item.id || item.href} href={item.href} target={item.target || undefined} rel={item.target === "_blank" ? "noreferrer" : undefined} className="relative py-2 text-sm font-medium text-[#52685f] transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-[#0a3d2d] after:transition-transform hover:text-[#0a3d2d] hover:after:scale-x-100 dark:text-[#b9c7c1] dark:hover:text-white">
+                {item.title}
+              </Link>
+            ))}
+          </nav>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="hidden h-10 w-10 place-items-center rounded-xl border border-black/10 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 md:grid dark:border-white/10 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
-              aria-label="검색"
-            >
-              <Search size={17} />
-            </button>
-            <button
-              type="button"
-              className="hidden h-10 w-10 place-items-center rounded-xl border border-black/10 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 md:grid dark:border-white/10 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
-              aria-label="알림"
-            >
-              <Bell size={17} />
-            </button>
-            <Link
-              href="/auth/signin"
-              className="hidden items-center gap-2 rounded-xl border border-black/10 px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-950 md:flex dark:border-white/10 dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
-            >
-              <CircleUserRound size={16} />
-              Sign in
-            </Link>
-            <Link
-              href="/auth/register"
-              className="hidden items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 md:flex dark:bg-white dark:text-black dark:hover:bg-gray-200"
-            >
-              Get started
-              <ArrowRight size={15} />
-            </Link>
-            <button
-              type="button"
-              className="grid h-10 w-10 place-items-center rounded-xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-950 md:hidden dark:text-dark-300 dark:hover:bg-white/10 dark:hover:text-white"
-              aria-label="메뉴"
-            >
-              <Menu size={19} />
-            </button>
+            <Link href="/auth/signin" className="hidden rounded-xl px-4 py-2.5 text-sm font-medium text-[#385046] transition-colors hover:bg-[#f0f7f3] sm:block dark:text-[#d4ded9] dark:hover:bg-white/10">로그인</Link>
+            <Link href="/auth/register" className="hidden items-center gap-2 rounded-xl bg-[#0a3d2d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#125841] hover:shadow-lg sm:flex">시작하기 <ArrowRight size={15} /></Link>
+            <details className="group relative md:hidden">
+              <summary className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-xl border border-[#0a3d2d]/15 [&::-webkit-details-marker]:hidden"><Menu className="group-open:hidden" size={19} /><X className="hidden group-open:block" size={19} /></summary>
+              <nav className="absolute right-0 top-12 grid min-w-56 gap-1 rounded-2xl border border-[#0a3d2d]/10 bg-white p-2 shadow-2xl dark:border-white/10 dark:bg-[#10251d]">
+                {navigation.slice(0, 5).map((item) => <Link key={item.id || item.href} href={item.href} className="rounded-xl px-4 py-3 text-sm hover:bg-[#eef7f2] dark:hover:bg-white/10">{item.title}</Link>)}
+              </nav>
+            </details>
           </div>
         </div>
       </header>
 
-      <main className="relative min-h-[calc(100vh-17rem)]">{children}</main>
+      <main>{children}</main>
 
-      <footer className="border-t border-black/10 bg-white dark:border-white/10 dark:bg-black">
-        <div className="mx-auto grid max-w-screen-xl gap-8 px-3 py-10 md:grid-cols-[1.2fr_2fr]">
-          <div>
-            <Link href={siteUrl || "/"} className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-black text-white dark:bg-white dark:text-black">
-                <LayoutGrid size={14} />
-              </span>
-              <span className="text-sm font-semibold">{siteTitle}</span>
-            </Link>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-500 dark:text-dark-300">
-              콘텐츠, 회원, 확장 기능을 프로젝트에 맞게 조립할 수 있는 기본 레이아웃입니다.
-            </p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-3">
+      <footer className="bg-[#062c20] text-white">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+          <div className="grid gap-12 py-16 md:grid-cols-[1.2fr_0.8fr_0.8fr] lg:py-20">
             <div>
-              <div className="text-xs font-semibold text-gray-950 dark:text-white">Product</div>
-              <div className="mt-3 grid gap-2 text-sm text-gray-500 dark:text-dark-300">
-                {footerItems.slice(0, 3).map((item) => (
-                  <Link key={item.id || item.href} href={item.href} target={item.target || undefined} rel={item.target === "_blank" ? "noreferrer" : undefined} className="hover:text-gray-950 dark:hover:text-white">
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
+              <Link href="/" className="inline-flex items-center gap-2.5 text-lg font-semibold tracking-[-0.035em]"><span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#0a3d2d]"><Leaf size={17} /></span>{siteTitle}</Link>
+              <p className="mt-5 max-w-sm text-sm leading-7 text-white/55">콘텐츠와 사람, 운영 도구를 연결해<br className="hidden sm:block" /> 더 나은 디지털 경험을 만듭니다.</p>
             </div>
             <div>
-              <div className="text-xs font-semibold text-gray-950 dark:text-white">Community</div>
-              <div className="mt-3 grid gap-2 text-sm text-gray-500 dark:text-dark-300">
-                {footerItems.slice(3, 6).map((item) => (
-                  <Link key={item.id || item.href} href={item.href} target={item.target || undefined} rel={item.target === "_blank" ? "noreferrer" : undefined} className="hover:text-gray-950 dark:hover:text-white">
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#83cdb0]">Explore</p>
+              <nav className="mt-5 grid gap-3 text-sm text-white/65">
+                {navigation.slice(0, 4).map((item) => <Link key={`footer-${item.id || item.href}`} href={item.href} className="w-fit transition-colors hover:text-white">{item.title}</Link>)}
+              </nav>
             </div>
             <div>
-              <div className="text-xs font-semibold text-gray-950 dark:text-white">Legal</div>
-              <div className="mt-3 grid gap-2 text-sm text-gray-500 dark:text-dark-300">
-                {footerItems.slice(6).map((item) => (
-                  <Link key={item.id || item.href} href={item.href} target={item.target || undefined} rel={item.target === "_blank" ? "noreferrer" : undefined} className="hover:text-gray-950 dark:hover:text-white">
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#83cdb0]">Account</p>
+              <div className="mt-5 grid gap-3 text-sm text-white/65"><Link href="/auth/signin" className="w-fit transition-colors hover:text-white">로그인</Link><Link href="/auth/register" className="w-fit transition-colors hover:text-white">회원가입</Link><Link href="/user" className="w-fit transition-colors hover:text-white">내 계정</Link></div>
             </div>
           </div>
-        </div>
-
-        <div className="border-t border-black/10 dark:border-white/10">
-          <div className="mx-auto flex max-w-screen-xl flex-col gap-2 px-3 py-5 text-xs text-gray-400 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 border-t border-white/10 py-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
             <span>© {new Date().getFullYear()} {siteTitle}. All rights reserved.</span>
-            <span>Built with Plextype</span>
+            <span>Built for clear and simple operations.</span>
           </div>
         </div>
       </footer>
@@ -258,4 +84,4 @@ const DefaultLayout = async ({
   );
 };
 
-export default DefaultLayout;
+export default StudioLayout;
