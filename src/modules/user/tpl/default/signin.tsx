@@ -123,17 +123,17 @@ const Signin = () => {
           isLoading={mutation.isPending}
           fullWidth
           icon={<LogIn className="h-4 w-4" />}
-          className="!min-h-12 !rounded-xl !border-black !bg-black !text-white hover:!bg-gray-900 dark:!border-white dark:!bg-white dark:!text-black dark:hover:!bg-gray-100"
+          className="!min-h-12 !rounded-xl !border-[#0a3d2d] !bg-[#0a3d2d] !text-white hover:!border-[#125841] hover:!bg-[#125841] dark:!border-[#b8f3d5] dark:!bg-[#b8f3d5] dark:!text-[#062c20] dark:hover:!border-white dark:hover:!bg-white"
         >
           로그인
         </Button>
       </div>
 
       <div className="mt-8 flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-500 dark:text-dark-400">
-        <Link href="/auth/register" className="hover:text-gray-950 dark:hover:text-white">
+        <Link href="/auth/register" className="hover:text-[#0a3d2d] dark:hover:text-[#b8f3d5]">
           회원가입
         </Link>
-        <Link href="/auth/find" className="hover:text-gray-950 dark:hover:text-white">
+        <Link href="/auth/find" className="hover:text-[#0a3d2d] dark:hover:text-[#b8f3d5]">
           계정 또는 비밀번호 찾기
         </Link>
       </div>
