@@ -72,6 +72,10 @@ export const buildExtensionRegistry = (...registries: ExtensionRegistryConfig[])
       update: item.update,
       preferences: item.preferences,
       delete: item.delete,
+      authLayout: item.authLayout,
+      signin: item.signin,
+      register: item.register,
+      resetPassword: item.resetPassword,
     };
     userLayoutOptions.set(item.key, toOption(item) as UserLayoutOption);
   };

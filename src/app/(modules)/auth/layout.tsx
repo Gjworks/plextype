@@ -1,11 +1,20 @@
 export const dynamic = 'force-dynamic';
-import { AuthLayout } from "@extensions";
-import { getPublicSiteUrlAction } from '@/modules/admin/actions/settings.action';
+import { AuthLayout, userLayouts } from "@extensions";
+import { getPublicSiteSettingsAction } from '@/modules/admin/actions/settings.action';
 
 const PageLayout = async ({ children }) => {
-  const settings = await getPublicSiteUrlAction();
+  const settings = await getPublicSiteSettingsAction();
+  const userLayoutKey = settings.data?.userLayout || "default";
+  const SelectedAuthLayout = userLayouts[userLayoutKey]?.authLayout || userLayouts.default.authLayout || AuthLayout;
 
-  return <AuthLayout siteUrl={settings.data?.siteUrl || "/"}>{children}</AuthLayout>
+  return (
+    <SelectedAuthLayout
+      siteUrl={settings.data?.siteUrl || "/"}
+      siteTitle={settings.data?.projectTitle || settings.data?.appName || "Plextype"}
+    >
+      {children}
+    </SelectedAuthLayout>
+  )
 }
 
 export default PageLayout

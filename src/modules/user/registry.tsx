@@ -1,8 +1,12 @@
 import { Users } from "lucide-react";
 
 import { defineModule, defineUserSkin } from "@/core/registry/define";
+import AuthLayout from "@/layouts/auth/Layout";
 import UserDelete from "@/modules/user/tpl/default/delete";
 import UserPreferences from "@/modules/user/tpl/default/preferences";
+import UserRegister from "@/modules/user/tpl/default/register";
+import UserResetPassword from "@/modules/user/tpl/default/resetPassword";
+import UserSignin from "@/modules/user/tpl/default/signin";
 import UserTimeline from "@/modules/user/tpl/default/timeline";
 import UserUpdate from "@/modules/user/tpl/default/update";
 
@@ -46,6 +50,10 @@ export const userModule = defineModule({
       update: UserUpdate,
       preferences: UserPreferences,
       delete: UserDelete,
+      authLayout: AuthLayout,
+      signin: UserSignin,
+      register: UserRegister,
+      resetPassword: UserResetPassword,
     }),
   ],
 });

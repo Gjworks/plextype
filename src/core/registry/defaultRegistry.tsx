@@ -15,6 +15,10 @@ export type UserLayoutComponents = {
   update: React.ComponentType<any>;
   preferences: React.ComponentType<any>;
   delete: React.ComponentType<any>;
+  authLayout?: React.ComponentType<any>;
+  signin?: React.ComponentType<any>;
+  register?: React.ComponentType<any>;
+  resetPassword?: React.ComponentType<any>;
 };
 export type UserLayoutMap = Record<string, UserLayoutComponents>;
 export type AdminLayoutOption = {
