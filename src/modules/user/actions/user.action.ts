@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { getAuthSettingsRuntimeAction, validatePasswordByAuthSettings } from "@/modules/admin/actions/auth-settings";
 import redisClient from "@utils/redis/redis";
+import { dispatchNotificationAction } from "@/modules/notification/actions/notification.action";
 /**
  * 💡 공통 유틸: Prisma 결과물에서 민감한 정보(비밀번호 등) 제외하기
  */
@@ -162,6 +163,76 @@ export const updateUserStatusAdminAction = async (
   } catch (error) {
     console.error("updateUserStatusAdminAction 에러:", error);
     return { success: false, type: "error", message: "회원 상태 변경 중 오류가 발생했습니다." };
+  }
+};
+
+export const sendUserNotificationAdminAction = async (
+  targetUserId: number,
+  payload: {
+    title?: string;
+    content?: string;
+    linkUrl?: string;
+  },
+): Promise<ActionState<{ notificationId?: string }>> => {
+  const loggedInfo = await getLoggedUserAction();
+  if (!loggedInfo.isAdmin) {
+    return { success: false, type: "error", message: "관리자 권한이 필요합니다." };
+  }
+
+  const title = payload.title?.trim();
+  const content = payload.content?.trim();
+  const linkUrl = payload.linkUrl?.trim() || "/user/notifications";
+
+  if (!targetUserId) {
+    return { success: false, type: "error", message: "알림을 받을 회원을 선택해주세요." };
+  }
+
+  if (!title) {
+    return { success: false, type: "error", message: "알림 제목을 입력해주세요." };
+  }
+
+  if (!content) {
+    return { success: false, type: "error", message: "알림 내용을 입력해주세요." };
+  }
+
+  try {
+    const targetUser = await query.findUserById(targetUserId);
+    if (!targetUser) {
+      return { success: false, type: "error", message: "회원을 찾을 수 없습니다." };
+    }
+
+    const notification = await dispatchNotificationAction({
+      userId: targetUser.id,
+      actorId: loggedInfo.id,
+      type: "info",
+      title,
+      content,
+      linkUrl,
+      subType: "admin-message",
+      metadata: {
+        subType: "admin-message",
+        source: "admin-user-list",
+        allowSelfNotification: true,
+      },
+    }, { user: loggedInfo });
+
+    if (!notification) {
+      return {
+        success: false,
+        type: "error",
+        message: "알림 설정 또는 푸시 설정 때문에 전송되지 않았습니다.",
+      };
+    }
+
+    return {
+      success: true,
+      type: "success",
+      message: "알림을 전송했습니다.",
+      data: { notificationId: notification.uuid },
+    };
+  } catch (error) {
+    console.error("sendUserNotificationAdminAction 에러:", error);
+    return { success: false, type: "error", message: "알림 전송 중 오류가 발생했습니다." };
   }
 };
 

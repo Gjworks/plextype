@@ -3,10 +3,10 @@
 import React, { useCallback, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Activity, Edit3, Plus, Search, Trash2, UsersRound } from "lucide-react";
+import { Activity, BellRing, Edit3, Plus, Search, Send, Trash2, UsersRound } from "lucide-react";
 
 import { UserInfo, UserListResponseData } from "@/modules/user/actions/_type";
-import { removeUserAction, updateUserStatusAdminAction } from "@/modules/user/actions/user.action";
+import { removeUserAction, sendUserNotificationAdminAction, updateUserStatusAdminAction } from "@/modules/user/actions/user.action";
 import {
   getUserTimelineAdminAction,
   UserTimelineFilter,
@@ -14,6 +14,7 @@ import {
 import PageNavigation from "@components/nav/PageNavigation";
 import Button from "@components/button/Button";
 import Bottom from "@components/panel/Bottom";
+import Modal from "@components/modal/Modal";
 import Timeline from "@/modules/user/tpl/default/timeline";
 import { UserAdminTabs } from "./adminTabs";
 
@@ -72,6 +73,8 @@ const AdminUserList = ({
   const searchKeyword = searchParams?.get("keyword") || "";
   const timelineUserId = Number(searchParams?.get("timelineUserId")) || null;
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [notificationTarget, setNotificationTarget] = useState<UserInfo | null>(null);
+  const [notificationResult, setNotificationResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const allChecked = initialUserList.length > 0 && selectedIds.length === initialUserList.length;
@@ -137,6 +140,41 @@ const AdminUserList = ({
     });
   };
 
+  const handleOpenNotification = (user: UserInfo) => {
+    setNotificationResult(null);
+    setNotificationTarget(user);
+  };
+
+  const handleSendNotification = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!notificationTarget) return;
+
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get("title")?.toString() || "";
+    const content = formData.get("content")?.toString() || "";
+    const linkUrl = formData.get("linkUrl")?.toString() || "";
+
+    startTransition(async () => {
+      const result = await sendUserNotificationAdminAction(notificationTarget.id, {
+        title,
+        content,
+        linkUrl,
+      });
+
+      setNotificationResult({
+        type: result.success ? "success" : "error",
+        message: result.message,
+      });
+
+      if (result.success) {
+        setTimeout(() => {
+          setNotificationTarget(null);
+          setNotificationResult(null);
+        }, 650);
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
@@ -198,7 +236,7 @@ const AdminUserList = ({
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px]">
+          <table className="w-full min-w-[920px]">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/80 dark:border-dark-800 dark:bg-dark-950/70">
                 <th className="w-16 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">ID</th>
@@ -206,6 +244,7 @@ const AdminUserList = ({
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Email</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Nickname</th>
                 <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
+                <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Push</th>
                 <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Timeline</th>
                 <th className="w-28 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">Edit</th>
                 <th className="w-14 px-4 py-3 text-center">
@@ -255,6 +294,16 @@ const AdminUserList = ({
                     <td className="px-4 py-4 text-center">
                       <button
                         type="button"
+                        onClick={() => handleOpenNotification(item)}
+                        className={`${adminActionButtonClass} cursor-pointer`}
+                      >
+                        <BellRing size={13} />
+                        전송
+                      </button>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        type="button"
                         onClick={() => handleOpenTimeline(item.id)}
                         className={`${adminActionButtonClass} cursor-pointer`}
                       >
@@ -281,7 +330,7 @@ const AdminUserList = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center text-sm text-gray-400">조회된 회원이 없습니다.</td>
+                  <td colSpan={9} className="py-16 text-center text-sm text-gray-400">조회된 회원이 없습니다.</td>
                 </tr>
               )}
             </tbody>
@@ -300,6 +349,75 @@ const AdminUserList = ({
           <AdminUserTimelinePanel userId={timelineUserId} />
         </Bottom>
       )}
+
+      <Modal state={Boolean(notificationTarget)} close={() => setNotificationTarget(null)} size="sm" position="center" escClose overlay overlayClose>
+        <form onSubmit={handleSendNotification} className="p-6">
+          <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-5 dark:border-dark-800">
+            <div>
+              <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-primary-500">
+                <BellRing size={13} />
+                Push Notification
+              </div>
+              <div className="mt-2 text-lg font-semibold text-gray-800 dark:text-dark-100">회원 알림 전송</div>
+              <div className="mt-1 text-sm text-gray-400">
+                {notificationTarget?.accountId} 회원에게 알림센터, 앱 푸시, 웹 푸시를 함께 보냅니다.
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 py-5">
+            {notificationResult && (
+              <div className={`rounded-xl px-4 py-3 text-sm ${
+                notificationResult.type === "success"
+                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-300"
+                  : "bg-rose-50 text-rose-600 dark:bg-rose-400/10 dark:text-rose-300"
+              }`}>
+                {notificationResult.message}
+              </div>
+            )}
+
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-dark-200">제목</span>
+              <input
+                name="title"
+                defaultValue="테스트 알림"
+                className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100"
+                placeholder="알림 제목"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-dark-200">내용</span>
+              <textarea
+                name="content"
+                defaultValue="관리자에서 보낸 테스트 푸시 알림입니다."
+                rows={4}
+                className="mt-2 w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100"
+                placeholder="회원에게 보낼 알림 내용을 입력하세요."
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-dark-200">이동 링크</span>
+              <input
+                name="linkUrl"
+                defaultValue="/user/notifications"
+                className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100"
+                placeholder="/user/notifications"
+              />
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-gray-100 pt-5 dark:border-dark-800">
+            <Button type="button" onClick={() => setNotificationTarget(null)} disabled={isPending} fullWidth={false}>
+              취소
+            </Button>
+            <Button type="submit" isLoading={isPending} disabled={isPending} fullWidth={false} icon={<Send size={14} />}>
+              전송
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
