@@ -14,9 +14,19 @@ const bytesToBase64Url = (bytes: Buffer) => {
   return bytes.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 };
 
+const isPlaceholderValue = (value: string | undefined, keyName: string) => {
+  const trimmed = value?.trim();
+  return !trimmed || trimmed === keyName || trimmed === `\${${keyName}}`;
+};
+
 const buildVapidJwk = () => {
-  const publicKey = process.env.WEB_PUSH_VAPID_PUBLIC_KEY;
-  const privateKey = process.env.WEB_PUSH_VAPID_PRIVATE_KEY;
+  const publicKey = process.env.WEB_PUSH_VAPID_PUBLIC_KEY?.trim();
+  const privateKey = process.env.WEB_PUSH_VAPID_PRIVATE_KEY?.trim();
+
+  if (
+    isPlaceholderValue(publicKey, "WEB_PUSH_VAPID_PUBLIC_KEY") ||
+    isPlaceholderValue(privateKey, "WEB_PUSH_VAPID_PRIVATE_KEY")
+  ) return null;
 
   if (!publicKey || !privateKey) return null;
 
@@ -37,11 +47,14 @@ const buildVapidJwk = () => {
 };
 
 export const getWebPushPublicKey = () => {
-  return process.env.WEB_PUSH_VAPID_PUBLIC_KEY || "";
+  const publicKey = process.env.WEB_PUSH_VAPID_PUBLIC_KEY;
+  if (isPlaceholderValue(publicKey, "WEB_PUSH_VAPID_PUBLIC_KEY")) return "";
+  return publicKey?.trim() || "";
 };
 
 export const isWebPushConfigured = () => {
-  return Boolean(process.env.WEB_PUSH_VAPID_PUBLIC_KEY && process.env.WEB_PUSH_VAPID_PRIVATE_KEY);
+  return !isPlaceholderValue(process.env.WEB_PUSH_VAPID_PUBLIC_KEY, "WEB_PUSH_VAPID_PUBLIC_KEY") &&
+    !isPlaceholderValue(process.env.WEB_PUSH_VAPID_PRIVATE_KEY, "WEB_PUSH_VAPID_PRIVATE_KEY");
 };
 
 export const createVapidHeaders = async (endpoint: string) => {

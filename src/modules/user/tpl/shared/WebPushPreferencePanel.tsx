@@ -85,6 +85,14 @@ const getDeviceLabel = (userAgent: string) => {
   return `${browser} · ${os}`;
 };
 
+const getWebPushKeyErrorMessage = (message?: string) => {
+  if (message?.includes("WEB_PUSH_VAPID_PUBLIC_KEY")) {
+    return "브라우저 알림 설정이 아직 준비되지 않았습니다. 관리자에게 문의해주세요.";
+  }
+
+  return message || "브라우저 알림 키를 불러오지 못했습니다.";
+};
+
 const formatDateTime = (value?: string) => {
   if (!value) return "기록 없음";
 
@@ -174,7 +182,7 @@ const WebPushPreferencePanel = () => {
       const keyResult = await keyResponse.json();
 
       if (!keyResponse.ok || !keyResult?.publicKey) {
-        setMessage({ type: "error", text: keyResult?.message || "브라우저 알림 키를 불러오지 못했습니다." });
+        setMessage({ type: "error", text: getWebPushKeyErrorMessage(keyResult?.message) });
         return;
       }
 

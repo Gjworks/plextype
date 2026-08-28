@@ -15,7 +15,12 @@ export async function GET() {
 
   if (!publicKey) {
     return NextResponse.json(
-      { success: false, message: "WEB_PUSH_VAPID_PUBLIC_KEY가 설정되지 않았습니다.", publicKey: "" },
+      {
+        success: false,
+        code: "WEB_PUSH_NOT_CONFIGURED",
+        message: "브라우저 알림 설정이 아직 준비되지 않았습니다.",
+        publicKey: "",
+      },
       { status: 503 }
     );
   }

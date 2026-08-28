@@ -2,21 +2,20 @@
 
 import React, { useEffect, useState } from 'react'
 import { getActiveUserList, forceLogout } from '@/widgets/admin/activeUser/activeUser'
-import { ArrowLeft, RefreshCw, LogOut, Clock } from 'lucide-react' // Clock 아이콘 추가
+import { RefreshCw, LogOut, Clock, Wifi } from 'lucide-react'
 import { useToastStore } from '@/core/store/useToastStore'
-import Link from 'next/link'
-import useRelativeTime from '@/core/hooks/date/useRelativeTime' // 🌟 훅 임포트
+import useRelativeTime from '@/core/hooks/date/useRelativeTime'
+import Button from '@components/button/Button'
+import { UserAdminTabs } from '@/modules/user/admin/adminTabs'
 
-// 1. 🌟 테이블 행(Row) 컴포넌트 분리 (훅 사용을 위해) ㅡㅡ+
 const UserRow = ({ user, onKick }: { user: any; onKick: (id: string, ip: string, name: string) => void }) => {
-  // 이미 만들어두신 훅으로 "5분 전" 계산
   const timeAgo = useRelativeTime(user.loginAt)
 
   return (
-    <tr className="hover:bg-gray-50/30 transition-colors dark:hover:bg-white/[0.04]">
+    <tr className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-primary-50/30 dark:border-dark-800 dark:hover:bg-white/[0.04]">
       <td className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-[10px] text-primary-600 font-bold dark:bg-primary-400/10 dark:text-primary-300">{user.nickName?.charAt(0)}</div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-600 dark:bg-primary-400/10 dark:text-primary-300">{user.nickName?.charAt(0)}</div>
           <span className="text-sm font-medium text-gray-700 dark:text-dark-100">{user.nickName}</span>
         </div>
       </td>
@@ -38,7 +37,7 @@ const UserRow = ({ user, onKick }: { user: any; onKick: (id: string, ip: string,
         </span>
       </td>
       <td className="p-4 text-right">
-        <button onClick={() => onKick(user.id, user.ip, user.nickName)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-90" title="강제 로그아웃">
+        <button onClick={() => onKick(user.id, user.ip, user.nickName)} className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-all hover:bg-red-50 hover:text-red-500 active:scale-95 dark:hover:bg-red-400/10 dark:hover:text-red-300" title="강제 로그아웃">
           <LogOut size={16} />
         </button>
       </td>
@@ -76,39 +75,56 @@ export default function ActiveUsersPage() {
   }, [])
 
   return (
-    <div className="p-8 max-w-6xl mx-auto dark:text-dark-100">
-      <header className="flex justify-between items-center mb-10">
-        <div className="flex items-center gap-4">
-          <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-full transition-all dark:hover:bg-dark-800">
-            <ArrowLeft size={20} />
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">실시간 접속자 명단</h1>
-        </div>
-        <button onClick={loadData} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 active:scale-95 transition-all dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:bg-dark-800">
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-          새로고침
-        </button>
-      </header>
+    <div className="mx-auto max-w-screen-2xl px-3 py-10 dark:text-dark-100">
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+          <UserAdminTabs activePath="/admin/user/active" />
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gray-50/50 border-b border-gray-100 dark:border-dark-800 dark:bg-dark-950/70">
-              <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">사용자</th>
-              <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">계정 ID</th>
-              <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">IP 주소</th>
-              <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">접속 시간</th>
-              <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider">상태</th>
-              <th className="p-4 text-[11px] font-bold uppercase text-gray-400 tracking-wider text-right">관리</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 dark:divide-dark-800">
-            {users.map((user, i) => (
-              <UserRow key={user.id || i} user={user} onKick={handleKick} />
-            ))}
-          </tbody>
-        </table>
-        {users.length === 0 && !loading && <div className="p-20 text-center text-gray-400 text-sm">현재 접속 중인 회원이 없습니다.</div>}
+          <div className="flex flex-col gap-4 px-5 py-7 xl:flex-row xl:items-end xl:justify-between md:px-8">
+            <div>
+              <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                <Wifi size={13} />
+                User Session
+              </div>
+              <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">로그인 된 회원</div>
+              <div className="mt-1 text-sm text-gray-400">
+                현재 접속 중인 회원 세션을 확인하고 필요할 때 강제 로그아웃할 수 있습니다.
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={loadData}
+              fullWidth={false}
+              icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />}
+            >
+              새로고침
+            </Button>
+          </div>
+        </section>
+
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/80 dark:border-dark-800 dark:bg-dark-950/70">
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">사용자</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">계정 ID</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">IP 주소</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">접속 시간</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">상태</th>
+                  <th className="p-4 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user, i) => (
+                  <UserRow key={user.id || i} user={user} onKick={handleKick} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {users.length === 0 && !loading && <div className="p-20 text-center text-sm text-gray-400">현재 접속 중인 회원이 없습니다.</div>}
+        </div>
       </div>
     </div>
   )

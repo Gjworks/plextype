@@ -15,6 +15,7 @@ import PageNavigation from "@components/nav/PageNavigation";
 import Button from "@components/button/Button";
 import Bottom from "@components/panel/Bottom";
 import Timeline from "@/modules/user/tpl/default/timeline";
+import { UserAdminTabs } from "./adminTabs";
 
 type Props = {
   initialUserList: UserInfo[];
@@ -26,7 +27,7 @@ type Props = {
 };
 
 const checkboxClass =
-  "h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500";
+  "h-4 w-4 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500";
 
 const adminActionButtonClass =
   "inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-950 hover:ring-4 hover:ring-gray-100/70 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-100 dark:hover:ring-dark-800/35";
@@ -137,61 +138,65 @@ const AdminUserList = ({
   };
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
-            <UsersRound size={13} />
-            User Control
-          </div>
-          <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">{title}</div>
-          <div className="mt-1 text-sm text-gray-400">
-            {description || `전체 ${initialNavigation.totalCount}명 중 ${initialUserList.length}명을 표시하고 있습니다.`}
-          </div>
-        </div>
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+        <UserAdminTabs activePath={basePath} />
 
-        <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
-          <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-md border border-gray-200 bg-white px-3 shadow-sm shadow-gray-100 xl:w-[420px] xl:flex-none dark:border-dark-700 dark:bg-dark-900 dark:shadow-black/20">
-            <select
-              name="target"
-              defaultValue={searchTarget}
-              className="shrink-0 bg-transparent py-2.5 pr-3 text-sm text-gray-500 outline-none dark:text-dark-300"
+        <div className="flex flex-col gap-4 px-5 py-7 xl:flex-row xl:items-end xl:justify-between md:px-8">
+          <div>
+            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+              <UsersRound size={13} />
+              User Control
+            </div>
+            <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">{title}</div>
+            <div className="mt-1 text-sm text-gray-400">
+              {description || `전체 ${initialNavigation.totalCount}명 중 ${initialUserList.length}명을 표시하고 있습니다.`}
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
+            <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-xl border border-gray-200 bg-white px-3 xl:w-[420px] xl:flex-none dark:border-dark-700 dark:bg-dark-900">
+              <select
+                name="target"
+                defaultValue={searchTarget}
+                className="shrink-0 bg-transparent py-2.5 pr-3 text-sm text-gray-500 outline-none dark:text-dark-300"
+              >
+                <option value="accountId">아이디</option>
+                <option value="nickName">닉네임</option>
+                <option value="email_address">이메일</option>
+              </select>
+              <div className="h-4 w-px bg-gray-200 dark:bg-dark-700" />
+              <input
+                type="text"
+                name="keyword"
+                defaultValue={searchKeyword}
+                className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-gray-700 outline-none placeholder:text-gray-300 dark:text-dark-100 dark:placeholder:text-dark-500"
+                placeholder="검색어 입력"
+              />
+              <button type="submit" className="cursor-pointer text-gray-400 transition-colors hover:text-gray-900 dark:hover:text-dark-100" aria-label="검색">
+                <Search size={17} />
+              </button>
+            </form>
+
+            <Link href="/admin/user/create" className={adminPrimaryButtonClass}>
+              <Plus size={15} />
+              회원추가
+            </Link>
+            <Button
+              type="button"
+              onClick={handleDelete}
+              isLoading={isPending}
+              disabled={selectedIds.length === 0 || isPending}
+              fullWidth={false}
+              icon={<Trash2 size={14} />}
             >
-              <option value="accountId">아이디</option>
-              <option value="nickName">닉네임</option>
-              <option value="email_address">이메일</option>
-            </select>
-            <div className="h-4 w-px bg-gray-200 dark:bg-dark-700" />
-            <input
-              type="text"
-              name="keyword"
-              defaultValue={searchKeyword}
-              className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-gray-700 outline-none placeholder:text-gray-300 dark:text-dark-100 dark:placeholder:text-dark-500"
-              placeholder="검색어 입력"
-            />
-            <button type="submit" className="cursor-pointer text-gray-400 transition-colors hover:text-gray-900 dark:hover:text-dark-100" aria-label="검색">
-              <Search size={17} />
-            </button>
-          </form>
-
-          <Link href="/admin/user/create" className={adminPrimaryButtonClass}>
-            <Plus size={15} />
-            회원추가
-          </Link>
-          <Button
-            type="button"
-            onClick={handleDelete}
-            isLoading={isPending}
-            disabled={selectedIds.length === 0 || isPending}
-            fullWidth={false}
-            icon={<Trash2 size={14} />}
-          >
-            삭제
-          </Button>
+              삭제
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/25">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px]">
             <thead>
@@ -217,7 +222,7 @@ const AdminUserList = ({
             <tbody>
               {initialUserList.length > 0 ? (
                 initialUserList.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40 dark:border-dark-800 dark:hover:bg-white/[0.04]">
+                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-primary-50/30 dark:border-dark-800 dark:hover:bg-white/[0.04]">
                     <td className="px-4 py-4 text-sm font-medium text-gray-400">{item.id}</td>
                     <td className="px-4 py-4">
                       <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{item.accountId}</div>

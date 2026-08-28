@@ -141,6 +141,14 @@ const urlBase64ToUint8Array = (value: string) => {
   return output;
 };
 
+const getWebPushKeyErrorMessage = (message?: string) => {
+  if (message?.includes("WEB_PUSH_VAPID_PUBLIC_KEY")) {
+    return "Web Push 공개 키가 아직 설정되지 않았습니다.";
+  }
+
+  return message || "Web Push 공개 키가 설정되지 않았습니다.";
+};
+
 const StatusPill = ({ ok, label }: { ok: boolean; label: string }) => {
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${ok ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-400"}`}>
@@ -657,7 +665,7 @@ const Settings = ({
       const keyResult = await keyResponse.json();
 
       if (!keyResponse.ok || !keyResult?.publicKey) {
-        setFormMessage({ type: "error", message: keyResult?.message || "Web Push 공개 키가 설정되지 않았습니다." });
+        setFormMessage({ type: "error", message: getWebPushKeyErrorMessage(keyResult?.message) });
         return;
       }
 

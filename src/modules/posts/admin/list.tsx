@@ -37,7 +37,12 @@ const adminPrimaryButtonClass =
   "inline-flex items-center justify-center gap-2 rounded-xl border border-primary-500/25 bg-white px-5 py-2.5 text-xs font-medium text-primary-600 ring-4 ring-primary-500/10 transition-all duration-200 hover:border-primary-500/30 hover:bg-primary-500/5 active:bg-primary-500/10 hover:ring-primary-500/10 dark:border-primary-400/25 dark:bg-dark-900 dark:text-primary-300 dark:ring-primary-400/10 dark:hover:bg-primary-400/10 dark:active:bg-primary-400/15";
 
 const checkboxClass =
-  "h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500";
+  "h-4 w-4 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500";
+
+const postsAdminTabs = [
+  { label: "게시판 목록", href: "/admin/posts/list" },
+  { label: "게시판 생성", href: "/admin/posts/create" },
+];
 
 const AdminPostsList = ({
   initialData,
@@ -115,66 +120,85 @@ const AdminPostsList = ({
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       {error && (
-        <div className="mb-6">
+        <div>
           <Alert message={error.message} type={error.type} />
         </div>
       )}
 
-      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
-            <MessageSquareText size={13} />
-            Board Control
-          </div>
-          <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">게시판 목록</div>
-          <div className="mt-1 text-sm text-gray-400">
-            전체 {pageNavigation.totalCount}개 중 {initialData.length}개를 표시하고 있습니다.
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+        <div className="shrink-0 border-b border-gray-100 px-5 dark:border-dark-800 md:px-8">
+          <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide md:gap-8">
+            {postsAdminTabs.map((tab) => {
+              const isActive = tab.href === "/admin/posts/list";
+
+              return (
+                <Link key={tab.href} href={tab.href} className="relative shrink-0 py-4">
+                  <span className={`text-[13px] font-bold transition-colors ${isActive ? "text-primary-600 dark:text-primary-300" : "text-gray-400 hover:text-gray-900 dark:text-dark-500 dark:hover:text-dark-100"}`}>
+                    {tab.label}
+                  </span>
+                  {isActive && <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-primary-600 dark:bg-primary-300" />}
+                </Link>
+              );
+            })}
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
-          <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-md border border-gray-200 bg-white px-3 shadow-sm shadow-gray-100 xl:w-[420px] xl:flex-none dark:border-dark-700 dark:bg-dark-900 dark:shadow-black/20">
-            <select
-              name="target"
-              defaultValue={searchTarget}
-              className="shrink-0 bg-transparent py-2.5 pr-3 text-sm text-gray-500 outline-none dark:text-dark-300"
+        <div className="flex flex-col gap-4 px-5 py-7 xl:flex-row xl:items-end xl:justify-between md:px-8">
+          <div>
+            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+              <MessageSquareText size={13} />
+              Board Control
+            </div>
+            <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">게시판 목록</div>
+            <div className="mt-1 text-sm text-gray-400">
+              전체 {pageNavigation.totalCount}개 중 {initialData.length}개를 표시하고 있습니다.
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
+            <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-xl border border-gray-200 bg-white px-3 xl:w-[420px] xl:flex-none dark:border-dark-700 dark:bg-dark-900">
+              <select
+                name="target"
+                defaultValue={searchTarget}
+                className="shrink-0 bg-transparent py-2.5 pr-3 text-sm text-gray-500 outline-none dark:text-dark-300"
+              >
+                <option value="moduleName">게시판 이름</option>
+                <option value="mid">게시판 ID</option>
+              </select>
+              <div className="h-4 w-px bg-gray-200 dark:bg-dark-700" />
+              <input
+                type="text"
+                name="keyword"
+                defaultValue={searchKeyword}
+                className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-gray-700 outline-none placeholder:text-gray-300 dark:text-dark-100 dark:placeholder:text-dark-500"
+                placeholder="검색어 입력"
+              />
+              <button type="submit" className="cursor-pointer text-gray-400 transition-colors hover:text-gray-900 dark:hover:text-dark-100" aria-label="검색">
+                <Search size={17} />
+              </button>
+            </form>
+
+            <Link href="/admin/posts/create" className={adminPrimaryButtonClass}>
+              <Plus size={15} />
+              게시판 추가
+            </Link>
+            <Button
+              type="button"
+              onClick={handleDelete}
+              isLoading={loading}
+              disabled={selectedIds.length === 0 || loading}
+              fullWidth={false}
+              icon={<Trash2 size={14} />}
             >
-              <option value="moduleName">게시판 이름</option>
-              <option value="mid">게시판 ID</option>
-            </select>
-            <div className="h-4 w-px bg-gray-200 dark:bg-dark-700" />
-            <input
-              type="text"
-              name="keyword"
-              defaultValue={searchKeyword}
-              className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-gray-700 outline-none placeholder:text-gray-300 dark:text-dark-100 dark:placeholder:text-dark-500"
-              placeholder="검색어 입력"
-            />
-            <button type="submit" className="cursor-pointer text-gray-400 transition-colors hover:text-gray-900 dark:hover:text-dark-100" aria-label="검색">
-              <Search size={17} />
-            </button>
-          </form>
-
-          <Link href="/admin/posts/create" className={adminPrimaryButtonClass}>
-            <Plus size={15} />
-            게시판 추가
-          </Link>
-          <Button
-            type="button"
-            onClick={handleDelete}
-            isLoading={loading}
-            disabled={selectedIds.length === 0 || loading}
-            fullWidth={false}
-            icon={<Trash2 size={14} />}
-          >
-            선택 삭제
-          </Button>
+              선택 삭제
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px]">
             <thead>
@@ -199,7 +223,7 @@ const AdminPostsList = ({
             <tbody>
               {initialData.length > 0 ? (
                 initialData.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40 dark:border-dark-800 dark:hover:bg-white/[0.04]">
+                  <tr key={item.id} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-primary-50/30 dark:border-dark-800 dark:hover:bg-white/[0.04]">
                     <td className="px-4 py-4 text-sm font-medium text-gray-400">{item.id}</td>
                     <td className="px-4 py-4">
                       <div className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600 dark:bg-dark-800 dark:text-dark-300">
@@ -209,7 +233,7 @@ const AdminPostsList = ({
                     <td className="px-4 py-4">
                       <Link
                         href={`/posts/${item.mid}`}
-                        className="text-sm font-semibold text-gray-800 transition-colors hover:text-blue-600 dark:text-dark-100 dark:hover:text-cyan-400"
+                        className="text-sm font-semibold text-gray-800 transition-colors hover:text-primary-600 dark:text-dark-100 dark:hover:text-primary-300"
                       >
                         {item.moduleName}
                       </Link>

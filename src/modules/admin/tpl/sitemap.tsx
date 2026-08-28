@@ -109,7 +109,7 @@ const defaultGroupFormState: GroupFormState = {
   isActive: true,
 };
 
-const selectClass = "w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 shadow-md shadow-gray-100 outline-none transition-all hover:border-gray-300 focus:border-gray-300 focus:ring-4 focus:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:shadow-black/20 dark:hover:border-dark-600 dark:focus:border-dark-600 dark:focus:ring-dark-800";
+const selectClass = "w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition-all hover:border-gray-300 focus:border-primary-500/30 focus:ring-4 focus:ring-primary-500/5 dark:border-dark-800 dark:bg-dark-950 dark:text-dark-100 dark:hover:border-dark-700 dark:focus:border-primary-400/30 dark:focus:ring-primary-400/10";
 
 const sitemapPrimaryButtonClass =
   "border-primary-500/25 bg-white text-primary-600 ring-4 ring-primary-500/5 hover:border-primary-500/30 hover:bg-primary-500/5 active:bg-primary-500/10 hover:text-primary-600 hover:ring-primary-500/10 dark:border-primary-400/25 dark:bg-dark-900 dark:text-primary-300 dark:ring-primary-400/10 dark:hover:bg-primary-400/10 dark:active:bg-primary-400/15";
@@ -563,15 +563,15 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
           </p>
         </div>
         <div className="grid grid-cols-3 gap-2 text-center sm:w-[360px]">
-          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+          <div className="rounded-xl border border-gray-200 bg-white px-3 py-3 dark:border-dark-800 dark:bg-dark-950">
             <div className="text-lg font-bold text-gray-950 dark:text-dark-100">{groups.length}</div>
             <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Groups</div>
           </div>
-          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+          <div className="rounded-xl border border-gray-200 bg-white px-3 py-3 dark:border-dark-800 dark:bg-dark-950">
             <div className="text-lg font-bold text-gray-950 dark:text-dark-100">{flatItems.length}</div>
             <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Menus</div>
           </div>
-          <div className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+          <div className="rounded-xl border border-gray-200 bg-white px-3 py-3 dark:border-dark-800 dark:bg-dark-950">
             <div className="text-lg font-bold text-gray-950 dark:text-dark-100">{activeCount}</div>
             <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Active</div>
           </div>
@@ -579,7 +579,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
       </div>
 
       {message && (
-        <div className={`mb-5 rounded-md px-3 py-2 text-sm ${
+        <div className={`mb-5 rounded-xl px-3 py-2 text-sm ${
           message.type === "success" ? "bg-primary-50 text-primary-600 dark:bg-primary-400/10 dark:text-primary-300" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-300"
         }`}>
           {message.text}
@@ -588,7 +588,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="grid gap-4 xl:grid-cols-[300px_360px_minmax(0,1fr)]">
-          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-dark-800">
               <div>
                 <div className="text-sm font-bold text-gray-950 dark:text-dark-100">Menu groups</div>
@@ -619,7 +619,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-dark-800">
               <div className="min-w-0">
                 <div className="truncate text-sm font-bold text-gray-950 dark:text-dark-100">{selectedGroup?.title || "메뉴 그룹"}</div>
@@ -639,7 +639,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
             <DroppableMenuList groupKey={selectedGroupKey}>
               {selectedGroupItems.length === 0 ? (
-                <div className="rounded-md border border-dashed border-gray-200 px-4 py-10 text-center">
+                <div className="rounded-xl border border-dashed border-gray-200 px-4 py-10 text-center dark:border-dark-800">
                   <div className="text-sm font-bold text-gray-400">메뉴가 없습니다.</div>
                   <p className="mt-2 text-xs leading-5 text-gray-400">오른쪽 상세 영역에서 새 메뉴를 추가할 수 있습니다.</p>
                 </div>
@@ -658,7 +658,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
             </DroppableMenuList>
           </section>
 
-          <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-dark-800">
             <div>
               <div className="text-sm font-bold text-gray-950 dark:text-dark-100">
@@ -677,9 +677,9 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
 
           <form onSubmit={handleSubmitMenu} className="p-4">
             {!isCreatingMenu && !isMenuEditing && selectedGroupItems.length > 0 ? (
-              <div className="flex min-h-[420px] items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50 px-6 text-center dark:border-dark-700 dark:bg-dark-950">
+              <div className="flex min-h-[420px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 text-center dark:border-dark-800 dark:bg-dark-900">
                 <div>
-                  <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-white text-gray-300 shadow-sm dark:bg-dark-900 dark:text-dark-500">
+                  <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-300 ring-1 ring-gray-100 dark:bg-dark-950 dark:text-dark-500 dark:ring-dark-800">
                     <FolderTree size={18} />
                   </div>
                   <div className="text-sm font-bold text-gray-500">수정할 메뉴를 선택하세요.</div>
@@ -727,7 +727,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
                   <InputField inputTitle="링크 타겟" name="target" value={menuFormState.target} onChange={handleMenuChange("target")} error={fieldErrors?.target} placeholder="_blank 또는 비움" />
                 </div>
 
-                <label className="mt-4 flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-950">
+                <label className="mt-4 flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-800 dark:bg-dark-900">
                   <span>
                     <span className="block text-sm font-bold text-gray-900 dark:text-dark-100">메뉴 사용</span>
                     <span className="mt-1 block text-xs text-gray-500">꺼두면 공개 레이아웃 메뉴에서 숨겨집니다.</span>
@@ -755,7 +755,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
               <div className="text-base font-bold text-gray-950 dark:text-dark-100">{groupFormState.id ? "메뉴 그룹 수정" : "메뉴 그룹 추가"}</div>
               <p className="mt-1 text-xs leading-5 text-gray-500">레이아웃에서 호출할 메뉴 묶음을 관리합니다.</p>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-950 text-white dark:bg-primary-400 dark:text-dark-950">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-950 text-white dark:bg-primary-400 dark:text-dark-950">
               <FolderTree size={16} />
             </div>
           </div>
@@ -780,7 +780,7 @@ const SitemapAdmin = ({ initialData }: SitemapAdminProps) => {
               </div>
               <InputField inputTitle="정렬" name="groupOrder" type="number" value={groupFormState.order} onChange={handleGroupChange("order")} error={groupFieldErrors?.order} placeholder="0" />
             </div>
-            <label className="flex cursor-pointer items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-950">
+            <label className="flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-800 dark:bg-dark-900">
               <span>
                 <span className="block text-sm font-bold text-gray-900 dark:text-dark-100">그룹 사용</span>
                 <span className="mt-1 block text-xs text-gray-500">꺼두면 공개 메뉴 조회에서 제외됩니다.</span>
@@ -850,20 +850,20 @@ const SortableGroupButton = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left transition-colors ${
+      className={`group relative mb-1 flex w-full items-center gap-2 rounded-xl px-2 py-2.5 text-left transition-colors ${
         isDragging
           ? "bg-white text-gray-400 opacity-60 dark:bg-dark-900 dark:text-dark-500"
           : isOver
           ? "bg-primary-500/5 text-primary-600 ring-4 ring-primary-500/10 dark:bg-primary-400/10 dark:text-primary-300 dark:ring-primary-400/10"
           : isSelected
-            ? "bg-gray-950 text-white shadow-lg shadow-gray-950/10 dark:bg-dark-100 dark:text-dark-950 dark:shadow-black/20"
+            ? "bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950"
             : "text-gray-500 hover:bg-gray-100 hover:text-gray-900 hover:ring-4 hover:ring-gray-100/70 dark:text-dark-400 dark:hover:bg-white/[0.04] dark:hover:text-dark-100 dark:hover:ring-dark-800/35"
       }`}
     >
       <span
         {...attributes}
         {...listeners}
-        className={`grid h-8 w-5 shrink-0 cursor-grab place-items-center rounded-md active:cursor-grabbing ${
+        className={`grid h-8 w-5 shrink-0 cursor-grab place-items-center rounded-lg active:cursor-grabbing ${
           isSelected ? "text-white/45 hover:bg-white/10 dark:text-dark-950/55" : `text-gray-300 dark:text-dark-600 ${sitemapSoftIconButtonClass}`
         }`}
       >
@@ -871,7 +871,7 @@ const SortableGroupButton = ({
       </span>
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 cursor-pointer text-left">
         <span className="flex min-w-0 items-center gap-2">
-          <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md ${
+          <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
             isSelected ? "bg-white/10 text-white dark:bg-dark-950/15 dark:text-dark-950" : "bg-gray-100 text-gray-400 group-hover:bg-white group-hover:text-gray-600 dark:bg-dark-800 dark:text-dark-500 dark:group-hover:bg-dark-700 dark:group-hover:text-dark-200"
           }`}>
             <Layers3 size={14} />
@@ -887,7 +887,7 @@ const SortableGroupButton = ({
         </span>
       </button>
       <div className="ml-1 flex shrink-0 items-center gap-0.5">
-        <span className={`grid h-7 min-w-7 place-items-center rounded-md px-2 text-[10px] font-bold ${
+        <span className={`grid h-7 min-w-7 place-items-center rounded-lg px-2 text-[10px] font-bold ${
             isSelected ? "bg-white text-gray-950 dark:bg-dark-950 dark:text-dark-100" : "bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300"
         }`}>
           {count}
@@ -898,7 +898,7 @@ const SortableGroupButton = ({
             event.stopPropagation();
             onEdit();
           }}
-          className={`grid h-7 w-7 cursor-pointer place-items-center rounded-md ${
+          className={`grid h-7 w-7 cursor-pointer place-items-center rounded-lg ${
             isSelected ? "text-white/45 transition-colors hover:bg-white/10 hover:text-white dark:text-dark-950/60 dark:hover:bg-dark-950/15 dark:hover:text-dark-950" : `text-gray-300 dark:text-dark-600 ${sitemapSoftIconButtonClass}`
           }`}
           aria-label={`${group.title} 그룹 수정`}
@@ -911,7 +911,7 @@ const SortableGroupButton = ({
             event.stopPropagation();
             onDelete();
           }}
-          className={`grid h-7 w-7 cursor-pointer place-items-center rounded-md ${
+          className={`grid h-7 w-7 cursor-pointer place-items-center rounded-lg ${
             isSelected ? "text-white/45 transition-colors hover:bg-white/10 hover:text-white dark:text-dark-950/60 dark:hover:bg-dark-950/15 dark:hover:text-dark-950" : `text-gray-300 dark:text-dark-600 ${sitemapSoftDangerIconButtonClass}`
           }`}
           aria-label={`${group.title} 그룹 삭제`}
@@ -981,7 +981,7 @@ const SortableMenuItem = ({
       type="button"
       onClick={onSelect}
       style={style}
-      className={`relative mb-1.5 flex cursor-pointer items-center gap-2 overflow-hidden rounded-lg border px-3 py-2.5 text-left transition-colors ${
+      className={`relative mb-1.5 flex cursor-pointer items-center gap-2 overflow-hidden rounded-xl border px-3 py-2.5 text-left transition-colors ${
         isOver
           ? "border-primary-500/25 bg-primary-500/5 text-primary-600 ring-4 ring-primary-500/10 dark:border-primary-400/30 dark:bg-primary-400/10 dark:text-primary-300 dark:ring-primary-400/10"
           : isDragging
@@ -1013,7 +1013,7 @@ const SortableMenuItem = ({
         <span
           {...attributes}
           {...listeners}
-          className="grid h-6 w-5 cursor-grab place-items-center rounded-md text-gray-300 transition-all duration-200 hover:bg-gray-100 hover:text-gray-500 hover:ring-4 hover:ring-gray-100/70 active:cursor-grabbing dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-300 dark:hover:ring-dark-800/35"
+          className="grid h-6 w-5 cursor-grab place-items-center rounded-lg text-gray-300 transition-all duration-200 hover:bg-gray-100 hover:text-gray-500 hover:ring-4 hover:ring-gray-100/70 active:cursor-grabbing dark:text-dark-600 dark:hover:bg-dark-800 dark:hover:text-dark-300 dark:hover:ring-dark-800/35"
           onClick={(event) => event.stopPropagation()}
         >
           <GripVertical size={13} />

@@ -10,6 +10,7 @@ import Alert from "@components/message/Alert";
 import Button from "@components/button/Button";
 import InputField from "@components/form/InputField";
 import Modal from "@components/modal/Modal";
+import { UserAdminTabs } from "./adminTabs";
 
 type Props = {
   initialGroupList: GroupInfo[];
@@ -104,37 +105,41 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
 
   return (
     <>
-      <div>
+      <div className="space-y-6">
         {message && (
-          <div className="mb-6">
+          <div>
             <Alert message={message.message} type={message.type} />
           </div>
         )}
 
-        <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
-              <UsersRound size={13} />
-              User Control
+        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+          <UserAdminTabs activePath="/admin/user/groupList" />
+
+          <div className="flex flex-col gap-4 px-5 py-7 xl:flex-row xl:items-end xl:justify-between md:px-8">
+            <div>
+              <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                <UsersRound size={13} />
+                User Control
+              </div>
+              <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">회원 그룹 관리</div>
+              <div className="mt-1 text-sm text-gray-400">
+                전체 {initialGroupList.length}개의 회원 그룹을 관리합니다.
+              </div>
             </div>
-            <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">회원 그룹 관리</div>
-            <div className="mt-1 text-sm text-gray-400">
-              전체 {initialGroupList.length}개의 회원 그룹을 관리합니다.
-            </div>
+
+            <Button
+              type="button"
+              onClick={openCreateModal}
+              fullWidth={false}
+              className={adminPrimaryButtonClass}
+              icon={<Plus size={15} />}
+            >
+              그룹 추가
+            </Button>
           </div>
+        </section>
 
-          <Button
-            type="button"
-            onClick={openCreateModal}
-            fullWidth={false}
-            className={adminPrimaryButtonClass}
-            icon={<Plus size={15} />}
-          >
-            그룹 추가
-          </Button>
-        </div>
-
-        <div className="overflow-hidden rounded-md border border-gray-100 bg-white shadow-sm shadow-gray-100 dark:border-dark-800 dark:bg-dark-900 dark:shadow-black/20">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px]">
               <thead>
@@ -149,7 +154,7 @@ const DashboardUserGroupList = ({ initialGroupList }: Props) => {
               <tbody>
                 {initialGroupList.length > 0 ? (
                   initialGroupList.map((group, index) => (
-                    <tr key={group.id || index} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-blue-50/40 dark:border-dark-800 dark:hover:bg-white/[0.04]">
+                    <tr key={group.id || index} className="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-primary-50/30 dark:border-dark-800 dark:hover:bg-white/[0.04]">
                       <td className="px-4 py-4">
                         <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{group.groupTitle}</div>
                       </td>
