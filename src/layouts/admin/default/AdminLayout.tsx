@@ -37,6 +37,15 @@ const isAdminPathActive = (pathname: string, href: string) => {
   return cleanedPath.startsWith(`${cleanedHref}/`)
 }
 
+const getBestAdminPathMatch = (pathname: string, hrefs: string[]) => {
+  const matches = hrefs
+    .map(cleanAdminPath)
+    .filter((href) => isAdminPathActive(pathname, href))
+    .sort((a, b) => b.length - a.length)
+
+  return matches[0] || null
+}
+
 const getAdminBreadcrumbs = (pathname: string, adminBreadcrumbs: AdminBreadcrumbRegistry) => {
   const segments = pathname.split('/').filter(Boolean)
   const section = segments[1]
@@ -95,6 +104,9 @@ const AdminSideNav = ({
           {menuConfig.map((menu) => {
             const active = getMenuActive(normalizedPathname, menu)
             const opened = openMenus[menu.id] ?? active
+            const activeChildHref = menu.items
+              ? getBestAdminPathMatch(normalizedPathname, menu.items.map((item) => item.href))
+              : null
 
             if (menu.href) {
               return (
@@ -133,7 +145,7 @@ const AdminSideNav = ({
                 {opened && (
                   <div className="ml-8 mt-1 space-y-1 border-l border-gray-200 pl-3 dark:border-dark-800">
                     {menu.items?.map((item) => {
-                      const itemActive = isAdminPathActive(normalizedPathname, item.href)
+                      const itemActive = cleanAdminPath(item.href) === activeChildHref
 
                       return (
                         <Link
