@@ -36,6 +36,7 @@ export const adminModule = defineModule({
         order: 50,
         items: [
           { label: "사이트맵", href: "/admin/site/sitemap" },
+          { label: "대시보드 구성", href: "/admin/site/dashboard" },
         ],
       },
       {
@@ -62,6 +63,7 @@ export const adminModule = defineModule({
       },
       site: {
         sitemap: "SITEMAP",
+        dashboard: "DASHBOARD",
       },
       settings: {
         index: "GENERAL",

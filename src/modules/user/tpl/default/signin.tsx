@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Eye, EyeOff, LoaderCircle, LockKeyhole, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 type SigninError = {
@@ -12,9 +12,17 @@ type SigninError = {
   fieldErrors?: Record<string, string>;
 };
 
+const getSafeRedirectPath = (value?: string | null) => {
+  if (!value) return "/";
+  if (!value.startsWith("/") || value.startsWith("//")) return "/";
+  return value;
+};
+
 const Signin = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -33,7 +41,7 @@ const Signin = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["user"] });
-      router.replace("/");
+      router.replace(redirectPath);
       router.refresh();
     },
     onError: (error) => {
