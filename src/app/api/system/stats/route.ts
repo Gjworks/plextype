@@ -17,7 +17,11 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let closed = false;
+
       const sendUpdate = async () => {
+        if (closed) return;
+
         try {
           // 🌟 1. 진짜 데이터들을 한꺼번에 긁어옵니다.
           const [cpu, mem, network, disk, time] = await Promise.all([
@@ -43,16 +47,23 @@ export async function GET(req: NextRequest) {
             timestamp: Date.now()
           };
 
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(stats)}\n\n`));
+          if (!closed) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(stats)}\n\n`));
+          }
         } catch (e) {
-          console.error("데이터 수집 에러:", e);
+          if (!closed) console.error("데이터 수집 에러:", e);
         }
       };
 
+      await sendUpdate();
       const timer = setInterval(sendUpdate, 2000);
       req.signal.addEventListener('abort', () => {
+        closed = true;
         clearInterval(timer);
-        controller.close();
+        try {
+          controller.close();
+        } catch {
+        }
       });
     }
   });

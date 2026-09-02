@@ -28,10 +28,10 @@
       "@/*": [
         "./src/*"
       ],
-      "@core/*" : [
+      "@core/*": [
         "./src/core/*"
       ],
-      "@app/*" : [
+      "@app/*": [
         "./src/app/*"
       ],
       "@modules/*": [
@@ -69,7 +69,7 @@
       "@hooks/*": [
         "./src/core/hooks/*"
       ],
-      "@layouts/*" : [
+      "@layouts/*": [
         "./src/layouts/*"
       ],
       "@providers/*": [
@@ -83,7 +83,7 @@
       ],
       "@widgets/*": [
         "./src/widgets/*"
-      ],
+      ]
     },
     "strictNullChecks": true
   },
@@ -97,6 +97,7 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next/dev"
   ]
 }
