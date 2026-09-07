@@ -124,6 +124,7 @@ export async function POST(request: Request): Promise<Response> {
       }, { status: 400 });
     }
 
+    const isMobileClient = validation.data.client === "mobile";
     const { accountId, password } = validation.data;
     const userIp = getClientIp(request);
     const authSettings = await getAuthSettingsRuntimeAction();
@@ -210,9 +211,11 @@ export async function POST(request: Request): Promise<Response> {
       groups: groupIds,
     };
 
+    const accessTokenExpiresIn = isMobileClient ? "365d" : authSettings.accessTokenExpiresIn;
+    const refreshTokenExpiresIn = isMobileClient ? "365d" : authSettings.refreshTokenExpiresIn;
     const [accessToken, refreshToken] = await Promise.all([
-      sign(tokenParams, authSettings.accessTokenExpiresIn),
-      refresh(tokenParams, authSettings.refreshTokenExpiresIn),
+      sign(tokenParams, accessTokenExpiresIn),
+      refresh(tokenParams, refreshTokenExpiresIn),
     ]);
 
     await prisma.user.update({
@@ -238,13 +241,13 @@ export async function POST(request: Request): Promise<Response> {
     response.cookies.set({
       name: "accessToken",
       value: accessToken,
-      ...getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn),
+      ...getAccessTokenCookieOptions(accessTokenExpiresIn),
     });
 
     response.cookies.set({
       name: "refreshToken",
       value: refreshToken,
-      ...getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn),
+      ...getRefreshTokenCookieOptions(refreshTokenExpiresIn),
     });
 
     const loginAt = new Date().toISOString();
@@ -276,7 +279,7 @@ export async function POST(request: Request): Promise<Response> {
       console.error("Login Redis Cache Error:", redisError);
     }
 
-    if (validation.data.client !== "mobile") {
+    if (!isMobileClient) {
       createLoginNotificationAction({
         userId: userInfo.id,
         source: "web",

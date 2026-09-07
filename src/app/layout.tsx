@@ -18,7 +18,7 @@ export async function generateMetadata() {
 
 const APP_THEME_COLORS = {
   light: "#ffffff",
-  dark: "#070a10",
+  dark: "#141417",
 } as const;
 
 const themeInitScript = `

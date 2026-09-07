@@ -457,7 +457,7 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
       }
 
       .dark .plextype-shiki-block {
-        background-color: #12161e !important;
+        background-color: #232327 !important;
       }
     `}} />
         {content}
