@@ -42,6 +42,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ uui
       return NextResponse.json({ error: "다운로드 권한이 없습니다." }, { status: 403 });
     }
 
+    if (order.productKind === "app_feature") {
+      if (order.featureDeliveryMode !== "downloadable") {
+        return NextResponse.json({ error: "앱 내부 동봉 기능은 다운로드 파일을 제공하지 않습니다." }, { status: 404 });
+      }
+      const entitlement = await query.findStoreFeatureEntitlementByOrderId(order.id);
+      if (!entitlement || entitlement.status !== "active" || entitlement.buyerId !== userId) {
+        return NextResponse.json({ error: "활성화된 앱 프로젝트 사용권이 필요합니다." }, { status: 403 });
+      }
+    }
+
     if (order.latestDeliveryType !== "file" || !order.latestFilePath) {
       return NextResponse.json({ error: "다운로드 파일이 없습니다." }, { status: 404 });
     }

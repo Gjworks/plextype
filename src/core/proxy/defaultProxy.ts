@@ -8,7 +8,11 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get("accessToken");
 
-  if (isStateChangingRequest(request) && !isSameOriginRequest(request)) {
+  if (
+    isStateChangingRequest(request)
+    && !isTrustedInternalRequest(request)
+    && !isSameOriginRequest(request)
+  ) {
     return NextResponse.json(
       { error: "Invalid request origin" },
       { status: 403 },
@@ -78,6 +82,10 @@ const CSRF_PROTECTED_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 const isStateChangingRequest = (request: NextRequest) => {
   return CSRF_PROTECTED_METHODS.has(request.method.toUpperCase());
+};
+
+const isTrustedInternalRequest = (request: NextRequest) => {
+  return request.nextUrl.pathname === "/api/internal/service-deploy/notify";
 };
 
 const isSameOriginRequest = (request: NextRequest) => {
