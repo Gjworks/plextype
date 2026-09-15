@@ -1,15 +1,3 @@
-import { getServiceDeployLogsAdminAction } from "@/extensions/service/actions/deploy.action";
-import { ServiceAdminDeployLogs } from "@/extensions/service/adminDeployLogs";
-
+// Extension-owned implementation; keep route configuration statically visible.
 export const dynamic = "force-dynamic";
-
-export default async function ServiceAdminDeployLogsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const { page } = await searchParams;
-  const logs = await getServiceDeployLogsAdminAction();
-
-  return <ServiceAdminDeployLogs logs={logs} page={Number(page) || 1} />;
-}
+export { default } from "@/extensions/service/routes/admin/service/deploy/logs/page";

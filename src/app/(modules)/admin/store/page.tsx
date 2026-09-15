@@ -1,3 +1,2 @@
-import { StoreAdminOverview } from "@/extensions/store/admin";
-
-export default StoreAdminOverview;
+// Implementation is owned by Store; route configuration stays statically visible.
+export { default } from "@/extensions/store/routes/admin/store/page";

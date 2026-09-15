@@ -1,3 +1,2 @@
-import { ServiceAdminDomains } from "@/extensions/service/admin";
-
-export default ServiceAdminDomains;
+// Extension-owned implementation; keep route configuration statically visible.
+export { default } from "@/extensions/service/routes/admin/service/domains/page";

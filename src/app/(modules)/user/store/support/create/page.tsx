@@ -1,8 +1,2 @@
-import MyStoreSupportCreate from "@/extensions/store/MyStoreSupportCreate";
-
-const UserStoreSupportCreatePage = async ({ searchParams }: { searchParams: Promise<{ order?: string }> }) => {
-  const { order = "" } = await searchParams;
-  return <MyStoreSupportCreate orderUuid={order} />;
-};
-
-export default UserStoreSupportCreatePage;
+// Implementation is owned by Store; route configuration stays statically visible.
+export { default } from "@/extensions/store/routes/user/store/support/create/page";

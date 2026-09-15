@@ -50,16 +50,16 @@ const highlightCodeBlocks = async (html: string) => {
     try {
       shikiHtml = await codeToHtml(code, {
         lang: language,
-        theme: SHIKI_THEME,
+        themes: { light: SHIKI_THEME, dark: 'slack-dark' },
       });
     } catch {
       shikiHtml = await codeToHtml(code, {
-        lang: 'typescript',
-        theme: SHIKI_THEME,
+        lang: 'text',
+        themes: { light: SHIKI_THEME, dark: 'slack-dark' },
       });
     }
 
-    const styledHtml = shikiHtml.replace('<pre class="shiki slack-ochin"', '<pre class="shiki slack-ochin plextype-shiki-block"');
+    const styledHtml = shikiHtml.replace('<pre class="', '<pre class="plextype-shiki-block ');
 
     highlightedHtml = highlightedHtml.replace(match[0], styledHtml);
   }
@@ -456,8 +456,31 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
         display: none;
       }
 
-      .dark .plextype-shiki-block {
+      .dark .postContent .plextype-shiki-block {
         background-color: #232327 !important;
+        color: var(--shiki-dark, #e4e4e7) !important;
+      }
+
+      .dark .postContent .plextype-shiki-block span {
+        color: var(--shiki-dark, inherit) !important;
+      }
+
+      .postContent :not(pre) > code:not(.plextype-shiki-block code) {
+        background-color: #e8f0ef !important;
+        color: #41786f !important;
+        border-radius: 6px;
+        padding: 0.15em 0.4em;
+      }
+
+      .dark .postContent :not(pre) > code:not(.plextype-shiki-block code) {
+        background-color: #183b39 !important;
+        color: #7ee0d1 !important;
+        box-shadow: inset 0 0 0 1px rgb(126 224 209 / 12%);
+      }
+
+      .postContent :not(pre) > code::before,
+      .postContent :not(pre) > code::after {
+        content: none;
       }
     `}} />
         {content}

@@ -45,7 +45,7 @@ import {
   adminPrimaryButtonClass,
 } from "@/extensions/admin/AdminExtensionTemplate";
 
-const DASHBOARD_WIDGET_STORAGE_KEY = "gjworks.admin.dashboard.widgets";
+import { DASHBOARD_WIDGET_STORAGE_KEY, parseDashboardLayout, type PlacedWidget, type WidgetColSpan } from "../dashboard/layout";
 const DASHBOARD_WIDGET_PANEL_WIDTH_KEY = "gjworks.admin.dashboard.widgetPanelWidth";
 const DEFAULT_WIDGET_PANEL_WIDTH = 420;
 const MIN_WIDGET_PANEL_WIDTH = 320;
@@ -56,9 +56,6 @@ const siteAdminTabs = [
   { label: "대시보드 구성", href: "/admin/site/dashboard" },
 ];
 
-type WidgetSize = "small" | "medium" | "wide" | "full";
-type WidgetColSpan = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-
 type DashboardWidget = {
   id: string;
   icon: ReactNode;
@@ -68,11 +65,6 @@ type DashboardWidget = {
   path: string;
   preview: "list" | "comments" | "support" | "sessions" | "system" | "flow";
   defaultColSpan: WidgetColSpan;
-};
-
-type PlacedWidget = {
-  id: string;
-  colSpan: WidgetColSpan;
 };
 
 const widgetCatalog: DashboardWidget[] = [
@@ -132,7 +124,7 @@ const widgetCatalog: DashboardWidget[] = [
     module: "service",
     title: "파트너 신청 현황",
     description: "파트너 신청 접수, 검토, 승인 상태를 빠르게 확인하는 위젯입니다.",
-    path: "src/extensions/service/admin/widgets/partnerApplications",
+    path: "src/extensions/partners/admin/widgets/partnerApplications",
     preview: "support",
     defaultColSpan: 6,
   },
@@ -170,13 +162,6 @@ const widgetCatalog: DashboardWidget[] = [
 
 const colSpanOptions: WidgetColSpan[] = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-const legacySizeColSpanMap: Record<WidgetSize, WidgetColSpan> = {
-  small: 4,
-  medium: 6,
-  wide: 8,
-  full: 12,
-};
-
 const colSpanClassMap: Record<WidgetColSpan, string> = {
   3: "xl:col-span-3",
   4: "xl:col-span-4",
@@ -192,46 +177,13 @@ const colSpanClassMap: Record<WidgetColSpan, string> = {
 
 const findWidget = (id: string) => widgetCatalog.find((widget) => widget.id === id);
 
-const isWidgetColSpan = (value: unknown): value is WidgetColSpan => (
-  typeof value === "number" && colSpanOptions.includes(value as WidgetColSpan)
-);
-
-const resolveStoredColSpan = (item: Record<string, unknown>, widget: DashboardWidget) => {
-  if (isWidgetColSpan(item.colSpan)) return item.colSpan;
-
-  if (typeof item.size === "string" && item.size in legacySizeColSpanMap) {
-    return legacySizeColSpanMap[item.size as WidgetSize];
-  }
-
-  return widget.defaultColSpan;
-};
-
-const normalizeStoredWidgets = (value: unknown): PlacedWidget[] => {
-  if (!Array.isArray(value)) return [];
-
-  return value.reduce<PlacedWidget[]>((items, item) => {
-    if (typeof item === "string") {
-      const widget = findWidget(item);
-      if (widget) items.push({ id: widget.id, colSpan: widget.defaultColSpan });
-      return items;
-    }
-
-    if (item && typeof item === "object" && "id" in item) {
-      const id = typeof item.id === "string" ? item.id : "";
-      const widget = findWidget(id);
-
-      if (widget) items.push({ id: widget.id, colSpan: resolveStoredColSpan(item as Record<string, unknown>, widget) });
-    }
-
-    return items;
-  }, []);
-};
+const widgetWidths = Object.fromEntries(widgetCatalog.map(widget => [widget.id, widget.defaultColSpan]));
 
 const readStoredWidgets = () => {
   if (typeof window === "undefined") return [];
 
   try {
-    return normalizeStoredWidgets(JSON.parse(window.localStorage.getItem(DASHBOARD_WIDGET_STORAGE_KEY) || "[]"));
+    return parseDashboardLayout(window.localStorage.getItem(DASHBOARD_WIDGET_STORAGE_KEY), widgetWidths);
   } catch {
     return [];
   }

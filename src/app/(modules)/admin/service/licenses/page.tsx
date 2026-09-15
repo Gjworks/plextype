@@ -1,3 +1,2 @@
-import { ServiceAdminLicenses } from "@/extensions/service/admin";
-
-export default ServiceAdminLicenses;
+// Extension-owned implementation; keep route configuration statically visible.
+export { default } from "@/extensions/service/routes/admin/service/licenses/page";

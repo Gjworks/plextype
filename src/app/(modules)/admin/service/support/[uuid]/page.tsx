@@ -1,8 +1,2 @@
-import AdminSupportDetailPage from "@/extensions/service/adminSupportDetail";
-
-const Page = async ({ params }: { params: Promise<{ uuid: string }> }) => {
-  const { uuid } = await params;
-  return <AdminSupportDetailPage uuid={uuid} />;
-};
-
-export default Page;
+// Extension-owned implementation; keep route configuration statically visible.
+export { default } from "@/extensions/service/routes/admin/service/support/[uuid]/page";

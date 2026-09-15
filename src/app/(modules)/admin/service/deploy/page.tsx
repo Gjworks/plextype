@@ -1,14 +1,2 @@
-import { ServiceAdminDeploy } from "@/extensions/service/adminDeploy";
-import {
-  getServiceDeployAssignableUsersAdminAction,
-  getServiceDeployRequestsAdminAction,
-} from "@/extensions/service/actions/deploy.action";
-
-export default async function ServiceAdminDeployPage() {
-  const [requests, users] = await Promise.all([
-    getServiceDeployRequestsAdminAction(),
-    getServiceDeployAssignableUsersAdminAction(),
-  ]);
-
-  return <ServiceAdminDeploy requests={requests} users={users} />;
-}
+// Extension-owned implementation; keep route configuration statically visible.
+export { default } from "@/extensions/service/routes/admin/service/deploy/page";

@@ -1,10 +1,3 @@
-import MyStorePurchaseDetail from "@/extensions/store/MyStorePurchaseDetail";
-
+// Implementation is owned by Store; route configuration stays statically visible.
 export const dynamic = "force-dynamic";
-
-const UserStorePurchaseDetailPage = async ({ params }: { params: Promise<{ uuid: string }> }) => {
-  const { uuid } = await params;
-  return <MyStorePurchaseDetail uuid={uuid} />;
-};
-
-export default UserStorePurchaseDetailPage;
+export { default } from "@/extensions/store/routes/user/store/[uuid]/page";

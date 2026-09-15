@@ -36,11 +36,12 @@ export interface TiptapEditorProps {
   initialContent?: string;
   onChange?: (html: string) => void;
   variant?: "default" | "compact";
+  readOnly?: boolean;
 }
 const SHIKI_THEME = 'slack-ochin'; // 희정님 스타일
 
 const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
-  const { onChange, initialContent, variant = "default" } = props;
+  const { onChange, initialContent, variant = "default", readOnly = false } = props;
   const isCompact = variant === "compact";
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [linkUrl, setLinkUrl] = useState(""); // 입력창의 URL 상태
@@ -60,6 +61,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
   };
 
   const editor = useEditor({
+    editable: !readOnly,
     extensions: [
       StarterKit.configure({
         // ✅ 1. 인라인 코드 스타일 클래스 주입
@@ -171,6 +173,8 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
   useImperativeHandle(ref, () => editor);
 
   if (!editor) return null;
+
+  if (readOnly) return <EditorContent editor={editor} />;
 
   return (
     <div className="w-full border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-md shadow-gray-100 transition-all duration-200 hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:shadow-black/30 dark:hover:border-dark-500 dark:focus-within:border-dark-500 dark:focus-within:ring-dark-800/80 flex flex-col">

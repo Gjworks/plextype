@@ -502,6 +502,13 @@ export const seedSiteNavigationItemsQuery = async (items: SiteNavigationSeed[]) 
   if (items.length === 0) return [];
 
   return prisma.$transaction(async (tx) => {
+    // Serialize first-use initialization across requests and server processes.
+    await tx.$executeRaw`LOCK TABLE "SiteNavigation" IN SHARE ROW EXCLUSIVE MODE`;
+    const existing = await tx.$queryRaw<Array<{ id: number }>>`
+      SELECT "id" FROM "SiteNavigation" LIMIT 1
+    `;
+    if (existing.length > 0) return [];
+
     const created: Array<{ id: number }> = [];
 
     for (const item of items) {

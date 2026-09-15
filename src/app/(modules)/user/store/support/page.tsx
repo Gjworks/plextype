@@ -1,8 +1,2 @@
-import MyStoreSupport from "@/extensions/store/MyStoreSupport";
-
-const UserStoreSupportPage = async ({ searchParams }: { searchParams: Promise<{ page?: string }> }) => {
-  const { page = "1" } = await searchParams;
-  return <MyStoreSupport page={Number(page) || 1} />;
-};
-
-export default UserStoreSupportPage;
+// Implementation is owned by Store; route configuration stays statically visible.
+export { default } from "@/extensions/store/routes/user/store/support/page";

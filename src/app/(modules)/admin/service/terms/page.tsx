@@ -1,3 +1,2 @@
-import AdminPartnerTermsPage from "@/extensions/service/adminPartnerTerms";
-
-export default AdminPartnerTermsPage;
+// Extension-owned implementation; keep route configuration statically visible.
+export { default } from "@/extensions/partners/routes/admin/service/terms/page";

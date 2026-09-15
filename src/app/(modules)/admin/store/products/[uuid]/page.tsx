@@ -1,8 +1,2 @@
-import StoreAdminProductDetail from "@/extensions/store/adminProductDetail";
-
-const Page = async ({ params }: { params: Promise<{ uuid: string }> }) => {
-  const { uuid } = await params;
-  return <StoreAdminProductDetail uuid={uuid} />;
-};
-
-export default Page;
+// Implementation is owned by Store; route configuration stays statically visible.
+export { default } from "@/extensions/store/routes/admin/store/products/[uuid]/page";

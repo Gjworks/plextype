@@ -1,8 +1,2 @@
-import AdminPartnerApplicationDetail from "@/extensions/service/adminPartnerApplicationDetail";
-
-const AdminServiceRequestDetailPage = async ({ params }: { params: Promise<{ uuid: string }> }) => {
-  const { uuid } = await params;
-  return <AdminPartnerApplicationDetail uuid={uuid} />;
-};
-
-export default AdminServiceRequestDetailPage;
+// Extension-owned implementation; keep route configuration statically visible.
+export { default } from "@/extensions/partners/routes/admin/service/requests/[uuid]/page";

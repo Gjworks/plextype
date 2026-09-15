@@ -1,8 +1,2 @@
-import MyStoreSupportDetail from "@/extensions/store/MyStoreSupportDetail";
-
-const UserStoreSupportDetailPage = async ({ params }: { params: Promise<{ uuid: string }> }) => {
-  const { uuid } = await params;
-  return <MyStoreSupportDetail uuid={uuid} />;
-};
-
-export default UserStoreSupportDetailPage;
+// Implementation is owned by Store; route configuration stays statically visible.
+export { default } from "@/extensions/store/routes/user/store/support/[uuid]/page";

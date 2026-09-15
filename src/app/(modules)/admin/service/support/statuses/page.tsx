@@ -1,3 +1,2 @@
-import AdminSupportStatusesPage from "@/extensions/service/adminSupportStatuses";
-
-export default AdminSupportStatusesPage;
+// Extension-owned implementation; keep route configuration statically visible.
+export { default } from "@/extensions/service/routes/admin/service/support/statuses/page";

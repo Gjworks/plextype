@@ -1,8 +1,2 @@
-import { NextResponse } from "next/server";
-
-import { getMyPartnerServiceAccessAction } from "@/extensions/partners/actions/partner.action";
-
-export async function GET() {
-  const access = await getMyPartnerServiceAccessAction();
-  return NextResponse.json({ success: true, data: access });
-}
+// Extension-owned implementation; keep route configuration statically visible.
+export { GET } from "@/extensions/partners/api/partners/service-access/route";
