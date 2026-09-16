@@ -3,7 +3,7 @@ import React, { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { Post } from "@/modules/posts"; // 🌟 스마트 블록
 import { getPostReadMetadata } from "@/modules/posts/actions/seo.action";
-import Loading from "@/app/loading";
+import ReadLoading, { CommentsLoading } from "@/modules/posts/tpl/default/readLoading";
 
 interface PageProps {
   params: Promise<{ mid: string; slug: string }>;
@@ -16,8 +16,6 @@ export async function generateMetadata({ params }: any) {
 }
 
 const Page = async ({ params, searchParams }: PageProps) => {
-  const resolvedParams = await params;
-
   const { mid, slug } = await params;
   const { page } = (await searchParams) || {};
   const docId = slug;
@@ -26,12 +24,14 @@ const Page = async ({ params, searchParams }: PageProps) => {
   if (slug === "create" || slug === "undefined") redirect(`/posts/${mid}/create`);
 
   return (
-    <div className="max-w-screen-xl mx-auto">
-      <Suspense fallback={<Loading />}>
-        <Post.Read mid={mid} slug={docId} />
-      </Suspense>
+    <div className="w-full max-w-screen-xl mx-auto">
+      <div className="min-h-[70svh] w-full">
+        <Suspense key={`${mid}/${docId}`} fallback={<ReadLoading />}>
+          <Post.Read mid={mid} slug={docId} />
+        </Suspense>
+      </div>
 
-      <Suspense fallback={<Loading />}>
+      <Suspense key={`${mid}/${docId}/comments/${page || 1}`} fallback={<CommentsLoading />}>
         <Post.Comments
           mid={mid}
           slug={docId}

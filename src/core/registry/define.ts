@@ -10,6 +10,7 @@ export type RegistryOption = {
 
 export type PostSkinRegistration = RegistryOption & {
   list?: React.ComponentType<any>;
+  read?: React.ComponentType<any>;
 };
 
 export type PostLayoutRegistration = RegistryOption & {

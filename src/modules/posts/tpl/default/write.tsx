@@ -278,6 +278,12 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
 
         <Attachment.Box
           content={content}
+          autoInsertImages={false}
+          onFileAttach={(file) => {
+            if (file.mimeType.startsWith("image/")) {
+              setThumbnail((current) => current || file.path);
+            }
+          }}
           selectedThumbnail={thumbnail}
           onFileClick={(file) => {
             const editor = editorRef.current;

@@ -121,6 +121,7 @@ export const sendWebPushNotificationAction = async ({
         },
       }, payload, {
         TTL: 120,
+        timeout: 10000,
       });
       successCount += 1;
       console.info("sendWebPushNotificationAction delivered:", {
@@ -148,6 +149,7 @@ export const sendWebPushNotificationAction = async ({
   return {
     success: true,
     sent: successCount,
+    failed: rows.length - successCount,
     disabled: invalidEndpoints.length,
   };
 };

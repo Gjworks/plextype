@@ -3,6 +3,7 @@ import { adminModule } from "@/modules/admin/registry";
 import { postsModule } from "@/modules/posts/registry";
 import { userModule } from "@/modules/user/registry";
 import { installerModule } from "@/modules/installer/registry";
+import { notificationModule } from "@/modules/notification/registry";
 
 export const coreRegistry = defineExtensionRegistry({
   modules: [
@@ -10,5 +11,6 @@ export const coreRegistry = defineExtensionRegistry({
     userModule,
     postsModule,
     installerModule,
+    notificationModule,
   ],
 });

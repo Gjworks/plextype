@@ -24,13 +24,25 @@ interface AttachmentBoxProps {
   onFileDelete: (file: IAttachment) => void;
   selectedThumbnail?: string | null;
   onThumbnailSelect?: (file: IAttachment) => void;
+  autoInsertImages?: boolean;
+  onFileAttach?: (file: IAttachment) => void;
 }
 
 export const Attachment = {
-  Box: ({ content, onFileClick, onFileDelete, selectedThumbnail, onThumbnailSelect }: AttachmentBoxProps) => {
+  Box: ({ content, onFileClick, onFileDelete, selectedThumbnail, onThumbnailSelect, autoInsertImages = true, onFileAttach }: AttachmentBoxProps) => {
     // ✅ 🌟 가져온 타입을 IAttachment로 사용합니다.
     const [allMyFiles, setAllMyFiles] = useState<IAttachment[]>([]);
     const [showPopup, setShowPopup] = useState(false);
+    const [attachedFiles, setAttachedFiles] = useState<IAttachment[]>([]);
+
+    const attachFile = (file: IAttachment & { originalName?: string }) => {
+      const attachment = { ...file, name: file.name || file.originalName || "" };
+      setAttachedFiles((files) => [...files.filter((item) => item.id !== attachment.id), attachment]);
+      onFileAttach?.(attachment);
+      if (autoInsertImages || !attachment.mimeType.startsWith("image/")) {
+        onFileClick(attachment);
+      }
+    };
 
     const refreshLibrary = async () => {
       const res = await getAttachmentsAction();
@@ -48,8 +60,9 @@ export const Attachment = {
       const pathsInContent = extractUploadPaths(content);
 
       // 내 전체 보관함 중에서 '본문에 있는 경로'를 가진 녀석들만 필터링
-      return allMyFiles.filter((file) => pathsInContent.includes(file.path));
-    }, [content, allMyFiles]);
+      const referencedFiles = allMyFiles.filter((file) => pathsInContent.includes(file.path) || file.path === selectedThumbnail);
+      return Array.from(new Map([...referencedFiles, ...attachedFiles].map((file) => [file.id, file])).values());
+    }, [content, allMyFiles, attachedFiles, selectedThumbnail]);
 
     return (
       <div className="space-y-4">
@@ -69,14 +82,23 @@ export const Attachment = {
         <AttachmentList
           attachments={usedFiles}
           onFileClick={onFileClick}
-          onDeleteRequest={onFileDelete}
+          onDeleteRequest={(file) => {
+            setAttachedFiles((files) => files.filter((item) => item.id !== file.id));
+            onFileDelete(file);
+          }}
           selectedThumbnail={selectedThumbnail}
           onThumbnailSelect={onThumbnailSelect}
         />
 
         <UploadFileManager
           onUploadSuccess={refreshLibrary}
-          onFileClick={onFileClick}
+          onFileClick={attachFile}
+          onFileDelete={(file) => {
+            if (!file) return;
+            setAttachedFiles((files) => files.filter((item) => item.id !== file.id));
+            onFileDelete({ ...file, name: file.originalName });
+            void refreshLibrary();
+          }}
         />
 
         <Popup
@@ -88,7 +110,7 @@ export const Attachment = {
         >
           <MyFiles
             onFileSelect={(file) => {
-              onFileClick(file);
+              attachFile(file);
               setShowPopup(false);
             }}
           />

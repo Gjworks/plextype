@@ -81,6 +81,7 @@ export const sendPushNotificationAction = async ({
   if (tokens.length === 0) return { success: true, sent: 0 };
 
   let successCount = 0;
+  let failureCount = 0;
   const invalidTokens: string[] = [];
 
   for (const tokenChunk of chunk(tokens, 500)) {
@@ -105,6 +106,7 @@ export const sendPushNotificationAction = async ({
     });
 
     successCount += response.successCount;
+    failureCount += response.failureCount;
     response.responses.forEach((item, index) => {
       const code = item.error?.code;
       if (code && INVALID_TOKEN_ERROR_CODES.has(code)) {
@@ -118,6 +120,7 @@ export const sendPushNotificationAction = async ({
   return {
     success: true,
     sent: successCount,
+    failed: failureCount,
     disabled: invalidTokens.length,
   };
 };

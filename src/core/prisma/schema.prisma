@@ -373,3 +373,26 @@ enum NotificationType {
   warning
   error
 }
+
+model NotificationBroadcast {
+  id         String @id
+  actorId    Int
+  draft      Json @db.JsonB
+  createdAt  DateTime @default(now())
+  recipients NotificationBroadcastRecipient[]
+
+  @@index([createdAt], map: "idx_notification_broadcast_created")
+}
+
+model NotificationBroadcastRecipient {
+  id          Int @id @default(autoincrement())
+  broadcastId String
+  userId      Int
+  status      String @default("pending") @db.VarChar(20)
+  result      Json? @db.JsonB
+  updatedAt   DateTime @default(now())
+  broadcast   NotificationBroadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+
+  @@unique([broadcastId, userId], map: "uniq_broadcast_recipient")
+  @@index([broadcastId, status], map: "idx_broadcast_recipient_status")
+}

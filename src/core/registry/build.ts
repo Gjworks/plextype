@@ -23,6 +23,7 @@ const toOption = <T extends RegistryOption>({ key, label, description }: T) => (
 
 export const buildExtensionRegistry = (...registries: ExtensionRegistryConfig[]) => {
   const postSkins: PostSkinMap = {};
+  const postReadSkins: PostSkinMap = {};
   const postLayouts: PostLayoutMap = {};
   const adminLayouts: AdminLayoutMap = {};
   const adminDashboards: AdminDashboardMap = {};
@@ -52,6 +53,7 @@ export const buildExtensionRegistry = (...registries: ExtensionRegistryConfig[])
 
   const appendPostSkin = (item: NonNullable<ExtensionRegistryConfig["postSkins"]>[number]) => {
     if (item.list) postSkins[item.key] = item.list;
+    if (item.read) postReadSkins[item.key] = item.read;
     postSkinOptions.set(item.key, toOption(item) as PostSkinOption);
   };
 
@@ -98,6 +100,7 @@ export const buildExtensionRegistry = (...registries: ExtensionRegistryConfig[])
 
   return {
     postSkins,
+    postReadSkins,
     postLayouts,
     adminLayouts,
     adminDashboards,

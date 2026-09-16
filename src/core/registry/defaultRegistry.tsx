@@ -44,6 +44,7 @@ export type PostLayoutOption = {
 
 export const {
   postSkins,
+  postReadSkins,
   postLayouts,
   adminLayouts,
   adminDashboards,

@@ -4,6 +4,8 @@ import PostNotPermission from "@/modules/posts/tpl/default/notPermission";
 import Button from "@components/button/Button";
 import CodeBlockShiki from 'tiptap-extension-code-block-shiki'
 import ReadActions from "./readActions";
+import AdjacentPosts from "./adjacentPosts";
+import PostContentStyles from "./contentStyles";
 import { codeToHtml } from "shiki";
 import { formatKstRelative, toKstDayjs } from "@/core/utils/date/kst";
 
@@ -122,6 +124,7 @@ interface Participant {
 }
 
 interface PostsReadProps {
+  Presentation?: React.ComponentType<any>;
   document: any;
   participants?: Participant[];
   postInfo: any;
@@ -134,7 +137,7 @@ interface PostsReadProps {
   currentUser: any;
 }
 
-const PostsRead = async ({ document, participants = [], postInfo, permissions, currentUser }: PostsReadProps) => {
+const PostsRead = async ({ document, participants = [], postInfo, permissions, currentUser, Presentation }: PostsReadProps) => {
   const extraFields = postInfo?.extraFields || [];
   const extraData = document.extraFieldData || {};
   const visibleParticipants = participants.slice(0, 5);
@@ -202,6 +205,13 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
 
   if (!permissions.doRead) return <PostNotPermission />;
   const content = await renderContent();
+
+  if (Presentation) return <>
+    <PostContentStyles />
+    <Presentation document={document} postInfo={postInfo} content={<div key="content">{content}</div>}
+      navigation={<AdjacentPosts key="navigation" mid={postInfo.mid} slug={document.slug} />}
+      actions={<ReadActions key="actions" mid={postInfo.mid} slug={document.slug} canEdit={currentUser?.id === document.userId} />} />
+  </>;
 
   return (
     <>
@@ -427,64 +437,10 @@ const PostsRead = async ({ document, participants = [], postInfo, permissions, c
       </div>
 
       <div className="postContent mx-auto max-w-screen-md px-3 py-6 lg:py-10 text-base font-normal leading-8 text-gray-800 dark:text-dark-200 tracking-tight">
-        <style dangerouslySetInnerHTML={{ __html: `
-      .plextype-shiki-block {
-        display: block !important;
-        background-color: #f9fafb  !important;
-        border-radius: 16px;
-        margin: 2.5rem 0;
-        padding: 1.5rem 2rem !important; 
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 14px !important;
-        line-height: 1.8 !important;
-        overflow-x: auto !important;
-        scrollbar-width: none;
-        white-space: pre !important;
-      }
-
-      .plextype-shiki-block code {
-        background: none !important;
-        padding: 0 !important;
-        color: inherit !important;
-        font-family: inherit !important;
-        font-size: inherit !important;
-        line-height: inherit !important;
-        white-space: inherit !important;
-      }
-
-      .plextype-shiki-block::-webkit-scrollbar {
-        display: none;
-      }
-
-      .dark .postContent .plextype-shiki-block {
-        background-color: #232327 !important;
-        color: var(--shiki-dark, #e4e4e7) !important;
-      }
-
-      .dark .postContent .plextype-shiki-block span {
-        color: var(--shiki-dark, inherit) !important;
-      }
-
-      .postContent :not(pre) > code:not(.plextype-shiki-block code) {
-        background-color: #e8f0ef !important;
-        color: #41786f !important;
-        border-radius: 6px;
-        padding: 0.15em 0.4em;
-      }
-
-      .dark .postContent :not(pre) > code:not(.plextype-shiki-block code) {
-        background-color: #183b39 !important;
-        color: #7ee0d1 !important;
-        box-shadow: inset 0 0 0 1px rgb(126 224 209 / 12%);
-      }
-
-      .postContent :not(pre) > code::before,
-      .postContent :not(pre) > code::after {
-        content: none;
-      }
-    `}} />
+        <PostContentStyles />
         {content}
       </div>
+      <AdjacentPosts mid={postInfo.mid} slug={document.slug} />
       <ReadActions mid={postInfo.mid} slug={document.slug} canEdit={currentUser?.id === document.userId} />
       <div className="dark:bg-dark-900 border-t border-gray-100 dark:border-dark-800"></div>
 

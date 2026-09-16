@@ -26,6 +26,7 @@ import PostProvider from "@/modules/posts/tpl/default/PostProvider";
 // 🌟 [Default Skins] 아무것도 안 넘겼을 때 입을 기본 옷들
 import DefaultListSkin from "@/modules/posts/tpl/default/list";
 import DefaultReadSkin from "@/modules/posts/tpl/default/read";
+import ArticleWithToc from "@/modules/posts/tpl/default/articleWithToc";
 import DefaultCommentsSkin from "@/modules/comment/tpl/list";
 import DefaultWriteSkin from "@/modules/posts/tpl/default/write";
 import SecretUnlock from "@/modules/posts/tpl/default/secretUnlock";
@@ -156,13 +157,16 @@ async function PostRead({
   await increaseViewCount(numericId, user?.id, requestIp);
 
   return (
+    <ArticleWithToc enabled={["", "default"].includes(normalizeSkinName(infoRes.data.config?.skin))}>
     <Skin
+      Presentation={postSkinRegistry.read[normalizeSkinName(infoRes.data.config?.skin)]}
       document={docRes.data}
       participants={participantsRes.data || []}
       postInfo={infoRes.data}
       permissions={permissions}
       currentUser={user}
     />
+    </ArticleWithToc>
   );
 }
 

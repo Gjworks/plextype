@@ -20,7 +20,7 @@ const Page = async ({ params, searchParams }: {
   const { page, category, status } = (await searchParams) || {};
 
   return (
-    <div className="max-w-screen-lg mx-auto px-3">
+    <div className="max-w-screen-lg mx-auto px-3 has-[.blog-list]:w-full has-[.blog-list]:max-w-[1280px] sm:has-[.blog-list]:px-6 lg:has-[.blog-list]:px-8">
       {/* 🌟 [핵심] 이제 복잡한 로직은 Post.List 블록이 다 알아서 합니다.
          우리는 그냥 레고 블록 끼우듯이 한 줄만 딱!
       */}

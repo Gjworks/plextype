@@ -1,14 +1,16 @@
 import type React from "react";
 
-import { postLayouts, postSkins } from "@extensions";
+import { postLayouts, postSkins, postReadSkins } from "@extensions";
 
 type PostSkinRegistry = {
   list: Record<string, React.ComponentType<any>>;
+  read: Record<string, React.ComponentType<any>>;
 };
 type PostLayoutRegistry = Record<string, React.ComponentType<any>>;
 
 export const postSkinRegistry: PostSkinRegistry = {
   list: postSkins || {},
+  read: postReadSkins || {},
 };
 
 export const postLayoutRegistry: PostLayoutRegistry = postLayouts || {};
