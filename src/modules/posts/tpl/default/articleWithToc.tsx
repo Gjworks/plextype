@@ -79,7 +79,7 @@ export default function ArticleWithToc({ children, enabled }: { children: ReactN
   const visible = enabled && entries.length > 0;
   return <div className={visible ? "grid w-full min-w-0 grid-cols-1 gap-x-10 xl:mx-auto xl:max-w-[1028px] xl:grid-cols-[minmax(0,768px)_220px]" : "w-full min-w-0"}>
     <div ref={root} className="min-w-0">{children}</div>
-    {visible && <aside className="order-first px-3 pt-5 xl:order-last xl:px-0 xl:pt-24">
+    {visible && <aside className="order-first px-3 xl:order-last xl:px-0">
       <div className="sticky top-28 hidden xl:block">
         <p className="mb-3 pl-5 text-[11px] font-semibold text-gray-400 dark:text-dark-500">ON THIS PAGE</p>
         <div ref={tocScroll} tabIndex={0} role="region" aria-label="스크롤 가능한 본문 목차" className="max-h-[calc(100svh-11rem)] overflow-y-auto overscroll-contain pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-2 focus-visible:outline-primary-500">
