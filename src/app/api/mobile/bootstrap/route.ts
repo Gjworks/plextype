@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import prisma from "@/core/utils/db/prisma";
 import { verify } from "@/core/utils/auth/jwtAuth";
-import {
-  findServiceDeployLogsByRequestedUserId,
-  findServiceDeployRequestsByRequestedUserId,
-} from "@/extensions/service/actions/deploy.query";
+import { getMobileHostingData } from "@extensions/serverIntegrations";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +28,7 @@ export async function GET(request: NextRequest): Promise<Response> {
       groupCount,
       recentDocuments,
       recentAttachments,
-      hostingRequests,
-      hostingLogs,
+      hostingData,
     ] = await Promise.all([
       prisma.modules.count({ where: { status: "active" } }),
       prisma.document.count({ where: { userId } }),
@@ -73,8 +69,7 @@ export async function GET(request: NextRequest): Promise<Response> {
           createdAt: true,
         },
       }),
-      findServiceDeployRequestsByRequestedUserId(userId, 3),
-      findServiceDeployLogsByRequestedUserId(userId, 5),
+      getMobileHostingData(userId),
     ]);
 
     return NextResponse.json(
@@ -90,29 +85,7 @@ export async function GET(request: NextRequest): Promise<Response> {
           },
           recentDocuments,
           recentAttachments,
-          hostingRequests: hostingRequests.map((request) => ({
-            uuid: request.uuid,
-            serviceName: request.serviceName,
-            domain: request.domain,
-            installType: request.installType,
-            status: request.status,
-            jobStatus: request.jobStatus,
-            jobStep: request.jobStep,
-            updatedAt: request.updatedAt,
-            completedAt: request.completedAt,
-          })),
-          hostingLogs: hostingLogs.map((log) => ({
-            uuid: log.uuid,
-            instanceUuid: log.instanceUuid,
-            serviceName: log.serviceName,
-            domain: log.domain,
-            type: log.type,
-            status: log.status,
-            step: log.step,
-            createdAt: log.createdAt,
-            startedAt: log.startedAt,
-            completedAt: log.completedAt,
-          })),
+          ...hostingData,
         },
       },
       { status: 200 },

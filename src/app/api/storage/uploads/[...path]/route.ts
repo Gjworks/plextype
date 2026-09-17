@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs/promises";
 import mime from "mime-types";
 
-import { findStoreProductVersionByFilePath } from "@/extensions/store/actions/market.query";
+import { isProtectedUpload } from "@extensions/serverIntegrations";
 
 export const runtime = "nodejs";
 
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "유효하지 않은 경로" }, { status: 400 });
     }
 
-    const storeVersionFile = await findStoreProductVersionByFilePath(`/storage/uploads/${relativePath}`);
+    const storeVersionFile = await isProtectedUpload(`/storage/uploads/${relativePath}`);
     if (storeVersionFile) {
       return NextResponse.json({ error: "Store 파일은 구매 내역의 다운로드 경로를 사용해주세요." }, { status: 403 });
     }

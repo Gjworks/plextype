@@ -39,11 +39,11 @@ import {
 } from "lucide-react";
 
 import {
-  AdminExtensionPage,
+  AdminPage as AdminExtensionPage,
   adminDarkButtonClass,
   adminGhostButtonClass,
   adminPrimaryButtonClass,
-} from "@/extensions/admin/AdminExtensionTemplate";
+} from "@/modules/admin/components/AdminPageTemplate";
 
 import { DASHBOARD_WIDGET_STORAGE_KEY, parseDashboardLayout, type PlacedWidget, type WidgetColSpan } from "../dashboard/layout";
 const DASHBOARD_WIDGET_PANEL_WIDTH_KEY = "gjworks.admin.dashboard.widgetPanelWidth";
