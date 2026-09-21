@@ -56,14 +56,14 @@ const FindPasswordPage = () => {
               </div>
               <h2 className="text-2xl font-semibold text-gray-700 dark:text-dark-50">비밀번호 찾기</h2>
               <p className="text-gray-500 dark:text-dark-400 text-sm mt-3">
-                가입하신 아이디 또는 이메일을 입력하시면 <br />
-                비밀번호 재설정 안내를 보내드립니다.
+                회원 아이디와 가입하신 이메일을 입력해주세요. <br />
+                두 정보가 일치하면 재설정 안내를 보내드립니다.
               </p>
             </div>
 
             <form onSubmit={submitHandler} className="space-y-6">
               <div>
-                <label htmlFor="account" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">아이디 또는 이메일</label>
+                <label htmlFor="accountId" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">회원 아이디 <span className="text-red-500">(*)</span></label>
                 <div className={inputContainerClass}>
                   <div className="pl-3 pr-2 text-gray-400 transition-colors group-focus-within:text-gray-800 dark:text-dark-500 dark:group-focus-within:text-dark-300">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -72,14 +72,36 @@ const FindPasswordPage = () => {
                   </div>
                   <input
                     type="text"
-                    name="account"
-                    id="account"
+                    name="accountId"
+                    id="accountId"
+                    autoComplete="username"
+                    maxLength={120}
+                    aria-invalid={Boolean(fieldErrors.accountId)}
+                    aria-describedby={fieldErrors.accountId ? "accountId-error" : undefined}
                     required
                     className="w-full bg-transparent py-2.5 pr-3 text-sm text-gray-800 outline-none placeholder:text-gray-400 dark:text-dark-100 dark:placeholder:text-dark-500"
-                    placeholder="아이디 또는 이메일을 입력하세요"
+                    placeholder="회원 아이디를 입력하세요"
                   />
                 </div>
-                {fieldErrors.account && <p className="mt-2 text-xs font-medium text-red-500">{fieldErrors.account}</p>}
+                {fieldErrors.accountId && <p id="accountId-error" className="mt-2 text-xs font-medium text-red-500">{fieldErrors.accountId}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm text-black dark:text-dark-200 mb-2 font-medium">가입 이메일 <span className="text-red-500">(*)</span></label>
+                <div className={inputContainerClass}>
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    autoComplete="email"
+                    required
+                    aria-invalid={Boolean(fieldErrors.email)}
+                    aria-describedby={fieldErrors.email ? "email-error" : undefined}
+                    className="w-full bg-transparent px-3 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-400 dark:text-dark-100 dark:placeholder:text-dark-500"
+                    placeholder="가입할 때 등록한 이메일을 입력하세요"
+                  />
+                </div>
+                {fieldErrors.email && <p id="email-error" className="mt-2 text-xs font-medium text-red-500">{fieldErrors.email}</p>}
               </div>
 
               {message && phase === "input" && <p className="text-sm text-red-500">{message}</p>}
@@ -110,7 +132,7 @@ const FindPasswordPage = () => {
                 </div>
               </div>
             </div>
-            <h2 className="text-2xl font-semibold text-gray-700 dark:text-dark-50">메일이 발송되었습니다</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 dark:text-dark-50">재설정 요청을 접수했습니다</h2>
             <div className="mt-8 p-6 bg-gray-50 dark:bg-dark-900 rounded-lg border border-gray-100 dark:border-dark-800">
               <p className="text-sm leading-6 text-gray-600 dark:text-dark-400">{message}</p>
               <p className="text-xs text-gray-400 mt-4">

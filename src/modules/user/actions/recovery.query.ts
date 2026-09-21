@@ -50,12 +50,12 @@ export const findRecoveryUserByEmail = async (email: string) => {
   return rows[0] || null;
 };
 
-export const findRecoveryUserByAccountOrEmail = async (value: string) => {
+export const findRecoveryUserByAccountAndEmail = async (accountId: string, email: string) => {
   const rows = await prisma.$queryRaw<RecoveryUser[]>`
     SELECT "id", "accountId", "email_address", "nickName", "status"
     FROM "User"
-    WHERE LOWER("accountId") = LOWER(${value})
-       OR LOWER("email_address") = LOWER(${value})
+    WHERE LOWER("accountId") = LOWER(${accountId})
+      AND LOWER("email_address") = LOWER(${email})
     LIMIT 1
   `;
 

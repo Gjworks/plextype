@@ -13,7 +13,8 @@ const requestAccountIdSchema = z.object({
 });
 
 const requestPasswordResetSchema = z.object({
-  account: z.string().trim().min(1, "아이디 또는 이메일을 입력해주세요.").max(120, "입력값이 너무 깁니다."),
+  accountId: z.string().trim().min(1, "회원 아이디를 입력해주세요.").max(120, "입력값이 너무 깁니다."),
+  email: z.string().trim().email("올바른 이메일을 입력해주세요."),
 });
 
 const resetPasswordSchema = z.object({
@@ -71,7 +72,8 @@ export const requestAccountIdRecoveryAction = async (formData: FormData): Promis
 
 export const requestPasswordResetAction = async (formData: FormData): Promise<ActionResponse<null>> => {
   const validation = requestPasswordResetSchema.safeParse({
-    account: formData.get("account"),
+    accountId: formData.get("accountId") ?? "",
+    email: formData.get("email") ?? "",
   });
 
   if (!validation.success) {
@@ -79,16 +81,17 @@ export const requestPasswordResetAction = async (formData: FormData): Promise<Ac
       success: false,
       type: "error",
       message: "입력값을 확인해주세요.",
-      fieldErrors: { account: validation.error.issues[0]?.message || "아이디 또는 이메일을 입력해주세요." },
+      fieldErrors: Object.fromEntries(
+        Object.entries(validation.error.flatten().fieldErrors).map(([field, errors]) => [field, errors[0]])
+      ),
     };
   }
 
   try {
-    await query.deleteExpiredPasswordResetTokens();
-
-    const user = await query.findRecoveryUserByAccountOrEmail(validation.data.account);
+    const user = await query.findRecoveryUserByAccountAndEmail(validation.data.accountId, validation.data.email);
 
     if (user && isActiveUser(user.status)) {
+      await query.deleteExpiredPasswordResetTokens();
       const rawToken = crypto.randomBytes(32).toString("base64url");
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
       const baseUrl = normalizeBaseUrl(await query.findPublicSiteUrl());

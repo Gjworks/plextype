@@ -1,5 +1,6 @@
 import net from "node:net";
 import tls from "node:tls";
+import { getSmtpConfig } from "./settings";
 
 type SendMailOptions = {
   to: string;
@@ -15,24 +16,6 @@ type SmtpConfig = {
   password?: string;
   from: string;
   secure: boolean;
-};
-
-const getSmtpConfig = (): SmtpConfig | null => {
-  const host = process.env.SMTP_HOST || process.env.MAIL_HOST;
-  const from = process.env.SMTP_FROM || process.env.MAIL_FROM || process.env.SMTP_USER || process.env.MAIL_USER;
-  if (!host || !from) return null;
-
-  const port = Number(process.env.SMTP_PORT || process.env.MAIL_PORT || 587);
-  const secure = (process.env.SMTP_SECURE || process.env.MAIL_SECURE) === "true" || port === 465;
-
-  return {
-    host,
-    port,
-    secure,
-    from,
-    user: process.env.SMTP_USER || process.env.MAIL_USER,
-    password: process.env.SMTP_PASSWORD || process.env.MAIL_PASSWORD,
-  };
 };
 
 const encodeHeader = (value: string) => {
@@ -162,15 +145,14 @@ const connectSocket = (config: SmtpConfig) => new Promise<net.Socket | tls.TLSSo
 });
 
 export const sendMail = async (options: SendMailOptions) => {
-  const config = getSmtpConfig();
+  const config = await getSmtpConfig();
 
   if (!config) {
-    console.info("[Mail disabled] SMTP 환경변수가 없어 메일을 발송하지 않았습니다.", {
-      to: options.to,
-      subject: options.subject,
-      text: options.text,
-    });
-    return { sent: false };
+    throw new Error("메일 발송이 비활성화되어 있거나 SMTP 설정이 없습니다.");
+  }
+
+  if ([config.from, options.to, options.subject].some(value => /[\r\n]/.test(value))) {
+    throw new Error("메일 헤더가 올바르지 않습니다.");
   }
 
   const socket = await connectSocket(config);
@@ -196,7 +178,7 @@ export const sendMail = async (options: SendMailOptions) => {
     await session.command(`MAIL FROM:<${config.from}>`, [250]);
     await session.command(`RCPT TO:<${options.to}>`, [250, 251]);
     await session.command("DATA", [354]);
-    await session.command(`${message}\r\n.`, [250]);
+    await session.command(`${message.replace(/^\./gm, "..")}\r\n.`, [250]);
     await session.command("QUIT", [221]);
 
     return { sent: true };
