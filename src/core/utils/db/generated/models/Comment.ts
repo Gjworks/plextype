@@ -750,10 +750,6 @@ export type CommentUncheckedCreateNestedManyWithoutParentInput = {
   connect?: Prisma.CommentWhereUniqueInput | Prisma.CommentWhereUniqueInput[]
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type CommentUpdateOneWithoutChildrenNestedInput = {
   create?: Prisma.XOR<Prisma.CommentCreateWithoutChildrenInput, Prisma.CommentUncheckedCreateWithoutChildrenInput>
   connectOrCreate?: Prisma.CommentCreateOrConnectWithoutChildrenInput
