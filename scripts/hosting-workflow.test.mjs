@@ -81,3 +81,14 @@ test('locked transition rejects wrong owners, edited repositories and missing ve
   assert.equal(await transitionHostingWorkflow(input), true);
   assert.equal(writes.length, 2);
 });
+
+test('failed installation can recheck access without requesting a new key', async () => {
+  const { api, writes, setStatus } = harness();
+  setStatus('failed');
+  assert.equal((await api.requestHostingInstallAction('request')).success, false);
+  assert.equal((await api.verifyHostingAccessAction('request')).success, true);
+  assert.equal(writes.at(-1).to, 'checking_access');
+  assert.equal((await api.requestHostingInstallAction('request')).success, false);
+  setStatus('access_verified');
+  assert.equal((await api.requestHostingInstallAction('request')).success, true);
+});
