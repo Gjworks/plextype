@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import webpush from "web-push";
 import { getWebPushPublicKey, getWebPushSubject, isWebPushConfigured } from "@/core/utils/webPush/vapid";

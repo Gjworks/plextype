@@ -31,3 +31,5 @@ export async function isProtectedUpload(_filePath: string): Promise<boolean> {
 export async function getMobileHostingData(_userId: number): Promise<MobileHostingData> {
   return { hostingRequests: [], hostingLogs: [] };
 }
+
+export async function isPublicUpload(_filePath: string, _ownerId: number): Promise<boolean> { return false; }

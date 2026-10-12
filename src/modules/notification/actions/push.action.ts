@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { getFirebaseMessaging } from "@/core/utils/firebase/admin";
 import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";

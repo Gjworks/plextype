@@ -1,5 +1,7 @@
 // src/app/(extentions)/users/_actions/user.ts
+import { withoutCredentials } from "@/core/utils/auth/safeUser";
 import { hashedPassword } from "@utils/auth/password";
+import { revokeUserSessions } from "@utils/auth/jwtAuth";
 import { verify } from "@utils/auth/jwtAuth";
 import * as query from "./user.query";
 import { dispatchTrigger } from "@utils/trigger/triggerHub";
@@ -147,13 +149,14 @@ export const saveUser = async (data: any, isProfileUpdate: boolean) => {
       : data.group.map((g: any) => Number(g.groupId));
 
     const updated = await query.upsertUser(true, data.id, updateData, groupsToUpdate);
+    if (data.status && data.status !== "active") await revokeUserSessions(updated.id);
     resultUser = { ...updated, _isNew: false };
   }
 
   // 3. 🎯 트리거 수동 발송 (웹/앱 공통)
   await dispatchTrigger("user.saved", { result: resultUser });
 
-  return { success: true, data: resultUser };
+  return { success: true, data: excludeSensitiveData(resultUser) };
 };
 
 /**
@@ -175,6 +178,5 @@ export const removeUser = async (userId: number) => {
  * 💡 공통 유틸: Prisma 결과물에서 민감한 정보(비밀번호 등) 제외하기
  */
 function excludeSensitiveData(user: any): UserInfo {
-  const { password, refreshToken, ...safeUser } = user;
-  return safeUser as UserInfo;
+  return withoutCredentials(user) as UserInfo;
 }

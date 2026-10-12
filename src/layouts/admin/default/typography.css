@@ -1,0 +1,21 @@
+/* 관리자 화면에만 적용하며 hover/focus 등의 상태 유틸리티를 우선한다. */
+@layer utilities {
+    .admin-typography {
+        letter-spacing: -0.015em;
+    }
+
+    :where(.admin-typography) :is(.tracking-wide, .tracking-wider, .tracking-widest,
+        .tracking-\[0\.12em\], .tracking-\[0\.18em\],
+        .tracking-\[0\.22em\], .tracking-\[0\.24em\]) {
+        letter-spacing: 0.025em;
+    }
+
+    :where(.admin-typography:not(.dark, .dark *)) :is(.text-gray-400, .text-slate-400) {
+        color: var(--color-gray-600);
+    }
+
+    :where(.admin-typography:is(.dark, .dark *)) :is(.dark\:text-dark-400, .dark\:text-dark-500,
+        .text-gray-400:where(:not([class*="dark:text-"])), .text-slate-400:where(:not([class*="dark:text-"]))) {
+        color: var(--color-dark-300);
+    }
+}

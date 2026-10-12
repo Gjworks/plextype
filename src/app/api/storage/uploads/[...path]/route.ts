@@ -3,7 +3,8 @@ import path from "path";
 import fs from "fs/promises";
 import mime from "mime-types";
 
-import { isProtectedUpload } from "@extensions/serverIntegrations";
+import { canReadUpload } from "@/modules/attachment/lib/access";
+import { getBoardViewer } from "@/modules/posts/actions/access";
 
 export const runtime = "nodejs";
 
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const pathname = url.pathname; // /api/storage/uploads/temp/.../파일.png
-    const relativePath = decodeURIComponent(pathname.replace(/^\/api\/storage\/uploads\//, ""));
+    const relativePath = decodeURIComponent(pathname.replace(/^\/(?:api\/)?storage\/uploads\//, ""));
 
     if (!relativePath || relativePath.includes("\0") || path.isAbsolute(relativePath)) {
       return NextResponse.json({ error: "유효하지 않은 경로" }, { status: 400 });
@@ -25,9 +26,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "유효하지 않은 경로" }, { status: 400 });
     }
 
-    const storeVersionFile = await isProtectedUpload(`/storage/uploads/${relativePath}`);
-    if (storeVersionFile) {
-      return NextResponse.json({ error: "Store 파일은 구매 내역의 다운로드 경로를 사용해주세요." }, { status: 403 });
+    if (!await canReadUpload(`/storage/uploads/${relativePath}`, await getBoardViewer())) {
+      return NextResponse.json({ error: "파일에 접근할 권한이 없습니다." }, { status: 403 });
+    }
+    const [realRoot, realPath] = await Promise.all([fs.realpath(uploadsRoot), fs.realpath(fileSystemPath)]);
+    if (!realPath.startsWith(`${realRoot}${path.sep}`)) {
+      return NextResponse.json({ error: "유효하지 않은 경로" }, { status: 403 });
     }
 
     let fileStat;
@@ -41,7 +45,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "파일을 찾을 수 없습니다." }, { status: 404 });
     }
 
-    const fileBuffer = await fs.readFile(fileSystemPath);
+    const fileBuffer = await fs.readFile(realPath);
     const mimeType = mime.lookup(fileSystemPath) || "application/octet-stream";
     const dispositionType = /^(image|audio|video)\//.test(mimeType) ? "inline" : "attachment";
 
@@ -51,9 +55,10 @@ export async function GET(req: NextRequest) {
         "Content-Type": mimeType,
         "Content-Length": fileBuffer.length.toString(),
         "Content-Disposition": `${dispositionType}; filename="${encodeURIComponent(path.basename(fileSystemPath))}"`,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
         "Cross-Origin-Resource-Policy": "same-origin",
+        "Content-Security-Policy": "sandbox; default-src 'none'",
       },
     });
   } catch (err) {

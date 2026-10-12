@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { z } from "zod"; // ✅ Zod 추가
 import { verifyPassword } from "@/core/utils/auth/password";
-import { sign, refresh } from "@/core/utils/auth/jwtAuth";
+import { sign, refresh, revokeUserSessions } from "@/core/utils/auth/jwtAuth";
 import prisma from "@/core/utils/db/prisma";
 import redisClient from "@/core/utils/redis/redis";
 import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
@@ -30,7 +30,7 @@ const getClientIp = (request: Request) => {
 
 const getLoginRateLimitKeys = (accountId: string, ip: string) => {
   const fingerprint = createHash("sha256")
-    .update(`${ip}:${accountId.trim().toLowerCase()}`)
+    .update(accountId.trim().toLowerCase())
     .digest("hex");
 
   return {
@@ -52,18 +52,18 @@ const getLoginRateLimitStatus = async (accountId: string, ip: string, lockSecond
     };
   } catch (error) {
     console.error("Login RateLimit Check Error:", error);
-    return { locked: false, retryAfter: lockSeconds };
+    return { locked: true, retryAfter: lockSeconds };
   }
 };
 
 const recordLoginFailure = async (accountId: string, ip: string, failLimit: number, failWindowSeconds: number, lockSeconds: number) => {
   try {
     const { id, failKey, lockKey, lockMetaKey } = getLoginRateLimitKeys(accountId, ip);
-    const failCount = await redisClient.incr(failKey);
-
-    if (failCount === 1) {
-      await redisClient.expire(failKey, failWindowSeconds);
-    }
+    const failCount = Number(await redisClient.eval(`
+      local count = redis.call('INCR', KEYS[1])
+      if redis.call('TTL', KEYS[1]) < 0 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
+      return count
+    `, 1, failKey, failWindowSeconds));
 
     if (failCount >= failLimit) {
       const lockedAt = new Date();
@@ -211,7 +211,8 @@ export async function POST(request: Request): Promise<Response> {
       groups: groupIds,
     };
 
-    const accessTokenExpiresIn = isMobileClient ? "365d" : authSettings.accessTokenExpiresIn;
+    const accessTokenExpiresIn = authSettings.accessTokenExpiresIn;
+    if (!authSettings.allowConcurrentSessions) await revokeUserSessions(userInfo.id);
     const refreshTokenExpiresIn = isMobileClient ? "365d" : authSettings.refreshTokenExpiresIn;
     const [accessToken, refreshToken] = await Promise.all([
       sign(tokenParams, accessTokenExpiresIn),

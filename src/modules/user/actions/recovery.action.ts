@@ -1,5 +1,6 @@
 "use server";
 
+import { allowRecoveryRequest } from "@/core/utils/auth/rateLimit";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { hashedPassword } from "@utils/auth/password";
@@ -47,6 +48,7 @@ export const requestAccountIdRecoveryAction = async (formData: FormData): Promis
   }
 
   try {
+    if (!await allowRecoveryRequest(validation.data.email)) return { success: true, type: "success", message: genericAccountIdMessage, data: null };
     const user = await query.findRecoveryUserByEmail(validation.data.email);
 
     if (user && isActiveUser(user.status)) {
@@ -88,6 +90,7 @@ export const requestPasswordResetAction = async (formData: FormData): Promise<Ac
   }
 
   try {
+    if (!await allowRecoveryRequest(validation.data.email)) return { success: true, type: "success", message: genericPasswordMessage, data: null };
     const user = await query.findRecoveryUserByAccountAndEmail(validation.data.accountId, validation.data.email);
 
     if (user && isActiveUser(user.status)) {

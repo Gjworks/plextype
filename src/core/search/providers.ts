@@ -1,3 +1,5 @@
+import { canReadDocument, canAccessBoard, getBoardViewer } from "@/modules/posts/actions/access";
+import { canReadUpload } from "@/modules/attachment/lib/access";
 import prisma from "@/core/utils/db/prisma";
 import type { SearchProvider, SearchResultItem } from "./search.types";
 import { extensionSearchProviders } from "@extensions/searchProviders";
@@ -60,6 +62,7 @@ const coreSearchProviders: SearchProvider[] = [
     order: 10,
     limit: 6,
     async search({ query, limit }) {
+      const viewer = await getBoardViewer();
       const items = await prisma.document.findMany({
         where: {
           isSecrets: false,
@@ -74,6 +77,7 @@ const coreSearchProviders: SearchProvider[] = [
         select: {
           id: true,
           slug: true,
+          moduleId: true, userId: true, published: true, isSecrets: true, authorPassword: true,
           title: true,
           content: true,
           authorName: true,
@@ -83,7 +87,8 @@ const coreSearchProviders: SearchProvider[] = [
         },
       });
 
-      return items.map<SearchResultItem>((item) => ({
+      const access = await Promise.all(items.map(async item => await canReadDocument(item, viewer) && await canAccessBoard(item.moduleId, "list", viewer)));
+      return items.filter((_, index) => access[index]).map<SearchResultItem>((item) => ({
         id: String(item.id),
         type: "document",
         title: item.title || "제목 없음",
@@ -103,6 +108,7 @@ const coreSearchProviders: SearchProvider[] = [
     order: 20,
     limit: 6,
     async search({ query, limit }) {
+      const viewer = await getBoardViewer();
       const items = await prisma.comment.findMany({
         where: {
           isDeleted: false,
@@ -121,6 +127,7 @@ const coreSearchProviders: SearchProvider[] = [
           document: {
             select: {
               slug: true,
+              moduleId: true, userId: true, published: true, isSecrets: true, authorPassword: true,
               title: true,
               module: { select: { mid: true, moduleName: true } },
             },
@@ -128,7 +135,8 @@ const coreSearchProviders: SearchProvider[] = [
         },
       });
 
-      return items.map<SearchResultItem>((item) => ({
+      const access = await Promise.all(items.map(async item => await canReadDocument(item.document, viewer) && await canAccessBoard(item.document.moduleId, "list", viewer)));
+      return items.filter((_, index) => access[index]).map<SearchResultItem>((item) => ({
         id: String(item.id),
         type: "comment",
         title: item.document.title || "댓글",
@@ -148,6 +156,7 @@ const coreSearchProviders: SearchProvider[] = [
     order: 30,
     limit: 6,
     async search({ query, limit }) {
+      const viewer = await getBoardViewer();
       const items = await prisma.attachment.findMany({
         where: {
           OR: [
@@ -170,7 +179,8 @@ const coreSearchProviders: SearchProvider[] = [
         },
       });
 
-      return items.map<SearchResultItem>((item) => ({
+      const access = await Promise.all(items.map(async item => await canReadUpload(item.path, viewer)));
+      return items.filter((_, index) => access[index]).map<SearchResultItem>((item) => ({
         id: String(item.id),
         type: "attachment",
         title: item.originalName || item.fileName,
@@ -190,6 +200,8 @@ const coreSearchProviders: SearchProvider[] = [
     order: 40,
     limit: 4,
     async search({ query, limit }) {
+      const viewer = await getBoardViewer();
+      if (!viewer?.isAdmin) return [];
       const items = await prisma.user.findMany({
         where: {
           OR: [

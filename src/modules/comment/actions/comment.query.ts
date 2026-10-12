@@ -17,6 +17,9 @@ export async function findDocumentCommentAccessInfo(documentId: number) {
       userId: true,
       slug: true,
       isSecrets: true,
+      moduleId: true,
+      authorPassword: true,
+      published: true,
       module: {
         select: {
           config: true,

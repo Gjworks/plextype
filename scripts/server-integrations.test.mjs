@@ -25,6 +25,7 @@ test('core fallback works without Store or hosting schemas', async () => {
 test('Store protection remains fail-closed and hosting lookup remains user-scoped', async () => {
   let unavailable = false;
   const api = load('src/extensions/serverIntegrations.ts', {
+    '@/modules/attachment/lib/parser': { extractUploadPaths: () => [] },
     './store/actions/market.query': {
       findStoreProductVersionByFilePath: async file => {
         if (unavailable) throw new Error('DB unavailable');

@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-import { refreshVerify, verify } from "@/core/utils/auth/jwtAuth";
-import prisma from "@/core/utils/db/prisma";
+import { refreshVerify, verify, revokeUserSessions } from "@/core/utils/auth/jwtAuth";
 import { getExpiredAuthCookieOptions } from "@/core/utils/auth/authCookies";
-import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 
 export async function POST(): Promise<Response> {
   try {
@@ -15,19 +13,7 @@ export async function POST(): Promise<Response> {
     const refreshVerified = !verified && refreshToken ? await refreshVerify(refreshToken) : null;
     const userId = verified?.id || refreshVerified?.id;
 
-    if (userId) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { refreshToken: true },
-      });
-
-      if (!refreshToken || user?.refreshToken === hashRefreshToken(refreshToken)) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { refreshToken: null },
-        }).catch(() => null);
-      }
-    }
+    if (userId) await revokeUserSessions(userId);
 
     // 쿠키에서 accessToken, refreshToken을 가져와서 삭제
     const response = NextResponse.json({ message: "Logged out successfully" });

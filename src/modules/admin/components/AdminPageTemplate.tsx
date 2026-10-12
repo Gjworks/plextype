@@ -131,7 +131,7 @@ export const AdminPanel = ({
       <div className="flex flex-col gap-3 border-b border-gray-100 bg-gray-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-dark-800 dark:bg-dark-950/70">
         <div>
           {title && <h2 className="text-sm font-semibold text-gray-700 dark:text-dark-100">{title}</h2>}
-          {description && <p className="mt-1 text-xs text-gray-400 dark:text-dark-500">{description}</p>}
+          {description && <p className="mt-1 text-[13px] leading-6 text-gray-400 dark:text-dark-500">{description}</p>}
         </div>
         {action}
       </div>
@@ -154,7 +154,7 @@ export const AdminInfoList = ({
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{item.title}</div>
-            <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-500">{item.description}</p>
+            <p className="mt-1 text-[13px] leading-6 text-gray-400 dark:text-dark-500">{item.description}</p>
           </div>
         </div>
       );
@@ -182,6 +182,6 @@ export const AdminEmptyState = ({
   <div className="flex min-h-72 flex-col items-center justify-center text-center">
     <div className="text-gray-300 dark:text-dark-600">{icon}</div>
     <div className="mt-4 text-sm font-semibold text-gray-900 dark:text-dark-100">{title}</div>
-    {description && <p className="mt-2 text-xs font-medium text-gray-400 dark:text-dark-500">{description}</p>}
+    {description && <p className="mt-2 text-[13px] leading-6 font-medium text-gray-400 dark:text-dark-500">{description}</p>}
   </div>
 );

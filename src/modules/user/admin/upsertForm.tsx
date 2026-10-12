@@ -61,7 +61,7 @@ const FieldRow = ({
     <div className="rounded-md p-5 transition-colors hover:bg-gray-50 dark:hover:bg-dark-900">
       <div className="mb-4">
         <div className="text-sm font-medium text-black dark:text-dark-100">{label}</div>
-        {description && <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>}
+        {description && <div className="mt-1 text-[13px] leading-6 text-gray-400">{description}</div>}
       </div>
       <div className="w-full">{children}</div>
     </div>

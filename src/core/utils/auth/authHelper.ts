@@ -5,7 +5,7 @@ export async function getAuthenticatedUser() {
   // 🌟 headers()가 Promise를 반환하므로 await로 먼저 받아야 합니다.
   const headerList = await headers();
   const authHeader = headerList.get("authorization");
-  const tokenFromHeader = authHeader?.split(" ")[1];
+  const tokenFromHeader = authHeader?.match(/^Bearer (.+)$/i)?.[1];
 
   // 🌟 cookies() 역시 Promise이므로 await가 필요합니다.
   const cookieStore = await cookies();

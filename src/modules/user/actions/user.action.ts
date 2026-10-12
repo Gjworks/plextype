@@ -2,6 +2,8 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { revokeUserSessions } from "@/core/utils/auth/jwtAuth";
+import { withoutCredentials } from "@/core/utils/auth/safeUser";
 import { hashedPassword, verifyPassword } from "@utils/auth/password";
 import { saveUser, removeUser, getUserList, decodeUserToken, getUserSession } from "./user";
 import { ActionState, UserUpsertSchema, PasswordChangeSchema, UserListParams, UserListSchema, UserListResponseData, LoggedParams, UserInfo, UserParams, PasswordVerifySchema } from "./_type";
@@ -16,8 +18,7 @@ import { dispatchNotificationAction } from "@/modules/notification/actions/notif
  * 💡 공통 유틸: Prisma 결과물에서 민감한 정보(비밀번호 등) 제외하기
  */
 function excludeSensitiveData(user: any): UserInfo {
-  const { password, refreshToken, ...safeUser } = user;
-  return safeUser as UserInfo;
+  return withoutCredentials(user) as UserInfo;
 }
 
 // ==========================================
@@ -29,6 +30,16 @@ export const saveUserAction = async (formData: FormData, paths?: string): Promis
   const loggedInfo = await getLoggedUserAction();
   const targetId = formData.get("id") ? Number(formData.get("id")) : undefined;
   const isAdminRequest = loggedInfo.isAdmin === true;
+  if (formData.get("id") && (!Number.isSafeInteger(targetId) || !targetId || targetId < 1)) {
+    return { success: false, type: "error", message: "회원 ID가 올바르지 않습니다." };
+  }
+  if (!targetId && !isAdminRequest) {
+    const settings = await getAuthSettingsRuntimeAction();
+    if (!settings.registrationEnabled) return { success: false, type: "error", message: "현재 회원가입이 허용되어 있지 않습니다." };
+  }
+  if (targetId && !isAdminRequest && formData.get("password")?.toString().trim()) {
+    return { success: false, type: "error", message: "비밀번호 변경 메뉴에서 현재 비밀번호를 확인한 후 변경해주세요.", fieldErrors: { password: "비밀번호 변경 메뉴를 이용해주세요." } };
+  }
 
   if (targetId && !isAdminRequest && loggedInfo.id !== targetId) {
     return { success: false, type: "error", message: "회원 정보를 수정할 권한이 없습니다." };
@@ -80,7 +91,7 @@ export const saveUserAction = async (formData: FormData, paths?: string): Promis
       success: true,
       type: "success",
       message: "저장되었습니다.",
-      data: result.data
+      data: excludeSensitiveData(result.data)
     };
 
   } catch (error: any) {
@@ -95,6 +106,7 @@ export const saveUserAction = async (formData: FormData, paths?: string): Promis
 export async function getUserListAction(params: UserListParams): Promise<ActionState<UserListResponseData>> {
   try {
     // 🌟 알맹이 호출
+    if (!(await getLoggedUserAction()).isAdmin) return { success: false, message: "관리자 권한이 필요합니다." };
     const data = await getUserList(params);
 
     return {
@@ -151,6 +163,7 @@ export const updateUserStatusAdminAction = async (
 
   try {
     const user = await query.updateUserStatus(id, status);
+    if (status !== "active") await revokeUserSessions(id);
     revalidatePath("/admin/user/list");
     revalidatePath("/admin/user/pending");
 
@@ -388,7 +401,7 @@ export const getUser = async (params: UserParams): Promise<ActionState<UserInfo>
     // 💡 query.findUserByCondition 호출!
     const userInfo = await query.findUserByCondition(obj);
 
-    if (!userInfo) return { success: false, type: "error", message: "회원정보가 없습니다." };
+    if (!userInfo || (!tokenInfo.isAdmin && userInfo.id !== tokenInfo.id)) return { success: false, type: "error", message: "회원정보가 없습니다." };
 
     return { success: true, message: "조회 성공", data: excludeSensitiveData(userInfo) };
   } catch (e) {
@@ -397,7 +410,8 @@ export const getUser = async (params: UserParams): Promise<ActionState<UserInfo>
 };
 
 export const getUserFullById = async (id: number) => { // 💡 findUserFullById -> getUserFullById 로 변경
-  if (!id) return null;
+  const viewer = await getLoggedUserAction();
+  if (!id || (!viewer.isAdmin && viewer.id !== id)) return null;
 
   try {
     // 💡 query.findUserFullById 호출!

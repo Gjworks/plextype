@@ -1,10 +1,13 @@
 'use server';
 
+import { requireAdmin } from "@/core/utils/auth/requireAdmin";
+import { revokeUserSessions } from "@/core/utils/auth/jwtAuth";
 import redisClient from "@core/utils/redis/redis";
 import { dispatchNotificationAction } from "@/modules/notification/actions/notification.action";
 
 export async function getActiveUserList(limit?: number) {
   try {
+    await requireAdmin();
     const activeKeys = await redisClient.keys("active_user:*");
     if (activeKeys.length === 0) return [];
 
@@ -68,8 +71,11 @@ export async function getActiveUserList(limit?: number) {
 
 export async function forceLogout(userId: string) { // 🌟 IP는 이제 참고용으로만 쓰거나 빼도 됩니다.
   try {
+    await requireAdmin();
     // 1. 🌟 해당 유저의 모든 접속 키 찾기 (와일드카드 활용)
     // 예: active_user:3:* -> 3번 유저가 모바일, PC 등 어디서 접속했든 다 찾아냅니다.
+    if (!/^[1-9]\d*$/.test(userId) || !Number.isSafeInteger(Number(userId))) throw new Error("Invalid user ID");
+    await revokeUserSessions(Number(userId));
     const pattern = `active_user:${userId}:*`;
     const keys = await redisClient.keys(pattern);
 

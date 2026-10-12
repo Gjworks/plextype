@@ -1,68 +1,31 @@
 // src/app/(extentions)/posts/_actions/comment.action.ts
 "use server";
 
+import { canAccessBoard, canReadDocument, getBoardViewer } from "@/modules/posts/actions/access";
 import { revalidatePath } from "next/cache";
 import * as query from "./comment.query";
 import { ActionState, CommentWithChildren, CommentListResponse } from "./_type";
 import { withTrigger } from "@utils/trigger/triggerWrapper";
-import { cookies } from "next/headers";
-import { verify } from "@utils/auth/jwtAuth";
 import {nanoid} from "nanoid";
 import { upsertSettingsQuery } from "@/modules/admin/actions/settings.query";
-import crypto from "crypto";
 
 
-async function getLoggedInfo() {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-  if (!accessToken) return null;
-  const verified = await verify(accessToken);
-  if (!verified?.id) return null;
-  return { id: verified.id, isAdmin: Boolean(verified.isAdmin) };
-}
-
-function isOwnerOnlyBoard(config: any) {
-  return Boolean(config?.consultingState);
-}
-
-function getSecretCookieName(slug: string) {
-  return `post_secret_${slug}`;
-}
-
-function createSecretCookieValue(slug: string) {
-  const secret = process.env.SECRET_KEY || process.env.JWT_SECRET || "plextype-secret";
-  return crypto.createHmac("sha256", secret).update(`post:${slug}`).digest("hex");
-}
-
-async function hasSecretDocumentCookie(slug: string) {
-  const cookieStore = await cookies();
-  return cookieStore.get(getSecretCookieName(slug))?.value === createSecretCookieValue(slug);
-}
-
-async function canAccessDocumentComments(documentId: number) {
+const getLoggedInfo = getBoardViewer;
+async function canAccessDocumentComments(documentId: number, action: "read" | "comment" = "read") {
   const document = await query.findDocumentCommentAccessInfo(documentId);
-  if (!document) return { allowed: false, message: "존재하지 않는 게시글입니다." };
-
-  const loggedInfo = await getLoggedInfo();
-
-  if (
-    document.isSecrets &&
-    document.userId !== loggedInfo?.id &&
-    !loggedInfo?.isAdmin &&
-    !(await hasSecretDocumentCookie(document.slug))
-  ) {
-    return { allowed: false, message: "비밀글 댓글을 조회할 권한이 없습니다." };
+  const viewer = await getLoggedInfo();
+  if (!document || !await canReadDocument(document, viewer) || !await canAccessBoard(document.moduleId, action, viewer)) {
+    return { allowed: false, message: "댓글에 접근할 권한이 없습니다." };
   }
+  return { allowed: true, document };
+}
 
-  if (!isOwnerOnlyBoard(document.module?.config)) {
-    return { allowed: true, document };
+function publicComment(comment: any, viewer: Awaited<ReturnType<typeof getBoardViewer>>) {
+  const { authorPassword, ...safe } = comment;
+  if (comment.isSecret && comment.userId !== viewer?.id && !viewer?.isAdmin) {
+    return { ...safe, content: "비밀 댓글입니다." };
   }
-
-  if (document.userId === loggedInfo?.id || loggedInfo?.isAdmin) {
-    return { allowed: true, document };
-  }
-
-  return { allowed: false, message: "댓글을 조회할 권한이 없습니다." };
+  return safe;
 }
 
 // [GET] 댓글 목록 조회
@@ -76,15 +39,16 @@ export async function getCommentsAction(documentId: number, page: number = 1, pa
     const rootIds = rootComments.map(rc => rc.id);
     const childComments = await query.findChildComments(documentId, rootIds);
 
+    const viewer = await getLoggedInfo();
     const items: CommentWithChildren[] = rootComments.map(rc => ({
-      ...rc,
+      ...publicComment(rc, viewer),
       userName: rc.user?.nickName ?? null,
       createdAt: rc.createdAt.toISOString(),
       updatedAt: rc.updatedAt.toISOString(),
       children: childComments
         .filter(cc => cc.parentId === rc.id)
         .map(cc => ({
-          ...cc,
+          ...publicComment(cc, viewer),
           userName: cc.user?.nickName ?? null,
           createdAt: cc.createdAt.toISOString(),
           updatedAt: cc.updatedAt.toISOString(),
@@ -116,7 +80,7 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
     const notificationEnabled = notificationEnabledValue !== "false";
 
     const access = await canAccessDocumentComments(documentId);
-    if (!access.allowed) return { success: false, type: "error", message: "댓글을 작성할 권한이 없습니다." };
+    if (!access.allowed || !await canAccessBoard(access.document?.moduleId, "comment", loggedInfo)) return { success: false, type: "error", message: "댓글을 작성할 권한이 없습니다." };
 
     let result;
     if (id) {
@@ -145,6 +109,7 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
       let finalParentId = parentId;
       if (parentId) {
         const parent = await query.findCommentById(parentId);
+        if (!parent || parent.documentId !== documentId) return { success: false, message: "잘못된 부모 댓글입니다." };
         finalParentId = parent?.parentId ?? parent?.id ?? null;
         depth = (parent?.depth ?? 0) + 1;
       }
@@ -165,7 +130,7 @@ export const saveCommentAction = withTrigger("comment.saved", async (formData: F
     }
 
     if (paths) revalidatePath(paths);
-    return { success: true, message: "저장 완료", data: { ...result, userName: result.user?.nickName, createdAt: result.createdAt.toISOString(), updatedAt: result.updatedAt.toISOString(), children: [] } as any };
+    return { success: true, message: "저장 완료", data: { ...publicComment(result, loggedInfo), userName: result.user?.nickName, createdAt: result.createdAt.toISOString(), updatedAt: result.updatedAt.toISOString(), children: [] } as any };
   } catch (error) {
     return { success: false, message: "저장 실패" };
   }
@@ -184,6 +149,7 @@ export async function removeCommentAction(documentId: number, commentId: number,
       return { success: false, type: "error", message: "댓글을 삭제할 권한이 없습니다." };
     }
 
+    if (!(await canAccessDocumentComments(documentId, "comment")).allowed) return { success: false, message: "댓글 삭제 권한이 없습니다." };
     const childCount = comment._count?.children ?? 0;
     if (childCount > 0) {
       // 소프트 삭제 (자식이 있는 경우)

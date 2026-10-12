@@ -19,7 +19,7 @@ function load(file, imports) {
   return exports;
 }
 
-function setup(status = 'active') {
+function setup(status = 'active', allowed = true) {
   const calls = { lookup: [], tokens: [], mails: [], cleanup: 0 };
   const query = load('recovery.query.ts', {
     '@utils/db/prisma': {
@@ -32,6 +32,7 @@ function setup(status = 'active') {
     },
   });
   const action = load('recovery.action.ts', {
+    '@/core/utils/auth/rateLimit': { allowRecoveryRequest: async () => allowed },
     './recovery.query': {
       ...query,
       deleteExpiredPasswordResetTokens: async () => { calls.cleanup++; },
@@ -79,4 +80,12 @@ test('only a matching active account receives a reset token and mail; responses 
     assert.deepEqual(await instance.request({ accountId, email }), response);
     assert.equal(instance.calls.tokens.length + instance.calls.mails.length + instance.calls.cleanup, 0);
   }
+});
+
+
+test('throttled recovery does not look up users, issue tokens or send mail', async () => {
+  const { request, calls } = setup('active', false);
+  const result = await request({ accountId: 'member', email: 'member@example.com' });
+  assert.equal(result.success, true);
+  assert.equal(calls.lookup.length + calls.tokens.length + calls.mails.length + calls.cleanup, 0);
 });

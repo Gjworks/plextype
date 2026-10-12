@@ -1,6 +1,7 @@
 // src/app/(extentions)/user/_actions/group.action.ts
 "use server";
 
+import { requireAdmin } from "@/core/utils/auth/requireAdmin";
 import { getUserSessionAction } from "@/modules/user/actions/user.action"; // 파일 경로에 맞게 수정
 import * as query from "./group.query";
 import { validateForm } from "@utils/validation/formValidator";
@@ -19,6 +20,7 @@ export const updateUserGroup = async (userId: number, groupId: number[]) => {
   }
 
   try {
+    await requireAdmin();
     await query.updateUserGroupQuery(userId, groupId);
     return { success: true, type: "success", message: "적용되었습니다." };
   } catch (error) {
@@ -33,6 +35,7 @@ export const deleteUserGroup = async (userId: number) => {
   }
 
   try {
+    await requireAdmin();
     await query.deleteUserGroupQuery(userId);
     return { success: true, type: "success" };
   } catch (error) {
@@ -47,6 +50,7 @@ export const deleteUserGroup = async (userId: number) => {
 
 // 페이지 렌더링용 (서버 컴포넌트에서 직접 호출)
 export async function getAllGroupRecords() {
+  await requireAdmin();
   return await query.getAllGroupsQuery();
 }
 
@@ -77,6 +81,7 @@ export const upsertGroup = async (formData: FormData): Promise<ActionState<Group
   const data = validation.data; // 완벽하게 타입 추론된 깨끗한 데이터
 
   try {
+    await requireAdmin();
     // 🛡️ 4. 신규 생성 시에만 groupName(그룹ID) 중복 검사
     if (!data.groupId) {
       // 💡 주의: 이 함수는 group.query.ts에 만들어주셔야 합니다! (아래 참고)
@@ -120,6 +125,7 @@ export const deleteGroup = async (groupId: number) => {
   }
 
   try {
+    await requireAdmin();
     const userGroup = await query.deleteGroupQuery(groupId);
     return {
       success: true,

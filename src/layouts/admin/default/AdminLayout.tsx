@@ -274,7 +274,7 @@ const AdminLayout = ({ children, appName, adminSessionGuard, adminMenus, adminBr
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-950 dark:bg-dark-950 dark:text-dark-100">
+    <div className="admin-typography min-h-screen bg-gray-50 text-gray-950 dark:bg-dark-950 dark:text-dark-100">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] flex-col border-r border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950 lg:flex">
         <AdminSideNav
           appName={appName}

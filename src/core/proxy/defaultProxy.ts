@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getExpiredAuthCookieOptions } from "@/core/utils/auth/authCookies";
 import { verify } from "@/core/utils/auth/jwtAuth";
 import redisClient from "@/core/utils/redis/redis";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get("accessToken");
+  if (pathname.startsWith("/storage/uploads/")) {
+    const target = request.nextUrl.clone();
+    target.pathname = `/api${pathname}`;
+    return NextResponse.rewrite(target);
+  }
 
   if (
     isStateChangingRequest(request)
@@ -22,8 +26,7 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/_next") ||
-    pathname.includes(".")
+    pathname.startsWith("/_next")
   ) {
     return NextResponse.next();
   }
@@ -45,15 +48,6 @@ export async function proxy(request: NextRequest) {
     const activeKey = `active_user:${decodeToken.id}:${userIp}`;
 
     try {
-      const isActive = await redisClient.exists(activeKey);
-
-      if (!isActive && !pathname.startsWith("/auth")) {
-        const response = NextResponse.redirect(new URL("/auth/signin?reason=kicked", request.url));
-        response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
-        response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
-        return response;
-      }
-
       await redisClient.expire(activeKey, 300);
     } catch (error) {
       console.error("Proxy Redis Error:", error);

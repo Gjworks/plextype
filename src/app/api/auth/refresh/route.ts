@@ -80,6 +80,8 @@ export async function POST(): Promise<Response> {
     }
 
     const tokenParams = {
+      sessionVersion: refreshVerifyToken.sessionVersion,
+      credentialVersion: refreshVerifyToken.credentialVersion,
       id: user.id,
       accountId: user.accountId,
       isAdmin: user.isAdmin,
@@ -91,10 +93,11 @@ export async function POST(): Promise<Response> {
       refresh(tokenParams, authSettings.refreshTokenExpiresIn),
     ]);
 
-    await prisma.user.update({
-      where: { id: user.id },
+    const rotated = await prisma.user.updateMany({
+      where: { id: user.id, refreshToken: hashRefreshToken(refreshToken) },
       data: { refreshToken: hashRefreshToken(newRefreshToken) },
     });
+    if (rotated.count !== 1) return NextResponse.json({ success: false, message: "세션이 변경되었습니다." }, { status: 401 });
 
     const response = NextResponse.json({
       success: true,

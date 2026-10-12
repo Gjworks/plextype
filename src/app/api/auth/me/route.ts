@@ -47,6 +47,8 @@ export async function GET(request: NextRequest): Promise<Response> {
 
         // 새로운 Access Token 발급 및 쿠키 설정 로직 진행
         const tokenParams = {
+          sessionVersion: refreshDecoded.sessionVersion,
+          credentialVersion: refreshDecoded.credentialVersion,
           id: refreshUser.id,
           accountId: refreshUser.accountId,
           isAdmin: refreshUser.isAdmin,
@@ -58,10 +60,11 @@ export async function GET(request: NextRequest): Promise<Response> {
           refresh(tokenParams, authSettings.refreshTokenExpiresIn),
         ]);
 
-        await prisma.user.update({
-          where: { id: refreshUser.id },
+        const rotated = await prisma.user.updateMany({
+          where: { id: refreshUser.id, refreshToken: refreshTokenHash },
           data: { refreshToken: hashRefreshToken(newRefreshToken) },
         });
+        if (rotated.count !== 1) return expiredSessionResponse();
 
         // 유저 정보 가져오기 (공통 로직으로 통합)
         const user = await findUserById(userId!);

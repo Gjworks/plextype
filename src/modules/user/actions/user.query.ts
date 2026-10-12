@@ -54,7 +54,7 @@ export function findUserSessionData(accountId: string) { // 💡 getUserSessionD
       profile: true,
       userGroups: {
         include: {
-          group: { include: { users: { include: { user: true } } } },
+          group: true,
         },
       },
     },

@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-import { refresh, refreshVerify, sign, verify } from "@/core/utils/auth/jwtAuth";
+import { refresh, refreshVerify, sign, verify, revokeUserSessions } from "@/core/utils/auth/jwtAuth";
 import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 import prisma from "@/core/utils/db/prisma";
@@ -94,6 +94,7 @@ export const setQrLoginCookies = async (request: NextRequest, userId: number) =>
     groups: user.userGroups.map(group => group.groupId),
   };
 
+  if (!authSettings.allowConcurrentSessions) await revokeUserSessions(user.id);
   const [accessToken, refreshToken] = await Promise.all([
     sign(tokenParams, authSettings.accessTokenExpiresIn),
     refresh(tokenParams, authSettings.refreshTokenExpiresIn),

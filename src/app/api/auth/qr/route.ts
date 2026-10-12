@@ -1,3 +1,4 @@
+import { consumeRateLimit } from "@/core/utils/auth/rateLimit";
 import QRCode from "qrcode";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -5,6 +6,8 @@ import { createRandomToken, QR_LOGIN_TTL_SECONDS, writeQrLoginSession } from "./
 
 export async function POST(request: NextRequest): Promise<Response> {
   try {
+    const limit = await consumeRateLimit("qr-create", "all", 30, 60);
+    if (!limit.allowed) return NextResponse.json({ success: false, message: "QR 발급 요청이 많습니다. 잠시 후 다시 시도해주세요." }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
     const sessionId = createRandomToken(16);
     const nonce = createRandomToken(16);
     const createdAt = new Date();

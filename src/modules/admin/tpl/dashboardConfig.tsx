@@ -320,7 +320,7 @@ const DashboardConfigAdmin = () => {
         <section className="rounded-xl border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
           <div className="border-b border-gray-100 px-6 py-5 dark:border-dark-800">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-dark-100">배치 가능한 위젯</h2>
-            <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-400">
+            <p className="mt-1 text-[13px] leading-6 text-gray-400 dark:text-dark-400">
               미리보기를 확인하고 필요한 위젯을 오른쪽으로 추가합니다.
             </p>
           </div>
@@ -375,7 +375,7 @@ const DashboardConfigAdmin = () => {
           <div className="flex flex-col gap-4 border-b border-gray-100 px-6 py-5 dark:border-dark-800 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-gray-900 dark:text-dark-100">관리자 메인 배치</h2>
-              <p className="mt-1 text-xs leading-5 text-gray-400 dark:text-dark-400">
+              <p className="mt-1 text-[13px] leading-6 text-gray-400 dark:text-dark-400">
                 12칸 그리드 기준으로 너비와 순서를 정하면 `/admin` 메인에 같은 배치로 표시됩니다.
               </p>
             </div>

@@ -1,9 +1,9 @@
 // src/app/(extentions)/posts/_actions/document.action.ts
 'use server'
 
+import { consumeRateLimit } from "@/core/utils/auth/rateLimit";
+import { canAccessBoard, canReadDocument, getBoardViewer, secretCookieValue } from "@/modules/posts/actions/access";
 import { cookies } from "next/headers";
-import { verify } from "@utils/auth/jwtAuth";
-import crypto from "crypto";
 import dayjs from "dayjs";
 import * as query from "./document.query";
 import { revalidatePath } from "next/cache";
@@ -18,14 +18,7 @@ import { getPostSkinCapability } from "@/modules/posts/actions/skinCapability";
 import { hashedPassword, verifyPassword } from "@/core/utils/auth/password";
 
 // 내부 유틸: 로그인 유저 확인
-async function getLoggedInfo() {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-  if (!accessToken) return null;
-  const verified = await verify(accessToken);
-  if (!verified?.id) return null;
-  return { id: verified.id, isAdmin: Boolean(verified.isAdmin) };
-}
+const getLoggedInfo = getBoardViewer;
 
 const SECRET_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
@@ -33,18 +26,15 @@ function getSecretCookieName(slug: string) {
   return `post_secret_${slug}`;
 }
 
-function createSecretCookieValue(slug: string) {
-  const secret = process.env.SECRET_KEY || process.env.JWT_SECRET || "plextype-secret";
-  return crypto.createHmac("sha256", secret).update(`post:${slug}`).digest("hex");
-}
+const createSecretCookieValue = secretCookieValue;
 
-async function hasDocumentSecretAccess(document: any, loggedInfo?: { id: number; isAdmin: boolean } | null) {
+async function hasDocumentSecretAccess(document: any, loggedInfo?: { id: number; isAdmin: boolean | null } | null) {
   if (!document?.isSecrets) return true;
   if (document.userId && document.userId === loggedInfo?.id) return true;
   if (loggedInfo?.isAdmin) return true;
 
   const cookieStore = await cookies();
-  return cookieStore.get(getSecretCookieName(document.slug))?.value === createSecretCookieValue(document.slug);
+  return cookieStore.get(getSecretCookieName(document.slug))?.value === createSecretCookieValue(document.slug, document.authorPassword);
 }
 
 function sanitizeDocument(document: any) {
@@ -54,12 +44,10 @@ function sanitizeDocument(document: any) {
 }
 
 function toLockedDocument(document: any) {
-  return {
-    ...sanitizeDocument(document),
-    content: null,
-    thumbnail: null,
-    _secretLocked: true,
-  };
+  return { id: document.id, slug: document.slug, moduleId: document.moduleId,
+    module: document.module, isSecrets: true, userId: document.userId,
+    title: "비밀글입니다.", content: null, thumbnail: null, extraFieldData: {},
+    Comment: [], _secretLocked: true };
 }
 
 export async function getDocument(id: number): Promise<ActionState<DocumentInfo>> {
@@ -73,13 +61,7 @@ export async function getDocument(id: number): Promise<ActionState<DocumentInfo>
       };
     }
 
-    // ✅ 성공 시에도 message와 type을 명시하여 ActionState 규격을 맞춥니다.
-    return {
-      success: true,
-      type: "success", // 생략 가능하게 정의되어 있지 않다면 추가
-      message: "게시글 조회 성공",
-      data: document as DocumentInfo
-    };
+    return getDocumentBySlugAction(document.slug);
   } catch (error) {
     console.error("getDocument 에러:", error);
     return {
@@ -127,6 +109,8 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
     const postInfo = await postsQuery.findModuleByMid(mid);
     if (!postInfo) return { success: false, type: "error", message: "존재하지 않는 게시판입니다." };
 
+    if (!await canAccessBoard(postInfo.id, "write", loggedInfo)) return { success: false, message: "글쓰기 권한이 없습니다." };
+
     // 🌟 [추가] 확장 필드 데이터 추출 로직
     const extraFieldData: Record<string, any> = {};
     formData.forEach((value, key) => {
@@ -142,7 +126,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
       title: formData.get("title"),
       content: formData.get("content"),
       thumbnail: formData.get("thumbnail"),
-      isNotice: formData.get("isNotice"),
+      isNotice: loggedInfo.isAdmin ? formData.get("isNotice") : false,
       isSecrets: formData.get("isSecrets"),
       secretPassword: formData.get("secretPassword"),
       moduleId: postInfo.id,
@@ -166,6 +150,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
     if (data.id) {
       const existing = await documentQuery.findDocument(data.id);
       if (!existing) return { success: false, type: "error", message: "글을 찾을 수 없습니다." };
+      if (existing.moduleId !== postInfo.id) return { success: false, message: "게시판 정보가 일치하지 않습니다." };
       if (existing.userId !== loggedInfo.id && !loggedInfo.isAdmin) {
         return { success: false, type: "error", message: "수정 권한이 없습니다." };
       }
@@ -257,7 +242,7 @@ export const saveDocument = withTrigger("document.saved",  async (mid: string, f
       revalidatePath(paths);
     }
 
-    return { success: true, type: "success", message: "저장되었습니다.", data: resultData };
+    return { success: true, type: "success", message: "저장되었습니다.", data: sanitizeDocument(resultData) };
   } catch (error) {
     console.error("saveDocument 에러:", error);
     return { success: false, type: "error", message: "게시글 저장 중 오류가 발생했습니다." };
@@ -387,6 +372,7 @@ export async function getDocumentList(
 
     const parsedCategoryId = categoryId ? Number(categoryId) : undefined;
     const loggedInfo = await getLoggedInfo();
+    if (!await canAccessBoard(postInfo.id, "list", loggedInfo) || !await canAccessBoard(postInfo.id, "read", loggedInfo)) return { success: false, message: "조회 권한이 없습니다." };
     const ownerId = isOwnerOnlyBoard(postInfo.config) && !loggedInfo?.isAdmin
       ? (loggedInfo?.id || 0)
       : undefined;
@@ -472,11 +458,12 @@ export async function getDocumentList(
         : null;
 
       return {
-        ...doc,
+        ...sanitizeDocument(doc),
+        Comment: secretLocked ? [] : doc.Comment,
         title: secretLocked ? "비밀글입니다." : doc.title,
         content: secretLocked ? "비밀번호가 필요한 글입니다." : previewContent,
         thumbnail: secretLocked ? null : thumbnail,
-        extraFieldData,
+        extraFieldData: secretLocked ? {} : extraFieldData,
         latestComment: secretLocked ? null : latestComment,
         _secretLocked: secretLocked,
       };
@@ -518,6 +505,7 @@ export const removeDocumentAction = withTrigger("document.removed", async (id: n
       return { success: false, type: "error", message: "삭제 권한이 없습니다." };
     }
 
+    if (!await canAccessBoard(doc.moduleId, "write", loggedInfo)) return { success: false, message: "삭제 권한이 없습니다." };
     // 🌟 2. DB에서 삭제를 진행합니다.
     await documentQuery.deleteDocument(id);
 
@@ -529,7 +517,7 @@ export const removeDocumentAction = withTrigger("document.removed", async (id: n
       success: true,
       type: "success",
       message: "게시글이 삭제되었습니다.",
-      data: doc
+      data: sanitizeDocument(doc)
     };
   } catch (error) {
     console.error("removeDocument 에러:", error);
@@ -568,6 +556,7 @@ export async function getDocumentBySlugAction(slug: string): Promise<ActionState
     }
 
     const loggedInfo = await getLoggedInfo();
+    if (!await canReadDocument(document, loggedInfo, false)) return { success: false, message: "조회 권한이 없습니다." };
     if (
       isOwnerOnlyBoard(document.module?.config) &&
       document.userId !== loggedInfo?.id &&
@@ -581,7 +570,7 @@ export async function getDocumentBySlugAction(slug: string): Promise<ActionState
         success: true,
         type: "warning",
         message: "비밀글입니다.",
-        data: toLockedDocument(document) as DocumentInfo,
+        data: toLockedDocument(document) as unknown as DocumentInfo,
       };
     }
 
@@ -600,6 +589,7 @@ export async function unlockDocumentSecretAction(slug: string, password: string)
   try {
     const document = await documentQuery.findDocumentBySlug(slug);
     if (!document) return { success: false, type: "error", message: "존재하지 않는 게시글입니다." };
+    if (!await canReadDocument(document, await getLoggedInfo(), false)) return { success: false, message: "조회 권한이 없습니다." };
     if (!document.isSecrets) return { success: true, type: "success", message: "비밀글이 아닙니다." };
 
     const inputPassword = String(password || "").trim();
@@ -616,6 +606,8 @@ export async function unlockDocumentSecretAction(slug: string, password: string)
       return { success: false, type: "error", message: "비밀글 비밀번호가 설정되어 있지 않습니다." };
     }
 
+    const limit = await consumeRateLimit("post-secret", document.slug, 10, 900);
+    if (!limit.allowed) return { success: false, type: "error", message: "비밀번호 확인 요청이 많습니다. 잠시 후 다시 시도해주세요." };
     const isValid = await verifyPassword(inputPassword, document.authorPassword);
     if (!isValid) {
       return {
@@ -627,7 +619,7 @@ export async function unlockDocumentSecretAction(slug: string, password: string)
     }
 
     const cookieStore = await cookies();
-    cookieStore.set(getSecretCookieName(slug), createSecretCookieValue(slug), {
+    cookieStore.set(getSecretCookieName(slug), createSecretCookieValue(slug, document.authorPassword), {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",

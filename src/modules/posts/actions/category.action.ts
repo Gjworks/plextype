@@ -1,6 +1,7 @@
 // src/app/(extentions)/posts/_actions/category.action.ts
 "use server";
 
+import { requireAdmin } from "@/core/utils/auth/requireAdmin";
 import { revalidatePath } from "next/cache";
 import * as query from "./category.query";
 import * as category from "./category";
@@ -17,6 +18,7 @@ export async function getCategoriesAdminAction(
   }
 
   try {
+    await requireAdmin();
     const tree = await category.getCategories(numericModuleId, moduleType);
 
     return {
@@ -41,6 +43,7 @@ export async function addCategoryAdminAction(
   moduleType: string = "posts",
 ): Promise<ActionState<any>> {
   try {
+    await requireAdmin();
     const result = await category.addCategory({
       title,
       parentId,
@@ -73,6 +76,7 @@ export async function renameCategoryAdminAction(
   title: string,
 ): Promise<ActionState<any>> {
   try {
+    await requireAdmin();
     const result = await category.renameCategory(parseInt(id), title);
     return { success: true, message: "이름이 변경되었습니다.", data: result };
   } catch (error) {
@@ -85,6 +89,7 @@ export async function removeCategoryAdminAction(
   path?: string,
 ): Promise<ActionState<null>> {
   try {
+    await requireAdmin();
     await category.removeCategory(parseInt(id));
     if (path) revalidatePath(path);
     return { success: true, message: "카테고리가 삭제되었습니다." };
@@ -99,6 +104,7 @@ export async function saveCategoryTreeAdminAction(
   path?: string,
 ): Promise<ActionState<null>> {
   try {
+    await requireAdmin();
     await category.saveCategoryTree(items, moduleType);
     if (path) revalidatePath(path);
     return { success: true, message: "카테고리 구조가 저장되었습니다." };

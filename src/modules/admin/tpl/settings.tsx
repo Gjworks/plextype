@@ -198,7 +198,7 @@ const FieldRow = ({
     <div className="rounded-md p-5 transition-colors hover:bg-gray-50 dark:hover:bg-dark-900">
       <div className="mb-4">
         <div className="text-sm font-medium text-black dark:text-dark-100">{label}</div>
-        {description && <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>}
+        {description && <div className="mt-1 text-[13px] leading-6 text-gray-400">{description}</div>}
       </div>
       <div className="w-full">{children}</div>
     </div>
@@ -220,7 +220,7 @@ const InlineField = ({
     <div className="rounded-md p-5 transition-colors hover:bg-gray-50 dark:hover:bg-dark-900">
       <div className="mb-3 min-h-[58px]">
         <div className="text-xs font-semibold text-gray-700 dark:text-dark-100">{title}</div>
-        <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
+        <div className="mt-1 text-[13px] leading-6 text-gray-400">{description}</div>
         {settingKey && (
           <div className="mt-2 inline-flex rounded bg-gray-100 px-2 py-0.5 font-mono text-[10px] font-medium text-gray-400 dark:bg-dark-800">
             {settingKey}
@@ -331,7 +331,7 @@ const SiteImageUploadField = ({
       </div>
       <div className="mb-3">
         <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{title}</div>
-        <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
+        <div className="mt-1 text-[13px] leading-6 text-gray-400">{description}</div>
         <div className="mt-2 inline-flex rounded bg-gray-100 px-2 py-1 font-mono text-[10px] font-semibold text-gray-500 dark:bg-dark-800">
           {recommendedSize}
         </div>
@@ -381,7 +381,7 @@ const UploadNumberField = ({
     <div className="rounded-md border border-gray-100 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
       <div className="mb-3 min-h-[58px]">
         <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{title}</div>
-        <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
+        <div className="mt-1 text-[13px] leading-6 text-gray-400">{description}</div>
       </div>
       <div className="relative">
         <InputField
@@ -420,7 +420,7 @@ const UploadTogglePolicy = ({
     <div className="flex items-center justify-between gap-4 rounded-md border border-gray-100 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
       <div className="min-w-0">
         <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{title}</div>
-        <div className="mt-1 text-xs leading-5 text-gray-400">{description}</div>
+        <div className="mt-1 text-[13px] leading-6 text-gray-400">{description}</div>
       </div>
       <Toggle name={name} checked={checked} onChange={onChange} />
     </div>

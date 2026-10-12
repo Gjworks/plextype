@@ -79,6 +79,7 @@ export async function findDocumentList(
   const whereCondition: Prisma.DocumentWhereInput = {
     moduleType: "posts",
     moduleId: postsId,
+    published: true,
     ...(categoryId && categoryId !== 0 ? { categoryId } : {}),
     ...(ownerId !== undefined ? { userId: ownerId } : {}),
     ...(status === "open" ? { OR: [{ status: "open" }, { status: null }] } : {}),
@@ -100,6 +101,7 @@ export async function findDocumentList(
         updatedAt: true,
         isNotice: true,
         isSecrets: true,
+        userId: true,
         status: true,
         readCount: true,
         commentCount: true,
@@ -109,6 +111,7 @@ export async function findDocumentList(
         category: { select: { id: true, title: true, parentId: true } },
         user: { select: { id: true, nickName: true, profile: true } },
         Comment: {
+          where: { isSecret: false, isDeleted: false },
           take: 1,
           orderBy: { createdAt: 'desc' },
           select: {
@@ -131,6 +134,7 @@ export async function countIssueStatuses(postsId: number, categoryId?: number, o
   const baseWhere: Prisma.DocumentWhereInput = {
     moduleType: "posts",
     moduleId: postsId,
+    published: true,
     ...(categoryId && categoryId !== 0 ? { categoryId } : {}),
     ...(ownerId !== undefined ? { userId: ownerId } : {}),
   };

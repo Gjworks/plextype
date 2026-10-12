@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { canAccessBoard } from "@/modules/posts/actions/access";
 import prisma from "@/core/utils/db/prisma";
 import { verify } from "@/core/utils/auth/jwtAuth";
 
@@ -28,41 +29,29 @@ export async function GET(request: NextRequest): Promise<Response> {
         config: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
-          select: {
-            documents: true,
-            Categorys: true,
-          },
-        },
-        documents: {
-          orderBy: { updatedAt: "desc" },
-          take: 1,
-          select: {
-            id: true,
-            uuid: true,
-            slug: true,
-            title: true,
-            updatedAt: true,
-          },
-        },
       },
     });
 
+    const visibleBoards: Array<(typeof boards)[number] & {
+      documentCount: number; categoryCount: number;
+      latestDocument: { id: number; uuid: string | null; slug: string; title: string | null; updatedAt: Date } | null;
+    }> = [];
+    for (const board of boards) {
+      if (!await canAccessBoard(board.id, "list", verified) || !await canAccessBoard(board.id, "read", verified)) continue;
+      const ownerOnly = Boolean((board.config as { consultingState?: boolean } | null)?.consultingState);
+      const where = { moduleId: board.id, published: true, isSecrets: false,
+        ...(ownerOnly && !verified.isAdmin ? { userId: verified.id } : {}) };
+      const [documentCount, categoryCount, latestDocument] = await Promise.all([
+        prisma.document.count({ where }),
+        prisma.category.count({ where: { moduleId: board.id } }),
+        prisma.document.findFirst({ where, orderBy: { updatedAt: "desc" }, select: { id: true, uuid: true, slug: true, title: true, updatedAt: true } }),
+      ]);
+      visibleBoards.push({ ...board, documentCount, categoryCount, latestDocument });
+    }
     return NextResponse.json(
       {
         success: true,
-        data: boards.map((board) => ({
-          id: board.id,
-          mid: board.mid,
-          moduleName: board.moduleName,
-          moduleDesc: board.moduleDesc,
-          config: board.config,
-          documentCount: board._count.documents,
-          categoryCount: board._count.Categorys,
-          latestDocument: board.documents[0] || null,
-          createdAt: board.createdAt,
-          updatedAt: board.updatedAt,
-        })),
+        data: visibleBoards,
       },
       { status: 200 },
     );
