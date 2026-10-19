@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getNotificationSettingsRuntimeAction, getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
+import { getNotificationSettingsRuntimeAction } from "@/modules/notification/actions/settings.action";
+import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 
 export async function GET() {
   const [notificationSettings, siteSettings] = await Promise.all([

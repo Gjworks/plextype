@@ -5,7 +5,7 @@ import {
   getUserSessionAction,
   removeMyAccount,
 } from "@/modules/user/actions/user.action";
-import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
+import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
 
 /**
  * [GET] 내 정보 조회

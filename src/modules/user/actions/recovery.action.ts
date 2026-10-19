@@ -6,7 +6,10 @@ import { z } from "zod";
 import { hashedPassword } from "@utils/auth/password";
 import { ActionResponse } from "@/core/types/actions";
 import { sendMail } from "@/core/utils/mail/smtp";
-import { getAuthSettingsRuntimeAction, validatePasswordByAuthSettings } from "@/modules/admin/actions/auth-settings";
+import {
+  getAuthSettingsRuntimeAction,
+  validatePasswordByAuthSettings,
+} from "@/modules/user/actions/auth-settings";
 import * as query from "./recovery.query";
 
 const requestAccountIdSchema = z.object({

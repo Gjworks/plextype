@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import { Users, Settings } from "lucide-react";
 
 import { defineModule, defineUserSkin } from "@/core/registry/define";
 import AuthLayout from "@/layouts/auth/Layout";
@@ -15,20 +15,31 @@ export const userModule = defineModule({
   label: "회원",
   description: "회원 관리 메뉴와 기본 사용자 마이페이지 스킨을 제공합니다.",
   admin: {
-    menu: {
-      id: "users",
-      icon: <Users size={18} />,
-      label: "회원 설정",
-      order: 20,
-      items: [
-        { label: "회원 목록", href: "/admin/user/list" },
-        { label: "로그인 된 회원", href: "/admin/user/active" },
-        { label: "가입 대기 회원", href: "/admin/user/pending" },
-        { label: "로그인 잠금", href: "/admin/user/login-locks" },
-        { label: "회원 추가", href: "/admin/user/create" },
-        { label: "회원 그룹 관리", href: "/admin/user/groupList" },
-      ],
-    },
+    menu: [
+      {
+        id: "users",
+        icon: <Users size={18} />,
+        label: "회원 설정",
+        order: 20,
+        items: [
+          { label: "회원 목록", href: "/admin/user/list" },
+          { label: "로그인 된 회원", href: "/admin/user/active" },
+          { label: "가입 대기 회원", href: "/admin/user/pending" },
+          { label: "로그인 잠금", href: "/admin/user/login-locks" },
+          { label: "회원 추가", href: "/admin/user/create" },
+          { label: "회원 그룹 관리", href: "/admin/user/groupList" },
+        ],
+      },
+      {
+        id: "settings",
+        icon: <Settings size={18} />,
+        label: "Settings",
+        order: 9999,
+        items: [
+          { label: "회원/인증 설정", href: "/admin/settings/auth", order: 40 },
+        ],
+      },
+    ],
     breadcrumbs: {
       user: {
         list: "LIST",
@@ -39,6 +50,7 @@ export const userModule = defineModule({
         update: "UPDATE",
         active: "ACTIVE",
       },
+      settings: { auth: "AUTH" },
     },
   },
   userSkins: [

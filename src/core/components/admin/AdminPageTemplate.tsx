@@ -54,8 +54,12 @@ export const AdminPage = ({
           {icon}
           {eyebrow}
         </div>
-        <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">{title}</div>
-        {description && <div className="mt-1 text-sm text-gray-400">{description}</div>}
+        <div className="mt-2 text-lg font-semibold text-gray-700 dark:text-dark-100">
+          {title}
+        </div>
+        {description && (
+          <div className="mt-1 text-sm text-gray-400">{description}</div>
+        )}
       </div>
       {action}
     </>
@@ -71,11 +75,19 @@ export const AdminPage = ({
                 const active = tab.href === activeHref;
 
                 return (
-                  <Link key={tab.href} href={tab.href} className="relative shrink-0 py-4">
-                    <span className={`text-[13px] font-bold transition-colors ${active ? "text-primary-600 dark:text-primary-300" : "text-gray-400 hover:text-gray-900 dark:text-dark-500 dark:hover:text-dark-100"}`}>
+                  <Link
+                    key={tab.href}
+                    href={tab.href}
+                    className="relative shrink-0 py-4"
+                  >
+                    <span
+                      className={`text-[13px] font-bold transition-colors ${active ? "text-primary-600 dark:text-primary-300" : "text-gray-400 hover:text-gray-900 dark:text-dark-500 dark:hover:text-dark-100"}`}
+                    >
                       {tab.label}
                     </span>
-                    {active && <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-primary-600 dark:bg-primary-300" />}
+                    {active && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-primary-600 dark:bg-primary-300" />
+                    )}
                   </Link>
                 );
               })}
@@ -92,7 +104,9 @@ export const AdminPage = ({
 
   return (
     <div className="mx-auto max-w-screen-2xl px-3 pb-12 pt-6">
-      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">{headerContent}</div>
+      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        {headerContent}
+      </div>
       <div className="space-y-6">{children}</div>
     </div>
   );
@@ -101,15 +115,24 @@ export const AdminPage = ({
 export const AdminStatGrid = ({ items }: { items: AdminStat[] }) => (
   <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
     {items.map((item) => (
-      <div key={item.label} className="rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-800 dark:bg-dark-950">
+      <div
+        key={item.label}
+        className="rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-800 dark:bg-dark-950"
+      >
         <div className="flex items-center justify-between gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300">
             {item.icon}
           </div>
-          {item.caption && <span className="text-[11px] font-medium text-gray-400 dark:text-dark-500">{item.caption}</span>}
+          {item.caption && (
+            <span className="text-[11px] font-medium text-gray-400 dark:text-dark-500">
+              {item.caption}
+            </span>
+          )}
         </div>
         <div className="mt-4 text-xs font-bold text-gray-400">{item.label}</div>
-        <div className="mt-1 text-3xl font-semibold text-gray-950 dark:text-dark-100">{item.value}</div>
+        <div className="mt-1 text-3xl font-semibold text-gray-950 dark:text-dark-100">
+          {item.value}
+        </div>
       </div>
     ))}
   </section>
@@ -130,8 +153,16 @@ export const AdminPanel = ({
     {(title || description || action) && (
       <div className="flex flex-col gap-3 border-b border-gray-100 bg-gray-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-dark-800 dark:bg-dark-950/70">
         <div>
-          {title && <h2 className="text-sm font-semibold text-gray-700 dark:text-dark-100">{title}</h2>}
-          {description && <p className="mt-1 text-[13px] leading-6 text-gray-400 dark:text-dark-500">{description}</p>}
+          {title && (
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-dark-100">
+              {title}
+            </h2>
+          )}
+          {description && (
+            <p className="mt-1 text-[13px] leading-6 text-gray-400 dark:text-dark-500">
+              {description}
+            </p>
+          )}
         </div>
         {action}
       </div>
@@ -143,7 +174,12 @@ export const AdminPanel = ({
 export const AdminInfoList = ({
   items,
 }: {
-  items: Array<{ title: string; description: string; icon?: ReactNode; href?: string }>;
+  items: Array<{
+    title: string;
+    description: string;
+    icon?: ReactNode;
+    href?: string;
+  }>;
 }) => (
   <div className="divide-y divide-gray-100 dark:divide-dark-800">
     {items.map((item) => {
@@ -153,8 +189,12 @@ export const AdminInfoList = ({
             {item.icon}
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">{item.title}</div>
-            <p className="mt-1 text-[13px] leading-6 text-gray-400 dark:text-dark-500">{item.description}</p>
+            <div className="text-sm font-semibold text-gray-800 dark:text-dark-100">
+              {item.title}
+            </div>
+            <p className="mt-1 text-[13px] leading-6 text-gray-400 dark:text-dark-500">
+              {item.description}
+            </p>
           </div>
         </div>
       );
@@ -181,7 +221,13 @@ export const AdminEmptyState = ({
 }) => (
   <div className="flex min-h-72 flex-col items-center justify-center text-center">
     <div className="text-gray-300 dark:text-dark-600">{icon}</div>
-    <div className="mt-4 text-sm font-semibold text-gray-900 dark:text-dark-100">{title}</div>
-    {description && <p className="mt-2 text-[13px] leading-6 font-medium text-gray-400 dark:text-dark-500">{description}</p>}
+    <div className="mt-4 text-sm font-semibold text-gray-900 dark:text-dark-100">
+      {title}
+    </div>
+    {description && (
+      <p className="mt-2 text-[13px] leading-6 font-medium text-gray-400 dark:text-dark-500">
+        {description}
+      </p>
+    )}
   </div>
 );

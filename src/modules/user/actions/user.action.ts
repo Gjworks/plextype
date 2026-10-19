@@ -11,7 +11,10 @@ import * as query from "./user.query"; // 분리된 쿼리 함수 임포트
 import { validateForm } from "@utils/validation/formValidator";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
-import { getAuthSettingsRuntimeAction, validatePasswordByAuthSettings } from "@/modules/admin/actions/auth-settings";
+import {
+  getAuthSettingsRuntimeAction,
+  validatePasswordByAuthSettings,
+} from "@/modules/user/actions/auth-settings";
 import redisClient from "@utils/redis/redis";
 import { dispatchNotificationAction } from "@/modules/notification/actions/notification.action";
 /**

@@ -1,6 +1,6 @@
 import Admin from "@/modules/admin";
 import { getSiteSettingsAdminAction } from "@/modules/admin/actions/settings.action";
-import { adminLayoutOptions, userLayoutOptions } from "@extensions";
+import { adminLayoutOptions } from "@extensions";
 
 const Page = async () => {
   const result = await getSiteSettingsAdminAction();
@@ -10,7 +10,6 @@ const Page = async () => {
       section="site"
       initialSiteSettings={result.data || undefined}
       adminLayoutOptions={adminLayoutOptions}
-      userLayoutOptions={userLayoutOptions}
     />
   );
 };

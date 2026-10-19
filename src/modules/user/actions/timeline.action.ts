@@ -1,6 +1,6 @@
 "use server";
 
-import { ActionState } from "@/modules/admin/actions/_type";
+import type { ActionResponse as ActionState } from "@/core/types/actions";
 import { getUserSessionAction } from "@/modules/user/actions/user.action";
 import { findUserById } from "@/modules/user/actions/user.query";
 import {

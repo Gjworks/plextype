@@ -1,19 +1,18 @@
-import Admin from "@/modules/admin";
-import { getAuthSettingsAdminAction, getSiteSettingsAdminAction } from "@/modules/admin/actions/settings.action";
-import { adminLayoutOptions, userLayoutOptions } from "@extensions";
+import Settings from "@/modules/user/admin/settings";
+import { getAuthSettingsAdminAction } from "@/modules/user/actions/settings.action";
+import { getUserLayoutAdminAction } from "@/modules/user/actions/user-layout.action";
+import { userLayoutOptions } from "@extensions";
 
 const Page = async () => {
   const [authResult, siteResult] = await Promise.all([
     getAuthSettingsAdminAction(),
-    getSiteSettingsAdminAction(),
+    getUserLayoutAdminAction(),
   ]);
 
   return (
-    <Admin.Settings
-      section="auth"
+    <Settings
       initialAuthSettings={authResult.data || undefined}
       initialSiteSettings={siteResult.data || undefined}
-      adminLayoutOptions={adminLayoutOptions}
       userLayoutOptions={userLayoutOptions}
     />
   );

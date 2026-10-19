@@ -1,7 +1,10 @@
 import redisClient from "@utils/redis/redis";
 import { timeToSeconds } from "@/core/utils/date/timeToSeconds";
-import { AuthSettingsData, AuthSettingsSchema } from "./_type";
-import { getSettingsByKeysQuery, SettingSeed } from "./settings.query";
+import { AuthSettingsData, AuthSettingsSchema } from "./settings.type";
+import {
+  getSettingsByKeysQuery,
+  SettingSeed,
+} from "@/core/utils/settings/settings.query";
 
 export const AUTH_SETTINGS_CACHE_KEY = "app:settings:auth";
 export const SETTINGS_CACHE_TTL = 60 * 60 * 24;
@@ -93,7 +96,9 @@ export const AUTH_SETTING_META = {
   },
 } as const;
 
-export const AUTH_SETTING_KEYS = Object.values(AUTH_SETTING_META).map((item) => item.key);
+export const AUTH_SETTING_KEYS = Object.values(AUTH_SETTING_META).map(
+  (item) => item.key,
+);
 
 const toBool = (value: string | null | undefined, fallback: boolean) => {
   if (value === "true") return true;
@@ -101,55 +106,107 @@ const toBool = (value: string | null | undefined, fallback: boolean) => {
   return fallback;
 };
 
-export const mapRecordsToAuthSettings = (records: Awaited<ReturnType<typeof getSettingsByKeysQuery>>): AuthSettingsData => {
-  const values = new Map(records.map((record) => [record.key, record.value || ""]));
+export const mapRecordsToAuthSettings = (
+  records: Awaited<ReturnType<typeof getSettingsByKeysQuery>>,
+): AuthSettingsData => {
+  const values = new Map(
+    records.map((record) => [record.key, record.value || ""]),
+  );
 
   return {
-    registrationEnabled: toBool(values.get(AUTH_SETTING_META.registrationEnabled.key), true),
-    accountDeletionEnabled: toBool(values.get(AUTH_SETTING_META.accountDeletionEnabled.key), true),
-    defaultUserStatus: (values.get(AUTH_SETTING_META.defaultUserStatus.key) || AUTH_SETTING_META.defaultUserStatus.fallback) as AuthSettingsData["defaultUserStatus"],
-    minPasswordLength: Number(values.get(AUTH_SETTING_META.minPasswordLength.key) || AUTH_SETTING_META.minPasswordLength.fallback),
-    requirePasswordNumber: toBool(values.get(AUTH_SETTING_META.requirePasswordNumber.key), false),
-    requirePasswordLetter: toBool(values.get(AUTH_SETTING_META.requirePasswordLetter.key), false),
-    requirePasswordSpecial: toBool(values.get(AUTH_SETTING_META.requirePasswordSpecial.key), false),
-    loginFailLimit: Number(values.get(AUTH_SETTING_META.loginFailLimit.key) || AUTH_SETTING_META.loginFailLimit.fallback),
-    loginFailWindowMinutes: Number(values.get(AUTH_SETTING_META.loginFailWindowMinutes.key) || AUTH_SETTING_META.loginFailWindowMinutes.fallback),
-    loginLockMinutes: Number(values.get(AUTH_SETTING_META.loginLockMinutes.key) || AUTH_SETTING_META.loginLockMinutes.fallback),
-    accessTokenExpiresIn: values.get(AUTH_SETTING_META.accessTokenExpiresIn.key) || process.env.ACCESSTOKEN_EXPIRES_IN || AUTH_SETTING_META.accessTokenExpiresIn.fallback,
-    refreshTokenExpiresIn: values.get(AUTH_SETTING_META.refreshTokenExpiresIn.key) || process.env.REFRESHTOKEN_EXPIRES_IN || AUTH_SETTING_META.refreshTokenExpiresIn.fallback,
-    allowConcurrentSessions: toBool(values.get(AUTH_SETTING_META.allowConcurrentSessions.key), true),
-    adminSessionGuard: toBool(values.get(AUTH_SETTING_META.adminSessionGuard.key), true),
+    registrationEnabled: toBool(
+      values.get(AUTH_SETTING_META.registrationEnabled.key),
+      true,
+    ),
+    accountDeletionEnabled: toBool(
+      values.get(AUTH_SETTING_META.accountDeletionEnabled.key),
+      true,
+    ),
+    defaultUserStatus: (values.get(AUTH_SETTING_META.defaultUserStatus.key) ||
+      AUTH_SETTING_META.defaultUserStatus
+        .fallback) as AuthSettingsData["defaultUserStatus"],
+    minPasswordLength: Number(
+      values.get(AUTH_SETTING_META.minPasswordLength.key) ||
+        AUTH_SETTING_META.minPasswordLength.fallback,
+    ),
+    requirePasswordNumber: toBool(
+      values.get(AUTH_SETTING_META.requirePasswordNumber.key),
+      false,
+    ),
+    requirePasswordLetter: toBool(
+      values.get(AUTH_SETTING_META.requirePasswordLetter.key),
+      false,
+    ),
+    requirePasswordSpecial: toBool(
+      values.get(AUTH_SETTING_META.requirePasswordSpecial.key),
+      false,
+    ),
+    loginFailLimit: Number(
+      values.get(AUTH_SETTING_META.loginFailLimit.key) ||
+        AUTH_SETTING_META.loginFailLimit.fallback,
+    ),
+    loginFailWindowMinutes: Number(
+      values.get(AUTH_SETTING_META.loginFailWindowMinutes.key) ||
+        AUTH_SETTING_META.loginFailWindowMinutes.fallback,
+    ),
+    loginLockMinutes: Number(
+      values.get(AUTH_SETTING_META.loginLockMinutes.key) ||
+        AUTH_SETTING_META.loginLockMinutes.fallback,
+    ),
+    accessTokenExpiresIn:
+      values.get(AUTH_SETTING_META.accessTokenExpiresIn.key) ||
+      process.env.ACCESSTOKEN_EXPIRES_IN ||
+      AUTH_SETTING_META.accessTokenExpiresIn.fallback,
+    refreshTokenExpiresIn:
+      values.get(AUTH_SETTING_META.refreshTokenExpiresIn.key) ||
+      process.env.REFRESHTOKEN_EXPIRES_IN ||
+      AUTH_SETTING_META.refreshTokenExpiresIn.fallback,
+    allowConcurrentSessions: toBool(
+      values.get(AUTH_SETTING_META.allowConcurrentSessions.key),
+      true,
+    ),
+    adminSessionGuard: toBool(
+      values.get(AUTH_SETTING_META.adminSessionGuard.key),
+      true,
+    ),
   };
 };
 
-export const readAuthSettingsCache = async (): Promise<AuthSettingsData | null> => {
-  try {
-    const cached = await redisClient.get(AUTH_SETTINGS_CACHE_KEY);
-    if (!cached) return null;
-    return AuthSettingsSchema.parse(JSON.parse(cached));
-  } catch {
-    return null;
-  }
-};
+export const readAuthSettingsCache =
+  async (): Promise<AuthSettingsData | null> => {
+    try {
+      const cached = await redisClient.get(AUTH_SETTINGS_CACHE_KEY);
+      if (!cached) return null;
+      return AuthSettingsSchema.parse(JSON.parse(cached));
+    } catch {
+      return null;
+    }
+  };
 
 export const writeAuthSettingsCache = async (data: AuthSettingsData) => {
   try {
-    await redisClient.set(AUTH_SETTINGS_CACHE_KEY, JSON.stringify(data), "EX", SETTINGS_CACHE_TTL);
+    await redisClient.set(
+      AUTH_SETTINGS_CACHE_KEY,
+      JSON.stringify(data),
+      "EX",
+      SETTINGS_CACHE_TTL,
+    );
   } catch {
     // Runtime settings should fall back to DB/defaults if cache is unavailable.
   }
 };
 
-export const getAuthSettingsRuntimeAction = async (): Promise<AuthSettingsData> => {
-  const cached = await readAuthSettingsCache();
-  if (cached) return cached;
+export const getAuthSettingsRuntimeAction =
+  async (): Promise<AuthSettingsData> => {
+    const cached = await readAuthSettingsCache();
+    if (cached) return cached;
 
-  const records = await getSettingsByKeysQuery(AUTH_SETTING_KEYS);
-  const data = mapRecordsToAuthSettings(records);
-  await writeAuthSettingsCache(data);
+    const records = await getSettingsByKeysQuery(AUTH_SETTING_KEYS);
+    const data = mapRecordsToAuthSettings(records);
+    await writeAuthSettingsCache(data);
 
-  return data;
-};
+    return data;
+  };
 
 export const toAuthSettingSeeds = (data: AuthSettingsData): SettingSeed[] => [
   {
@@ -252,7 +309,10 @@ export const toAuthSettingSeeds = (data: AuthSettingsData): SettingSeed[] => [
   },
 ];
 
-export const validatePasswordByAuthSettings = (password: string, settings: AuthSettingsData) => {
+export const validatePasswordByAuthSettings = (
+  password: string,
+  settings: AuthSettingsData,
+) => {
   if (password.length < settings.minPasswordLength) {
     return `비밀번호는 ${settings.minPasswordLength}자 이상이어야 합니다.`;
   }
@@ -265,7 +325,10 @@ export const validatePasswordByAuthSettings = (password: string, settings: AuthS
     return "비밀번호에 숫자를 포함해주세요.";
   }
 
-  if (settings.requirePasswordSpecial && !/[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?`~]/.test(password)) {
+  if (
+    settings.requirePasswordSpecial &&
+    !/[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?`~]/.test(password)
+  ) {
     return "비밀번호에 특수문자를 포함해주세요.";
   }
 

@@ -1,5 +1,6 @@
 import { AdminLayout as FallbackAdminLayoutClient, adminBreadcrumbs, adminLayouts, adminMenus } from '@extensions'
-import { getAuthSettingsAdminAction, getPublicSiteSettingsAction } from '@/modules/admin/actions/settings.action'
+import { getAuthSettingsAdminAction } from "@/modules/user/actions/settings.action";
+import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 import { cookies } from 'next/headers'
 
 const AdminLayout = async ({ children }: { children: React.ReactNode }) => {

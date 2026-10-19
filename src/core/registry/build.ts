@@ -13,15 +13,24 @@ import type {
   ExtensionRegistryConfig,
   RegistryOption,
 } from "@/core/registry/define";
-import type { AdminBreadcrumbRegistry, AdminMenuItem } from "@/core/registry/adminRegistry";
+import type {
+  AdminBreadcrumbRegistry,
+  AdminMenuItem,
+} from "@/core/registry/adminRegistry";
 
-const toOption = <T extends RegistryOption>({ key, label, description }: T) => ({
+const toOption = <T extends RegistryOption>({
+  key,
+  label,
+  description,
+}: T) => ({
   key,
   label,
   description,
 });
 
-export const buildExtensionRegistry = (...registries: ExtensionRegistryConfig[]) => {
+export const buildExtensionRegistry = (
+  ...registries: ExtensionRegistryConfig[]
+) => {
   const postSkins: PostSkinMap = {};
   const postReadSkins: PostSkinMap = {};
   const postLayouts: PostLayoutMap = {};
@@ -48,27 +57,53 @@ export const buildExtensionRegistry = (...registries: ExtensionRegistryConfig[])
 
   const appendMenus = (menu?: AdminMenuItem | AdminMenuItem[]) => {
     if (!menu) return;
-    adminMenus.push(...(Array.isArray(menu) ? menu : [menu]));
+    for (const item of Array.isArray(menu) ? menu : [menu]) {
+      const existing = adminMenus.find((entry) => entry.id === item.id);
+      if (!existing) {
+        adminMenus.push({
+          ...item,
+          items: item.items
+            ? item.items.map((child) => ({ ...child }))
+            : undefined,
+        });
+        continue;
+      }
+      // Multiple domain modules may contribute to one navigation group.
+      const children = new Map(
+        (existing.items || []).map((child) => [child.href, child]),
+      );
+      for (const child of item.items || [])
+        children.set(child.href, { ...child });
+      existing.items = [...children.values()];
+    }
   };
 
-  const appendPostSkin = (item: NonNullable<ExtensionRegistryConfig["postSkins"]>[number]) => {
+  const appendPostSkin = (
+    item: NonNullable<ExtensionRegistryConfig["postSkins"]>[number],
+  ) => {
     if (item.list) postSkins[item.key] = item.list;
     if (item.read) postReadSkins[item.key] = item.read;
     postSkinOptions.set(item.key, toOption(item) as PostSkinOption);
   };
 
-  const appendPostLayout = (item: NonNullable<ExtensionRegistryConfig["postLayouts"]>[number]) => {
+  const appendPostLayout = (
+    item: NonNullable<ExtensionRegistryConfig["postLayouts"]>[number],
+  ) => {
     postLayouts[item.key] = item.component;
     postLayoutOptions.set(item.key, toOption(item) as PostLayoutOption);
   };
 
-  const appendAdminLayout = (item: NonNullable<ExtensionRegistryConfig["adminLayouts"]>[number]) => {
+  const appendAdminLayout = (
+    item: NonNullable<ExtensionRegistryConfig["adminLayouts"]>[number],
+  ) => {
     adminLayouts[item.key] = item.component;
     if (item.dashboard) adminDashboards[item.key] = item.dashboard;
     adminLayoutOptions.set(item.key, toOption(item) as AdminLayoutOption);
   };
 
-  const appendUserSkin = (item: NonNullable<ExtensionRegistryConfig["userSkins"]>[number]) => {
+  const appendUserSkin = (
+    item: NonNullable<ExtensionRegistryConfig["userSkins"]>[number],
+  ) => {
     userLayouts[item.key] = {
       timeline: item.timeline,
       update: item.update,
@@ -105,7 +140,14 @@ export const buildExtensionRegistry = (...registries: ExtensionRegistryConfig[])
     adminLayouts,
     adminDashboards,
     userLayouts,
-    adminMenus: [...adminMenus].sort((a, b) => (a.order ?? 999) - (b.order ?? 999)),
+    adminMenus: adminMenus
+      .map((menu) => ({
+        ...menu,
+        items: menu.items
+          ?.slice()
+          .sort((a, b) => (a.order ?? 999) - (b.order ?? 999)),
+      }))
+      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999)),
     adminBreadcrumbs,
     postSkinOptions: Array.from(postSkinOptions.values()),
     postLayoutOptions: Array.from(postLayoutOptions.values()),

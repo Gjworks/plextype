@@ -2,8 +2,8 @@ import "server-only";
 
 import { revalidatePath } from "next/cache";
 import * as query from "./notification.query";
-import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
-import { getSettingsByKeysQuery } from "@/modules/admin/actions/settings.query";
+import { getNotificationSettingsRuntimeAction } from "@/modules/notification/actions/settings.action";
+import { getSettingsByKeysQuery } from "@/core/utils/settings/settings.query";
 import { notificationEvents } from "@/core/utils/trigger/notificationEvents";
 import { findUserPreferenceByUserId } from "@/modules/user/actions/preference.query";
 import { sendPushNotificationAction } from "./push.action";

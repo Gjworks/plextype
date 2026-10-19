@@ -7,7 +7,7 @@ import prisma from "@/core/utils/db/prisma";
 import redisClient from "@/core/utils/redis/redis";
 import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
-import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
+import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
 import { createLoginNotificationAction } from "@/modules/notification/actions/notification.action";
 
 

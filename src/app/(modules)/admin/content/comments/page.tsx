@@ -1,5 +1,5 @@
-import Admin from "@/modules/admin";
-import { getRecentCommentsAdminAction } from "@/modules/admin/actions/content.action";
+import ContentAdmin from "@/modules/comment/admin/content";
+import { getRecentCommentsAdminAction } from "@/modules/comment/actions/admin-content.action";
 
 const AdminContentCommentsPage = async ({
   searchParams,
@@ -10,16 +10,17 @@ const AdminContentCommentsPage = async ({
   const page = parseInt(pageParam ?? "1", 10);
   const result = await getRecentCommentsAdminAction(page, 20);
   const comments = result.success && result.data ? result.data.items : [];
-  const navigation = result.success && result.data
-    ? result.data.navigation
-    : {
-        totalCount: 0,
-        totalPages: 0,
-        page: 1,
-        listCount: 0,
-      };
+  const navigation =
+    result.success && result.data
+      ? result.data.navigation
+      : {
+          totalCount: 0,
+          totalPages: 0,
+          page: 1,
+          listCount: 0,
+        };
 
-  return <Admin.Content section="comments" initialComments={comments} navigation={navigation} />;
+  return <ContentAdmin initialComments={comments} navigation={navigation} />;
 };
 
 export default AdminContentCommentsPage;

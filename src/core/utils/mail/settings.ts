@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
-import { getSettingsByKeysQuery } from "@/modules/admin/actions/settings.query";
+import { getSettingsByKeysQuery } from "@/core/utils/settings/settings.query";
 import { defaultMailSettings, mailSettingsSchema } from "@/modules/admin/mail-settings";
 
 export const MAIL_SETTINGS_KEY = "mail.smtp";

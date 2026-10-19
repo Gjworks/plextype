@@ -1,5 +1,5 @@
-import Admin from "@/modules/admin";
-import { getRecentDocumentsAdminAction } from "@/modules/admin/actions/content.action";
+import ContentAdmin from "@/modules/document/admin/content";
+import { getRecentDocumentsAdminAction } from "@/modules/document/actions/admin-content.action";
 
 const AdminContentDocumentsPage = async ({
   searchParams,
@@ -10,16 +10,17 @@ const AdminContentDocumentsPage = async ({
   const page = parseInt(pageParam ?? "1", 10);
   const result = await getRecentDocumentsAdminAction(page, 20);
   const documents = result.success && result.data ? result.data.items : [];
-  const navigation = result.success && result.data
-    ? result.data.navigation
-    : {
-        totalCount: 0,
-        totalPages: 0,
-        page: 1,
-        listCount: 0,
-      };
+  const navigation =
+    result.success && result.data
+      ? result.data.navigation
+      : {
+          totalCount: 0,
+          totalPages: 0,
+          page: 1,
+          listCount: 0,
+        };
 
-  return <Admin.Content section="documents" initialDocuments={documents} navigation={navigation} />;
+  return <ContentAdmin initialDocuments={documents} navigation={navigation} />;
 };
 
 export default AdminContentDocumentsPage;

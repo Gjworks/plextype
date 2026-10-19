@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Bell, Search, Send, RefreshCw, Play, Pause, X, UserRound, Users, Globe, Monitor, Smartphone } from "lucide-react";
-import { AdminPage, AdminPanel, AdminEmptyState, adminInputClass, adminTextareaClass, adminPrimaryButtonClass, adminGhostButtonClass } from "@/modules/admin/components/AdminPageTemplate";
+import {
+  AdminPage,
+  AdminPanel,
+  AdminEmptyState,
+  adminInputClass,
+  adminTextareaClass,
+  adminPrimaryButtonClass,
+  adminGhostButtonClass,
+} from "@/core/components/admin/AdminPageTemplate";
 import * as actions from "../actions/broadcast.action";
 import type { BroadcastDraft, BroadcastJob, BroadcastPreview, RecipientOption } from "../broadcast";
 

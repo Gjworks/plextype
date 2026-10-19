@@ -4,6 +4,7 @@ import { buildExtensionRegistry } from "@/core/registry/build";
 import { coreRegistry } from "@/core/registry/coreRegistry";
 
 export type AdminMenuChild = {
+  order?: number;
   label: string;
   href: string;
 };
@@ -19,7 +20,10 @@ export type AdminMenuItem = {
 
 export type AdminBreadcrumbRegistry = Record<string, Record<string, string>>;
 
-const { adminMenus: defaultAdminMenus, adminBreadcrumbs: defaultAdminBreadcrumbs } = buildExtensionRegistry(coreRegistry);
+const {
+  adminMenus: defaultAdminMenus,
+  adminBreadcrumbs: defaultAdminBreadcrumbs,
+} = buildExtensionRegistry(coreRegistry);
 
 export const getAdminMenuRegistry = (): AdminMenuItem[] => {
   return defaultAdminMenus;

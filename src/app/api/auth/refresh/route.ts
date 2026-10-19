@@ -9,7 +9,7 @@ import {
 import prisma from "@/core/utils/db/prisma";
 import { getAccessTokenCookieOptions, getExpiredAuthCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
-import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
+import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
 
 export async function POST(): Promise<Response> {
   const cookieStore = await cookies();

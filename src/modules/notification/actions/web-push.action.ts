@@ -2,7 +2,7 @@ import "server-only";
 
 import webpush from "web-push";
 import { getWebPushPublicKey, getWebPushSubject, isWebPushConfigured } from "@/core/utils/webPush/vapid";
-import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
+import { getNotificationSettingsRuntimeAction } from "@/modules/notification/actions/settings.action";
 import {
   countActiveWebPushSubscriptionsQuery,
   deleteOtherWebPushSubscriptionsQuery,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/core/utils/auth/authHelper";
 import { findHistoryPage } from "@/modules/notification/actions/notification.action"; // 액션에서 가져오기
 import { isNotificationAuthError, notificationGuestResponse, notificationServerErrorResponse } from "../_utils";
-import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
+import { getNotificationSettingsRuntimeAction } from "@/modules/notification/actions/settings.action";
 
 export async function GET(request: Request) {
   try {

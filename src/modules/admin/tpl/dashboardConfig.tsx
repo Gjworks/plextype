@@ -43,7 +43,7 @@ import {
   adminDarkButtonClass,
   adminGhostButtonClass,
   adminPrimaryButtonClass,
-} from "@/modules/admin/components/AdminPageTemplate";
+} from "@/core/components/admin/AdminPageTemplate";
 
 import { DASHBOARD_WIDGET_STORAGE_KEY, parseDashboardLayout, type PlacedWidget, type WidgetColSpan } from "../dashboard/layout";
 const DASHBOARD_WIDGET_PANEL_WIDTH_KEY = "gjworks.admin.dashboard.widgetPanelWidth";

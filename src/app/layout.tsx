@@ -10,7 +10,7 @@ import { getSeoMetadata } from "@/core/utils/helper/matadata";
 import UserPreferenceBootstrap from "@/core/providers/UserPreferenceBootstrap";
 import PwaWebPushBootstrap from "@/core/providers/PwaWebPushBootstrap";
 import { cookies } from "next/headers";
-import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
+import { getNotificationSettingsRuntimeAction } from "@/modules/notification/actions/settings.action";
 
 export async function generateMetadata() {
   return getSeoMetadata({});

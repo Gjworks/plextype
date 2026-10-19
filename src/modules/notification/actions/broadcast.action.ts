@@ -1,7 +1,7 @@
 "use server";
 
 import { getUserSessionAction } from "@/modules/user/actions/user.action";
-import { getNotificationSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
+import { getNotificationSettingsRuntimeAction } from "@/modules/notification/actions/settings.action";
 import { notificationEvents } from "@/core/utils/trigger/notificationEvents";
 import { sendPushNotificationAction } from "./push.action";
 import { sendWebPushNotificationAction } from "./web-push.action";

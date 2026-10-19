@@ -4,7 +4,12 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowUpRight, ChevronDown, CirclePause, Link2, Monitor, Package, PackageOpen, RefreshCw, Search, ShieldCheck } from "lucide-react";
-import { AdminPage, AdminPanel, adminGhostButtonClass, adminPrimaryButtonClass } from "@/modules/admin/components/AdminPageTemplate";
+import {
+  AdminPage,
+  AdminPanel,
+  adminGhostButtonClass,
+  adminPrimaryButtonClass,
+} from "@/core/components/admin/AdminPageTemplate";
 import type { InstallerState } from "../actions/_type";
 
 const tabs = [

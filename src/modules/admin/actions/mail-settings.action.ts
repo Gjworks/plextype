@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getUserSessionAction } from "@/modules/user/actions/user.action";
-import { upsertSettingsQuery } from "./settings.query";
+import { upsertSettingsQuery } from "@/core/utils/settings/settings.query";
 import { mailSettingsSchema, type MailSettingsView } from "../mail-settings";
 import { encryptMailPassword, environmentSmtpConfig, mailEncryptionReady, MAIL_PASSWORD_KEY, MAIL_SETTINGS_KEY, readMailSettings } from "@/core/utils/mail/settings";
 

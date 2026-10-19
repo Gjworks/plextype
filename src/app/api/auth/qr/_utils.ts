@@ -6,7 +6,7 @@ import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/cor
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 import prisma from "@/core/utils/db/prisma";
 import redisClient from "@/core/utils/redis/redis";
-import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
+import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
 import { createLoginNotificationAction } from "@/modules/notification/actions/notification.action";
 
 export const QR_LOGIN_TTL_SECONDS = 150;

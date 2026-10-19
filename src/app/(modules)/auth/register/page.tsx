@@ -1,5 +1,5 @@
 import Register from "@/modules/user/tpl/default/register";
-import { getAuthSettingsRuntimeAction } from "@/modules/admin/actions/auth-settings";
+import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
 import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 import { userLayouts } from "@extensions";
 import { redirect } from "next/navigation";

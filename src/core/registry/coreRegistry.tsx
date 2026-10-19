@@ -1,3 +1,6 @@
+import { documentModule } from "@/modules/document/registry";
+import { commentModule } from "@/modules/comment/registry";
+import { attachmentModule } from "@/modules/attachment/registry";
 import { defineExtensionRegistry } from "@/core/registry/define";
 import { adminModule } from "@/modules/admin/registry";
 import { postsModule } from "@/modules/posts/registry";
@@ -10,6 +13,9 @@ export const coreRegistry = defineExtensionRegistry({
     adminModule,
     userModule,
     postsModule,
+    documentModule,
+    commentModule,
+    attachmentModule,
     installerModule,
     notificationModule,
   ],

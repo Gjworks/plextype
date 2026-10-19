@@ -1,5 +1,5 @@
-import Admin from "@/modules/admin";
-import { getRecentAttachmentsAdminAction } from "@/modules/admin/actions/content.action";
+import ContentAdmin from "@/modules/attachment/admin/content";
+import { getRecentAttachmentsAdminAction } from "@/modules/attachment/actions/admin-content.action";
 
 const AdminContentAttachmentsPage = async ({
   searchParams,
@@ -10,16 +10,19 @@ const AdminContentAttachmentsPage = async ({
   const page = parseInt(pageParam ?? "1", 10);
   const result = await getRecentAttachmentsAdminAction(page, 24);
   const attachments = result.success && result.data ? result.data.items : [];
-  const navigation = result.success && result.data
-    ? result.data.navigation
-    : {
-        totalCount: 0,
-        totalPages: 0,
-        page: 1,
-        listCount: 0,
-      };
+  const navigation =
+    result.success && result.data
+      ? result.data.navigation
+      : {
+          totalCount: 0,
+          totalPages: 0,
+          page: 1,
+          listCount: 0,
+        };
 
-  return <Admin.Content section="attachments" initialAttachments={attachments} navigation={navigation} />;
+  return (
+    <ContentAdmin initialAttachments={attachments} navigation={navigation} />
+  );
 };
 
 export default AdminContentAttachmentsPage;

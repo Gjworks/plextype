@@ -6,7 +6,10 @@ import { verify } from "@utils/auth/jwtAuth";
 import * as query from "./user.query";
 import { dispatchTrigger } from "@utils/trigger/triggerHub";
 import { UserListParams, UserListSchema, UserInfo, LoggedParams } from "./_type";
-import { getAuthSettingsRuntimeAction, validatePasswordByAuthSettings } from "@/modules/admin/actions/auth-settings";
+import {
+  getAuthSettingsRuntimeAction,
+  validatePasswordByAuthSettings,
+} from "@/modules/user/actions/auth-settings";
 
 /**
  * 🌟 타 모듈에서도 안심하고 쓸 수 있는 함수

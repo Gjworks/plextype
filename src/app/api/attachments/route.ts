@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import prisma from "@/core/utils/db/prisma";
 import dayjs from "dayjs";
 import { verify } from "@/core/utils/auth/jwtAuth";
-import { getUploadSettingsRuntimeAction } from "@/modules/admin/actions/settings.action";
+import { getUploadSettingsRuntimeAction } from "@/modules/attachment/actions/settings.action";
 import sharp from "sharp";
 import { assertDecodableImage, detectMimeTypeFromBuffer, isMimeCompatibleWithExtension } from "@/core/utils/file/fileValidation";
 

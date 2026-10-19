@@ -3,7 +3,11 @@
 import { useState, useTransition } from "react";
 import { Mail, Save, Server, ShieldCheck, KeyRound, CirclePause } from "lucide-react";
 import Button from "@components/button/Button";
-import { AdminPage, AdminPanel, adminInputClass } from "../components/AdminPageTemplate";
+import {
+  AdminPage,
+  AdminPanel,
+  adminInputClass,
+} from "@/core/components/admin/AdminPageTemplate";
 import { getMailSettingsAdminAction, updateMailSettingsAdminAction } from "../actions/mail-settings.action";
 import type { MailSettingsView } from "../mail-settings";
 

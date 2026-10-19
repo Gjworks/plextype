@@ -7,7 +7,7 @@ import * as query from "./comment.query";
 import { ActionState, CommentWithChildren, CommentListResponse } from "./_type";
 import { withTrigger } from "@utils/trigger/triggerWrapper";
 import {nanoid} from "nanoid";
-import { upsertSettingsQuery } from "@/modules/admin/actions/settings.query";
+import { upsertSettingsQuery } from "@/core/utils/settings/settings.query";
 
 
 const getLoggedInfo = getBoardViewer;
