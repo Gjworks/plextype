@@ -39,7 +39,7 @@ const query = {
 };
 const actions = load('src/modules/notification/actions/broadcast.action.ts', {
   '@/modules/user/actions/user.action': { getUserSessionAction: async () => ({ success: true, data: { id: 1, isAdmin } }) },
-  '@/modules/admin/actions/settings.action': { getNotificationSettingsRuntimeAction: async () => ({ webPushEnabled: true, fcmPushEnabled: true }) },
+  '@/modules/notification/actions/settings.action': { getNotificationSettingsRuntimeAction: async () => ({ webPushEnabled: true, fcmPushEnabled: true }) },
   '@/core/utils/trigger/notificationEvents': { notificationEvents: { emit() {} } },
   './broadcast.query': query,
   '../broadcast': domain,
@@ -74,8 +74,8 @@ assert.equal(calls[2].status, 'unknown');
 
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
-const template = load('src/modules/admin/components/AdminPageTemplate.tsx', { 'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) } });
-const UI = load('src/modules/notification/admin/BroadcastAdmin.tsx', { '@/modules/admin/components/AdminPageTemplate': template, '../actions/broadcast.action': actions }).default;
+const template = load('src/core/components/admin/AdminPageTemplate.tsx', { 'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) } });
+const UI = load('src/modules/notification/admin/BroadcastAdmin.tsx', { '@/core/components/admin/AdminPageTemplate': template, '../actions/broadcast.action': actions }).default;
 for (const history of [false, true]) {
   const html = renderToStaticMarkup(React.createElement(UI, { history, initial: { ready: false, webEnabled: false, appEnabled: false, jobs: [], groups: [] } }));
   assert.match(html, /DB 마이그레이션/);
@@ -85,7 +85,7 @@ for (const history of [false, true]) {
 }
 const GroupUI = load('src/modules/notification/admin/BroadcastAdmin.tsx', {
   react: { ...React, useState: initial => React.useState(initial?.audience ? { ...initial, audience: 'groups' } : initial) },
-  '@/modules/admin/components/AdminPageTemplate': template,
+  '@/core/components/admin/AdminPageTemplate': template,
   '../actions/broadcast.action': actions,
 }).default;
 const groupHtml = renderToStaticMarkup(React.createElement(GroupUI, { history: false, initial: { ready: true, webEnabled: false, appEnabled: false, jobs: [], groups: await query.listBroadcastGroupsQuery() } }));

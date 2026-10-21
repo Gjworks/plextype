@@ -20,7 +20,7 @@ function load(file, overrides = {}) {
   return api;
 }
 const inventory = load('../src/modules/installer/actions/inventory.query.ts');
-const template = load('../src/modules/admin/components/AdminPageTemplate.tsx', {
+const template = load('../src/core/components/admin/AdminPageTemplate.tsx', {
   'next/link': ({ href, ...props }) => React.createElement('a', { href, ...props }),
 });
 const manifest = {
@@ -89,7 +89,7 @@ test('module is registered in core and does not import Store implementation', ()
 
 test('all views render honest disconnected states and package details', () => {
   const { default: Page } = load('../src/modules/installer/tpl/InstallerAdmin.tsx', {
-    '@/modules/admin/components/AdminPageTemplate': template,
+    '@/core/components/admin/AdminPageTemplate': template,
     'next/navigation': { useRouter: () => ({ refresh() {} }) },
     'next/link': ({ href, ...props }) => React.createElement('a', { href, ...props }),
   });
@@ -116,7 +116,7 @@ test('installer owns its tabs and provides constrained content spacing inside th
   const page = read('../src/modules/installer/tpl/InstallerAdmin.tsx');
   assert.match(page, /<AdminPage/);
   assert.match(page, /<AdminPanel/);
-  const shared = read('../src/modules/admin/components/AdminPageTemplate.tsx');
+  const shared = read('../src/core/components/admin/AdminPageTemplate.tsx');
   assert.match(shared, /max-w-screen-2xl px-3 pb-12/);
   assert.match(shared, /flex items-center gap-6 overflow-x-auto/);
   assert.match(page, /sm:grid-cols-\[180px_minmax\(0,1fr\)\]/);
@@ -124,7 +124,7 @@ test('installer owns its tabs and provides constrained content spacing inside th
 
 test('existing extension pages retain the same shared admin template exports', () => {
   const compatibility = load('../src/extensions/admin/AdminExtensionTemplate.tsx', {
-    '@/modules/admin/components/AdminPageTemplate': template,
+    '@/core/components/admin/AdminPageTemplate': template,
   });
   assert.equal(compatibility.AdminExtensionPage, template.AdminPage);
   for (const name of ['AdminPanel', 'AdminEmptyState', 'AdminInfoList', 'AdminStatGrid', 'adminPrimaryButtonClass', 'adminGhostButtonClass', 'adminDarkButtonClass', 'adminInputClass', 'adminTextareaClass', 'adminDangerButtonClass']) {
