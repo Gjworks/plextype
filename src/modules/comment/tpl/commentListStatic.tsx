@@ -12,6 +12,11 @@ import ListItem from "@tiptap/extension-list-item";
 import { CommentWithChildren } from "@/modules/comment/actions/_type";
 import CommentItemActions from "./commentItemActions";
 import { formatKstRelative } from "@/core/utils/date/kst";
+import { MessageCircle } from "lucide-react";
+
+// 삭제되지 않은 댓글과 답글을 모두 센다.
+const countComments = (items: CommentWithChildren[]): number =>
+  items.reduce((total, item) => total + (item.isDeleted ? 0 : 1) + countComments(item.children || []), 0);
 
 const commentExtensions = [
   StarterKit.configure({
@@ -183,10 +188,21 @@ const CommentListStatic = ({ documentId, comments, currentUser, canReply, upsert
   };
 
   return (
-    <section className={`max-w-screen-md mx-auto px-2 pt-16 ${className}`} aria-label="댓글 목록">
-      <h2 className="sr-only">댓글</h2>
+    <section className={`max-w-screen-md mx-auto px-2 pt-14 ${className}`} aria-label="댓글 목록">
+      <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-dark-100">
+        댓글
+        <span className="text-sm font-medium text-primary-600 dark:text-primary-300">{countComments(comments)}</span>
+      </h2>
       {comments.length > 0 ? renderComments(comments) : (
-	        <p className="text-sm text-gray-400 dark:text-dark-500">아직 댓글이 없습니다.</p>
+        <div className="flex flex-col items-center rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center dark:border-dark-800">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-gray-400 dark:bg-dark-900 dark:text-dark-500">
+            <MessageCircle size={18} strokeWidth={1.5} />
+          </span>
+          <p className="mt-4 text-sm font-medium text-gray-700 dark:text-dark-200">아직 댓글이 없습니다.</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-dark-500">
+            {canReply ? "첫 댓글을 남겨 보세요." : currentUser ? "이 게시판은 댓글 작성 권한이 필요합니다." : "로그인하면 댓글을 남길 수 있습니다."}
+          </p>
+        </div>
       )}
     </section>
   );
