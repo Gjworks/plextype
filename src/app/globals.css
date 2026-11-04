@@ -34,6 +34,8 @@
     --color-dark-800: #25272c;
     --color-dark-900: #1c1d21;
     --color-dark-950: #131418;
+    /* 다크모드 관리자 바탕. dark-950 카드보다 한 단계 어두워 라이트모드의 gray-50 바탕 · white 카드 대비를 재현한다. */
+    --color-dark-975: #0c0d10;
 
     --color-primary-50: #fbe9e7;
     --color-primary-100: #ffccbc;

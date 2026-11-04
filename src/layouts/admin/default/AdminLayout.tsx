@@ -267,14 +267,14 @@ const AdminLayout = ({ children, appName, adminSessionGuard, adminMenus, adminBr
 
   if (isLoading || !user || !user.isAdmin) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm font-semibold text-gray-500 dark:bg-dark-950 dark:text-dark-400">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm font-semibold text-gray-500 dark:bg-dark-975 dark:text-dark-400">
         관리자 권한을 확인하고 있습니다.
       </div>
     )
   }
 
   return (
-    <div className="admin-typography min-h-screen bg-gray-50 text-gray-950 dark:bg-dark-950 dark:text-dark-100">
+    <div className="admin-typography min-h-screen bg-gray-50 text-gray-950 dark:bg-dark-975 dark:text-dark-100">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] flex-col border-r border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950 lg:flex">
         <AdminSideNav
           appName={appName}
@@ -301,7 +301,7 @@ const AdminLayout = ({ children, appName, adminSessionGuard, adminMenus, adminBr
       </Left>
 
       <div className="min-h-screen lg:pl-[264px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-gray-50 px-4 dark:border-dark-800 dark:bg-dark-950 md:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-gray-50 px-4 dark:border-dark-800 dark:bg-dark-975 md:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
