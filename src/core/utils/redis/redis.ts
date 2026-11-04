@@ -2,6 +2,10 @@ import Redis from 'ioredis';
 
 const isNextBuild = process.env.NEXT_PHASE === "phase-production-build";
 
+// 재연결을 포기(null 반환)하면 연결이 영구히 닫혀 Redis가 다시 살아나도 복구되지 않는다.
+// 끊긴 동안의 명령은 maxRetriesPerRequest로 빠르게 실패시키고, 연결은 최대 5초 간격으로 계속 재시도한다.
+const retryStrategy = (times: number) => Math.min(times * 200, 5000);
+
 const createRedisClient = () => {
   if (isNextBuild) {
     return {
@@ -22,7 +26,7 @@ const createRedisClient = () => {
     return new Redis(process.env.REDIS_URL, {
       lazyConnect: true,
       maxRetriesPerRequest: 1,
-      retryStrategy: (times) => (times > 3 ? null : Math.min(times * 100, 1000)),
+      retryStrategy,
     });
   }
 
@@ -32,7 +36,7 @@ const createRedisClient = () => {
     password: process.env.REDIS_PASSWORD || undefined,
     lazyConnect: true,
     maxRetriesPerRequest: 1,
-    retryStrategy: (times) => (times > 3 ? null : Math.min(times * 100, 1000)),
+    retryStrategy,
   });
 };
 
