@@ -95,6 +95,29 @@ html[data-motion="reduced"] *::after {
     transition-duration: 0.01ms !important;
 }
 
+/* 테마 전환(src/core/utils/theme/themeTransition.ts) 중에만 적용한다.
+   기본 교차 페이드를 끄고, 이전 화면 위로 새 테마 화면을 가운데에서 원형으로 넓히며 흐림을 걷어 드러낸다. */
+html[data-theme-transition]::view-transition-old(root),
+html[data-theme-transition]::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+html[data-theme-transition]::view-transition-new(root) {
+    animation: theme-reveal 500ms ease-out;
+}
+
+@keyframes theme-reveal {
+    from {
+        clip-path: circle(0% at 50% 50%);
+        filter: blur(4px);
+    }
+    to {
+        clip-path: circle(150% at 50% 50%);
+        filter: blur(0);
+    }
+}
+
 .postContent p {
     @apply mb-3;
     @apply leading-7;
