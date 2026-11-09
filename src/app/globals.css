@@ -186,3 +186,50 @@ html[data-theme-transition]::view-transition-new(root) {
 .tiptap h6:first-child {
     @apply mt-0;
 }
+
+/*
+ * 얇고 둥근 오버레이형 스크롤바. Windows 기본 스크롤바(넓은 회색 트랙과 화살표 버튼) 대신 macOS와 비슷하게 보이게 한다.
+ * WebKit/Blink는 ::-webkit-scrollbar로 그린다. scrollbar-width/scrollbar-color를 함께 주면 Chrome 121+가
+ * ::-webkit-scrollbar를 무시하므로, 표준 속성은 ::-webkit-scrollbar를 모르는 브라우저(Firefox)에만 준다.
+ */
+@utility scrollbar-subtle {
+    --scrollbar-thumb: rgb(0 0 0 / 0.2);
+    --scrollbar-thumb-hover: rgb(0 0 0 / 0.36);
+
+    &:where(.dark, .dark *) {
+        --scrollbar-thumb: rgb(255 255 255 / 0.18);
+        --scrollbar-thumb-hover: rgb(255 255 255 / 0.32);
+    }
+
+    &::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-track,
+    &::-webkit-scrollbar-corner {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-button {
+        display: none;
+    }
+
+    /* 투명 테두리로 막대를 트랙 안쪽 4px 굵기로 줄여 가장자리에서 띄운다. */
+    &::-webkit-scrollbar-thumb {
+        border: 3px solid transparent;
+        border-radius: 9999px;
+        background-color: var(--scrollbar-thumb);
+        background-clip: padding-box;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background-color: var(--scrollbar-thumb-hover);
+    }
+
+    @supports not selector(::-webkit-scrollbar) {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
+}

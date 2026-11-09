@@ -5,6 +5,7 @@ import { UserProvider } from "@/core/providers/UserProvider";
 import Log from "@/core/utils/debug/Log";
 export const dynamic = 'force-dynamic';
 import { ToastContainer } from "@/core/components/toast/toast";
+import { ConfirmDialogHost } from "@/core/components/confirm/ConfirmDialog";
 import RealtimeNotificationListener from "@/core/components/toast/RealtimeNotificationListener";
 import { getSeoMetadata } from "@/core/utils/helper/matadata";
 import UserPreferenceBootstrap from "@/core/providers/UserPreferenceBootstrap";
@@ -106,6 +107,7 @@ export default async function RootLayout({ children }) {
             {children}
 
             <ToastContainer position="top-right" />
+            <ConfirmDialogHost />
             <div id="left"></div>
             <div id="right"></div>
             <div id="bottom"></div>

@@ -181,3 +181,17 @@ const StatusIcon = ({ type }: { type: any }) => {
   };
   return icons[type as keyof typeof icons] || icons.info;
 };
+
+type ToastHelperOptions = { title?: string; imageUrl?: string; duration?: number; linkUrl?: string };
+
+/**
+ * 컴포넌트 밖(이벤트 핸들러, 서버 액션 결과 처리)에서도 바로 부르는 토스트 단축 함수.
+ * 루트 layout의 ToastContainer가 화면에 그린다.
+ * 예: toast.success("저장되었습니다."), toast.error(result.message, { title: "저장 실패" })
+ */
+export const toast = {
+  success: (message: string, options?: ToastHelperOptions) => useToastStore.getState().addToast(message, "success", options),
+  error: (message: string, options?: ToastHelperOptions) => useToastStore.getState().addToast(message, "error", options),
+  warning: (message: string, options?: ToastHelperOptions) => useToastStore.getState().addToast(message, "warning", options),
+  info: (message: string, options?: ToastHelperOptions) => useToastStore.getState().addToast(message, "info", options),
+};
