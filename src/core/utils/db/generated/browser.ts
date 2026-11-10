@@ -122,13 +122,3 @@ export type NotificationBroadcast = Prisma.NotificationBroadcastModel
  * 
  */
 export type NotificationBroadcastRecipient = Prisma.NotificationBroadcastRecipientModel
-/**
- * Model ServiceDeployInstance
- * 
- */
-export type ServiceDeployInstance = Prisma.ServiceDeployInstanceModel
-/**
- * Model ServiceDeployJob
- * 
- */
-export type ServiceDeployJob = Prisma.ServiceDeployJobModel

@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.8.0
- * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
+ * Prisma Client JS version: 7.10.1
+ * Query Engine version: d1b3f377ca835d73fd50954a5e22128b9ebdd6b8
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.8.0",
-  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
+  client: "7.10.1",
+  engine: "d1b3f377ca835d73fd50954a5e22128b9ebdd6b8"
 }
 
 /**
@@ -156,6 +156,19 @@ export type Subset<T, U> = {
 };
 
 /**
+ * Resolved type of the argument passed to the `PrismaClient` constructor.
+ *
+ * When called without a narrower options type (the common case), this resolves
+ * to `PrismaClientOptions` directly, which produces a clear TypeScript error
+ * message (`not assignable to parameter of type 'PrismaClientOptions'`) when
+ * the argument is missing or incomplete. When the user supplies a narrower
+ * options type (e.g. via a literal), it falls back to `Subset` to keep
+ * filtering out unknown properties.
+ */
+export type PrismaClientConstructorArgs<Options extends PrismaClientOptions> =
+  [PrismaClientOptions] extends [Options] ? PrismaClientOptions : Subset<Options, PrismaClientOptions>;
+
+/**
  * SelectSubset
  * @desc From `T` pick properties that exist in `U`. Simple version of Intersection.
  * Additionally, it validates, if both select and include are present. If the case, it errors.
@@ -187,7 +200,7 @@ type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
 export type XOR<T, U> =
   T extends object ?
   U extends object ?
-    (Without<T, U> & U) | (Without<U, T> & T)
+    ((Without<T, U> & U) | (Without<U, T> & T)) & object
   : U : T
 
 
@@ -404,9 +417,7 @@ export const ModelName = {
   SiteNavigationGroup: 'SiteNavigationGroup',
   SiteNavigation: 'SiteNavigation',
   NotificationBroadcast: 'NotificationBroadcast',
-  NotificationBroadcastRecipient: 'NotificationBroadcastRecipient',
-  ServiceDeployInstance: 'ServiceDeployInstance',
-  ServiceDeployJob: 'ServiceDeployJob'
+  NotificationBroadcastRecipient: 'NotificationBroadcastRecipient'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -422,7 +433,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "profile" | "userPreference" | "userGroup" | "userGroupUser" | "document" | "category" | "modules" | "fieldGroup" | "permission" | "comment" | "documentViewLog" | "attachment" | "notification" | "pushToken" | "webPushSubscription" | "appSetting" | "siteNavigationGroup" | "siteNavigation" | "notificationBroadcast" | "notificationBroadcastRecipient" | "serviceDeployInstance" | "serviceDeployJob"
+    modelProps: "user" | "profile" | "userPreference" | "userGroup" | "userGroupUser" | "document" | "category" | "modules" | "fieldGroup" | "permission" | "comment" | "documentViewLog" | "attachment" | "notification" | "pushToken" | "webPushSubscription" | "appSetting" | "siteNavigationGroup" | "siteNavigation" | "notificationBroadcast" | "notificationBroadcastRecipient"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1980,154 +1991,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    ServiceDeployInstance: {
-      payload: Prisma.$ServiceDeployInstancePayload<ExtArgs>
-      fields: Prisma.ServiceDeployInstanceFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.ServiceDeployInstanceFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.ServiceDeployInstanceFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>
-        }
-        findFirst: {
-          args: Prisma.ServiceDeployInstanceFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.ServiceDeployInstanceFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>
-        }
-        findMany: {
-          args: Prisma.ServiceDeployInstanceFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>[]
-        }
-        create: {
-          args: Prisma.ServiceDeployInstanceCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>
-        }
-        createMany: {
-          args: Prisma.ServiceDeployInstanceCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.ServiceDeployInstanceCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>[]
-        }
-        delete: {
-          args: Prisma.ServiceDeployInstanceDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>
-        }
-        update: {
-          args: Prisma.ServiceDeployInstanceUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>
-        }
-        deleteMany: {
-          args: Prisma.ServiceDeployInstanceDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.ServiceDeployInstanceUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.ServiceDeployInstanceUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>[]
-        }
-        upsert: {
-          args: Prisma.ServiceDeployInstanceUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployInstancePayload>
-        }
-        aggregate: {
-          args: Prisma.ServiceDeployInstanceAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateServiceDeployInstance>
-        }
-        groupBy: {
-          args: Prisma.ServiceDeployInstanceGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ServiceDeployInstanceGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.ServiceDeployInstanceCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ServiceDeployInstanceCountAggregateOutputType> | number
-        }
-      }
-    }
-    ServiceDeployJob: {
-      payload: Prisma.$ServiceDeployJobPayload<ExtArgs>
-      fields: Prisma.ServiceDeployJobFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.ServiceDeployJobFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.ServiceDeployJobFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>
-        }
-        findFirst: {
-          args: Prisma.ServiceDeployJobFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.ServiceDeployJobFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>
-        }
-        findMany: {
-          args: Prisma.ServiceDeployJobFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>[]
-        }
-        create: {
-          args: Prisma.ServiceDeployJobCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>
-        }
-        createMany: {
-          args: Prisma.ServiceDeployJobCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.ServiceDeployJobCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>[]
-        }
-        delete: {
-          args: Prisma.ServiceDeployJobDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>
-        }
-        update: {
-          args: Prisma.ServiceDeployJobUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>
-        }
-        deleteMany: {
-          args: Prisma.ServiceDeployJobDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.ServiceDeployJobUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.ServiceDeployJobUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>[]
-        }
-        upsert: {
-          args: Prisma.ServiceDeployJobUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServiceDeployJobPayload>
-        }
-        aggregate: {
-          args: Prisma.ServiceDeployJobAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateServiceDeployJob>
-        }
-        groupBy: {
-          args: Prisma.ServiceDeployJobGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ServiceDeployJobGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.ServiceDeployJobCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ServiceDeployJobCountAggregateOutputType> | number
-        }
-      }
-    }
   }
 } & {
   other: {
@@ -2500,66 +2363,6 @@ export const NotificationBroadcastRecipientScalarFieldEnum = {
 export type NotificationBroadcastRecipientScalarFieldEnum = (typeof NotificationBroadcastRecipientScalarFieldEnum)[keyof typeof NotificationBroadcastRecipientScalarFieldEnum]
 
 
-export const ServiceDeployInstanceScalarFieldEnum = {
-  id: 'id',
-  uuid: 'uuid',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  installType: 'installType',
-  status: 'status',
-  serviceName: 'serviceName',
-  domain: 'domain',
-  projectPath: 'projectPath',
-  containerName: 'containerName',
-  hostPort: 'hostPort',
-  originRepository: 'originRepository',
-  upstreamRepository: 'upstreamRepository',
-  deployBranch: 'deployBranch',
-  appName: 'appName',
-  appTitle: 'appTitle',
-  adminAccountId: 'adminAccountId',
-  adminEmail: 'adminEmail',
-  adminNickname: 'adminNickname',
-  dbEngine: 'dbEngine',
-  dbHost: 'dbHost',
-  dbPort: 'dbPort',
-  dbName: 'dbName',
-  dbUser: 'dbUser',
-  dbPasswordManaged: 'dbPasswordManaged',
-  dbPasswordSecretKey: 'dbPasswordSecretKey',
-  redisHost: 'redisHost',
-  redisPort: 'redisPort',
-  useWebPush: 'useWebPush',
-  useFcm: 'useFcm',
-  setupSnapshot: 'setupSnapshot',
-  note: 'note',
-  lastError: 'lastError',
-  completedAt: 'completedAt'
-} as const
-
-export type ServiceDeployInstanceScalarFieldEnum = (typeof ServiceDeployInstanceScalarFieldEnum)[keyof typeof ServiceDeployInstanceScalarFieldEnum]
-
-
-export const ServiceDeployJobScalarFieldEnum = {
-  id: 'id',
-  uuid: 'uuid',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  instanceId: 'instanceId',
-  requestedByUserId: 'requestedByUserId',
-  type: 'type',
-  status: 'status',
-  step: 'step',
-  payload: 'payload',
-  logs: 'logs',
-  errorMessage: 'errorMessage',
-  startedAt: 'startedAt',
-  completedAt: 'completedAt'
-} as const
-
-export type ServiceDeployJobScalarFieldEnum = (typeof ServiceDeployJobScalarFieldEnum)[keyof typeof ServiceDeployJobScalarFieldEnum]
-
-
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2728,19 +2531,10 @@ export type BatchPayload = {
 export const defineExtension = runtime.Extensions.defineExtension as unknown as runtime.Types.Extensions.ExtendsHook<"define", TypeMapCb, runtime.Types.Extensions.DefaultArgs>
 export type DefaultPrismaClient = PrismaClient
 export type ErrorFormat = 'pretty' | 'colorless' | 'minimal'
-export type PrismaClientOptions = ({
-  /**
-   * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-pg`.
-   */
-  adapter: runtime.SqlDriverAdapterFactory
-  accelerateUrl?: never
-} | {
-  /**
-   * Prisma Accelerate URL allowing the client to connect through Accelerate instead of a direct database.
-   */
-  accelerateUrl: string
-  adapter?: never
-}) & {
+/**
+ * Options common to all variants of `PrismaClientOptions`, regardless of whether you connect to your database through a driver adapter or through Prisma Accelerate.
+ */
+export interface PrismaClientBaseOptions {
   /**
    * @default "colorless"
    */
@@ -2827,6 +2621,56 @@ export type PrismaClientOptions = ({
    */
   queryPlanCacheMaxSize?: number
 }
+
+/**
+ * `PrismaClient` options for connecting to your database through Prisma Accelerate instead of a driver adapter.
+ * 
+ * Learn more: https://pris.ly/d/accelerate
+ */
+export interface PrismaClientOptionsWithAccelerateUrl extends PrismaClientBaseOptions {
+  /**
+   * The Prisma Accelerate connection URL. Use this option to connect to your database through Prisma Accelerate instead of using a driver adapter to connect directly.
+   * 
+   * Learn more: https://pris.ly/d/accelerate
+   */
+  accelerateUrl: string
+  adapter?: never
+}
+
+/**
+ * `PrismaClient` options for connecting to your database through a driver adapter. This is the common case in Prisma 7.
+ * 
+ * Learn more: https://pris.ly/d/driver-adapters
+ */
+export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions {
+  /**
+   * A driver adapter that PrismaClient uses to connect to your database, such as the ones provided by `@prisma/adapter-pg`, `@prisma/adapter-libsql`, `@prisma/adapter-planetscale`, etc.
+   * 
+   * A driver adapter is **required** unless you connect to your database through Prisma Accelerate (in which case use `accelerateUrl` instead).
+   * 
+   * Learn more: https://pris.ly/d/driver-adapters
+   * 
+   * @example
+   * ```ts
+   * import { PrismaPg } from '@prisma/adapter-pg'
+   * import { PrismaClient } from './generated/prisma/client'
+   * 
+   * const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+   * const prisma = new PrismaClient({ adapter })
+   * ```
+   */
+  adapter: runtime.SqlDriverAdapterFactory
+  accelerateUrl?: never
+}
+
+/**
+ * Options passed to the `PrismaClient` constructor.
+ * 
+ * A driver adapter (or, alternatively, a Prisma Accelerate URL) is **required**. See {@link PrismaClientOptionsWithAdapter} and {@link PrismaClientOptionsWithAccelerateUrl} for the two variants. All other properties live in {@link PrismaClientBaseOptions} and are optional.
+ * 
+ * Learn more about driver adapters: https://pris.ly/d/driver-adapters
+ */
+export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   profile?: Prisma.ProfileOmit
@@ -2849,8 +2693,6 @@ export type GlobalOmitConfig = {
   siteNavigation?: Prisma.SiteNavigationOmit
   notificationBroadcast?: Prisma.NotificationBroadcastOmit
   notificationBroadcastRecipient?: Prisma.NotificationBroadcastRecipientOmit
-  serviceDeployInstance?: Prisma.ServiceDeployInstanceOmit
-  serviceDeployJob?: Prisma.ServiceDeployJobOmit
 }
 
 /* Types for Logging */

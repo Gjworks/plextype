@@ -1,2 +1,5 @@
-// Extension-owned implementation; keep route configuration statically visible.
-export { default } from "@/extensions/pages/MainIntro/routes/page";
+import { DefaultLayout, HomePage } from "@extensions";
+
+export default function Page() {
+  return <DefaultLayout><HomePage /></DefaultLayout>;
+}
