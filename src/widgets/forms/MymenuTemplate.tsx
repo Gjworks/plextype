@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Bell, Zap, Trash2, CheckCheck, Loader2, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { hasClientSession } from "@/core/utils/auth/clientAuth";
+import { useUserContext } from "@/core/providers/UserProvider";
 import { formatKstRelative, toKstDayjs } from "@/core/utils/date/kst";
 
 interface DBNotification {
@@ -21,6 +21,8 @@ interface DBNotification {
 const MymenuTemplate = () => {
   const [notifications, setNotifications] = useState<DBNotification[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, isLoading: userLoading } = useUserContext();
+  const userId = user?.id;
 
   // 🌟 1. 어떤 그룹이 펼쳐져 있는지 관리하는 상태
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
@@ -28,8 +30,7 @@ const MymenuTemplate = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const hasSession = await hasClientSession();
-      if (!hasSession) {
+      if (!userId) {
         setNotifications([]);
         return;
       }
@@ -45,7 +46,9 @@ const MymenuTemplate = () => {
     }
   };
 
-  useEffect(() => { fetchNotifications(); }, []);
+  useEffect(() => {
+    if (!userLoading) fetchNotifications();
+  }, [userId, userLoading]);
 
   // 🌟 2. [핵심 로직] 알림 그룹화 (제목 기준)
   const groupedNotifications = React.useMemo(() => {
@@ -81,7 +84,7 @@ const MymenuTemplate = () => {
 
   // 개별 읽음/삭제 및 전체 처리 함수들 (기존 로직 유지)
   const handleRead = async (uuid: string) => {
-    if (!(await hasClientSession())) return;
+    if (!userId) return;
 
     setNotifications(prev => prev.filter(n => n.uuid !== uuid));
     await fetch(`/api/notifications/${uuid}/read`, { method: 'PATCH' });
@@ -90,7 +93,7 @@ const MymenuTemplate = () => {
   };
 
   const handleDelete = async (uuid: string) => {
-    if (!(await hasClientSession())) return;
+    if (!userId) return;
 
     setNotifications(prev => prev.filter(n => n.uuid !== uuid));
     await fetch(`/api/notifications/${uuid}`, { method: 'DELETE' });
@@ -99,7 +102,7 @@ const MymenuTemplate = () => {
   };
 
   const handleReadAll = async () => {
-    if (!(await hasClientSession())) return;
+    if (!userId) return;
 
     setNotifications([]);
     await fetch('/api/notifications/read-all', { method: 'POST' });
@@ -108,7 +111,7 @@ const MymenuTemplate = () => {
   };
 
   const handleDeleteAll = async () => {
-    if (!(await hasClientSession())) return;
+    if (!userId) return;
 
     setNotifications([]);
     await fetch('/api/notifications/delete-all', { method: 'POST' });

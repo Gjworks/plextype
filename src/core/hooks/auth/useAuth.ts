@@ -1,20 +1,9 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 
-// 로그인 후 사용자의 정보를 가져오는 함수
-const fetchUser = async () => {
-  const response = await fetch("/api/auth/me", {
-    method: "GET",
-    credentials: "include", // 쿠키 포함
-  });
+import { fetchClientSession } from "@/core/utils/auth/clientAuth";
 
-  // 로그인 안 된 상태는 401로 내려온다고 가정
-
-  const data = await response.json();
-
-  if (!data.isLoggedIn) return null; // 로그인 안 된 상태는 null 반환
-
-  return data;
-};
+// 로그인한 사용자 정보. 로그인하지 않았으면 null. hasClientSession과 진행 중인 요청을 함께 쓴다.
+const fetchUser = () => fetchClientSession();
 
 export const useUser = (options?: Partial<UseQueryOptions<any, Error>>) => {
   const queryOptions: UseQueryOptions<any, Error> = {

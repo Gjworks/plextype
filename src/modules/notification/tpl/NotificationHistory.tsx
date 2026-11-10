@@ -15,7 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 
-import { hasClientSession } from "@/core/utils/auth/clientAuth";
+import { useUserContext } from "@/core/providers/UserProvider";
 import { formatKstTime, getKstDayGroup } from "@/core/utils/date/kst";
 
 const LIMIT = 10;
@@ -45,12 +45,14 @@ const NotificationPage = ({ showHeader = true, variant = "default" }: { showHead
   const [fetchingMore, setFetchingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const { user, isLoading: userLoading } = useUserContext();
+  const userId = user?.id;
 
   const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
 
     try {
-      if (!(await hasClientSession())) return;
+      if (!userId) return;
 
       const res = await fetch("/api/notifications/read-all", { method: "POST" });
       if (!res.ok) throw new Error("전체 읽음 처리 실패");
@@ -65,8 +67,7 @@ const NotificationPage = ({ showHeader = true, variant = "default" }: { showHead
     try {
       targetPage === 1 ? setLoading(true) : setFetchingMore(true);
 
-      const hasSession = await hasClientSession();
-      if (!hasSession) {
+      if (!userId) {
         setNotifications([]);
         setHasMore(false);
         return;
@@ -95,8 +96,8 @@ const NotificationPage = ({ showHeader = true, variant = "default" }: { showHead
   };
 
   useEffect(() => {
-    fetchHistory(1);
-  }, []);
+    if (!userLoading) fetchHistory(1);
+  }, [userId, userLoading]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -105,7 +106,7 @@ const NotificationPage = ({ showHeader = true, variant = "default" }: { showHead
   };
 
   const handleDelete = async (uuid: string) => {
-    if (!(await hasClientSession())) return;
+    if (!userId) return;
 
     setNotifications((prev) => prev.filter((notification) => notification.uuid !== uuid));
     const res = await fetch(`/api/notifications/${uuid}`, { method: "DELETE" });
@@ -116,7 +117,7 @@ const NotificationPage = ({ showHeader = true, variant = "default" }: { showHead
 
   const handleDeleteAll = async () => {
     if (!confirm("모든 알림 기록을 영구적으로 삭제하시겠습니까?")) return;
-    if (!(await hasClientSession())) return;
+    if (!userId) return;
 
     setNotifications([]);
     const res = await fetch("/api/notifications/delete-all", { method: "POST" });
@@ -126,7 +127,7 @@ const NotificationPage = ({ showHeader = true, variant = "default" }: { showHead
   };
 
   const handleRead = async (uuid: string) => {
-    if (!(await hasClientSession())) return;
+    if (!userId) return;
 
     setNotifications((prev) => prev.map((notification) => (
       notification.uuid === uuid ? { ...notification, isRead: true } : notification

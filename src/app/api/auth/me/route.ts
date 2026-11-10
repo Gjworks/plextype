@@ -1,11 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 
-import { refresh, refreshVerify, sign, verify } from "@/core/utils/auth/jwtAuth";
+import { verify } from "@/core/utils/auth/jwtAuth";
+import { rotateRefreshSession } from "@/core/utils/auth/refreshSession";
 
 import { findUserById } from "@/modules/user/actions/user.query";
-import prisma from "@/core/utils/db/prisma";
 import { getAccessTokenCookieOptions, getExpiredAuthCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
-import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
 import { findUserPreferenceByUserId } from "@/modules/user/actions/preference.query";
 
@@ -27,66 +26,34 @@ export async function GET(request: NextRequest): Promise<Response> {
       needsNewToken = true; // 토큰 없음
     }
 
-    // 2. 토큰 갱신이 필요한 경우 Refresh Token 확인
+    // 2. 토큰 갱신이 필요한 경우 Refresh Token 회전
     if (needsNewToken && refreshToken) {
-      const refreshDecoded = await refreshVerify(refreshToken);
-      const refreshTokenHash = hashRefreshToken(refreshToken);
-      const refreshUser = refreshDecoded?.id
-        ? await prisma.user.findUnique({
-          where: { id: refreshDecoded.id },
-          include: { userGroups: { select: { groupId: true } } },
-        })
-        : null;
+      const result = await rotateRefreshSession(refreshToken, {
+        accessTokenExpiresIn: authSettings.accessTokenExpiresIn,
+        refreshTokenExpiresIn: authSettings.refreshTokenExpiresIn,
+      });
 
-      if (refreshDecoded && refreshUser?.refreshToken === refreshTokenHash) {
-        if (!isUserAccountAvailable(refreshUser)) {
-          return expiredSessionResponse();
-        }
+      if (result.status === "pending") return NextResponse.json({ isLoggedIn: false, pending: true }, { status: 503 });
+      if (result.status !== "rotated") return expiredSessionResponse();
 
-        userId = refreshDecoded.id;
+      const user = await findUserById(result.userId);
+      if (!user) return expiredSessionResponse();
 
-        // 새로운 Access Token 발급 및 쿠키 설정 로직 진행
-        const tokenParams = {
-          sessionVersion: refreshDecoded.sessionVersion,
-          credentialVersion: refreshDecoded.credentialVersion,
-          id: refreshUser.id,
-          accountId: refreshUser.accountId,
-          isAdmin: refreshUser.isAdmin,
-          nickName: refreshUser.nickName,
-          groups: refreshUser.userGroups.map((group) => group.groupId),
-        };
-        const [newAccessToken, newRefreshToken] = await Promise.all([
-          sign(tokenParams, authSettings.accessTokenExpiresIn),
-          refresh(tokenParams, authSettings.refreshTokenExpiresIn),
-        ]);
-
-        const rotated = await prisma.user.updateMany({
-          where: { id: refreshUser.id, refreshToken: refreshTokenHash },
-          data: { refreshToken: hashRefreshToken(newRefreshToken) },
-        });
-        if (rotated.count !== 1) return expiredSessionResponse();
-
-        // 유저 정보 가져오기 (공통 로직으로 통합)
-        const user = await findUserById(userId!);
-        if (user) {
-          const response = NextResponse.json({
-            isLoggedIn: true,
-            ...(await formatUserResponse(user)) // 유저 정보 포맷팅
-          });
-
-          response.cookies.set({
-            name: "accessToken",
-            value: newAccessToken,
-            ...getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn),
-          });
-          response.cookies.set({
-            name: "refreshToken",
-            value: newRefreshToken,
-            ...getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn),
-          });
-          return response;
-        }
-      }
+      const response = NextResponse.json({
+        isLoggedIn: true,
+        ...(await formatUserResponse(user)),
+      });
+      response.cookies.set({
+        name: "accessToken",
+        value: result.accessToken,
+        ...getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn),
+      });
+      response.cookies.set({
+        name: "refreshToken",
+        value: result.refreshToken,
+        ...getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn),
+      });
+      return response;
     }
 
     // 3. 유저 정보 반환 (정상 로그인 상태)

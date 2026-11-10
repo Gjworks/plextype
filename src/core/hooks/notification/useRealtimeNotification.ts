@@ -16,9 +16,9 @@ export function useRealtimeNotification(userId: string | number | undefined) {
     let eventSource: EventSource | null = null;
     let retryTimer: number | undefined;
 
-    const connect = async () => {
-      const hasSession = await hasClientSession();
-      if (!active || !hasSession) return;
+    // userId는 UserProvider가 세션을 확인한 결과이므로 처음 연결할 때는 다시 묻지 않는다.
+    const connect = () => {
+      if (!active) return;
 
       eventSource = new EventSource(`/api/notifications/stream`);
 

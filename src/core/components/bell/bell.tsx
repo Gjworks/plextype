@@ -4,16 +4,17 @@ import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { hasClientSession } from '@/core/utils/auth/clientAuth';
+import { useUserContext } from '@/core/providers/UserProvider';
 
 export default function NotificationBell() {
   const [hasUnread, setHasUnread] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { user, isLoading } = useUserContext();
+  const userId = user?.id;
 
   const checkNotifications = async () => {
     try {
-      const hasSession = await hasClientSession();
-      if (!hasSession) {
+      if (!userId) {
         setHasUnread(false);
         return;
       }
@@ -30,6 +31,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     setMounted(true);
+    if (isLoading) return;
     checkNotifications();
 
     // 🌟 [추가] 'new-notification' 신호가 오면 즉시 다시 확인!
@@ -46,7 +48,7 @@ export default function NotificationBell() {
       clearInterval(timer);
       window.removeEventListener('refresh-unread', handleNewNoti); // 클린업
     };
-  }, []);
+  }, [userId, isLoading]);
 
   if (!mounted) {
     return (

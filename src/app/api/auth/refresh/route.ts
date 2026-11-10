@@ -1,103 +1,36 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-import {
-  sign,
-  refresh,
-  refreshVerify,
-} from "@/core/utils/auth/jwtAuth";
-import prisma from "@/core/utils/db/prisma";
 import { getAccessTokenCookieOptions, getExpiredAuthCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
-import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
+import { rotateRefreshSession } from "@/core/utils/auth/refreshSession";
 import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
+
+const failure = (status: number, code: string, message: string, clearCookies = true) => {
+  const response = NextResponse.json({ success: false, code, type: "error", message, data: {} }, { status });
+  if (clearCookies) {
+    response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
+    response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
+  }
+  return response;
+};
 
 export async function POST(): Promise<Response> {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get("refreshToken")?.value;
-  const authSettings = await getAuthSettingsRuntimeAction();
 
   try {
-    if (!refreshToken) {
-      const response = NextResponse.json({
-        success: false,
-        code: "token_error",
-        type: "error",
-        message: "refreshToken이 존재하지 않습니다.",
-        data: {},
-      }, { status: 401 });
-      response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
-      response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
-      return response;
-    }
+    if (!refreshToken) return failure(401, "token_error", "refreshToken이 존재하지 않습니다.");
 
-    const refreshVerifyToken = await refreshVerify(refreshToken);
-    if (!refreshVerifyToken?.id) {
-      const response = NextResponse.json({
-        success: false,
-        code: "refreshToken_expires",
-        type: "error",
-        message: "token이 만료되었습니다. 로그인을 새로 해주세요.",
-        data: {},
-      }, { status: 401 });
-      response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
-      response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
-      return response;
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: refreshVerifyToken.id },
-      include: {
-        userGroups: {
-          select: { groupId: true },
-        },
-      },
+    const authSettings = await getAuthSettingsRuntimeAction();
+    const result = await rotateRefreshSession(refreshToken, {
+      accessTokenExpiresIn: authSettings.accessTokenExpiresIn,
+      refreshTokenExpiresIn: authSettings.refreshTokenExpiresIn,
     });
 
-    if (!user || user.refreshToken !== hashRefreshToken(refreshToken)) {
-      const response = NextResponse.json({
-        success: false,
-        code: "invalid_refreshToken",
-        type: "error",
-        message: "유효하지 않은 토큰입니다. 다시 로그인해주세요.",
-        data: {},
-      }, { status: 401 });
-      response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
-      response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
-      return response;
-    }
-
-    if (!user.isAdmin && user.status && user.status !== "active") {
-      const response = NextResponse.json({
-        success: false,
-        code: "inactive_account",
-        type: "error",
-        message: "현재 사용할 수 없는 계정입니다.",
-        data: {},
-      }, { status: 403 });
-      response.cookies.set("accessToken", "", getExpiredAuthCookieOptions());
-      response.cookies.set("refreshToken", "", getExpiredAuthCookieOptions());
-      return response;
-    }
-
-    const tokenParams = {
-      sessionVersion: refreshVerifyToken.sessionVersion,
-      credentialVersion: refreshVerifyToken.credentialVersion,
-      id: user.id,
-      accountId: user.accountId,
-      isAdmin: user.isAdmin,
-      nickName: user.nickName,
-      groups: user.userGroups.map((group) => group.groupId),
-    };
-    const [newAccessToken, newRefreshToken] = await Promise.all([
-      sign(tokenParams, authSettings.accessTokenExpiresIn),
-      refresh(tokenParams, authSettings.refreshTokenExpiresIn),
-    ]);
-
-    const rotated = await prisma.user.updateMany({
-      where: { id: user.id, refreshToken: hashRefreshToken(refreshToken) },
-      data: { refreshToken: hashRefreshToken(newRefreshToken) },
-    });
-    if (rotated.count !== 1) return NextResponse.json({ success: false, message: "세션이 변경되었습니다." }, { status: 401 });
+    if (result.status === "invalid") return failure(401, "refreshToken_expires", "token이 만료되었습니다. 로그인을 새로 해주세요.");
+    if (result.status === "inactive") return failure(403, "inactive_account", "현재 사용할 수 없는 계정입니다.");
+    // 다른 요청이 같은 토큰을 회전하는 중이다. 쿠키를 그대로 두고 잠시 뒤 다시 요청하게 한다.
+    if (result.status === "pending") return failure(503, "refresh_in_progress", "토큰을 갱신하는 중입니다. 잠시 후 다시 시도해주세요.", false);
 
     const response = NextResponse.json({
       success: true,
@@ -106,20 +39,10 @@ export async function POST(): Promise<Response> {
       message: "토큰이 갱신되었습니다.",
       data: {},
     });
-    response.cookies.set("accessToken", newAccessToken, getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn));
-    response.cookies.set("refreshToken", newRefreshToken, getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn));
-
+    response.cookies.set("accessToken", result.accessToken, getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn));
+    response.cookies.set("refreshToken", result.refreshToken, getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn));
     return response;
-  } catch (err) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: "server_error",
-        type: "error",
-        message: "서버 오류가 발생했습니다.",
-        data: {},
-      },
-      { status: 500 },
-    );
+  } catch {
+    return failure(500, "server_error", "서버 오류가 발생했습니다.", false);
   }
 }
