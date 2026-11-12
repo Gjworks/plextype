@@ -49,6 +49,9 @@ docker-compose.yml
 
 package-lock.json
 
+# npm run prisma:sync가 코어·확장 마이그레이션을 합쳐 만드는 결과물. 원본은 src/**/prisma/migrations에 둔다.
+/prisma/migrations/
+
 .env
 .env.development
 .env.production

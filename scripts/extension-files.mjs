@@ -19,8 +19,10 @@ export function findExtensionPrismaSources(rootDir) {
     if (path.basename(directory) !== 'prisma') return;
     sources.push({
       name: 'Extension',
+      prismaDir: directory,
       singleSchemaPath: path.join(directory, 'schema.prisma'),
       schemaDir: path.join(directory, 'schema'),
+      migrationsDir: path.join(directory, 'migrations'),
     });
   });
   return sources;

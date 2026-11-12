@@ -15,9 +15,9 @@
     "extensions:sync": "node scripts/sync-extension-routes.mjs --write",
     "extensions:test": "node --test scripts/extension-files.test.mjs src/extensions/store/routes.test.mjs",
     "prisma:generate": "npm run prisma:sync && npx prisma generate",
-    "migrate:dev": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate dev",
+    "migrate:dev": "node scripts/migrate-dev.mjs",
     "migrate:reset": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate reset",
-    "migrate:init": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma migrate dev --name init",
+    "migrate:init": "node scripts/migrate-dev.mjs --to core --name init",
     "dbpush:push": "npm run prisma:sync && dotenv -e .env -e .env.development -- npx prisma db push",
     "db:seed": "dotenv -e .env -e .env.development -- npx prisma db seed"
   },

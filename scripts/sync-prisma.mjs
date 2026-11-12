@@ -1,35 +1,46 @@
 import fs from "fs";
 import path from "path";
+import { pathToFileURL } from "url";
 import { findExtensionPrismaSources } from "./extension-files.mjs";
 
-const rootDir = process.cwd();
-const coreSchemaPath = path.join(rootDir, "src", "core", "prisma", "schema.prisma");
-const fragmentSources = findExtensionPrismaSources(rootDir);
-const outputDir = path.join(rootDir, "prisma");
-const outputPath = path.join(outputDir, "schema.prisma");
-const legacyOutputSeedPath = path.join(outputDir, "seed.js");
-const legacyOutputMigrationsPath = path.join(outputDir, "migrations");
+// 코어와 각 확장은 같은 모양의 prisma 폴더를 가진다.
+//   <prisma 폴더>/schema.prisma 또는 schema/*.prisma   스키마(모델 정의)
+//   <prisma 폴더>/migrations/<14자리 시각>_<이름>/migration.sql   마이그레이션(DB 변경 SQL)
+// 이 스크립트는 둘을 각각 루트 prisma/schema.prisma와 prisma/migrations로 합친다. 루트 prisma 폴더는 결과물이므로 직접 고치지 않는다.
+
+export const MIGRATION_NAME_PATTERN = /^\d{14}_[A-Za-z0-9_-]+$/;
+// 합친 마이그레이션 폴더에 이 스크립트가 넣은 이름을 기록한다. 기록에 없는 폴더는 `prisma migrate dev`가 새로 만든 것으로 본다.
+export const MANIFEST_FILE = ".sources.json";
+const LOCK_FILE = "migration_lock.toml";
 
 const readIfExists = (filePath) => {
   if (!fs.existsSync(filePath)) return null;
   return fs.readFileSync(filePath, "utf8").trim();
 };
 
-const readSchemaFragments = () => {
+const relative = (rootDir, filePath) => path.relative(rootDir, filePath).split(path.sep).join("/");
+
+export const prismaSources = (rootDir) => [
+  {
+    name: "Core",
+    prismaDir: path.join(rootDir, "src", "core", "prisma"),
+    singleSchemaPath: path.join(rootDir, "src", "core", "prisma", "schema.prisma"),
+    schemaDir: null,
+    migrationsDir: path.join(rootDir, "src", "core", "prisma", "migrations"),
+  },
+  ...findExtensionPrismaSources(rootDir),
+];
+
+const readSchemaFragments = (rootDir, sources) => {
   const fragments = [];
 
-  for (const source of fragmentSources) {
+  for (const source of sources) {
     const singleSchema = readIfExists(source.singleSchemaPath);
-
     if (singleSchema) {
-      fragments.push({
-        source: source.name,
-        label: path.relative(rootDir, source.singleSchemaPath),
-        content: singleSchema,
-      });
+      fragments.push({ source: source.name, label: relative(rootDir, source.singleSchemaPath), content: singleSchema });
     }
 
-    if (fs.existsSync(source.schemaDir)) {
+    if (source.schemaDir && fs.existsSync(source.schemaDir)) {
       const files = fs
         .readdirSync(source.schemaDir)
         .filter((fileName) => fileName.endsWith(".prisma"))
@@ -38,13 +49,7 @@ const readSchemaFragments = () => {
       for (const fileName of files) {
         const filePath = path.join(source.schemaDir, fileName);
         const content = readIfExists(filePath);
-        if (!content) continue;
-
-        fragments.push({
-          source: source.name,
-          label: path.relative(rootDir, filePath),
-          content,
-        });
+        if (content) fragments.push({ source: source.name, label: relative(rootDir, filePath), content });
       }
     }
   }
@@ -52,34 +57,104 @@ const readSchemaFragments = () => {
   return fragments;
 };
 
-const coreSchema = readIfExists(coreSchemaPath);
+// 각 원본 폴더의 마이그레이션을 모은다. 이름이 겹치면 DB 적용 이력이 섞이므로 멈춘다.
+export const collectMigrations = (rootDir, sources = prismaSources(rootDir)) => {
+  const migrations = new Map();
 
-if (!coreSchema) {
-  console.error(`Core Prisma schema not found: ${path.relative(rootDir, coreSchemaPath)}`);
-  process.exit(1);
+  for (const source of sources) {
+    if (!fs.existsSync(source.migrationsDir)) continue;
+
+    for (const entry of fs.readdirSync(source.migrationsDir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name === LOCK_FILE) continue;
+      const entryPath = path.join(source.migrationsDir, entry.name);
+      if (!entry.isDirectory()) throw new Error(`마이그레이션 폴더에는 마이그레이션 폴더와 ${LOCK_FILE}만 둡니다: ${relative(rootDir, entryPath)}`);
+      if (!MIGRATION_NAME_PATTERN.test(entry.name)) throw new Error(`마이그레이션 이름은 <14자리 시각>_<이름> 형식이어야 합니다: ${relative(rootDir, entryPath)}`);
+      if (!fs.existsSync(path.join(entryPath, "migration.sql"))) throw new Error(`migration.sql이 없습니다: ${relative(rootDir, entryPath)}`);
+
+      const existing = migrations.get(entry.name);
+      if (existing) {
+        throw new Error(`같은 이름의 마이그레이션이 두 곳에 있습니다: ${relative(rootDir, existing)}, ${relative(rootDir, entryPath)}`);
+      }
+      migrations.set(entry.name, entryPath);
+    }
+  }
+
+  return migrations;
+};
+
+// 합친 폴더에 있지만 원본에 없고, 이 스크립트가 넣은 기록도 없는 폴더. `prisma migrate dev`가 새로 만든 마이그레이션이다.
+export const findNewMigrations = (rootDir, migrations = collectMigrations(rootDir)) => {
+  const outputDir = path.join(rootDir, "prisma", "migrations");
+  if (!fs.existsSync(outputDir)) return [];
+
+  const manifestPath = path.join(outputDir, MANIFEST_FILE);
+  const synced = new Set(fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : []);
+
+  return fs
+    .readdirSync(outputDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && !migrations.has(entry.name) && !synced.has(entry.name))
+    .map((entry) => entry.name)
+    .sort();
+};
+
+export function syncPrisma(rootDir) {
+  const sources = prismaSources(rootDir);
+  const fragments = readSchemaFragments(rootDir, sources);
+  if (!fragments.some((fragment) => fragment.source === "Core")) {
+    throw new Error(`Core Prisma schema not found: ${relative(rootDir, sources[0].singleSchemaPath)}`);
+  }
+
+  const migrations = collectMigrations(rootDir, sources);
+  const newMigrations = findNewMigrations(rootDir, migrations);
+  if (newMigrations.length > 0) {
+    // 지우면 새로 만든 마이그레이션을 잃는다. 원본 폴더로 옮긴 뒤 다시 실행하게 한다.
+    throw new Error(
+      [
+        `prisma/migrations에 원본 폴더에 없는 마이그레이션이 있습니다: ${newMigrations.join(", ")}`,
+        "코어 변경이면 src/core/prisma/migrations, 확장 변경이면 src/extensions/<기능>/prisma/migrations로 옮기세요.",
+        "npm run migrate:dev -- --to <core|기능 경로>로 실행하면 자동으로 옮깁니다.",
+      ].join("\n"),
+    );
+  }
+
+  const outputDir = path.join(rootDir, "prisma");
+  const outputMigrationsDir = path.join(outputDir, "migrations");
+  const generatedSchema = [
+    "// This file is generated by scripts/sync-prisma.mjs.",
+    "// Edit src/core/prisma/schema.prisma for core schema changes.",
+    "// Edit src/extensions/<feature>/prisma/schema.prisma or prisma/schema/*.prisma for extension schema changes.",
+    "",
+    ...fragments.flatMap((fragment, index) =>
+      fragment.source === "Core" && index === 0 ? [fragment.content] : ["", `// ${fragment.source} schema: ${fragment.label}`, fragment.content],
+    ),
+    "",
+  ].join("\n");
+
+  fs.mkdirSync(outputDir, { recursive: true });
+  fs.rmSync(path.join(outputDir, "seed.js"), { force: true });
+  fs.writeFileSync(path.join(outputDir, "schema.prisma"), generatedSchema);
+
+  fs.rmSync(outputMigrationsDir, { recursive: true, force: true });
+  fs.mkdirSync(outputMigrationsDir, { recursive: true });
+  const names = [...migrations.keys()].sort();
+  for (const name of names) {
+    fs.cpSync(migrations.get(name), path.join(outputMigrationsDir, name), { recursive: true });
+  }
+  const coreLock = path.join(sources[0].migrationsDir, LOCK_FILE);
+  if (fs.existsSync(coreLock)) fs.copyFileSync(coreLock, path.join(outputMigrationsDir, LOCK_FILE));
+  fs.writeFileSync(path.join(outputMigrationsDir, MANIFEST_FILE), `${JSON.stringify(names, null, 2)}\n`);
+
+  const extensionMigrations = names.filter((name) => !migrations.get(name).startsWith(sources[0].migrationsDir + path.sep)).length;
+  console.log(`Synced Prisma schema to prisma/schema.prisma (${fragments.length - 1} extension fragment(s)).`);
+  console.log(`Synced ${names.length} migration(s) to prisma/migrations (${extensionMigrations} from extensions).`);
+  return { fragments, migrations: names };
 }
 
-const schemaFragments = readSchemaFragments();
-const generatedSchema = [
-  "// This file is generated by scripts/sync-prisma.mjs.",
-  "// Edit src/core/prisma/schema.prisma for core schema changes.",
-  "// Edit src/extensions/<feature>/prisma/schema/*.prisma for extension schema changes.",
-  "",
-  coreSchema,
-  ...schemaFragments.flatMap((fragment) => [
-    "",
-    `// ${fragment.source} schema: ${fragment.label}`,
-    fragment.content,
-  ]),
-  "",
-].join("\n");
-
-fs.mkdirSync(outputDir, { recursive: true });
-fs.rmSync(legacyOutputSeedPath, { force: true });
-fs.rmSync(legacyOutputMigrationsPath, { recursive: true, force: true });
-fs.writeFileSync(outputPath, generatedSchema);
-
-console.log(`Synced Prisma schema to ${path.relative(rootDir, outputPath)}`);
-if (schemaFragments.length > 0) {
-  console.log(`Included ${schemaFragments.length} schema fragment(s).`);
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  try {
+    syncPrisma(process.cwd());
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
 }
