@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 544" width="1280" height="544" role="img" aria-label="gjworks 서비스의 모듈과 데이터 기반" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<title>gjworks 서비스의 모듈과 데이터 기반</title>
+<desc>웹과 Flutter가 Next.js 서버에 연결되고 회원, 콘텐츠, 알림 모듈이 PostgreSQL, Redis, 파일 저장소를 사용합니다.</desc>
+<defs><marker id="a" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L8 5 L1 9" fill="none" stroke="#6b7280" stroke-width="1.4"/></marker></defs>
+<rect width="1280" height="544" rx="12" fill="#ffffff"/>
+<rect x="16" y="32" width="224" height="448" rx="8" fill="#f9fafb" stroke="#e5e7eb"/>
+<text x="32" y="56" font-size="11" font-weight="600" letter-spacing="1.5" fill="#9ca3af">CLIENT</text>
+<rect x="536" y="32" width="256" height="448" rx="8" fill="#fff7ed" stroke="#fed7aa"/>
+<text x="552" y="56" font-size="11" font-weight="600" letter-spacing="1.5" fill="#c2410c">CORE MODULES</text>
+<rect x="1000" y="32" width="264" height="448" rx="8" fill="#f9fafb" stroke="#e5e7eb"/>
+<text x="1016" y="56" font-size="11" font-weight="600" letter-spacing="1.5" fill="#9ca3af">PERSISTENCE</text>
+<path d="M232 132 H256 Q264 132 264 140 V216 Q264 224 272 224 H292" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M232 340 H256 Q264 340 264 332 V256 Q264 248 272 248 H292" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M500 212 H520 Q528 212 528 204 V116 Q528 108 536 108 H560" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M500 236 H520 Q528 236 528 244 V248 Q528 256 536 256 H560" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M500 260 H520 Q528 260 528 268 V420 Q528 428 536 428 H560" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M768 108 H1024" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M768 268 H1024" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M768 284 H888 Q896 284 896 292 V420 Q896 428 904 428 H1024" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="24" y="96" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="40" y="128" font-size="15" font-weight="600" fill="#111827">웹 · 관리자 화면</text>
+<text x="40" y="148" font-size="12" fill="#6b7280">Layouts / Skins</text>
+<rect x="24" y="304" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="40" y="336" font-size="15" font-weight="600" fill="#111827">Flutter 클라이언트</text>
+<text x="40" y="356" font-size="12" fill="#6b7280">Cookie / Web API</text>
+<rect x="292" y="200" width="208" height="72" rx="8" fill="#111827" stroke="#111827" stroke-width="1.2"/>
+<text x="308" y="232" font-size="15" font-weight="600" fill="#ffffff">Next.js 서버</text>
+<text x="308" y="252" font-size="12" fill="#d1d5db">App Router / API</text>
+<rect x="560" y="72" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="576" y="104" font-size="15" font-weight="600" fill="#111827">회원 · 인증 · 권한</text>
+<text x="576" y="124" font-size="12" fill="#6b7280">User / Group / Session</text>
+<rect x="560" y="232" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="576" y="264" font-size="15" font-weight="600" fill="#111827">게시판 · 문서 · 댓글</text>
+<text x="576" y="284" font-size="12" fill="#6b7280">Posts / Document / Comment</text>
+<rect x="560" y="392" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="576" y="424" font-size="15" font-weight="600" fill="#111827">알림 · 운영 설정</text>
+<text x="576" y="444" font-size="12" fill="#6b7280">Notification / Admin</text>
+<rect x="1024" y="72" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="1040" y="104" font-size="15" font-weight="600" fill="#111827">Redis</text>
+<text x="1040" y="124" font-size="12" fill="#6b7280">Session version / Rate limit</text>
+<rect x="1024" y="232" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="1040" y="264" font-size="15" font-weight="600" fill="#111827">PostgreSQL</text>
+<text x="1040" y="284" font-size="12" fill="#6b7280">Prisma / Relational data</text>
+<rect x="1024" y="392" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="1040" y="424" font-size="15" font-weight="600" fill="#111827">파일 저장소</text>
+<text x="1040" y="444" font-size="12" fill="#6b7280">Attachment / Storage</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 448" width="1280" height="448" role="img" aria-label="코어와 확장 모듈의 Prisma 스키마 통합" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<title>코어와 확장 모듈의 Prisma 스키마 통합</title>
+<desc>코어와 확장 모듈의 모델을 하나의 스키마로 합친 뒤 Prisma Client 생성과 데이터베이스 마이그레이션을 별도로 진행합니다.</desc>
+<defs><marker id="a" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L8 5 L1 9" fill="none" stroke="#6b7280" stroke-width="1.4"/></marker></defs>
+<rect width="1280" height="448" rx="12" fill="#ffffff"/>
+<rect x="16" y="32" width="248" height="352" rx="8" fill="#f9fafb" stroke="#e5e7eb"/>
+<text x="32" y="56" font-size="11" font-weight="600" letter-spacing="1.5" fill="#9ca3af">SOURCE SCHEMAS</text>
+<rect x="320" y="32" width="576" height="352" rx="8" fill="#fff7ed" stroke="#fed7aa"/>
+<text x="336" y="56" font-size="11" font-weight="600" letter-spacing="1.5" fill="#c2410c">GENERATED ARTIFACTS</text>
+<path d="M240 132 H284 Q292 132 292 140 V192 Q292 200 300 200 H344" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M240 292 H284 Q292 292 292 284 V232 Q292 224 300 224 H344" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M568 212 H656" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M864 200 H936 Q944 200 944 192 V116 Q944 108 952 108 H1024" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M864 224 H936 Q944 224 944 232 V308 Q944 316 952 316 H1024" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="32" y="96" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="48" y="128" font-size="15" font-weight="600" fill="#111827">코어 모델</text>
+<text x="48" y="148" font-size="12" fill="#6b7280">src/core/prisma/schema.prisma</text>
+<rect x="32" y="256" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="48" y="288" font-size="15" font-weight="600" fill="#111827">확장 모델</text>
+<text x="48" y="308" font-size="12" fill="#6b7280">extensions/*/prisma</text>
+<rect x="344" y="176" width="224" height="72" rx="8" fill="#111827" stroke="#111827" stroke-width="1.2"/>
+<text x="360" y="208" font-size="15" font-weight="600" fill="#ffffff">스키마 병합</text>
+<text x="360" y="228" font-size="12" fill="#d1d5db">scripts/sync-prisma.mjs</text>
+<rect x="656" y="176" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="672" y="208" font-size="15" font-weight="600" fill="#111827">통합 스키마</text>
+<text x="672" y="228" font-size="12" fill="#6b7280">prisma/schema.prisma</text>
+<rect x="1024" y="72" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="1040" y="104" font-size="15" font-weight="600" fill="#111827">Prisma Client 생성</text>
+<text x="1040" y="124" font-size="12" fill="#6b7280">prisma generate</text>
+<rect x="1024" y="280" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="1040" y="312" font-size="15" font-weight="600" fill="#111827">DB 변경 적용</text>
+<text x="1040" y="332" font-size="12" fill="#6b7280">migrate deploy</text>
+</svg>

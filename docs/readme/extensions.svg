@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 568" width="1280" height="568" role="img" aria-label="화면 구성 레지스트리와 이벤트 확장의 분리" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<title>화면 구성 레지스트리와 이벤트 확장의 분리</title>
+<desc>코어와 프로젝트 레지스트리를 합쳐 화면 스킨과 관리자 구성을 만들고, Trigger 설정과 핸들러는 별도 이벤트 경로에서 실행합니다.</desc>
+<defs><marker id="a" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L8 5 L1 9" fill="none" stroke="#6b7280" stroke-width="1.4"/></marker></defs>
+<rect width="1280" height="568" rx="12" fill="#ffffff"/>
+<rect x="16" y="32" width="1248" height="304" rx="8" fill="#f9fafb" stroke="#e5e7eb"/>
+<text x="32" y="56" font-size="11" font-weight="600" letter-spacing="1.5" fill="#9ca3af">COMPOSITION / BUILD EXTENSION REGISTRY</text>
+<rect x="16" y="376" width="1248" height="160" rx="8" fill="#fff7ed" stroke="#fed7aa"/>
+<text x="32" y="400" font-size="11" font-weight="600" letter-spacing="1.5" fill="#c2410c">RUNTIME / TRIGGER REGISTRY</text>
+<path d="M240 116 H288 Q296 116 296 124 V168 Q296 176 304 176 H352" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M240 260 H288 Q296 260 296 252 V208 Q296 200 304 200 H352" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M592 176 H640 Q648 176 648 168 V124 Q648 116 656 116 H704" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M592 200 H640 Q648 200 648 208 V252 Q648 260 656 260 H704" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M912 116 H960 Q968 116 968 124 V168 Q968 176 976 176 H1024" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M912 260 H960 Q968 260 968 252 V208 Q968 200 976 200 H1024" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M240 468 H352" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M592 468 H704" fill="none" stroke="#6b7280" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="32" y="80" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="48" y="112" font-size="15" font-weight="600" fill="#111827">코어 레지스트리</text>
+<text x="48" y="132" font-size="12" fill="#6b7280">Admin / User / Posts</text>
+<rect x="32" y="224" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="48" y="256" font-size="15" font-weight="600" fill="#111827">프로젝트 레지스트리</text>
+<text x="48" y="276" font-size="12" fill="#6b7280">Service / Store / Skins</text>
+<rect x="352" y="152" width="240" height="72" rx="8" fill="#111827" stroke="#111827" stroke-width="1.2"/>
+<text x="368" y="184" font-size="15" font-weight="600" fill="#ffffff">레지스트리 병합</text>
+<text x="368" y="204" font-size="12" fill="#d1d5db">buildExtensionRegistry</text>
+<rect x="704" y="80" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="720" y="112" font-size="15" font-weight="600" fill="#111827">콘텐츠 · 회원 스킨</text>
+<text x="720" y="132" font-size="12" fill="#6b7280">Blog / Issue tracker / User</text>
+<rect x="704" y="224" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="720" y="256" font-size="15" font-weight="600" fill="#111827">관리자 구성</text>
+<text x="720" y="276" font-size="12" fill="#6b7280">Layout / Menu / Breadcrumb</text>
+<rect x="1024" y="152" width="216" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="1040" y="184" font-size="15" font-weight="600" fill="#111827">gjworks 화면</text>
+<text x="1040" y="204" font-size="12" fill="#6b7280">Core + Project</text>
+<rect x="32" y="432" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="48" y="464" font-size="15" font-weight="600" fill="#111827">코어 · 확장 이벤트 설정</text>
+<text x="48" y="484" font-size="12" fill="#6b7280">trigger.json / Handlers</text>
+<rect x="352" y="432" width="240" height="72" rx="8" fill="#111827" stroke="#111827" stroke-width="1.2"/>
+<text x="368" y="464" font-size="15" font-weight="600" fill="#ffffff">Trigger Hub</text>
+<text x="368" y="484" font-size="12" fill="#d1d5db">Merge / Map / Dispatch</text>
+<rect x="704" y="432" width="208" height="72" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.2"/>
+<text x="720" y="464" font-size="15" font-weight="600" fill="#111827">이벤트 핸들러</text>
+<text x="720" y="484" font-size="12" fill="#6b7280">Notification / Slack / Log</text>
+</svg>
