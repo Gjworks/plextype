@@ -6,6 +6,8 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { writeCoreVersion } from './write-core-version.mjs';
 import { isPlextypeSource, releaseArgs, sourceMarker } from './release.mjs';
+import { setAppName } from './set-app-name.mjs';
+import { findMissingWorkspaceDeps } from './check-workspace-deps.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
@@ -28,6 +30,9 @@ test('core release bumps only src/core/plextype.json; project release bumps pack
   assert.notEqual(project.npm, false);
   assert.equal(project.hooks, undefined);
   assert.equal(project.plugins['@release-it/conventional-changelog'].infile, 'CHANGELOG.project.md');
+  // 프로젝트 릴리스는 병합으로 들어온 코어 커밋을 변경 이력과 다음 버전 계산에서 뺀다.
+  assert.deepEqual(project.plugins['@release-it/conventional-changelog'].gitRawCommitsOpts, { firstParent: true });
+  assert.deepEqual(project.plugins['@release-it/conventional-changelog'].commitsOpts, { firstParent: true });
   assert.equal(read('package.json').scripts.release, 'node scripts/release.mjs');
 });
 
@@ -63,4 +68,40 @@ test('project-only packages are declared in the extensions workspace, not the co
     assert.equal(pkg.dependencies?.[name], undefined, `${name} is declared in both manifests`);
     assert.equal(pkg.devDependencies?.[name], undefined, `${name} is declared in both manifests`);
   }
+});
+
+// package.json의 name도 version처럼 프로젝트 소유다. 원본은 배포판 기본값을 유지한다.
+test('source repository keeps the distribution package name', { skip: !isPlextypeSource(root) }, () => {
+  assert.equal(read('package.json').name, 'plextype');
+});
+
+test('setAppName rewrites only the top-level name, and never in the source repository', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'plextype-name-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const manifest = '{\n  "name": "plextype",\n  "version": "0.1.0",\n  "config": { "name": "keep" }\n}\n';
+  fs.writeFileSync(path.join(dir, 'package.json'), manifest);
+  assert.equal(setAppName(dir, 'my-site'), true);
+  assert.equal(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'), manifest.replace('"plextype"', '"my-site"'));
+  assert.equal(setAppName(dir, 'my-site'), false);
+  for (const invalid of ['My Site', '_site', '', undefined, 'a/b']) assert.throws(() => setAppName(dir, invalid), /Invalid app name/);
+  fs.mkdirSync(path.join(dir, '.github/workflows'), { recursive: true });
+  fs.writeFileSync(path.join(dir, sourceMarker), '');
+  assert.equal(setAppName(dir, 'other'), false);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).name, 'my-site');
+});
+
+// Dockerfile이 루트 package.json만 복사해 설치하면 workspace 패키지가 빠진다. 빌드 전에 그 상태를 찾아 설치한다.
+test('prebuild finds extension packages that were not installed', t => {
+  assert.equal(read('package.json').scripts.prebuild, 'node scripts/check-workspace-deps.mjs');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'plextype-deps-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  assert.deepEqual(findMissingWorkspaceDeps(dir), []);
+  fs.mkdirSync(path.join(dir, 'src/extensions'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src/extensions/package.json'), JSON.stringify({ dependencies: { yauzl: '^3', '@scope/pkg': '^1' }, devDependencies: { '@types/yauzl': '^3' } }));
+  assert.deepEqual(findMissingWorkspaceDeps(dir), ['yauzl', '@scope/pkg']);
+  fs.mkdirSync(path.join(dir, 'node_modules/yauzl'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'node_modules/yauzl/package.json'), '{}');
+  fs.mkdirSync(path.join(dir, 'src/extensions/node_modules/@scope/pkg'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src/extensions/node_modules/@scope/pkg/package.json'), '{}');
+  assert.deepEqual(findMissingWorkspaceDeps(dir), []);
 });

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import readline from 'readline/promises';
+import { setAppName } from './scripts/set-app-name.mjs';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -131,6 +132,13 @@ FIREBASE_PRIVATE_KEY=${envValue('')}
     } catch (e) {
       console.log("⚠️  링크 생성 실패.");
     }
+  }
+
+  // package.json의 name을 입력받은 APP_NAME으로 맞춘다. 릴리스 안내와 관리자 System Stack 위젯에 이 이름이 표시된다.
+  try {
+    if (setAppName(process.cwd(), appName)) console.log(`✅ package.json의 name을 ${appName}(으)로 설정했습니다.`);
+  } catch {
+    console.log(`⚠️  APP_NAME(${appName})은 npm 패키지 이름으로 쓸 수 없어 package.json의 name은 그대로 둡니다.`);
   }
 
   console.log("\n📦 셋업: 패키지 설치 및 DB 초기화 중...");

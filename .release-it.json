@@ -15,7 +15,13 @@
     "@release-it/conventional-changelog": {
       "preset": "angular",
       "infile": "CHANGELOG.project.md",
-      "header": "# 변경 이력\n\n"
+      "header": "# 변경 이력\n\n",
+      "gitRawCommitsOpts": {
+        "firstParent": true
+      },
+      "commitsOpts": {
+        "firstParent": true
+      }
     }
   }
 }

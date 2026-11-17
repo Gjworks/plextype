@@ -154,12 +154,15 @@ export const proxyExtension: ProxyExtension = async (request, { getSession }) =>
 | 코어가 쓰는 npm 패키지 | 루트 `package.json`의 `dependencies` | 코어 |
 | 프로젝트·플러그인만 쓰는 npm 패키지 | `src/extensions/package.json` | 프로젝트 |
 | Plextype 코어 버전 | `src/core/plextype.json`의 `version` | 코어 릴리스 |
-| 프로젝트의 앱 버전 | 루트 `package.json`의 `version` | 프로젝트 |
+| 프로젝트의 앱 이름과 버전 | 루트 `package.json`의 `name`, `version` | 프로젝트 |
 
 - `src/extensions`는 npm workspace입니다. 루트에서 `npm install`을 한 번 실행하면 코어와 프로젝트 패키지가 함께 설치되고, 폴더가 없는 배포판에서도 그대로 동작합니다.
 - 프로젝트 패키지는 `npm install <패키지> -w src/extensions`로 추가합니다. `src/extensions/package.json`이 없으면 아래 내용으로 먼저 만듭니다.
 - React, Next.js, Prisma처럼 하나만 설치되어야 하는 패키지는 프로젝트에서 따로 추가하지 않고 코어 버전을 씁니다.
+- Docker 이미지를 만들 때 루트 `package.json`만 복사해 `npm install`을 하면 `src/extensions/package.json`의 패키지가 빠집니다. `npm run build`는 시작할 때 이를 확인해 빠진 패키지가 있으면 `npm install`을 한 번 더 실행하므로 Dockerfile을 고치지 않아도 빌드됩니다. 이 단계에서 네트워크를 쓸 수 없는 환경이면 Dockerfile에서 소스를 복사한(`COPY . .`) 다음에 `RUN npm install`을 넣습니다.
+
 - 원본과 배포판의 `package.json` `version`은 `0.1.0`으로 고정되어 있습니다. 릴리스가 이 줄을 바꾸면 자기 버전을 올린 프로젝트가 코어를 병합할 때마다 충돌하기 때문입니다. 프로젝트는 이 값을 자기 앱 버전으로 자유롭게 올립니다.
+- `name`도 프로젝트가 자기 앱 이름으로 바꿉니다. 원본은 `plextype`에서 바꾸지 않으므로 병합 충돌이 없고, 릴리스 안내와 System Stack 위젯에 이 이름이 표시됩니다. `npm run setup`이 입력받은 `APP_NAME`으로 바꿔 주며, 나중에 바꿀 때는 `node scripts/set-app-name.mjs <이름>`을 씁니다. 이름은 영문 소문자, 숫자, `.`, `_`, `-`만 쓰고 영문 소문자나 숫자로 시작합니다.
 - 관리자 대시보드의 System Stack 위젯이 앱 버전과 Plextype 버전을 따로 보여줍니다.
 
 ```json
@@ -184,6 +187,7 @@ export const proxyExtension: ProxyExtension = async (request, { getSession }) =>
 - 원본 저장소는 배포판으로 나가지 않는 `.github/workflows/sync-to-plextype.yml`이 있는지로 구분합니다.
 - 두 경우 모두 `chore(release): v<버전>` 커밋과 `v<버전>` 태그를 만들어 push합니다. `GITHUB_TOKEN` 환경 변수가 있으면 GitHub Release도 자동으로 만들고, 없으면 내용이 채워진 작성 화면 링크를 출력합니다.
 - 다음 버전은 지난 태그 이후 커밋 메시지의 `fix:`(패치), `feat:`(마이너) 접두사로 정합니다. 접두사를 쓰지 않는 프로젝트는 `npm run release -- 1.2.0`처럼 버전을 직접 줍니다.
+- 프로젝트 릴리스는 `main`에 직접 쌓인 커밋만 봅니다(`--first-parent`). `git merge upstream/main`으로 들어온 코어 커밋은 프로젝트의 변경 이력과 다음 버전 계산에 들어가지 않습니다. 코어를 `rebase`로 받으면 코어 커밋이 프로젝트 이력에 직접 쌓여 이 구분이 되지 않으므로 `merge`를 씁니다.
 - 프로젝트는 `CHANGELOG.md`와 `src/core/plextype.json`을 고치지 않습니다. 둘은 코어 병합으로만 바뀝니다.
 - 프로젝트의 태그와 Plextype의 태그는 둘 다 `v<버전>` 모양이라, 코어를 받을 때 태그는 가져오지 않습니다("코어 업데이트 받기" 참고).
 
