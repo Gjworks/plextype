@@ -37,11 +37,15 @@ export interface TiptapEditorProps {
   onChange?: (html: string) => void;
   variant?: "default" | "compact";
   readOnly?: boolean;
+  // 바깥 테두리. boxed는 각진 테두리 하나, plain은 테두리 없이 부모 상자에 꼭 맞게 들어간다.
+  frame?: "boxed" | "plain";
+  // 모서리 둥글기, 그림자, 포커스 링처럼 스킨마다 다른 겉모양. 에디터는 기본으로 이런 장식을 갖지 않는다.
+  className?: string;
 }
 const SHIKI_THEME = 'slack-ochin'; // 희정님 스타일
 
 const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
-  const { onChange, initialContent, variant = "default", readOnly = false } = props;
+  const { onChange, initialContent, variant = "default", readOnly = false, frame = "boxed", className = "" } = props;
   const isCompact = variant === "compact";
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [linkUrl, setLinkUrl] = useState(""); // 입력창의 URL 상태
@@ -177,7 +181,7 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
   if (readOnly) return <EditorContent editor={editor} />;
 
   return (
-    <div className="w-full border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-md shadow-gray-100 transition-all duration-200 hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 dark:border-dark-700 dark:bg-dark-900 dark:shadow-black/30 dark:hover:border-dark-500 dark:focus-within:border-dark-500 dark:focus-within:ring-dark-800/80 flex flex-col">
+    <div className={`flex w-full flex-col overflow-hidden bg-white dark:bg-dark-900 ${frame === "boxed" ? "border border-gray-200 transition-colors duration-200 hover:border-gray-300 focus-within:border-gray-400 dark:border-dark-700 dark:hover:border-dark-500 dark:focus-within:border-dark-500" : ""} ${className}`}>
       {/* 🛠️ 툴바 영역 */}
       <div className="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border-b border-gray-100 sticky top-0 z-20 dark:border-dark-800 dark:bg-dark-950">
 
