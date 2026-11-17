@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { ArrowUp, ChevronDown, MessageSquare } from "lucide-react";
 
 type Entry = { id: string; title: string; level: number };
+
+// 댓글 화면이 자기 영역에 붙이는 id. 목차 아래의 "댓글" 버튼이 이 위치로 이동한다.
+const COMMENTS_ID = "comments";
+const scrollBehavior = () => (window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth") as ScrollBehavior;
+const jumpClass = "flex items-center gap-1 text-[11px] font-semibold text-gray-400 transition-colors hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500 dark:text-dark-500 dark:hover:text-dark-100";
 
 export default function ArticleWithToc({ children, enabled }: { children: ReactNode; enabled: boolean }) {
   const root = useRef<HTMLDivElement>(null);
@@ -11,6 +16,7 @@ export default function ArticleWithToc({ children, enabled }: { children: ReactN
   const prefix = `article-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const [entries, setEntries] = useState<Entry[]>([]);
   const [active, setActive] = useState("");
+  const [hasComments, setHasComments] = useState(false);
 
   useEffect(() => {
     const container = tocScroll.current;
@@ -45,6 +51,8 @@ export default function ArticleWithToc({ children, enabled }: { children: ReactN
         if (!heading.id || document.getElementById(heading.id) !== heading) heading.id = `${prefix}-${index}`;
         heading.style.scrollMarginTop = "120px";
       });
+      // 댓글은 본문보다 늦게 그려질 수 있어 본문이 바뀔 때마다 다시 확인한다.
+      setHasComments(Boolean(container.querySelector(`#${COMMENTS_ID}`)));
       setEntries(headings.map(heading => ({ id: heading.id, title: heading.textContent!.trim(), level: Number(heading.tagName.slice(1)) })));
       schedule();
     };
@@ -82,8 +90,18 @@ export default function ArticleWithToc({ children, enabled }: { children: ReactN
     {visible && <aside className="order-first px-3 xl:order-last xl:px-0">
       <div className="sticky top-28 hidden xl:block">
         <p className="mb-3 pl-5 text-[11px] font-semibold text-gray-400 dark:text-dark-500">ON THIS PAGE</p>
-        <div ref={tocScroll} tabIndex={0} role="region" aria-label="스크롤 가능한 본문 목차" className="max-h-[calc(100svh-11rem)] overflow-y-auto overscroll-contain pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-2 focus-visible:outline-primary-500">
+        <div ref={tocScroll} tabIndex={0} role="region" aria-label="스크롤 가능한 본문 목차" className="max-h-[calc(100svh-14rem)] overflow-y-auto overscroll-contain pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-2 focus-visible:outline-primary-500">
           {links(entries)}
+        </div>
+        <div className="mt-4 flex items-center gap-4 pl-5">
+          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: scrollBehavior() })} className={jumpClass}>
+            <ArrowUp size={12} strokeWidth={2.25} aria-hidden="true" />맨 위로
+          </button>
+          {hasComments && (
+            <button type="button" onClick={() => document.getElementById(COMMENTS_ID)?.scrollIntoView({ behavior: scrollBehavior(), block: "start" })} className={jumpClass}>
+              <MessageSquare size={12} strokeWidth={2.25} aria-hidden="true" />댓글
+            </button>
+          )}
         </div>
       </div>
       <details className="border-y border-gray-200 py-3 dark:border-dark-800 xl:hidden"><summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium text-gray-600 dark:text-dark-300">이 글의 목차<ChevronDown size={15} /></summary><div className="mt-3">{links(entries)}</div></details>
