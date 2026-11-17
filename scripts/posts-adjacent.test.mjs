@@ -29,15 +29,17 @@ assert.deepEqual(calls[2].where.AND[1].OR[1], { createdAt: date, id: { gt: 42 } 
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 let neighbors = { previous: { slug: 'older', title: '<script>long title</script>' }, next: null };
-const Component = load('src/modules/posts/tpl/default/adjacentPosts.tsx', {
+const Component = load('src/modules/posts/tpl/default/boardAdjacentPosts.tsx', {
   'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
   '../../actions/adjacent.action': { getAdjacentPostsAction: async () => neighbors },
+  './boardStyles': { boardLabelCell: 'board-label', boardRowLine: 'board-row' },
 }).default;
 const html = renderToStaticMarkup(await Component({ mid: 'blog', slug: 'current' }));
 assert.match(html, /href="\/posts\/blog\/older"/);
 assert.match(html, /다음 글이 없습니다/);
 assert.match(html, /&lt;script&gt;/);
-assert.match(html, /sm:grid-cols-2/);
+assert.match(html, /이전 글/);
+assert.match(html, /board-row/);
 neighbors = { previous: null, next: null };
 assert.equal(await Component({ mid: 'blog', slug: 'current' }), null);
 console.log('adjacent posts: board/owner/secret scope, timestamp tie-break, links, empty state and rendering passed');

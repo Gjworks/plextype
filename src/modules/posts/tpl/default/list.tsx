@@ -1,21 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useTransition } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ImageIcon, LockKeyhole, PenLine } from "lucide-react";
 import PostsHeader from "./header";
 import { usePostContext } from "./PostProvider";
-import { formatKstRelative } from "@/core/utils/date/kst";
-
-// 💡 1. 쓸모없어진 getPostsAction 대신 우리의 새 매니저를 불러옵니다!
-import { getDocumentList } from "@/modules/document/actions/document.action";
-
+import { boardPrimaryButton, boardRowLine, boardTopLine } from "./boardStyles";
+import { toKstDayjs } from "@/core/utils/date/kst";
 import PageNavigation from "@components/nav/PageNavigation";
-import Button from "@components/button/Button";
 import PostNotPermission from "@/modules/posts/tpl/default/notPermission";
 
-// 💡 2. 새 Action의 응답 규격(navigation)에 맞춰 인터페이스를 통일합니다!
 interface Pagination {
   page: number;
   totalPages: number;
@@ -23,248 +18,140 @@ interface Pagination {
   totalCount: number;
 }
 
-const PostsListClient = ({
-  posts,
-  pagination: initialPagination,
-}: {
-  posts: any[];
-  pagination: Pagination;
-}) => {
+type BoardPost = {
+  id: number;
+  slug: string;
+  title?: string | null;
+  thumbnail?: string | null;
+  createdAt: string;
+  isNotice?: boolean | null;
+  isSecrets?: boolean | null;
+  commentCount?: number | null;
+  readCount?: number | null;
+  category?: { title: string } | null;
+  user?: { nickName?: string | null } | null;
+};
+
+// 목록 라우트가 한 페이지에 요청하는 글 수. 글 번호를 거꾸로 매길 때 쓴다.
+const PAGE_SIZE = 10;
+const NEW_POST_HOURS = 24;
+
+// 오늘 쓴 글은 시각, 그 전 글은 날짜로 보여준다.
+const formatListDate = (value: string) => {
+  const date = toKstDayjs(value);
+  if (!date) return "";
+  return date.format("YYYY-MM-DD") === toKstDayjs(new Date())?.format("YYYY-MM-DD") ? date.format("HH:mm") : date.format("YYYY.MM.DD");
+};
+
+const isNewPost = (value: string) => Date.now() - new Date(value).getTime() < NEW_POST_HOURS * 60 * 60 * 1000;
+
+const headCell = "h-11 px-2 text-center text-[13px] font-medium text-gray-600 dark:text-dark-300";
+const metaCell = "hidden px-2 text-center text-[13px] text-gray-500 dark:text-dark-400 md:table-cell";
+
+const PostsListClient = ({ posts, pagination }: { posts: BoardPost[]; pagination: Pagination }) => {
   const router = useRouter();
-  const [documentInfo, setDocumentInfo] = useState(posts);
-  const [pagination, setPagination] = useState(initialPagination);
-  const [page, setPage] = useState(pagination.page); // 💡 currentPage 대신 page 사용
+  const searchParams = useSearchParams();
+  const [pending, startTransition] = useTransition();
   const { postInfo, permissions } = usePostContext();
 
-  useEffect(() => {
-    setDocumentInfo(posts);
-    setPagination(initialPagination);
-    setPage(initialPagination.page);
-  }, [posts, initialPagination]);
+  if (!permissions.doList) return <PostNotPermission />;
 
-  if (!permissions.doList) {
-    return <PostNotPermission />;
-  }
+  const base = `/posts/${encodeURIComponent(postInfo.mid)}`;
+  const firstNumber = pagination.totalCount - (pagination.page - 1) * PAGE_SIZE;
 
-  // 🌟 3. 페이지 변경 핸들러 (ActionState 포장지 뜯기 적용)
-  const handlePageChange = async (newPage: number) => {
-    setPage(newPage);
-
-    // 새 매니저(Action)에게 요청! (한 페이지에 몇 개씩 보여줄지 10개로 고정하거나 기존 상태 사용)
-    const res = await getDocumentList(postInfo.mid, newPage, 10);
-    // 포장지 뜯고 상태 업데이트
-    if (res.success && res.data) {
-      setDocumentInfo(res.data.documentList);
-      setPagination(res.data.navigation);
-    }
-
-    // URL 업데이트
-    router.replace(`/posts/${postInfo.pid}?page=${newPage}`, { scroll: false });
+  const changePage = (page: number) => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.set("page", String(page));
+    startTransition(() => router.push(`${base}?${params.toString()}`));
   };
 
-  console.log(posts);
-
   return (
-    <>
+    <div className="w-full pb-16">
       <PostsHeader />
-      <div className=" mb-6">
-        {documentInfo.map((doc) => (
-          <div
-            key={doc.id}
-            className="border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-dark-800 dark:hover:bg-dark-900/70"
-          >
-            <div className="flex gap-4 flex-1 px-3 py-4 lg:py-8">
-              <div className="relative shrink-0 w-[80px] h-[80px] rounded-md overflow-hidden bg-gray-100 flex items-center justify-center dark:bg-dark-900 dark:ring-1 dark:ring-dark-800">
-                {doc.thumbnail ? (
-                  <Image
-                    src={doc.thumbnail}
-                    alt={doc.title || "썸네일"}
-                    width={80}
-                    height={80}
-                    className="object-cover w-full h-full text-[12px] text-gray-400"
-                  />
-                ) : (
-                  <span className="text-gray-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                      />
-                    </svg>
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center flex-1 flex-wrap gap-4">
-                <Link
-                  href={`/posts/${postInfo.mid}/${doc.slug}`}
-                  className="w-full lg:flex-1"
-                >
-                  <div>
-                    <div className="flex items-center gap-2 text-sm lg:text-base font-semibold text-gray-950 dark:text-white line-clamp-2 mb-2">
-                      {doc.title}
-                      {doc.thumbnail && (
-                        <span className="text-gray-500">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.25}
-                            stroke="currentColor"
-                            className="w-4 h-4"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                            />
-                          </svg>
-                        </span>
-                      )}
-                    </div>
-                    <div
-                      className={`mb-4 text-sm wrap-break-word break-keep text-gray-500 dark:text-gray-300 line-clamp-2`}
-                    >
-                      {doc.content}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {doc.category && (
-                        <div className="relative text-gray-900 text-xs before:bg-gray-300 dark:text-dark-300 dark:before:bg-dark-700">
-                          {doc.category.title}
-                        </div>
-                      )}
-                      <div className="relative flex items-center gap-1.5 text-gray-900 dark:text-dark-100 text-xs before:bg-gray-300 dark:before:bg-dark-700">
-                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400 dark:bg-dark-800 dark:text-dark-300">
-                          {doc.user?.profile?.profileImage ? (
-                            <img
-                              src={doc.user.profile.profileImage}
-                              alt={doc.user?.nickName || "작성자"}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            doc.user?.nickName?.slice(0, 1).toUpperCase() || "작"
-                          )}
-                        </span>
-                        <span>{doc.user?.nickName || "작성자"}</span>
-                      </div>
-                      <div className="relative text-gray-400 text-xs before:bg-gray-300">
-                        {formatKstRelative(doc.createdAt)}
-                      </div>
-                      <div className="relative flex gap-2 before:bg-gray-300 dark:before:bg-dark-700">
-                        <div className="text-xs text-gray-400">댓글</div>
-                        <div className="text-xs text-gray-700 dark:text-dark-300">
-                          {doc.commentCount}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <div className="text-xs text-gray-400">조회수</div>
-                        <div className="text-xs text-gray-700 dark:text-dark-300">
-                          {doc.readCount}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
 
-                {/* 우측 댓글 알림 영역 등 (기존 하드코딩된 부분 유지) */}
-                <div className="flex items-center w-full lg:w-1/4">
-                  {doc.latestComment ? (
-                    <div className="flex-1 py-2 rounded-md ">
-                      <div className="flex items-center gap-4 lg:block pl-0 lg:px-4 lg:border-l border-gray-200 dark:border-dark-800">
-                        <div className="flex items-center gap-2 mb-0 lg:mb-1">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-4 text-gray-400"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
-                            />
-                          </svg>
-                          <div className="!text-[12px] lg:text-sm text-gray-600 dark:text-dark-100 line-clamp-1">
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-[10px] font-semibold text-gray-400 dark:bg-dark-800 dark:text-dark-300">
-                                {doc.latestComment?.user?.profile?.profileImage ? (
-                                  <img
-                                    src={doc.latestComment.user.profile.profileImage}
-                                    alt={doc.latestComment?.user?.nickName || "익명"}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  doc.latestComment?.user?.nickName?.slice(0, 1).toUpperCase() || "익"
-                                )}
-                              </span>
-                              {doc.latestComment?.user?.nickName || "익명"}
-                            </span>
-                          </div>
-                          <div className="text-gray-400 !text-[12px]">
-                            {formatKstRelative(doc.latestComment?.createdAt)}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 !text-[12px] text-gray-500 dark:text-dark-400">
-                          {doc.latestComment.image && (
-                            <Image
-                              src={doc.latestComment.image}
-                              alt="댓글 이미지"
-                              width={20}
-                              height={20}
-                              className="h-5 w-5 shrink-0 rounded object-cover"
-                            />
-                          )}
-                          <span className="line-clamp-1">
-                            {doc.latestComment.content}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    /* 댓글이 없을 때 보여줄 빈 상태 (선택 사항) */
-                    <div className="hidden lg:flex flex-1 items-center justify-center py-2 px-4 border-l border-gray-100 italic text-[12px] text-gray-400 dark:border-dark-800 dark:text-dark-500">
-                      아직 댓글이 없습니다.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="flex items-center justify-between pb-2 text-[13px] text-gray-500 dark:text-dark-400">
+        <span>전체 <strong className="font-semibold text-gray-900 dark:text-dark-100">{pagination.totalCount.toLocaleString()}</strong>건</span>
+        <span>{pagination.page} / {Math.max(pagination.totalPages, 1)} 페이지</span>
       </div>
-      <div className="flex items-center justify-end gap-4">
-        <div className="">
-          {/* 💡 Link로 감싸서 이동 기능을 주고, Button으로 디자인과 애니메이션을 담당합니다. */}
-          <Link href={`/posts/${postInfo.mid}/create`}>
-            <Button type="button" className="px-8">
-              글쓰기
-            </Button>
+
+      <table aria-busy={pending} className={`w-full table-fixed border-collapse ${boardTopLine} ${pending ? "pointer-events-none opacity-50" : ""}`}>
+        <caption className="sr-only">{postInfo.moduleName} 글 목록</caption>
+        <colgroup>
+          <col className="hidden w-[72px] md:table-column" />
+          <col />
+          <col className="hidden w-[120px] md:table-column" />
+          <col className="hidden w-[96px] md:table-column" />
+          <col className="hidden w-[72px] md:table-column" />
+        </colgroup>
+        <thead className={`hidden bg-gray-50 dark:bg-dark-900 md:table-header-group ${boardRowLine}`}>
+          <tr>
+            <th scope="col" className={headCell}>번호</th>
+            <th scope="col" className={headCell}>제목</th>
+            <th scope="col" className={headCell}>글쓴이</th>
+            <th scope="col" className={headCell}>날짜</th>
+            <th scope="col" className={headCell}>조회</th>
+          </tr>
+        </thead>
+        <tbody>
+          {!posts.length && (
+            <tr className={boardRowLine}>
+              <td colSpan={5} className="py-20 text-center text-sm text-gray-500 dark:text-dark-400">등록된 글이 없습니다.</td>
+            </tr>
+          )}
+          {posts.map((post, index) => {
+            const author = post.user?.nickName || "작성자";
+            const comments = post.commentCount || 0;
+            return (
+              <tr
+                key={post.id}
+                className={`${boardRowLine} transition-colors hover:bg-gray-50 dark:hover:bg-dark-900/70 ${post.isNotice ? "bg-gray-50/70 dark:bg-dark-900/50" : ""}`}
+              >
+                <td className={metaCell}>
+                  {post.isNotice
+                    ? <span className="inline-flex h-6 items-center rounded-sm bg-gray-900 px-2 text-[11px] font-semibold text-white dark:bg-dark-100 dark:text-dark-950">공지</span>
+                    : <span className="tabular-nums">{Math.max(firstNumber - index, 1)}</span>}
+                </td>
+                <td className="px-2 py-3 md:py-0">
+                  <Link href={`${base}/${encodeURIComponent(post.slug)}`} className="group flex min-w-0 items-center gap-1.5 md:h-12">
+                    {post.isNotice && <span className="inline-flex h-5 shrink-0 items-center rounded-sm bg-gray-900 px-1.5 text-[11px] font-semibold text-white dark:bg-dark-100 dark:text-dark-950 md:hidden">공지</span>}
+                    {post.category?.title && <span className="shrink-0 text-[13px] text-gray-500 dark:text-dark-400">[{post.category.title}]</span>}
+                    {post.isSecrets && <LockKeyhole size={13} aria-label="비밀글" className="shrink-0 text-gray-400 dark:text-dark-500" />}
+                    <span className={`truncate text-sm text-gray-900 group-hover:underline dark:text-dark-100 ${post.isNotice ? "font-semibold" : ""}`}>
+                      {post.title || "제목 없음"}
+                    </span>
+                    {comments > 0 && <span className="shrink-0 text-[13px] font-semibold tabular-nums text-primary-600 dark:text-primary-400" aria-label={`댓글 ${comments}개`}>[{comments}]</span>}
+                    {post.thumbnail && <ImageIcon size={13} aria-label="이미지 있음" className="shrink-0 text-gray-400 dark:text-dark-500" />}
+                    {isNewPost(post.createdAt) && <span aria-label="새 글" className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-primary-500 text-[10px] font-bold leading-none text-white">N</span>}
+                  </Link>
+                  <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-500 dark:text-dark-400 md:hidden">
+                    <span>{author}</span>
+                    <span aria-hidden="true" className="h-2.5 w-px bg-gray-300 dark:bg-dark-700" />
+                    <span>{formatListDate(post.createdAt)}</span>
+                    <span aria-hidden="true" className="h-2.5 w-px bg-gray-300 dark:bg-dark-700" />
+                    <span>조회 {(post.readCount || 0).toLocaleString()}</span>
+                  </div>
+                </td>
+                <td className={`${metaCell} truncate`}>{author}</td>
+                <td className={`${metaCell} tabular-nums`}>{formatListDate(post.createdAt)}</td>
+                <td className={`${metaCell} tabular-nums`}>{(post.readCount || 0).toLocaleString()}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {permissions.doWrite && (
+        <div className="flex justify-end pt-4">
+          <Link href={`${base}/create`} className={boardPrimaryButton}>
+            <PenLine size={14} aria-hidden="true" />글쓰기
           </Link>
         </div>
+      )}
+
+      <div className="flex justify-center pt-8">
+        <PageNavigation page={pagination.page} totalPages={pagination.totalPages} onPageChange={changePage} />
       </div>
-      <div className="pt-10 pb-20">
-        <div className="">
-          <div className="flex justify-between gap-4 flex-wrap">
-            <div className="w-full flex justify-center">
-              <PageNavigation
-                page={page}
-                totalPages={pagination.totalPages}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 };
 

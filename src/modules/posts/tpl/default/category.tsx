@@ -1,114 +1,44 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation"; // useSearchParams 추가
+import { usePathname, useSearchParams } from "next/navigation";
 import { usePostContext } from "@/modules/posts/tpl/default/PostProvider";
 
+const tabClass = (active: boolean) =>
+  "-ml-px inline-flex h-9 shrink-0 items-center whitespace-nowrap border px-4 text-[13px] transition-colors first:ml-0 focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-primary-500 " +
+  (active
+    ? "relative z-[1] border-gray-900 bg-gray-900 font-semibold text-white dark:border-dark-100 dark:bg-dark-100 dark:text-dark-950"
+    : "border-gray-300 bg-white text-gray-600 hover:text-gray-950 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-300 dark:hover:text-white");
+
+// 분류가 없는 게시판에서는 "전체" 하나만 남으므로 아무것도 그리지 않는다.
 const PostsCategories = () => {
-  const pathname = usePathname();
-  const searchParams = useSearchParams(); // URL 쿼리 파라미터 읽기
-
-  const [activeTabIndex, setActiveTabIndex] = useState(0);
-  const [tabUnderlineWidth, setTabUnderlineWidth] = useState(0);
-  const [tabUnderlineLeft, setTabUnderlineLeft] = useState(0);
-
-  const tabsRef = useRef<(HTMLAnchorElement | null)[]>([]);
+  const pathname = usePathname() || "/";
+  const currentCategory = useSearchParams()?.get("category");
   const { postInfo } = usePostContext();
-  const Category = postInfo.categories;
-  console.log(Category)
+  const categories = postInfo.categories ?? [];
+  if (!categories.length) return null;
 
-  // URL의 category 파라미터 값 가져오기
-  const currentCategory = searchParams?.get("category");
-
-  // 1. URL이 변경되면(카테고리 클릭 시) activeTabIndex를 업데이트
-  useEffect(() => {
-    if (!currentCategory) {
-      // 카테고리 파라미터가 없으면 '전체'(0번 인덱스)
-      setActiveTabIndex(0);
-    } else {
-      // 카테고리 파라미터가 있으면 해당 ID를 가진 인덱스를 찾음
-      const targetIndex = Category.findIndex(
-        (item) => String(item.id) === currentCategory
-      );
-      // 찾았으면 +1 (0번은 '전체'니까), 못 찾았으면 0
-      setActiveTabIndex(targetIndex !== -1 ? targetIndex + 1 : 0);
-    }
-  }, [currentCategory, Category]);
-
-  // 2. activeTabIndex가 변경될 때마다 밑줄 위치(애니메이션) 업데이트
-  useEffect(() => {
-    function setTabPosition() {
-      const currentTab = tabsRef.current[activeTabIndex];
-      if (currentTab) {
-        setTabUnderlineLeft(currentTab.offsetLeft);
-        setTabUnderlineWidth(currentTab.clientWidth);
-      }
-    }
-
-    setTabPosition();
-    window.addEventListener("resize", setTabPosition);
-
-    return () => window.removeEventListener("resize", setTabPosition);
-  }, [activeTabIndex]);
+  const hasActiveCategory = categories.some((item) => String(item.id) === currentCategory);
 
   return (
-    <div className="flex top-0 lg:top-0 w-full bg-white/90 dark:bg-dark-950/40 backdrop-blur-lg z-90 border-b border-gray-100 dark:border-dark-700">
-      <div className="relative overflow-scroll-hide overflow-hidden overflow-x-auto flex justify-start md:justify-center gap-8 px-3">
-
-        {/* '전체' 링크: 카테고리 쿼리를 제거하여 원래 경로로 이동 */}
-        <Link
-          key={0}
-          href={pathname || "/"}
-          ref={(el) => {
-            tabsRef.current[0] = el;
-          }}
-          className={
-            "block whitespace-nowrap py-4 px-1 text-sm hover:text-gray-950 dark:hover:text-dark-300 " +
-            (activeTabIndex === 0
-              ? "text-gray-950 hover:text-gray-400 dark:text-white dark:hover:text-white font-bold"
-              : "text-gray-600 dark:text-dark-300 dark:hover:text-white")
-          }
-        >
-          전체
-        </Link>
-
-        {Category &&
-          Category.map((item, index) => {
-            const tabIndex = index + 1;
-
-            // 현재 탭이 활성화 상태인지 확인
-            const isActive = activeTabIndex === tabIndex;
-
-            return (
-              <Link
-                key={tabIndex}
-                // href 설정: 현재 경로 + ?category=아이디
-                href={{
-                  pathname: pathname,
-                  query: { category: item.id }
-                }}
-                ref={(el) => {
-                  tabsRef.current[tabIndex] = el;
-                }}
-                className={
-                  "block whitespace-nowrap py-4 px-1 text-sm hover:text-gray-950 dark:hover:text-dark-300 " +
-                  (isActive
-                    ? "text-gray-950 hover:text-gray-400 dark:text-white dark:hover:text-white font-bold"
-                    : "text-gray-600 dark:text-dark-300 dark:hover:text-white")
-                }
-              >
-                {item.title}
-              </Link>
-            );
-          })}
-
-        <div
-          className="absolute bottom-0 block h-1 bg-gray-950 dark:bg-white transition-all duration-300"
-          style={{ left: tabUnderlineLeft, width: tabUnderlineWidth }}
-        ></div>
-      </div>
-    </div>
+    <nav aria-label="분류" className="flex overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <Link href={pathname} aria-current={hasActiveCategory ? undefined : "page"} className={tabClass(!hasActiveCategory)}>
+        전체
+      </Link>
+      {categories.map((item) => {
+        const active = String(item.id) === currentCategory;
+        return (
+          <Link
+            key={item.id}
+            href={{ pathname, query: { category: item.id } }}
+            aria-current={active ? "page" : undefined}
+            className={tabClass(active)}
+          >
+            {item.title}
+          </Link>
+        );
+      })}
+    </nav>
   );
 };
 

@@ -11,9 +11,7 @@ import { usePostContext } from "./PostProvider";
 import PostNotPermission from "@/modules/posts/tpl/default/notPermission";
 import ExtraFieldRenderer from "@/modules/posts/tpl/default/ExtraFieldRenderer";
 import TiptapEditor from "@components/editor/tiptap/tiptapEditor";
-import Button from "@components/button/Button";
-import InputField from "@components/form/InputField";
-import SelectField from "@components/form/SelectField";
+import { boardButton, boardFlat, boardInput, boardLabelCell, boardPrimaryButton, boardRowLine, boardTopLine } from "./boardStyles";
 
 // 1. 프롭 타입 정의 (이게 빠지면 에러 납니다)
 interface PostWriteProps {
@@ -32,7 +30,6 @@ interface PostWriteProps {
 const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
   const { postInfo, permissions } = usePostContext();
   const router = useRouter();
-  console.log(postInfo)
   // 2. 필수 상태 및 Ref 선언
   const formRef = useRef<HTMLFormElement | null>(null);
   const editorRef = useRef<any>(null);
@@ -137,206 +134,180 @@ const PostWrite: React.FC<PostWriteProps> = ({ savePost, existingPost }) => {
     if (thumbnail === file.path) setThumbnail("");
   };
 
-  const IconCategory = () => (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-      />
-    </svg>
-  );
+  const rowClass = `flex flex-col sm:flex-row ${boardRowLine}`;
+  const labelClass = `flex shrink-0 items-center px-4 py-2 sm:w-32 sm:py-3 ${boardLabelCell}`;
+  const fieldClass = "min-w-0 flex-1 px-4 py-3";
+  const errorClass = "mt-1.5 text-xs leading-5 text-red-500";
+  const checkboxClass = "h-4 w-4 cursor-pointer rounded-sm border-gray-300 accent-gray-900 dark:border-dark-600 dark:accent-dark-200";
+  const hasCategories = postInfo.categories && postInfo.categories.length > 0;
 
   return (
-    <form ref={formRef} className="space-y-6">
-      {/* 4. 수정 모드일 때 ID 전송 */}
+    <form ref={formRef} className={`w-full pb-16 pt-8 sm:pt-10 ${boardFlat}`} onSubmit={(event) => event.preventDefault()}>
+      {/* 수정할 때는 글 ID를 함께 보낸다. */}
       {existingPost && <input type="hidden" name="id" value={existingPost.id} />}
       <input type="hidden" name="thumbnail" value={thumbnail} />
 
-      <div className="text-center text-2xl font-semibold py-8">{postInfo.moduleName}</div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 pb-4">
+        <h1 className="text-xl font-bold tracking-[-0.01em] text-gray-950 dark:text-dark-50 sm:text-2xl">{postInfo.moduleName}</h1>
+        <p className="text-[13px] text-gray-500 dark:text-dark-400">{existingPost ? "글 수정" : "글쓰기"}</p>
+      </div>
 
       {formMessage && (
-        <div className="rounded-md bg-red-50 px-3 py-2 text-sm leading-6 text-red-500">
+        <div role="alert" className="mb-3 rounded-sm border border-red-200 bg-red-50 px-4 py-2.5 text-sm leading-6 text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300">
           {formMessage}
         </div>
       )}
 
-      {postInfo.categories && postInfo.categories.length > 0 && (
-        <SelectField
-          ref={categoryRef}
-          inputTitle="카테고리"
-          name="categoryId"
-          defaultValue={existingPost?.categoryId ?? ""}
-          options={postInfo.categories}
-          icon={<IconCategory />} // 필요하다면 아이콘 추가
-          error={fieldErrors?.categoryId}
-        />
-      )}
-
-      <InputField
-        ref={titleRef}
-        inputTitle="제목"
-        type="text"
-        name="title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="제목을 입력해주세요."
-        className="w-full border-b-2 py-3 text-xl outline-none focus:border-blue-500 font-semibold"
-        error={fieldErrors?.title}
-        // 혹시 label이 필요한 구조라면 아래 주석을 해제하세요.
-        // label="제목"
-      />
-
-      {/* 🌟 [추가] 확장 필드 렌더러 */}
-      {postInfo.extraFields && postInfo.extraFields.length > 0 && (
-        <div className="">
-          <ExtraFieldRenderer
-            fields={postInfo.extraFields}
-            value={extraData}
-            onChange={(newData) => setExtraData(newData)}
-          />
-        </div>
-      )}
-
-      {postInfo.config?.secretPost && (
-        <div className="rounded-md border border-gray-100 bg-white p-4 dark:border-dark-700 dark:bg-dark-900/80">
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={isSecrets}
-              onChange={(event) => setIsSecrets(event.target.checked)}
-              className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
-            />
-            <span>
-              <span className="block text-sm font-semibold text-gray-800 dark:text-dark-100">비밀글로 작성</span>
-              <span className="mt-1 block text-xs leading-5 text-gray-400 dark:text-dark-400">
-                작성자와 관리자, 비밀번호를 입력한 사용자만 본문과 댓글을 볼 수 있습니다.
-              </span>
-            </span>
-          </label>
-
-          {isSecrets && (
-            <div className="mt-4">
-              <InputField
-                ref={secretPasswordRef}
-                inputTitle="비밀글 비밀번호"
-                type="password"
-                name="secretPassword"
-                placeholder={existingPost?.isSecrets ? "변경할 때만 새 비밀번호를 입력하세요." : "비밀글 비밀번호를 입력해주세요."}
-                error={fieldErrors?.secretPassword || fieldErrors?.isSecrets}
-              />
+      <div className={boardTopLine}>
+        {hasCategories && (
+          <div className={rowClass}>
+            <label htmlFor="post-category" className={labelClass}>분류</label>
+            <div className={fieldClass}>
+              <select
+                ref={categoryRef}
+                id="post-category"
+                name="categoryId"
+                defaultValue={existingPost?.categoryId ?? ""}
+                aria-invalid={Boolean(fieldErrors?.categoryId)}
+                className={`${boardInput} sm:w-60`}
+              >
+                <option value="">분류 선택</option>
+                {postInfo.categories.map((category: { id: number; title: string }) => (
+                  <option key={category.id} value={category.id}>{category.title}</option>
+                ))}
+              </select>
+              {fieldErrors?.categoryId && <p className={errorClass}>{fieldErrors.categoryId}</p>}
             </div>
-          )}
-        </div>
-      )}
-
-      {/* 에디터 (Tiptap) */}
-      <div className="min-h-[400px]">
-        <TiptapEditor
-          ref={editorRef}
-          initialContent={existingPost?.content || ""}
-          // 🌟 빈 함수를 추가해서 에러를 해결합니다.
-          onChange={(html: string) => {
-            setContent(html);
-          }}
-        />
-        {fieldErrors?.content && (
-          <div className="mt-1.5 text-xs leading-5 text-red-500">
-            {fieldErrors.content}
           </div>
         )}
+
+        <div className={rowClass}>
+          <label htmlFor="post-title" className={labelClass}>제목</label>
+          <div className={fieldClass}>
+            <input
+              ref={titleRef}
+              id="post-title"
+              type="text"
+              name="title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="제목을 입력해주세요."
+              aria-invalid={Boolean(fieldErrors?.title)}
+              className={boardInput}
+            />
+            {fieldErrors?.title && <p className={errorClass}>{fieldErrors.title}</p>}
+          </div>
+        </div>
+
+        <div className={rowClass}>
+          <span className={labelClass}>옵션</span>
+          <div className={`${fieldClass} flex flex-wrap items-center gap-x-6 gap-y-2`}>
+            {postInfo.config?.secretPost && (
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-dark-100">
+                <input type="checkbox" checked={isSecrets} onChange={(event) => setIsSecrets(event.target.checked)} className={checkboxClass} />
+                비밀글
+              </label>
+            )}
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800 dark:text-dark-100">
+              <input
+                type="checkbox"
+                checked={extraData.notificationEnabled !== false}
+                onChange={(event) => setExtraData((prev: any) => ({ ...prev, notificationEnabled: event.target.checked }))}
+                className={checkboxClass}
+              />
+              댓글 알림 받기
+            </label>
+          </div>
+        </div>
+
+        {postInfo.config?.secretPost && isSecrets && (
+          <div className={rowClass}>
+            <label htmlFor="post-secret-password" className={labelClass}>비밀번호</label>
+            <div className={fieldClass}>
+              <input
+                ref={secretPasswordRef}
+                id="post-secret-password"
+                type="password"
+                name="secretPassword"
+                autoComplete="new-password"
+                placeholder={existingPost?.isSecrets ? "변경할 때만 새 비밀번호를 입력하세요." : "비밀글 비밀번호를 입력해주세요."}
+                aria-invalid={Boolean(fieldErrors?.secretPassword || fieldErrors?.isSecrets)}
+                className={`${boardInput} sm:w-80`}
+              />
+              <p className="mt-1.5 text-xs leading-5 text-gray-500 dark:text-dark-400">작성자와 관리자, 비밀번호를 입력한 사용자만 본문과 댓글을 볼 수 있습니다.</p>
+              {(fieldErrors?.secretPassword || fieldErrors?.isSecrets) && <p className={errorClass}>{fieldErrors.secretPassword || fieldErrors.isSecrets}</p>}
+            </div>
+          </div>
+        )}
+
+        {postInfo.extraFields && postInfo.extraFields.length > 0 && (
+          <div className={rowClass}>
+            <span className={labelClass}>추가 항목</span>
+            <div className={fieldClass}>
+              <ExtraFieldRenderer fields={postInfo.extraFields} value={extraData} onChange={(newData) => setExtraData(newData)} />
+            </div>
+          </div>
+        )}
+
+        <div className={rowClass}>
+          <span className={labelClass}>내용</span>
+          <div className={`${fieldClass} min-h-[400px]`}>
+            <TiptapEditor
+              ref={editorRef}
+              initialContent={existingPost?.content || ""}
+              onChange={(html: string) => {
+                setContent(html);
+              }}
+            />
+            {fieldErrors?.content && <p className={errorClass}>{fieldErrors.content}</p>}
+          </div>
+        </div>
+
+        <div className={rowClass}>
+          <span className={labelClass}>첨부파일</span>
+          <div className={fieldClass}>
+            <Attachment.Box
+              content={content}
+              autoInsertImages={false}
+              onFileAttach={(file) => {
+                if (file.mimeType.startsWith("image/")) {
+                  setThumbnail((current) => current || file.path);
+                }
+              }}
+              selectedThumbnail={thumbnail}
+              onFileClick={(file) => {
+                const editor = editorRef.current;
+                if (!editor) return;
+
+                if (file.mimeType.startsWith("image/")) {
+                  if (!thumbnail) setThumbnail(file.path);
+
+                  // 이미지 뒤에 빈 문단을 하나 넣어 바로 이어서 쓸 수 있게 한다.
+                  editor.chain()
+                    .focus()
+                    .insertContent([
+                      { type: "image", attrs: { src: file.path, alt: file.name } },
+                      { type: "paragraph" },
+                    ])
+                    .run();
+                } else {
+                  editor.chain().focus().insertContent(
+                    `<a href="${file.path}" target="_blank" class="text-blue-600 underline">${file.name}</a> `
+                  ).run();
+                }
+              }}
+              onFileDelete={handleFileDelete}
+              onThumbnailSelect={(file) => setThumbnail(file.path)}
+            />
+          </div>
+        </div>
       </div>
 
-	      <div className="rounded-md border border-gray-100 bg-white p-4 dark:border-dark-700 dark:bg-dark-900/80">
-	        <label className="flex cursor-pointer items-start gap-3">
-	          <input
-	            type="checkbox"
-	            checked={extraData.notificationEnabled !== false}
-            onChange={(event) => setExtraData((prev: any) => ({
-              ...prev,
-              notificationEnabled: event.target.checked,
-            }))}
-	            className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 accent-gray-700 dark:border-dark-600 dark:bg-dark-950 dark:accent-dark-300"
-	          />
-	          <span>
-	            <span className="block text-sm font-semibold text-gray-800 dark:text-dark-100">댓글 알림 받기</span>
-	            <span className="mt-1 block text-xs leading-5 text-gray-400 dark:text-dark-400">
-	              이 글에 새 댓글이 달렸을 때 알림을 받습니다. 알림이 너무 많으면 글마다 끌 수 있습니다.
-	            </span>
-	          </span>
-        </label>
-      </div>
-
-      {/* 🌟 [핵심 조립] 첨부파일 엔진 */}
-      <div className="">
-
-        <Attachment.Box
-          content={content}
-          autoInsertImages={false}
-          onFileAttach={(file) => {
-            if (file.mimeType.startsWith("image/")) {
-              setThumbnail((current) => current || file.path);
-            }
-          }}
-          selectedThumbnail={thumbnail}
-          onFileClick={(file) => {
-            const editor = editorRef.current;
-            if (!editor) return;
-
-            if (file.mimeType.startsWith("image/")) {
-              if (!thumbnail) setThumbnail(file.path);
-
-              // 🌟 [수정] setImage 대신 insertContent를 사용합니다.
-              editor.chain()
-                .focus() // 에디터에 다시 집중!
-                .insertContent([
-                  {
-                    type: 'image',
-                    attrs: {
-                      src: file.path,
-                      alt: file.name
-                    }
-                  },
-                  {
-                    type: 'paragraph' // 💡 센스 있게 이미지 다음에 빈 줄(문단) 하나 추가!
-                  }
-                ])
-                .run();
-            } else {
-              // 링크 삽입은 기존과 동일하게 유지해도 됩니다 (이미 insertContent를 쓰고 계셨네요!)
-              editor.chain().focus().insertContent(
-                `<a href="${file.path}" target="_blank" class="text-blue-600 underline">${file.name}</a> `
-              ).run();
-            }
-          }}
-          onFileDelete={handleFileDelete}
-          onThumbnailSelect={(file) => setThumbnail(file.path)}
-        />
-      </div>
-
-      {/* 하단 버튼 바 */}
-      <div className="flex justify-end gap-3 pt-4">
-        <Button
-          type="button"
-          onClick={() => router.back()}
-          className="min-w-24"
-        >
-          취소
-        </Button>
-        <Button
-          type="button"
-          isLoading={loading}
-          onClick={() => handleSubmit(formRef.current)}
-          className="min-w-28 border-primary-500/25 text-primary-600 hover:border-primary-500/35 hover:bg-primary-50 hover:text-primary-600 hover:ring-primary-100/70 dark:border-primary-400/20 dark:text-primary-300 dark:hover:bg-primary-400/10 dark:hover:ring-primary-400/10"
-        >
-          저장하기
-        </Button>
+      <div className="flex justify-center gap-2 pt-6">
+        <button type="button" onClick={() => router.back()} disabled={loading} className={`${boardButton} min-w-24`}>취소</button>
+        <button type="button" onClick={() => handleSubmit(formRef.current)} disabled={loading} className={`${boardPrimaryButton} min-w-24`}>
+          {loading ? "저장 중..." : existingPost ? "수정 완료" : "등록"}
+        </button>
       </div>
     </form>
   );

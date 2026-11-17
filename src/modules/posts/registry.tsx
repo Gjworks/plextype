@@ -31,8 +31,8 @@ export const postsModule = defineModule({
   postSkins: [
     definePostSkin({
       key: "default",
-      label: "기본 목록",
-      description: "Plextype 기본 게시판 목록 스킨입니다.",
+      label: "기본",
+      description: "번호·제목·글쓴이·날짜·조회 열을 가진 표 형태의 Plextype 기본 게시판 스킨입니다.",
     }),
   ],
   postLayouts: [
