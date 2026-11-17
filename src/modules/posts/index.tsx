@@ -27,10 +27,9 @@ import PostProvider from "@/modules/posts/tpl/default/PostProvider";
 import DefaultListSkin from "@/modules/posts/tpl/default/list";
 import DefaultReadSkin from "@/modules/posts/tpl/default/read";
 import ArticleWithToc from "@/modules/posts/tpl/default/articleWithToc";
-import DefaultCommentsSkin from "@/modules/comment/tpl/list";
+import DefaultCommentsSkin from "@/modules/comment/tpl/commentBoard";
 import DefaultWriteSkin from "@/modules/posts/tpl/default/write";
 import SecretUnlock from "@/modules/posts/tpl/default/secretUnlock";
-import CommentListStatic from "@/modules/comment/tpl/commentListStatic";
 import { normalizeSkinName, postSkinRegistry } from "@/modules/posts/tpl/skinRegistry";
 import { getPostSkinCapability } from "@/modules/posts/actions/skinCapability";
 
@@ -130,10 +129,13 @@ async function PostList({
 async function PostRead({
   mid,
   slug,
+  comments,
   Skin = DefaultReadSkin, // 👈 스킨 주입
 }: {
   mid: string;
   slug: string;
+  // 본문과 같은 열에 놓을 댓글 화면. 목차가 있는 스킨에서는 목차가 댓글 끝까지 따라온다.
+  comments?: React.ReactNode;
   Skin?: React.ComponentType<any>;
 }) {
   const [infoRes, docRes, user] = await Promise.all([
@@ -156,16 +158,22 @@ async function PostRead({
   const requestIp = (await headers()).get("x-forwarded-for") || "";
   await increaseViewCount(numericId, user?.id, requestIp);
 
+  const skinKey = normalizeSkinName(infoRes.data.config?.skin);
+  // 댓글 자리를 직접 정하는 스킨에는 댓글을 넘겨주고, 나머지는 본문 바로 아래에 놓는다.
+  const skinPlacesComments = postSkinRegistry.placesComments.includes(skinKey);
+
   return (
-    <ArticleWithToc enabled={["", "default"].includes(normalizeSkinName(infoRes.data.config?.skin))}>
+    <ArticleWithToc enabled={postSkinRegistry.toc.includes(skinKey)}>
     <Skin
-      Presentation={postSkinRegistry.read[normalizeSkinName(infoRes.data.config?.skin)]}
+      Presentation={postSkinRegistry.read[skinKey]}
+      comments={skinPlacesComments ? comments : undefined}
       document={docRes.data}
       participants={participantsRes.data || []}
       postInfo={infoRes.data}
       permissions={permissions}
       currentUser={user}
     />
+    {!skinPlacesComments && comments}
     </ArticleWithToc>
   );
 }
@@ -177,7 +185,7 @@ async function PostComments({
   mid,
   slug,
   page = 1,
-  Skin = DefaultCommentsSkin, // 👈 스킨 주입
+  Skin, // 👈 스킨 주입
 }: {
   mid: string;
   slug: string;
@@ -219,31 +227,24 @@ async function PostComments({
     return await saveCommentAction(formData, path);
   }
 
+  if (!permissions.doRead) return null;
+
+  const pagination = commentsRes.data?.pagination || { totalCount: 0, totalPages: 0, currentPage: 1, pageSize: 10 };
+  // 댓글 스킨을 따로 정하지 않았으면 게시판 스킨의 댓글 화면을, 그것도 없으면 기본 댓글 화면을 쓴다.
+  const commentSkinKey = normalizeSkinName(infoRes.data.config?.commentSkin) || normalizeSkinName(infoRes.data.config?.skin);
+  const CommentsSkin = Skin || postSkinRegistry.comments[commentSkinKey] || DefaultCommentsSkin;
+
   return (
     <PostProvider
       value={{ postInfo: infoRes.data, currentUser: user, permissions }}
     >
-      <CommentListStatic
+      <CommentsSkin
         documentId={id}
+        basePath={`/posts/${mid}/${slug}`}
         comments={commentsRes.data?.items || []}
+        pagination={pagination}
         currentUser={user}
         canReply={permissions.doComment}
-        upsertComment={upsertCommentAction as any}
-      />
-      <Skin
-        documentId={id}
-        renderList={false}
-        commentsData={
-          commentsRes.data || {
-            items: [],
-            pagination: {
-              totalCount: 0,
-              totalPages: 0,
-              currentPage: 1,
-              pageSize: 10,
-            },
-          }
-        }
         upsertComment={upsertCommentAction as any}
         getCommentsPage={async (p: number) => {
           "use server";
@@ -260,7 +261,7 @@ async function PostComments({
 async function PostWrite({
   mid,
   slug,
-  Skin = DefaultWriteSkin, // 👈 스킨 주입
+  Skin, // 👈 스킨 주입
 }: {
   mid: string;
   slug?: string;
@@ -271,14 +272,14 @@ async function PostWrite({
     getServerUser(),
   ]);
 
-  console.log(mid);
-
   if (!infoRes.success || !infoRes.data) return null;
 
   const permissions = await checkPermissionsAction(
     infoRes.data.permissions,
     user,
   );
+
+  const WriteSkin = Skin || postSkinRegistry.write[normalizeSkinName(infoRes.data.config?.skin)] || DefaultWriteSkin;
 
   let existingPost: any = null;
   if (slug) {
@@ -295,7 +296,7 @@ async function PostWrite({
     <PostProvider
       value={{ postInfo: infoRes.data, currentUser: user, permissions }}
     >
-      <Skin existingPost={existingPost} savePost={savePostAction} />
+      <WriteSkin existingPost={existingPost} savePost={savePostAction} />
     </PostProvider>
   );
 }

@@ -27,17 +27,17 @@ const Page = async ({ params, searchParams }: PageProps) => {
     <div className="w-full max-w-screen-xl mx-auto">
       <div className="min-h-[70svh] w-full">
         <Suspense key={`${mid}/${docId}`} fallback={<ReadLoading />}>
-          <Post.Read mid={mid} slug={docId} />
+          <Post.Read
+            mid={mid}
+            slug={docId}
+            comments={
+              <Suspense key={`${mid}/${docId}/comments/${page || 1}`} fallback={<CommentsLoading />}>
+                <Post.Comments mid={mid} slug={docId} page={Number(page || 1)} />
+              </Suspense>
+            }
+          />
         </Suspense>
       </div>
-
-      <Suspense key={`${mid}/${docId}/comments/${page || 1}`} fallback={<CommentsLoading />}>
-        <Post.Comments
-          mid={mid}
-          slug={docId}
-          page={Number(page || 1)}
-        />
-      </Suspense>
     </div>
   );
 };

@@ -124,6 +124,8 @@ export interface PostInfoData {
   // 💡 데이터 구조를 config 주머니가 있는 모양으로 바꿉니다!
   config: {
     skin?: string;
+    // 댓글 화면만 다른 스킨으로 쓸 때의 스킨 키. 비어 있으면 skin을 따른다.
+    commentSkin?: string;
     layout?: string;
     listCount: number;
     pageCount: number;

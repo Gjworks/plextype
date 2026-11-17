@@ -32,6 +32,7 @@ const DashboardPostCreate = ({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
   const defaultPostConfig = {
     skin: "default",
+    commentSkin: "",
     layout: "default",
     listCount: 20,
     pageCount: 10,
@@ -65,6 +66,7 @@ const DashboardPostCreate = ({
       const nextInfo = { ...prev.postInfo };
       const configKeys = [
         "skin",
+        "commentSkin",
         "layout",
         "listCount",
         "pageCount",

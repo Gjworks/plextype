@@ -5,7 +5,7 @@ import { FileText, Heart, Layers, ListChecks, MessageSquareLock } from "lucide-r
 
 import InputField from "@components/form/InputField";
 import type { PostInfoData } from "@/modules/posts/actions/_type";
-import { postLayoutOptions, postSkinOptions } from "@extensions";
+import { postCommentSkinOptions, postLayoutOptions, postSkinOptions } from "@extensions";
 
 type PostInfoProps = {
   id?: string;
@@ -99,6 +99,10 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors })
     onChange({ skin: e.target.value || "default" });
   };
 
+  const handleCommentSkinChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange({ commentSkin: e.target.value });
+  };
+
   const handleLayoutChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange({ layout: e.target.value || "default" });
   };
@@ -169,7 +173,7 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors })
           </div>
         </FieldRow>
 
-        <FieldRow label="목록 스킨" description="게시글 목록을 렌더링하는 스킨입니다.">
+        <FieldRow label="게시판 스킨" description="목록, 본문, 글쓰기 화면을 그리는 스킨입니다.">
           <select
             id="skin"
             name="skin"
@@ -184,7 +188,32 @@ const PostInfo: React.FC<PostInfoProps> = ({ id, value, onChange, fieldErrors })
             ))}
           </select>
           <div className="mt-2 text-xs leading-5 text-gray-400">
-            {postSkinOptions.find((option) => option.key === (value.config.skin || "default"))?.description || "등록된 게시판 목록 스킨입니다."}
+            {postSkinOptions.find((option) => option.key === (value.config.skin || "default"))?.description || "등록된 게시판 스킨입니다."}
+          </div>
+        </FieldRow>
+
+        <FieldRow label="댓글 스킨" description="본문 아래의 댓글 목록과 댓글 쓰기 화면을 그리는 스킨입니다.">
+          <select
+            id="commentSkin"
+            name="commentSkin"
+            value={value.config.commentSkin || ""}
+            onChange={handleCommentSkinChange}
+            className={selectClass}
+          >
+            <option value="">게시판 스킨과 같게</option>
+            <option value="default">기본</option>
+            {postCommentSkinOptions.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2 text-xs leading-5 text-gray-400">
+            {!value.config.commentSkin
+              ? "게시판 스킨이 가진 댓글 화면을 쓰고, 없으면 기본 댓글 화면을 씁니다."
+              : value.config.commentSkin === "default"
+                ? "게시판 스킨과 관계없이 기본 댓글 화면을 씁니다."
+                : postCommentSkinOptions.find((option) => option.key === value.config.commentSkin)?.description || "등록되지 않은 스킨입니다. 기본 댓글 화면으로 표시됩니다."}
           </div>
         </FieldRow>
 
