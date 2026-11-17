@@ -93,7 +93,8 @@ const SystemStackWidget = () => {
       </div>
 
 	      <div className="space-y-2 border-t border-gray-100 pt-4 dark:border-dark-800">
-	        <StackLine label="React DOM" value={info.packages.reactDom} />
+	        <StackLine label="Plextype" value={`v${info.core.version}`} />
+        <StackLine label="React DOM" value={info.packages.reactDom} />
         <StackLine label="Prisma CLI" value={info.packages.prismaCli} />
         <StackLine label="Adapter PG" value={info.packages.adapterPg} />
         <StackLine label="TypeScript" value={info.packages.typescript} />

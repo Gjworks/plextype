@@ -1,0 +1,24 @@
+{
+  "npm": false,
+  "github": {
+    "release": true
+  },
+  "git": {
+    "tagName": "v${version}",
+    "commitMessage": "chore(release): v${version}",
+    "requireCleanWorkingDir": true
+  },
+  "hooks": {
+    "after:bump": [
+      "node scripts/write-core-version.mjs ${version}",
+      "npx auto-changelog -v ${version}"
+    ]
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": "angular",
+      "infile": "CHANGELOG.md",
+      "header": "# 📋 변경 이력 (Change Log)\n\n"
+    }
+  }
+}

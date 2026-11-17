@@ -2,6 +2,7 @@
 
 import { execSync } from 'child_process'
 import pkg from '../../../../../package.json'
+import core from '@/core/plextype.json'
 
 function getPackageVersion(name: string) {
   const dependencies = pkg.dependencies || {}
@@ -32,6 +33,10 @@ export async function getSystemStackInfo() {
     app: {
       name: pkg.name,
       version: pkg.version,
+    },
+    // package.json의 version은 프로젝트의 앱 버전이고, 코어 버전은 릴리스가 src/core/plextype.json에 적는다.
+    core: {
+      version: core.version,
     },
     runtime: {
       node: process.version.replace(/^v/, ''),

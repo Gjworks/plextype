@@ -90,6 +90,7 @@ npm run dev
 | `npm run migrate:dev -- --to <core\|기능 경로> --name <이름>` | 마이그레이션을 만들어 개발 DB에 적용하고 원본 폴더로 옮김 |
 | `npm run extensions:check` / `extensions:sync` | 확장의 `routes.json`과 `src/app` 연결 파일을 검사·동기화 |
 | `npm run db:seed` | seed 실행 |
+| `npm run release` | 버전과 변경 이력을 올리고 태그와 GitHub Release를 만들어 push. 올리는 대상은 "릴리스" 참고 |
 
 `migrate:reset`과 `dbpush:push`는 DB 내용을 지우거나 마이그레이션 기록 없이 구조를 바꾸므로 개발 DB에서만 씁니다.
 
@@ -144,6 +145,48 @@ export const proxyExtension: ProxyExtension = async (request, { getSession }) =>
 - `/_next` 자산 요청에는 확장을 부르지 않습니다.
 - `matcher` 같은 Next.js 정적 설정은 `src/proxy.ts`에 직접 적습니다.
 
+## 패키지와 버전
+
+`package.json` 한 파일을 코어와 프로젝트가 함께 고치면 코어를 병합할 때마다 충돌하므로 소유를 나눕니다.
+
+| 항목 | 위치 | 고치는 쪽 |
+|---|---|---|
+| 코어가 쓰는 npm 패키지 | 루트 `package.json`의 `dependencies` | 코어 |
+| 프로젝트·플러그인만 쓰는 npm 패키지 | `src/extensions/package.json` | 프로젝트 |
+| Plextype 코어 버전 | `src/core/plextype.json`의 `version` | 코어 릴리스 |
+| 프로젝트의 앱 버전 | 루트 `package.json`의 `version` | 프로젝트 |
+
+- `src/extensions`는 npm workspace입니다. 루트에서 `npm install`을 한 번 실행하면 코어와 프로젝트 패키지가 함께 설치되고, 폴더가 없는 배포판에서도 그대로 동작합니다.
+- 프로젝트 패키지는 `npm install <패키지> -w src/extensions`로 추가합니다. `src/extensions/package.json`이 없으면 아래 내용으로 먼저 만듭니다.
+- React, Next.js, Prisma처럼 하나만 설치되어야 하는 패키지는 프로젝트에서 따로 추가하지 않고 코어 버전을 씁니다.
+- 원본과 배포판의 `package.json` `version`은 `0.1.0`으로 고정되어 있습니다. 릴리스가 이 줄을 바꾸면 자기 버전을 올린 프로젝트가 코어를 병합할 때마다 충돌하기 때문입니다. 프로젝트는 이 값을 자기 앱 버전으로 자유롭게 올립니다.
+- 관리자 대시보드의 System Stack 위젯이 앱 버전과 Plextype 버전을 따로 보여줍니다.
+
+```json
+{
+  "name": "project-extensions",
+  "private": true,
+  "dependencies": {}
+}
+```
+
+이 구조가 들어오기 전에 루트 `package.json`에 자기 패키지를 추가한 프로젝트는 코어를 병합할 때 그 패키지를 `src/extensions/package.json`으로 옮기고, 루트 `package.json`은 `version`만 자기 값으로 남깁니다.
+
+### 릴리스
+
+`npm run release`(`scripts/release.mjs`)는 저장소 종류에 맞는 release-it 설정을 골라 실행합니다.
+
+| 저장소 | 설정 | 올리는 버전 | 변경 이력 |
+|---|---|---|---|
+| 배포판을 받아 만든 프로젝트 | `.release-it.json` | `package.json`의 `version` | `CHANGELOG.project.md` |
+| Plextype 원본(`Gjworks/gjworks_web`) | `.release-it.plextype.json` | `src/core/plextype.json`의 `version` | `CHANGELOG.md` |
+
+- 원본 저장소는 배포판으로 나가지 않는 `.github/workflows/sync-to-plextype.yml`이 있는지로 구분합니다.
+- 두 경우 모두 `chore(release): v<버전>` 커밋과 `v<버전>` 태그를 만들어 push합니다. `GITHUB_TOKEN` 환경 변수가 있으면 GitHub Release도 자동으로 만들고, 없으면 내용이 채워진 작성 화면 링크를 출력합니다.
+- 다음 버전은 지난 태그 이후 커밋 메시지의 `fix:`(패치), `feat:`(마이너) 접두사로 정합니다. 접두사를 쓰지 않는 프로젝트는 `npm run release -- 1.2.0`처럼 버전을 직접 줍니다.
+- 프로젝트는 `CHANGELOG.md`와 `src/core/plextype.json`을 고치지 않습니다. 둘은 코어 병합으로만 바뀝니다.
+- 프로젝트의 태그와 Plextype의 태그는 둘 다 `v<버전>` 모양이라, 코어를 받을 때 태그는 가져오지 않습니다("코어 업데이트 받기" 참고).
+
 ## DB 스키마와 마이그레이션
 
 코어와 각 확장은 같은 모양의 `prisma` 폴더를 가집니다.
@@ -164,21 +207,8 @@ src/extensions/<기능>/prisma/          확장
 `Gjworks/gjworks_web`의 `main`에 push하면 `Sync to Plextype` 워크플로가 배포판을 만듭니다.
 
 1. `src/extensions`, `src/app/(extensions)`, `src/app/(pages)`, `.github`, `AGENTS.md` 등 전용 파일을 이력에서 걸러냅니다.
-2. `scripts/prepare-plextype.mjs`가 확장에 연결된 라우트 파일을 지우고 `package.json`에서 전용 의존성을 뺍니다.
+2. `scripts/prepare-plextype.mjs`가 확장에 연결된 라우트 파일을 지우고 코어 기본 화면을 채웁니다.
 3. 걸러낸 상태로 설치와 빌드가 되는지 검사한 뒤 `Gjworks/plextype`에 반영합니다.
-
-gjworks 전용 npm 패키지는 원본 `package.json`에 추가하고 `scripts/plextype-distribution.json`의 `gjworksOnly`에 기능별로 적습니다. 코어가 쓰기 시작한 패키지는 목록에서 뺍니다. 지금 목록은 비어 있어 모든 의존성이 배포판에 그대로 전달됩니다.
-
-```json
-{
-  "gjworksOnly": {
-    "sitePlugin": {
-      "dependencies": ["some-site-sdk"],
-      "devDependencies": ["@types/some-site-sdk"]
-    }
-  }
-}
-```
 
 `prepare-plextype.mjs`는 `src/extensions`가 남아 있으면 중단하므로 원본 체크아웃에서는 실행되지 않습니다.
 
@@ -188,10 +218,14 @@ gjworks 전용 npm 패키지는 원본 `package.json`에 추가하고 `scripts/p
 
 ```bash
 git remote add upstream https://github.com/Gjworks/plextype.git
+git config remote.upstream.tagOpt --no-tags
 git fetch upstream
 git merge upstream/main
+npm install
 npm run prisma:generate
 ```
+
+`tagOpt --no-tags`는 Plextype의 릴리스 태그가 프로젝트 태그와 섞이지 않게 합니다. 받은 코어의 버전은 `src/core/plextype.json`에서 확인합니다. 이 설정 전에 받아 둔 Plextype 태그(`v0.5.0` 이후)가 남아 있으면 앱 버전이 같은 번호에 도달할 때 태그 생성이 실패하므로, 받아 둔 태그를 지우거나 앱 버전을 `1.0.0`부터 시작합니다.
 
 병합 뒤 새 마이그레이션이 있으면 개발 DB에는 `npm run migrate:dev`, 운영 DB에는 배포 과정의 `prisma migrate deploy`로 적용합니다. 코어 파일을 직접 고친 프로젝트는 이 병합에서 충돌이 나므로 변경은 확장에 둡니다.
 
