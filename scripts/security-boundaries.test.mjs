@@ -279,7 +279,7 @@ test('comment action rejects missing comment permission even when document read 
       canReadDocument: async () => true, canAccessBoard: async (_id, action) => action === 'read' },
     './comment.query': { findDocumentCommentAccessInfo: async () => ({ id: 5, moduleId: 1 }), insertComment: async () => writes++ },
     'next/cache': {}, '@utils/trigger/triggerWrapper': { withTrigger: (_name, fn) => fn },
-    '@/modules/admin/actions/settings.query': {},
+    '@/core/utils/settings/settings.query': {},
   });
   const form = new FormData(); form.set('documentId', '5'); form.set('content', 'test');
   assert.equal((await api.saveCommentAction(form)).success, false);
@@ -291,7 +291,7 @@ test('notification API ignores forged recipient ID and scopes reads to authentic
     'next/server': { NextResponse: { json: data => data } },
     '@/core/utils/auth/authHelper': { getAuthenticatedUser: async () => ({ id: 7 }) },
     '@/modules/notification/actions/notification.action': { findHistoryPage: async id => { assert.equal(id, 7); return []; } },
-    '@/modules/admin/actions/settings.action': { getNotificationSettingsRuntimeAction: async () => ({ historyPageSize: 20 }) },
+    '@/modules/notification/actions/settings.action': { getNotificationSettingsRuntimeAction: async () => ({ historyPageSize: 20 }) },
     '../_utils': {},
   });
   assert.deepEqual(await api.GET(new Request('http://localhost/api/notifications/history?userId=999')), []);
@@ -334,6 +334,97 @@ test('original upload URLs are rewritten before static serving and dotted admin 
   assert.deepEqual(await api.proxy(request('/admin/file.csv')), { redirect: '/auth/signin' });
 });
 
+function proxyHarness(session = null) {
+  let verified = 0;
+  const touched = [];
+  const api = load('src/core/proxy/defaultProxy.ts', {
+    'next/server': { NextResponse: { next: () => ({ next: true }), rewrite: url => ({ rewrite: url.pathname }),
+      redirect: url => ({ redirect: url.pathname }), json: (_body, init) => ({ denied: init.status }) } },
+    '@/core/utils/auth/jwtAuth': { verify: async () => { verified++; return session; } },
+    '@/core/utils/redis/redis': { expire: async key => { touched.push(key); } },
+  });
+  const request = (pathname, { method = 'GET', origin } = {}) => {
+    const headers = { host: 'localhost', 'x-forwarded-for': '10.0.0.1', ...(origin ? { origin } : {}) };
+    return { method, url: `http://localhost${pathname}`, headers: { get: name => headers[name] ?? null },
+      nextUrl: Object.assign(new URL(`http://localhost${pathname}`), { clone: () => new URL(`http://localhost${pathname}`) }),
+      cookies: { get: () => (session ? { value: 'token' } : undefined) } };
+  };
+  return { api, request, touched, verifiedCount: () => verified };
+}
+
+const proxyCases = [
+  ['/', {}], ['/posts/notice', {}], ['/user', {}], ['/admin', {}], ['/admin/file.csv', {}],
+  ['/auth/signin', {}], ['/auth/register', {}], ['/api/auth/me', {}], ['/_next/static/chunk.js', {}],
+  ['/storage/uploads/private.pdf', {}], ['/api/posts', { method: 'POST' }],
+  ['/api/posts', { method: 'POST', origin: 'http://localhost' }],
+  ['/api/posts', { method: 'DELETE', origin: 'https://attacker.example' }],
+];
+
+test('proxy without an extension and with a pass-through extension decide every request identically', async () => {
+  for (const session of [null, { id: 7, isAdmin: false }, { id: 1, isAdmin: true }]) {
+    const { api, request, touched } = proxyHarness(session);
+    const passThrough = api.createProxy(async () => undefined);
+    const withoutExtension = api.createProxy(null);
+    for (const [pathname, init] of proxyCases) {
+      const expected = await api.proxy(request(pathname, init));
+      assert.deepEqual(await withoutExtension(request(pathname, init)), expected);
+      assert.deepEqual(await passThrough(request(pathname, init)), expected);
+    }
+    if (session) assert.ok(touched.every(key => key === `active_user:${session.id}:10.0.0.1`));
+    else assert.equal(touched.length, 0);
+  }
+  const guest = proxyHarness(null);
+  assert.deepEqual(await guest.api.proxy(guest.request('/user')), { redirect: '/auth/signin' });
+  assert.deepEqual(await guest.api.proxy(guest.request('/')), { next: true });
+  const member = proxyHarness({ id: 7, isAdmin: false });
+  assert.deepEqual(await member.api.proxy(member.request('/admin')), { redirect: '/access' });
+  assert.deepEqual(await member.api.proxy(member.request('/auth/signin')), { next: true });
+  assert.equal(member.verifiedCount(), 1);
+});
+
+test('proxy extension response ends the request and receives the core-verified session once', async () => {
+  const { api, request, verifiedCount } = proxyHarness({ id: 7, isAdmin: false });
+  const sessions = [];
+  const proxy = api.createProxy(async (req, { getSession }) => {
+    const session = await getSession();
+    sessions.push(await getSession());
+    if (!session?.isAdmin && req.nextUrl.pathname.startsWith('/auth/register')) return { blocked: true };
+  });
+  assert.deepEqual(await proxy(request('/auth/register')), { blocked: true });
+  assert.deepEqual(sessions, [{ id: '7', isAdmin: false }]);
+  assert.equal(verifiedCount(), 1);
+  assert.deepEqual(await proxy(request('/user')), { next: true });
+  assert.equal(verifiedCount(), 2);
+  assert.deepEqual(await proxy(request('/auth/signin')), { next: true });
+});
+
+test('proxy extension cannot override CSRF, upload rewrite or /admin and /user access checks', async () => {
+  const calls = [];
+  const open = req => { calls.push(req.nextUrl.pathname); return { opened: true }; };
+  const guest = proxyHarness(null);
+  const guestProxy = guest.api.createProxy(open);
+  assert.deepEqual(await guestProxy(guest.request('/api/posts', { method: 'POST' })), { denied: 403 });
+  assert.deepEqual(await guestProxy(guest.request('/api/posts', { method: 'PUT', origin: 'https://attacker.example' })), { denied: 403 });
+  assert.deepEqual(await guestProxy(guest.request('/api/auth/signin', { method: 'POST', origin: 'https://attacker.example' })), { denied: 403 });
+  assert.deepEqual(await guestProxy(guest.request('/storage/uploads/private.pdf')), { rewrite: '/api/storage/uploads/private.pdf' });
+  assert.deepEqual(await guestProxy(guest.request('/admin')), { redirect: '/auth/signin' });
+  assert.deepEqual(await guestProxy(guest.request('/user')), { redirect: '/auth/signin' });
+  const member = proxyHarness({ id: 7, isAdmin: false });
+  assert.deepEqual(await member.api.createProxy(open)(member.request('/admin/users')), { redirect: '/access' });
+  assert.deepEqual(await guestProxy(guest.request('/_next/static/chunk.js')), { next: true });
+  assert.deepEqual(calls, []);
+  assert.deepEqual(await guestProxy(guest.request('/api/posts', { method: 'POST', origin: 'http://localhost' })), { opened: true });
+  await assert.rejects(guest.api.createProxy(async () => { throw new Error('extension failed'); })(guest.request('/')), /extension failed/);
+});
+
+test('proxy entry binds the extension alias, which falls back to an empty core default', () => {
+  assert.match(source('src/proxy.ts'), /createProxy\(proxyExtension\)/);
+  assert.match(source('src/proxy.ts'), /from "@extensions\/proxy"/);
+  assert.deepEqual(JSON.parse(source('tsconfig.json')).compilerOptions.paths['@extensions/proxy'],
+    ['./src/extensions/proxy.ts', './src/core/proxy/defaultProxyExtension.ts']);
+  assert.equal(load('src/core/proxy/defaultProxyExtension.ts').proxyExtension, null);
+});
+
 test('storage endpoint authorizes before touching disk and refuses traversal and symlink escapes', async () => {
   let allowed = false, touched = 0, symlink = false;
   const api = load('src/app/api/storage/uploads/[...path]/route.ts', {
@@ -372,7 +463,7 @@ test('registration settings and dedicated password-change flow are enforced by t
     './_type': {}, './user.query': { findUserById: async () => ({ id: 7, isAdmin: false }) },
     '@utils/validation/formValidator': { validateForm: (_schema, data) => ({ isValid: true, data }) },
     'next/cache': {}, '@utils/redis/redis': {},
-    '@/modules/admin/actions/auth-settings': { getAuthSettingsRuntimeAction: async () => ({ registrationEnabled: enabled }) },
+    '@/modules/user/actions/auth-settings': { getAuthSettingsRuntimeAction: async () => ({ registrationEnabled: enabled }) },
     '@/modules/notification/actions/notification.action': {},
   });
   const form = new FormData(); form.set('password', 'new-password');

@@ -103,7 +103,7 @@ src/
 ├── layouts/        기본·관리자·인증 레이아웃
 ├── widgets/        여러 화면이 함께 쓰는 복합 UI
 ├── extensions/     프로젝트 전용 기능. 배포판에는 들어 있지 않다
-└── proxy.ts        요청 출처 검사와 페이지 접근 제어
+└── proxy.ts        요청 출처 검사와 페이지 접근 제어. 코어 proxy에 프로젝트 확장을 연결한다
 prisma/             prisma:sync가 만드는 결과물. 직접 고치지 않는다
 scripts/            스키마·라우트 동기화, 배포판 준비, 테스트
 docs/readme/        이 README가 쓰는 이미지
@@ -117,6 +117,32 @@ setup.mjs           최초 설치 스크립트
 - 코어(`src/core`, `src/modules`, `src/layouts`, `src/widgets`)는 배포판으로 나가는 영역입니다. 프로젝트 요구는 먼저 확장으로 해결하고, 코어는 여러 프로젝트에 공통으로 필요한 변경만 넣습니다.
 - 확장은 `src/extensions/<기능>/` 한 폴더에 화면, 액션, API, 스키마를 모읍니다. 라우트는 기능의 `routes.json`에 적고 `npm run extensions:sync`로 `src/app`에 연결합니다.
 - 메뉴·스킨·레이아웃은 `src/extensions/registry.tsx`에서, 코어 이벤트에 붙는 로직은 트리거(`src/core/utils/trigger`)로 등록합니다.
+
+### 요청 단계 접근 제어 확장
+
+`src/proxy.ts`는 코어 proxy(`src/core/proxy/defaultProxy.ts`)에 `@extensions/proxy`를 연결합니다. 이 경로는 `src/extensions/proxy.ts`가 있으면 그 파일을, 없으면 확장이 없는 코어 기본값(`src/core/proxy/defaultProxyExtension.ts`)을 가리키므로 파일을 만들기만 하면 적용됩니다.
+
+```ts
+// src/extensions/proxy.ts
+import { NextResponse } from "next/server";
+import type { ProxyExtension } from "@/core/proxy/defaultProxy";
+
+const adminOnlyPaths = ["/user", "/auth/find", "/auth/reset-password", "/auth/register"];
+
+export const proxyExtension: ProxyExtension = async (request, { getSession }) => {
+  const { pathname } = request.nextUrl;
+  if (!adminOnlyPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))) return;
+
+  const session = await getSession();
+  if (!session?.isAdmin) return NextResponse.redirect(new URL("/auth/signin", request.url));
+};
+```
+
+- 코어가 먼저 `/storage/uploads` rewrite, 출처(CSRF) 검사, `/admin` 관리자 확인, `/user` 로그인 확인을 하고, 통과한 요청만 확장에 넘깁니다. 확장은 요청을 더 막을 수만 있고 코어가 막은 요청을 열 수는 없습니다.
+- 확장이 응답을 돌려주면 그 응답으로 끝나고, 아무것도 돌려주지 않으면 코어가 요청을 통과시킵니다.
+- `getSession()`은 코어가 검증한 `{ id, isAdmin }`을 돌려주며 비로그인이면 `null`입니다. 토큰을 검증할 때 DB와 Redis를 읽으므로 필요한 경로에서만 부릅니다.
+- `/_next` 자산 요청에는 확장을 부르지 않습니다.
+- `matcher` 같은 Next.js 정적 설정은 `src/proxy.ts`에 직접 적습니다.
 
 ## DB 스키마와 마이그레이션
 
