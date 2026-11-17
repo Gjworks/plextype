@@ -45,6 +45,10 @@ export type PostLayoutOption = {
 export const {
   postSkins,
   postReadSkins,
+  postWriteSkins,
+  postCommentSkins,
+  postTocSkins,
+  postCommentPlacingSkins,
   postLayouts,
   adminLayouts,
   adminDashboards,
@@ -52,6 +56,7 @@ export const {
   adminMenus,
   adminBreadcrumbs,
   postSkinOptions,
+  postCommentSkinOptions,
   postLayoutOptions,
   adminLayoutOptions,
   userLayoutOptions,

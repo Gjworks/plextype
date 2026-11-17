@@ -33,6 +33,13 @@ export const buildExtensionRegistry = (
 ) => {
   const postSkins: PostSkinMap = {};
   const postReadSkins: PostSkinMap = {};
+  const postWriteSkins: PostSkinMap = {};
+  const postCommentSkins: PostSkinMap = {};
+  // 댓글 화면을 가진 스킨의 선택 항목. 같은 댓글 화면을 여러 스킨이 함께 쓰면 먼저 등록한 것만 보여준다.
+  const postCommentSkinOptions: PostSkinOption[] = [];
+  const listedCommentSkins = new Set<unknown>();
+  const postTocSkins: string[] = [];
+  const postCommentPlacingSkins: string[] = [];
   const postLayouts: PostLayoutMap = {};
   const adminLayouts: AdminLayoutMap = {};
   const adminDashboards: AdminDashboardMap = {};
@@ -83,6 +90,16 @@ export const buildExtensionRegistry = (
   ) => {
     if (item.list) postSkins[item.key] = item.list;
     if (item.read) postReadSkins[item.key] = item.read;
+    if (item.write) postWriteSkins[item.key] = item.write;
+    if (item.comments) {
+      postCommentSkins[item.key] = item.comments;
+      if (!listedCommentSkins.has(item.comments)) {
+        listedCommentSkins.add(item.comments);
+        postCommentSkinOptions.push(toOption(item) as PostSkinOption);
+      }
+    }
+    if (item.toc && !postTocSkins.includes(item.key)) postTocSkins.push(item.key);
+    if (item.placesComments && !postCommentPlacingSkins.includes(item.key)) postCommentPlacingSkins.push(item.key);
     postSkinOptions.set(item.key, toOption(item) as PostSkinOption);
   };
 
@@ -136,6 +153,10 @@ export const buildExtensionRegistry = (
   return {
     postSkins,
     postReadSkins,
+    postWriteSkins,
+    postCommentSkins,
+    postTocSkins,
+    postCommentPlacingSkins,
     postLayouts,
     adminLayouts,
     adminDashboards,
@@ -150,6 +171,7 @@ export const buildExtensionRegistry = (
       .sort((a, b) => (a.order ?? 999) - (b.order ?? 999)),
     adminBreadcrumbs,
     postSkinOptions: Array.from(postSkinOptions.values()),
+    postCommentSkinOptions,
     postLayoutOptions: Array.from(postLayoutOptions.values()),
     adminLayoutOptions: Array.from(adminLayoutOptions.values()),
     userLayoutOptions: Array.from(userLayoutOptions.values()),
