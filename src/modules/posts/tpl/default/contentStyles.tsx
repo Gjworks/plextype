@@ -3,7 +3,8 @@ export default function PostContentStyles() {
         <style dangerouslySetInnerHTML={{ __html: `
       .plextype-shiki-block {
         display: block !important;
-        background-color: #f9fafb  !important;
+        /* 본문 배경(#f9fafb 계열)과 같은 색이면 블록 경계가 보이지 않아, 푸른 기가 도는 한 단계 진한 배경을 쓴다. */
+        background-color: #eef2f7 !important;
         border-radius: 16px;
         margin: 2.5rem 0;
         padding: 1.5rem 2rem !important; 

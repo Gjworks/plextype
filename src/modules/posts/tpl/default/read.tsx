@@ -27,6 +27,32 @@ import ListItem from "@tiptap/extension-list-item";
 
 const SHIKI_THEME = 'slack-ochin';
 
+// 다크 모드의 코드 글자색. 다른 테마로 바꾸면 키·문자열의 색 계열이 통째로 달라지므로,
+// 라이트 테마의 색상(hue)은 그대로 두고 어두운 배경에서 읽히도록 밝기만 올린다.
+const toDarkCodeColor = (hex: string) => {
+  const value = hex.replace('#', '').slice(0, 6);
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(value.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2;
+  const delta = max - min;
+  let hue = 0;
+  if (delta) {
+    if (max === r) hue = ((g - b) / delta) % 6;
+    else if (max === g) hue = (b - r) / delta + 2;
+    else hue = (r - g) / delta + 4;
+  }
+  const saturation = delta ? delta / (1 - Math.abs(2 * lightness - 1)) : 0;
+  // 본문색처럼 아주 어두운 색은 색조를 거의 빼서 밝은 회색으로, 나머지는 채도를 조금 낮춰 파스텔 톤으로 만든다.
+  const nextSaturation = lightness < 0.2 ? saturation * 0.18 : Math.min(saturation, 0.85) * 0.82;
+  const nextLightness = lightness < 0.2 ? 0.86 : 0.68 + lightness * 0.16;
+  return `hsl(${Math.round(((hue * 60) + 360) % 360)} ${Math.round(nextSaturation * 100)}% ${Math.round(nextLightness * 100)}%)`;
+};
+
+const withDarkCodeColors = (html: string) =>
+  html.replace(/--shiki-dark:(#[0-9a-fA-F]{6,8})/g, (_match, hex: string) => `--shiki-dark:${toDarkCodeColor(hex)}`);
+
+
 const decodeHtmlEntities = (value: string) =>
   value
     .replace(/&amp;/g, "&")
@@ -52,16 +78,16 @@ const highlightCodeBlocks = async (html: string) => {
     try {
       shikiHtml = await codeToHtml(code, {
         lang: language,
-        themes: { light: SHIKI_THEME, dark: 'slack-dark' },
+        themes: { light: SHIKI_THEME, dark: SHIKI_THEME },
       });
     } catch {
       shikiHtml = await codeToHtml(code, {
         lang: 'text',
-        themes: { light: SHIKI_THEME, dark: 'slack-dark' },
+        themes: { light: SHIKI_THEME, dark: SHIKI_THEME },
       });
     }
 
-    const styledHtml = shikiHtml.replace('<pre class="', '<pre class="plextype-shiki-block ');
+    const styledHtml = withDarkCodeColors(shikiHtml).replace('<pre class="', '<pre class="plextype-shiki-block ');
 
     highlightedHtml = highlightedHtml.replace(match[0], styledHtml);
   }

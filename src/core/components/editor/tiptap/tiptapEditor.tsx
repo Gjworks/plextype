@@ -402,7 +402,9 @@ const TiptapEditor = forwardRef((props: TiptapEditorProps, ref) => {
   /* 1. 이 클래스가 곧 <pre> 태그입니다! */
   .plextype-shiki-block {
     display: block !important;
-    background-color: #f9fafb !important;
+    /* 에디터의 코드 블록은 밝은 테마 하나로만 강조한다. 다크 모드에서도 밝은 배경을 유지하므로 글자색을 어둡게 고정한다. */
+    background-color: #eef2f7 !important;
+    color: #1f2937 !important;
     border-radius: 16px;
     margin: 2.5rem 0;
 
