@@ -346,7 +346,7 @@ const AdminLayout = ({ children, appName, adminSessionGuard, adminMenus, adminBr
                 <ChevronDown size={14} className={`text-gray-400 transition-transform dark:text-dark-500 ${showUserDropdown ? 'rotate-180' : ''}`} />
               </button>
 
-              <Dropdown state={showUserDropdown} close={setShowUserDropdown} className="right-0 top-full mt-2">
+              <Dropdown state={showUserDropdown} close={setShowUserDropdown} align="right">
                 <div className="w-max min-w-60 max-w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white p-2 shadow-xl shadow-gray-950/5 dark:border-dark-800 dark:bg-dark-900/95 dark:shadow-black/40">
                   <div className="border-b border-gray-100 px-3 py-3 dark:border-dark-800">
                     <div className="flex items-center gap-3">
