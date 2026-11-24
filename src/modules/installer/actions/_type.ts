@@ -27,7 +27,12 @@ export type InstallerCatalogItem = {
   maxPlatformVersion: string | null;
   requiresDatabaseReview: boolean;
   size: number;
+  // 보안 패치로 표시된 공개 버전들.
+  securityVersions: string[];
 };
+
+// Store에서 받은 뒤 src/extensions로 옮겨 직접 고쳐 쓰는 패키지.
+export type InstallerAdoptedPackage = { packageId: string; productUuid: string; version: string; path: string; adoptedAt: string };
 
 export type InstallerState = {
   success: boolean;
@@ -36,6 +41,7 @@ export type InstallerState = {
     environment: "development" | "production";
     platformVersion: string;
     storeConnected: boolean;
+    adopted: InstallerAdoptedPackage[];
     // 토큰은 화면으로 내보내지 않는다.
     connection: { storeUrl: string; accountName: string; tokenName: string; keyCount: number; connectedAt: string } | null;
     defaultStoreUrl: string;
@@ -58,6 +64,7 @@ export type InstallerPackagePreview = {
   node: { required: string | null; current: string };
   alsoInstalls: { packageId: string; version: string; previousVersion: string | null; versionUuid: string }[];
   npm: { missing: { name: string; range: string }[]; conflicts: { name: string; range: string; installed: string }[]; command: string | null };
+  localChanges: { packageId: string; files: { path: string; change: "modified" | "removed" | "added" }[] }[];
   hasDatabaseFiles: boolean;
   migrations: { packageId: string; name: string; sql: string; truncated: boolean }[];
 };

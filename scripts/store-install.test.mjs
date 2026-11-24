@@ -392,3 +392,96 @@ test('version ranges follow the four forms the Store accepts', () => {
     ['1.2.3', '1.2.3', true], ['1.2.4', '1.2.3', false], ['4.5.0-beta.1', '^4.4.0', true], ['4.4.0', 'latest', false],
   ]) assert.equal(lib.satisfiesRange(version, range), expected, `${version} ${range}`);
 });
+
+test('files edited after installation are reported before an update and are not overwritten without consent', async t => {
+  const { root, storeUrl, state, read } = await setup(t);
+  await lib.connectStore(root, storeUrl, TOKEN);
+  await lib.installStorePackage(root, 'product-demo');
+  assert.deepEqual(await lib.findLocalChanges(root, 'demo'), []);
+
+  await fs.writeFile(path.join(root, 'src/packages/demo/index.ts'), 'export const demo = "mine";\n');
+  await fs.writeFile(path.join(root, 'src/packages/demo/extra.ts'), 'export {};\n');
+  await fs.rm(path.join(root, 'src/packages/demo/routes/detail.tsx'));
+  const changes = [{ path: 'extra.ts', change: 'added' }, { path: 'index.ts', change: 'modified' }, { path: 'routes/detail.tsx', change: 'removed' }];
+  assert.deepEqual(await lib.findLocalChanges(root, 'demo'), changes);
+
+  state.current = second;
+  assert.deepEqual((await lib.previewStorePackage(root, 'product-demo')).localChanges, [{ packageId: 'demo', files: changes }]);
+  await rejects(lib.installStorePackage(root, 'product-demo'), /직접 고친 파일이 있어 업데이트하지 않았습니다: demo 3개/);
+  assert.equal(await read('src/packages/demo/index.ts'), 'export const demo = "mine";\n');
+
+  await lib.installStorePackage(root, 'product-demo', { overwriteLocalChanges: true });
+  assert.equal(await read('src/packages/demo/index.ts'), 'export const demo = 2;\n');
+  // 덮어쓴 수정은 백업 폴더에 남는다.
+  const [backup] = await fs.readdir(path.join(root, '.plextype/backup'));
+  assert.equal(await read(`.plextype/backup/${backup}/index.ts`), 'export const demo = "mine";\n');
+});
+
+test('adopting moves a package into the project\'s own extensions, and the installer then leaves it alone', async t => {
+  const withImports = buildPackage('0.6.0', {
+    'index.ts': 'export { helper } from "@/packages/demo/helper";\n',
+    'helper.ts': 'export const helper = 1;\n',
+    'registry.tsx': 'import { helper } from "@/packages/demo/helper";\nexport default { modules: [] };\n',
+    'routes/list.tsx': 'export default function List() { return null; }\n',
+    'routes.json': JSON.stringify([route('', 'list.tsx')]),
+  });
+  const newer = buildPackage('0.7.0', { 'index.ts': 'export const next = true;\n' });
+  const { root, storeUrl, state, exists, read } = await setup(t, withImports);
+  await lib.connectStore(root, storeUrl, TOKEN);
+  await lib.installStorePackage(root, 'product-demo');
+
+  const adopted = await lib.adoptStorePackage(root, 'demo');
+  assert.deepEqual([adopted.path, adopted.version, adopted.hadLocalChanges], ['src/extensions/demo', '0.6.0', false]);
+  assert.equal(await exists('src/packages/demo'), false);
+  // 자기 위치를 가리키던 경로와 연결 파일, 등록 목록이 새 위치를 가리킨다.
+  assert.equal(await read('src/extensions/demo/index.ts'), 'export { helper } from "@/extensions/demo/helper";\n');
+  assert.match(await read('src/extensions/demo/routes.json'), /"src\/extensions\/demo\/routes\/list\.tsx"/);
+  assert.equal(await read('src/app/(extensions)/demo/page.tsx'), renderExtensionRoute({ ...route('', 'list.tsx'), implementation: 'src/extensions/demo/routes/list.tsx' }));
+  assert.match(await read('src/packages/index.ts'), /import package0 from "@\/extensions\/demo\/registry";/);
+  assert.equal(await exists('src/extensions/demo/plextype.package.json'), false);
+  assert.deepEqual((await lib.listAdoptedPackages(root)).map(item => [item.packageId, item.version]), [['demo', '0.6.0']]);
+  // 가져온 시점의 사본은 고치기 전의 경로 그대로 남는다.
+  assert.equal(await read(`${adopted.referencePath}/index.ts`), 'export { helper } from "@/packages/demo/helper";\n');
+
+  // 새 버전이 나와도 설치하지 않는다. 비교용으로만 받는다.
+  state.current = newer;
+  await rejects(lib.installStorePackage(root, 'product-demo'), /내 확장으로 가져온 패키지라 설치하지 않습니다/);
+  assert.equal(await exists('src/packages/demo'), false);
+  const reference = await lib.downloadReferencePackage(root, 'product-demo');
+  assert.deepEqual([reference.version, reference.basePath], ['0.7.0', adopted.referencePath]);
+  assert.equal(await read(`${reference.referencePath}/index.ts`), 'export const next = true;\n');
+  assert.equal(await read('src/extensions/demo/index.ts'), 'export { helper } from "@/extensions/demo/helper";\n');
+
+  await rejects(lib.markAdoptedVersion(root, 'demo', 'latest'), /형식/);
+  await lib.markAdoptedVersion(root, 'demo', '0.7.0');
+  assert.equal((await lib.readAdopted(root, 'demo')).version, '0.7.0');
+
+  // 가져오기를 취소하면 폴더가 백업으로 가고, 다시 설치할 수 있다.
+  const discarded = await lib.discardAdoptedPackage(root, 'demo');
+  assert.equal(await exists('src/extensions/demo'), false);
+  assert.equal(await exists('src/app/(extensions)/demo/page.tsx'), false);
+  assert.equal(await exists(`${discarded.backupPath}/helper.ts`), true);
+  assert.doesNotMatch(await read('src/packages/index.ts'), /demo/);
+  assert.equal((await lib.installStorePackage(root, 'product-demo')).version, '0.7.0');
+});
+
+test('an adopted package counts as installed for packages that need it, at the version it follows', async t => {
+  const core = named('core', '1.0.0');
+  const needsOld = named('app', '1.0.0', { requires: { packages: [{ packageId: 'core', minVersion: '1.0.0' }] } });
+  const { root, state, exists } = await setupStore(t, [core, needsOld]);
+  await lib.installStorePackage(root, 'product-core');
+  await lib.adoptStorePackage(root, 'core');
+
+  const preview = await lib.previewStorePackage(root, 'product-app');
+  assert.deepEqual([preview.blockers, preview.alsoInstalls], [[], []]);
+  await lib.installStorePackage(root, 'product-app');
+  assert.equal(await exists('src/packages/core'), false);
+  await lib.uninstallStorePackage(root, 'app');
+
+  // 가져온 확장이 따르는 버전보다 높은 버전이 필요하면, 덮어쓰지 않고 직접 반영하라고 알린다.
+  state.packages = [named('core', '2.0.0'), named('app', '2.0.0', { requires: { packages: [{ packageId: 'core', minVersion: '2.0.0' }] } })];
+  const blocked = await lib.previewStorePackage(root, 'product-app');
+  assert.match(blocked.blockers[0], /내 확장으로 가져온 core은\(는\) 1\.0\.0 기준/);
+  await lib.markAdoptedVersion(root, 'core', '2.0.0');
+  assert.deepEqual((await lib.previewStorePackage(root, 'product-app')).blockers, []);
+});

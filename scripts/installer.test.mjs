@@ -72,7 +72,7 @@ test('admin action checks authorization before touching the filesystem and hides
     'next/cache': { revalidatePath() {} },
     '../lib/storeInstall': {
       DEFAULT_STORE_URL: 'https://store.example', InstallerError,
-      readConnection: async () => null, readPlatformVersion: async () => '0.11.2', fetchCatalog: async () => [],
+      readConnection: async () => null, readPlatformVersion: async () => '0.11.2', fetchCatalog: async () => [], listAdoptedPackages: async () => [],
       installStorePackage: async () => { installs++; if (installs === 2) throw new InstallerError('먼저 Store에 연결해주세요.'); if (installs === 3) throw Error('/private/secret'); return { packageId: 'demo', version: '0.1.0', previousVersion: null, requiresDatabaseReview: true, registered: true, newMigrations: ['20260101000000_first'], alsoInstalled: [{ packageId: 'core', version: '1.0.0', previousVersion: null }] }; },
       uninstallStorePackage: async () => { uninstalls++; return { packageId: 'demo', version: '0.1.0', routes: [], backupPath: '.plextype/backup/demo', migrations: [] }; },
     },
@@ -140,8 +140,8 @@ test('views show what can be done in the current connection and environment', ()
     'next/link': ({ href, ...props }) => React.createElement('a', { href, ...props }),
     '../actions/installer.action': {},
   });
-  const item = { productUuid: 'product-test', name: 'Demo 자료', summary: '', category: 'layout', licenseType: 'mit', sellerName: '판매자', packageId: 'demo', version: '0.2.0', minPlatformVersion: '0.9.3', maxPlatformVersion: null, requiresDatabaseReview: false, size: 2048 };
-  const base = { packages: [inventory.parseInstalledManifest(manifest, 'demo')], warnings: [], platformVersion: '0.11.2', defaultStoreUrl: 'https://store.example', catalog: [item, { ...item, productUuid: 'future', packageId: 'future', minPlatformVersion: '9.0.0' }], catalogError: null };
+  const item = { productUuid: 'product-test', name: 'Demo 자료', summary: '', category: 'layout', licenseType: 'mit', sellerName: '판매자', packageId: 'demo', version: '0.2.0', minPlatformVersion: '0.9.3', maxPlatformVersion: null, requiresDatabaseReview: false, size: 2048, securityVersions: ['0.1.5'] };
+  const base = { packages: [inventory.parseInstalledManifest(manifest, 'demo')], warnings: [], adopted: [], platformVersion: '0.11.2', defaultStoreUrl: 'https://store.example', catalog: [item, { ...item, productUuid: 'future', packageId: 'future', minPlatformVersion: '9.0.0' }], catalogError: null };
   const render = (data, view) => renderToStaticMarkup(React.createElement(Page, { state: { success: true, message: '', data: { ...base, ...data } }, view }));
   const disconnected = { environment: 'development', storeConnected: false, connection: null };
   const connected = { environment: 'development', storeConnected: true, connection: { storeUrl: 'https://store.example', accountName: '계정', tokenName: '프로젝트', keyCount: 1, connectedAt: '' } };
@@ -167,6 +167,17 @@ test('views show what can be done in the current connection and environment', ()
   assert.doesNotMatch(render(connected, 'connection'), /name="token"/);
   assert.ok(enabled(render(connected, 'connection')).includes('연결 해제'));
   assert.ok(enabled(render(connected, 'installed')).includes('제거'));
+  // 설치된 버전(0.1.0)보다 새로운 보안 패치(0.1.5)가 있으면 어느 탭에서든 알린다.
+  for (const view of ['catalog', 'installed', 'connection']) assert.match(render(connected, view), /보안 패치가 나온 패키지가 있습니다[\s\S]*지금 0\.1\.0, 보안 패치 0\.1\.5/);
+  assert.ok(enabled(render(connected, 'installed')).includes('내 확장으로 가져오기'));
+  // 내 확장으로 가져온 패키지는 설치·업데이트 대신 새 버전을 받아 두는 버튼만 내놓고, 보안 패치는 직접 반영하라고 알린다.
+  const adoptedState = { ...connected, packages: [], adopted: [{ packageId: 'demo', productUuid: 'product-test', version: '0.1.0', path: 'src/extensions/demo', adoptedAt: '' }] };
+  const adoptedCatalog = render(adoptedState, 'catalog');
+  assert.match(adoptedCatalog, /내 확장으로 가져옴 · 0\.1\.0 기준/);
+  assert.match(adoptedCatalog, /자동으로 받을 수 없습니다/);
+  assert.ok(enabled(adoptedCatalog).includes('새 버전 받아 두기'));
+  assert.ok(!buttons(adoptedCatalog).some(button => button.text === '업데이트' || button.text === '설치'));
+  assert.ok(enabled(render(adoptedState, 'installed')).includes('가져오기 취소'));
   // 운영 환경에서는 연결돼 있어도 설치·연결·제거를 내놓지 않는다.
   const production = { ...connected, environment: 'production' };
   assert.deepEqual(disabled(render(production, 'catalog')), ['업데이트', '호환 안 됨']);

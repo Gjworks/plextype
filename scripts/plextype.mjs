@@ -7,6 +7,10 @@
 //   npm run plextype -- install <패키지ID|상품UUID> 설치 또는 업데이트 (DB 변경이 있으면 내용을 보여 주고 묻는다. --yes로 묻지 않음)
 //   npm run plextype -- migrate                     설치한 패키지의 스키마를 합치고 마이그레이션을 개발 DB에 적용
 //   npm run plextype -- remove <패키지ID>           제거 (.plextype/backup으로 옮김)
+//   npm run plextype -- adopt <패키지ID>            패키지를 src/extensions로 옮겨 직접 고쳐 쓰는 내 확장으로 만들기
+//   npm run plextype -- reference <패키지ID>        가져온 패키지의 새 버전을 비교용으로 받기 (.plextype/reference)
+//   npm run plextype -- mark <패키지ID> <버전>      새 버전을 반영한 뒤 가져온 확장의 기준 버전 올리기
+//   npm run plextype -- discard <패키지ID>          가져오기 취소 (고쳐 쓰던 폴더를 .plextype/backup으로 옮김)
 //   npm run plextype -- keys                        서명 검증 키 다시 받기
 //   npm run plextype -- disconnect                  연결 해제
 //
@@ -86,8 +90,15 @@ const commands = {
     const connection = await lib.readConnection(root);
     const products = await lib.fetchCatalog(option('--store') || connection?.storeUrl || lib.DEFAULT_STORE_URL);
     if (!products.length) return console.log('설치할 수 있는 자료가 없습니다.');
+    const adopted = new Map((await lib.listAdoptedPackages(root)).map((item) => [item.packageId, item.version]));
     for (const product of products) {
-      console.log(`${product.packageId}@${product.version}  ${product.name}  (${product.sellerName}, ${product.licenseType || '라이선스 미표기'})`);
+      const base = adopted.get(product.packageId);
+      const notes = [
+        base ? `내 확장으로 가져옴(${base} 기준)` : '',
+        base && lib.compareVersions(product.version, base) > 0 ? '새 버전 있음' : '',
+        base && product.securityVersions.some((version) => lib.compareVersions(version, base) > 0) ? '보안 패치 있음' : '',
+      ].filter(Boolean).join(', ');
+      console.log(`${product.packageId}@${product.version}  ${product.name}  (${product.sellerName}, ${product.licenseType || '라이선스 미표기'})${notes ? `  [${notes}]` : ''}`);
     }
   },
   async install() {
@@ -106,6 +117,15 @@ const commands = {
     if (preview.alsoInstalls.length) {
       console.log(`  함께 설치되는 패키지: ${preview.alsoInstalls.map((item) => `${item.packageId}@${item.version}`).join(', ')}`);
     }
+    let overwrite = false;
+    if (preview.localChanges.length) {
+      console.log('  직접 고친 파일이 있습니다. 업데이트하면 이 수정이 사라집니다(이전 폴더는 .plextype/backup에 보관).');
+      for (const changed of preview.localChanges) {
+        for (const file of changed.files) console.log(`    ${changed.packageId}: ${file.change} ${file.path}`);
+      }
+      overwrite = await ask('  덮어쓰고 업데이트할까요? 수정을 유지하려면 n을 누르고 adopt 명령으로 가져오세요.');
+      if (!overwrite) throw new lib.InstallerError('업데이트하지 않았습니다.');
+    }
     for (const conflict of preview.npm.conflicts) {
       console.log(`  주의: ${conflict.name}은(는) 프로젝트에 ${conflict.installed}가 있고 이 패키지는 ${conflict.range}를 요구합니다.`);
     }
@@ -119,7 +139,7 @@ const commands = {
       apply = await ask('\n설치하고 개발 DB에 적용할까요?');
     }
     const expected = Object.fromEntries([...preview.alsoInstalls, preview].map((item) => [item.packageId, item.versionUuid]));
-    const result = await lib.installStorePackage(root, product.productUuid, { versionUuid: preview.versionUuid, expected });
+    const result = await lib.installStorePackage(root, product.productUuid, { versionUuid: preview.versionUuid, expected, overwriteLocalChanges: overwrite });
     afterInstall(result);
     if (apply) await applyDatabase();
     else if (preview.hasDatabaseFiles) console.log('\nDB에는 적용하지 않았습니다. 준비되면 npm run plextype -- migrate 를 실행해주세요.');
@@ -136,6 +156,37 @@ const commands = {
       console.log('이 패키지가 만든 테이블과 마이그레이션 적용 이력은 DB에 남아 있습니다. 필요 없으면 테이블을 직접 정리해주세요.');
     }
   },
+  async adopt() {
+    const name = rest.find((value) => !value.startsWith('--'));
+    if (!name) throw new lib.InstallerError('가져올 패키지 ID를 적어주세요: npm run plextype -- adopt <패키지ID>');
+    const result = await lib.adoptStorePackage(root, name);
+    console.log(`가져왔습니다: ${result.path} (${result.version} 기준)`);
+    console.log('이제 직접 고쳐 쓸 수 있습니다. 새 버전은 버튼으로 받을 수 없고, reference 명령으로 받아 직접 반영합니다.');
+    console.log(`가져온 시점의 사본: ${result.referencePath}${result.hadLocalChanges ? ' (가져오기 전에 고친 파일이 있어 Store의 원본과 다릅니다)' : ''}`);
+  },
+  async reference() {
+    const name = rest.find((value) => !value.startsWith('--'));
+    if (!name) throw new lib.InstallerError('패키지 ID를 적어주세요: npm run plextype -- reference <패키지ID>');
+    const connection = await requireConnection();
+    const product = (await lib.fetchCatalog(connection.storeUrl)).find((item) => item.packageId === name || item.productUuid === name);
+    if (!product) throw new lib.InstallerError(`Store에서 "${name}" 자료를 찾지 못했습니다.`);
+    const result = await lib.downloadReferencePackage(root, product.productUuid);
+    console.log(`${result.packageId} ${result.version}을(를) ${result.referencePath}에 받았습니다.`);
+    if (result.basePath) console.log(`바뀐 내용 보기:\n  git diff --no-index ${result.basePath} ${result.referencePath}`);
+    console.log(`반영을 마치면: npm run plextype -- mark ${result.packageId} ${result.version}`);
+  },
+  async mark() {
+    const [name, version] = rest.filter((value) => !value.startsWith('--'));
+    if (!name || !version) throw new lib.InstallerError('사용법: npm run plextype -- mark <패키지ID> <버전>');
+    const result = await lib.markAdoptedVersion(root, name, version);
+    console.log(`${result.packageId}의 기준 버전을 ${result.version}으로 올렸습니다.`);
+  },
+  async discard() {
+    const name = rest.find((value) => !value.startsWith('--'));
+    if (!name) throw new lib.InstallerError('패키지 ID를 적어주세요: npm run plextype -- discard <패키지ID>');
+    const result = await lib.discardAdoptedPackage(root, name);
+    console.log(`가져오기를 취소했습니다. 고쳐 쓰던 폴더는 ${result.backupPath}로 옮겼습니다.`);
+  },
   async migrate() {
     await applyDatabase();
   },
@@ -150,7 +201,7 @@ const commands = {
 };
 
 if (!command || !commands[command]) {
-  console.log('사용법: npm run plextype -- <connect|status|list|install|migrate|remove|keys|disconnect>');
+  console.log('사용법: npm run plextype -- <connect|status|list|install|migrate|remove|adopt|reference|mark|discard|keys|disconnect>');
   process.exit(command ? 1 : 0);
 }
 

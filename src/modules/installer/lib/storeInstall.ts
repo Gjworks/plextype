@@ -39,6 +39,8 @@ export type CatalogProduct = {
   maxPlatformVersion: string | null;
   requiresDatabaseReview: boolean;
   size: number;
+  // 보안 패치로 표시된 공개 버전들. 설치했거나 가져온 버전보다 새 것이 있으면 서둘러 반영해야 한다.
+  securityVersions: string[];
 };
 
 type PackageManifest = {
@@ -279,6 +281,9 @@ export async function fetchCatalog(storeUrl: string): Promise<CatalogProduct[]> 
       maxPlatformVersion: latest.maxPlatformVersion as string | null,
       requiresDatabaseReview: latest.requiresDatabaseReview === true,
       size: typeof latest.size === "number" ? latest.size : 0,
+      securityVersions: Array.isArray(item.securityVersions)
+        ? item.securityVersions.filter((value): value is string => typeof value === "string" && VERSION.test(value)).slice(0, 200)
+        : [],
     }];
   });
 }
@@ -523,12 +528,21 @@ export async function writePackageRegistry(root: string) {
       if (stat?.isFile()) { registered.push({ packageId: entry.name, file }); break; }
     }
   }
+  // 내 확장으로 가져온 패키지도 기록 파일과 registry 파일이 남아 있는 동안은 여기서 등록한다.
+  // 가져온 순간 관리자 메뉴나 스킨이 사라지지 않게 하기 위함이며, 기록 파일을 지우면 설치기는 더 관여하지 않는다.
+  const specifiers = registered.map((item) => `./${item.packageId}/registry`);
+  for (const adopted of await listAdoptedPackages(root)) {
+    for (const file of ["registry.ts", "registry.tsx"]) {
+      const stat = await fs.lstat(path.join(root, EXTENSIONS_DIRECTORY, adopted.packageId, file)).catch(() => null);
+      if (stat?.isFile()) { specifiers.push(`@/extensions/${adopted.packageId}/registry`); break; }
+    }
+  }
   const lines = [
-    "// 쉬운 설치가 만드는 파일. 직접 고치지 않는다. 패키지를 설치하거나 제거할 때마다 다시 만든다.",
+    "// 쉬운 설치가 만드는 파일. 직접 고치지 않는다. 패키지를 설치·제거하거나 내 확장으로 가져올 때마다 다시 만든다.",
     'import type { ExtensionRegistryConfig } from "@/core/registry/define";',
-    ...registered.map((item, index) => `import package${index} from "./${item.packageId}/registry";`),
+    ...specifiers.map((specifier, index) => `import package${index} from "${specifier}";`),
     "",
-    `export const installedPackages: ExtensionRegistryConfig[] = [${registered.map((_, index) => `package${index}`).join(", ")}];`,
+    `export const installedPackages: ExtensionRegistryConfig[] = [${specifiers.map((_, index) => `package${index}`).join(", ")}];`,
     "",
   ];
   await fs.mkdir(directory, { recursive: true });
@@ -680,6 +694,9 @@ const MAX_DEPENDENCY_DEPTH = 10;
 // 설치를 막는 사유(blockers)가 있으면 순서를 만들었더라도 설치하면 안 된다.
 async function planInstall(root: string, productUuid: string, options: { versionUuid?: string } = {}) {
   const target = await loadVerifiedPackage(root, productUuid, options);
+  if (await readAdopted(root, target.manifest.packageId)) {
+    throw new InstallerError(`${target.manifest.packageId}은(는) 내 확장으로 가져온 패키지라 설치하지 않습니다. 새 버전은 참고용으로 받아 직접 반영하거나, 가져오기를 취소한 뒤 설치해주세요.`);
+  }
   const steps: LoadedPackage[] = [];
   const blockers: string[] = [];
   const planned = new Map<string, string>([[target.manifest.packageId, target.manifest.version]]);
@@ -688,8 +705,11 @@ async function planInstall(root: string, productUuid: string, options: { version
   const visit = async (loaded: LoadedPackage, depth: number) => {
     for (const need of loaded.manifest.requires?.packages ?? []) {
       const label = `${loaded.manifest.packageId}에 필요한 ${need.packageId} ${need.minVersion} 이상`;
-      const have = planned.get(need.packageId) ?? (await readInstalled(root, need.packageId))?.version;
+      // 내 확장으로 가져온 패키지는 그 확장이 따르는 버전으로 설치된 것과 같이 본다.
+      const adopted = await readAdopted(root, need.packageId);
+      const have = planned.get(need.packageId) ?? adopted?.version ?? (await readInstalled(root, need.packageId))?.version;
       if (have && compareVersions(have, need.minVersion) >= 0) continue;
+      if (adopted) { blockers.push(`${label}이 필요한데, 내 확장으로 가져온 ${need.packageId}은(는) ${adopted.version} 기준입니다. 새 버전을 반영하고 기준 버전을 올려주세요.`); continue; }
       if (planned.has(need.packageId)) { blockers.push(`${label}을(를) 맞출 수 없습니다. 함께 설치될 버전은 ${have}입니다.`); continue; }
       if (depth >= MAX_DEPENDENCY_DEPTH) { blockers.push(`${label}: 필요한 패키지가 너무 깊이 이어집니다.`); continue; }
       const connection = await readConnection(root);
@@ -727,7 +747,13 @@ async function planInstall(root: string, productUuid: string, options: { version
   if (requiredNode && compareVersions(currentNode.split("-")[0], requiredNode) < 0) {
     blockers.push(`Node ${requiredNode} 이상이 필요합니다. 현재 버전은 ${currentNode}입니다.`);
   }
-  return { target, steps, blockers, node: { required: requiredNode, current: currentNode }, npm: await checkNpmRequirements(root, [...npm.values()]) };
+  // 업데이트되는 패키지 가운데 설치 후 사람이 고친 파일이 있는 것. 업데이트하면 그 수정이 사라진다.
+  const localChanges: { packageId: string; files: LocalChange[] }[] = [];
+  for (const step of steps) {
+    const files = step.installed ? await findLocalChanges(root, step.manifest.packageId) : [];
+    if (files.length > 0) localChanges.push({ packageId: step.manifest.packageId, files });
+  }
+  return { target, steps, blockers, localChanges, node: { required: requiredNode, current: currentNode }, npm: await checkNpmRequirements(root, [...npm.values()]) };
 }
 
 export type PackagePreview = {
@@ -744,6 +770,8 @@ export type PackagePreview = {
   alsoInstalls: { packageId: string; version: string; previousVersion: string | null; versionUuid: string }[];
   // 프로젝트에 없거나 버전이 맞지 않는 npm 라이브러리. 없는 것은 command로 직접 설치한다.
   npm: { missing: { name: string; range: string }[]; conflicts: { name: string; range: string; installed: string }[]; command: string | null };
+  // 설치 후 직접 고친 파일이 있는 패키지. 업데이트하면 이 수정이 사라진다(이전 폴더는 백업에 남는다).
+  localChanges: { packageId: string; files: LocalChange[] }[];
   // 함께 설치되는 것을 포함해 prisma 스키마나 SQL 파일이 들어 있는지.
   hasDatabaseFiles: boolean;
   // 설치하면 DB에 새로 적용될 마이그레이션과 그 SQL.
@@ -776,6 +804,7 @@ export async function previewStorePackage(root: string, productUuid: string): Pr
       versionUuid: step.metadata.versionUuid,
     })),
     npm: plan.npm,
+    localChanges: plan.localChanges,
     hasDatabaseFiles: plan.steps.some((step) => step.manifest.requiresDatabaseReview),
     migrations,
   };
@@ -786,10 +815,14 @@ export async function previewStorePackage(root: string, productUuid: string): Pr
 export async function installStorePackage(
   root: string,
   productUuid: string,
-  options: { versionUuid?: string; expected?: Record<string, string> } = {},
+  options: { versionUuid?: string; expected?: Record<string, string>; overwriteLocalChanges?: boolean } = {},
 ): Promise<InstallResult> {
   const plan = await planInstall(root, productUuid, { versionUuid: options.versionUuid });
   if (plan.blockers.length > 0) throw new InstallerError(plan.blockers.join("\n"));
+  // 직접 고친 파일을 덮어쓰는 것은 그 사실을 본 뒤에 명시적으로 허락했을 때만 한다.
+  if (plan.localChanges.length > 0 && !options.overwriteLocalChanges) {
+    throw new InstallerError(`직접 고친 파일이 있어 업데이트하지 않았습니다: ${plan.localChanges.map((item) => `${item.packageId} ${item.files.length}개`).join(", ")}. 내용을 확인한 뒤 덮어쓰기를 선택하거나, 패키지를 내 확장으로 가져와주세요.`);
+  }
   if (options.expected && plan.steps.some((step) => options.expected![step.manifest.packageId] !== step.metadata.versionUuid)) {
     throw new InstallerError("확인한 뒤에 Store의 버전이 바뀌었습니다. 다시 설치를 눌러 내용을 확인해주세요.");
   }
@@ -904,6 +937,9 @@ export async function uninstallStorePackage(root: string, packageId: string) {
   for (const name of await listInstalledPackageIds(root)) {
     if (name !== packageId && (await readInstalled(root, name))?.requires.packages.some((item) => item.packageId === packageId)) dependents.push(name);
   }
+  for (const adopted of await listAdoptedPackages(root)) {
+    if (adopted.requires.packages.some((item) => item.packageId === packageId)) dependents.push(`${adopted.packageId}(내 확장)`);
+  }
   if (dependents.length > 0) {
     throw new InstallerError(`${dependents.join(", ")} 패키지가 ${packageId}을(를) 필요로 합니다. 그 패키지를 먼저 제거해주세요.`);
   }
@@ -928,4 +964,239 @@ export async function uninstallStorePackage(root: string, packageId: string) {
     // 이 패키지가 가져왔던 마이그레이션. 폴더를 빼도 DB의 테이블과 적용 이력은 그대로 남는다.
     migrations: installed.migrations,
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// 직접 고친 패키지 다루기
+//
+// 패키지를 고쳐 쓰는 길은 둘이다.
+// - 등록 단위(스킨의 화면, 레이아웃, 메뉴)만 바꿀 때: src/extensions에서 같은 key로 등록한다. 패키지는 그대로라 업데이트를 계속 받는다.
+// - 패키지 안쪽까지 고칠 때: 패키지를 src/extensions로 가져와 내 확장으로 만든다(adoptStorePackage).
+//   그 뒤로 설치기는 그 폴더를 덮어쓰지 않으며, 새 버전은 알리기만 하고 반영은 사람이 한다.
+// 그 밖에 src/packages 안의 파일을 직접 고친 경우는 업데이트 전에 알려, 모르는 사이에 덮어쓰지 않게 한다.
+// ---------------------------------------------------------------------------------------------
+
+const ADOPTED_FILE = "plextype.adopted.json";
+const EXTENSIONS_DIRECTORY = "src/extensions";
+// 가져올 때 경로를 고쳐 쓸 글자 파일. 그 밖의 파일(이미지 등)은 내용을 건드리지 않는다.
+const TEXT_FILE = /\.(tsx?|jsx?|mjs|cjs|json|css|scss|mdx?|prisma)$/i;
+
+export type LocalChange = { path: string; change: "modified" | "removed" | "added" };
+
+export type AdoptedPackage = {
+  packageId: string;
+  productUuid: string;
+  // 가져온 코드가 따르고 있는 Store 버전. 새 버전을 직접 반영한 뒤 올린다.
+  version: string;
+  adoptedAt: string;
+  requires: PackageRequirements;
+};
+
+async function walkFiles(directory: string, prefix = ""): Promise<string[]> {
+  const files: string[] = [];
+  let entries: Dirent[] = [];
+  try { entries = await fs.readdir(path.join(directory, prefix), { withFileTypes: true }); }
+  catch { return files; }
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) files.push(...await walkFiles(directory, relative));
+    else if (entry.isFile()) files.push(relative);
+  }
+  return files;
+}
+
+// 설치한 뒤에 사람이 바꾼 파일. 설치할 때 기록한 파일별 해시와 지금 폴더를 비교한다.
+export async function findLocalChanges(root: string, packageId: string): Promise<LocalChange[]> {
+  const directory = path.join(root, PACKAGES_DIRECTORY, packageId);
+  const raw = await readText(path.join(directory, "plextype.package.json"));
+  if (raw === null) return [];
+  let manifest: unknown;
+  try { manifest = JSON.parse(raw); }
+  catch { return []; }
+  if (!isRecord(manifest) || !Array.isArray(manifest.files)) return [];
+  const recorded = new Map<string, string>();
+  for (const file of manifest.files) {
+    if (isRecord(file) && typeof file.path === "string" && typeof file.sha256 === "string") recorded.set(file.path, file.sha256);
+  }
+  const changes: LocalChange[] = [];
+  const present = new Set<string>();
+  for (const file of await walkFiles(directory)) {
+    if (file === "plextype.package.json") continue;
+    present.add(file);
+    const expected = recorded.get(file);
+    if (!expected) changes.push({ path: file, change: "added" });
+    else if (sha256(await fs.readFile(path.join(directory, file))) !== expected) changes.push({ path: file, change: "modified" });
+  }
+  for (const file of recorded.keys()) if (!present.has(file)) changes.push({ path: file, change: "removed" });
+  return changes.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+export async function readAdopted(root: string, packageId: string): Promise<AdoptedPackage | null> {
+  if (!PACKAGE_ID.test(packageId)) return null;
+  const raw = await readText(path.join(root, EXTENSIONS_DIRECTORY, packageId, ADOPTED_FILE));
+  if (raw === null) return null;
+  try {
+    const value = JSON.parse(raw) as unknown;
+    if (!isRecord(value) || value.schemaVersion !== 1 || value.packageId !== packageId ||
+        typeof value.productUuid !== "string" || !UUID.test(value.productUuid) ||
+        typeof value.version !== "string" || !VERSION.test(value.version)) return null;
+    return {
+      packageId,
+      productUuid: value.productUuid,
+      version: value.version,
+      adoptedAt: typeof value.adoptedAt === "string" ? value.adoptedAt : "",
+      requires: parseRequirements(value.requires) ?? NO_REQUIREMENTS,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function listAdoptedPackages(root: string): Promise<AdoptedPackage[]> {
+  let entries: Dirent[] = [];
+  try { entries = await fs.readdir(path.join(root, EXTENSIONS_DIRECTORY), { withFileTypes: true }); }
+  catch { /* 확장 폴더가 없으면 가져온 것도 없다. */ }
+  const adopted: AdoptedPackage[] = [];
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    const item = entry.isDirectory() ? await readAdopted(root, entry.name) : null;
+    if (item) adopted.push(item);
+  }
+  return adopted;
+}
+
+const writeAdopted = (root: string, adopted: AdoptedPackage) => fs.writeFile(
+  path.join(root, EXTENSIONS_DIRECTORY, adopted.packageId, ADOPTED_FILE),
+  JSON.stringify({ schemaVersion: 1, type: "plextype-adopted", ...adopted }, null, 2) + "\n",
+);
+
+const isAdoptedAdapter = (content: string, packageId: string) => (
+  ADAPTER_HEADERS.some((header) => content.startsWith(header)) && content.includes(`from "@/extensions/${packageId}/`)
+);
+
+const referencePath = (root: string, packageId: string, version: string) => statePath(root, "reference", `${packageId}-${version}`);
+const relativeToRoot = (root: string, target: string) => path.relative(root, target).split(path.sep).join("/");
+
+// 설치한 패키지를 src/extensions로 옮겨 내 확장으로 만든다.
+// 패키지 안에서 자기 위치를 가리키던 경로(import, routes.json)와 src/app의 연결 파일을 새 위치로 고치고,
+// 어느 Store 패키지의 몇 버전에서 왔는지 기록 파일(plextype.adopted.json)을 남긴다.
+// 옮기기 전의 모습은 .plextype/reference에 사본으로 두어, 나중에 새 버전과 비교할 수 있게 한다.
+export async function adoptStorePackage(root: string, packageId: string) {
+  assertInstallAllowed();
+  if (!PACKAGE_ID.test(packageId)) throw new InstallerError("설치된 패키지를 찾지 못했습니다.");
+  const installed = await readInstalled(root, packageId);
+  if (!installed) throw new InstallerError("쉬운 설치로 넣은 패키지만 가져올 수 있습니다.");
+  const destination = path.join(root, EXTENSIONS_DIRECTORY, packageId);
+  if (await hasFile(destination)) throw new InstallerError(`${EXTENSIONS_DIRECTORY}/${packageId} 폴더가 이미 있어 가져올 수 없습니다.`);
+
+  const hadLocalChanges = (await findLocalChanges(root, packageId)).length > 0;
+  const reference = referencePath(root, packageId, installed.version);
+  if (!(await hasFile(reference))) {
+    await fs.mkdir(path.dirname(reference), { recursive: true });
+    await fs.cp(installed.directory, reference, { recursive: true });
+  }
+
+  await fs.mkdir(path.dirname(destination), { recursive: true });
+  await fs.rename(installed.directory, destination);
+  await fs.rm(path.join(destination, "plextype.package.json"), { force: true });
+
+  const moved = new RegExp(`(@/|src/)packages/${packageId}(?=[/"'\`])`, "g");
+  for (const file of await walkFiles(destination)) {
+    if (!TEXT_FILE.test(file)) continue;
+    const target = path.join(destination, file);
+    const content = await fs.readFile(target, "utf8");
+    const next = content.replace(moved, `$1extensions/${packageId}`);
+    if (next !== content) await fs.writeFile(target, next);
+  }
+
+  // 연결 파일은 옮긴 routes.json대로 다시 쓴다. 이 패키지의 연결 파일이었던 것과 아직 없는 것만 쓴다.
+  const routes: string[] = [];
+  for (const file of await walkFiles(destination)) {
+    if (file !== "routes.json" && !file.endsWith("/routes.json")) continue;
+    let entries: unknown;
+    try { entries = JSON.parse(await fs.readFile(path.join(destination, file), "utf8")); }
+    catch { continue; }
+    if (!Array.isArray(entries)) continue;
+    for (const entry of entries) {
+      if (!isRecord(entry) || typeof entry.route !== "string" || !entry.route.startsWith("src/app/") || !isSafeRelativePath(entry.route) ||
+          typeof entry.implementation !== "string" || !entry.implementation.startsWith(`${EXTENSIONS_DIRECTORY}/${packageId}/`) || !isSafeRelativePath(entry.implementation) ||
+          !Array.isArray(entry.configs) || !entry.configs.every((config) => typeof config === "string" && ROUTE_CONFIG.test(config)) ||
+          (entry.exports !== undefined && (!Array.isArray(entry.exports) || !entry.exports.every((item) => typeof item === "string" && ROUTE_EXPORT.test(item))))) continue;
+      const target = path.join(root, entry.route);
+      const current = await readText(target);
+      if (current !== null && !isOwnedAdapter(current, packageId)) continue;
+      await fs.mkdir(path.dirname(target), { recursive: true });
+      await fs.writeFile(target, renderRouteAdapter(entry as unknown as RouteEntry));
+      routes.push(entry.route);
+    }
+  }
+
+  await writeAdopted(root, { packageId, productUuid: installed.productUuid, version: installed.version, adoptedAt: new Date().toISOString(), requires: installed.requires });
+  await writePackageRegistry(root);
+  return {
+    packageId,
+    version: installed.version,
+    path: `${EXTENSIONS_DIRECTORY}/${packageId}`,
+    routes,
+    referencePath: relativeToRoot(root, reference),
+    // 가져오기 전에 이미 고친 파일이 있었다면 참고 사본도 원본 그대로가 아니다.
+    hadLocalChanges,
+  };
+}
+
+// 가져온 확장을 포기한다. 폴더를 .plextype/backup으로 옮기고 그 연결 파일을 지워, Store의 패키지를 다시 설치할 수 있게 한다.
+export async function discardAdoptedPackage(root: string, packageId: string) {
+  assertInstallAllowed();
+  const adopted = await readAdopted(root, packageId);
+  if (!adopted) throw new InstallerError("내 확장으로 가져온 패키지가 아닙니다.");
+  const directory = path.join(root, EXTENSIONS_DIRECTORY, packageId);
+  for (const file of await walkFiles(directory)) {
+    if (file !== "routes.json" && !file.endsWith("/routes.json")) continue;
+    let entries: unknown;
+    try { entries = JSON.parse(await fs.readFile(path.join(directory, file), "utf8")); }
+    catch { continue; }
+    if (!Array.isArray(entries)) continue;
+    for (const entry of entries) {
+      if (!isRecord(entry) || typeof entry.route !== "string" || !entry.route.startsWith("src/app/") || !isSafeRelativePath(entry.route)) continue;
+      const target = path.join(root, entry.route);
+      const current = await readText(target);
+      if (current !== null && isAdoptedAdapter(current, packageId)) await fs.rm(target, { force: true });
+    }
+  }
+  const backup = statePath(root, "backup", `${packageId}-${Date.now()}-${randomBytes(4).toString("hex")}`);
+  await fs.mkdir(path.dirname(backup), { recursive: true });
+  await fs.rename(directory, backup);
+  await writePackageRegistry(root);
+  return { packageId, version: adopted.version, backupPath: relativeToRoot(root, backup) };
+}
+
+// 가져온 패키지의 새 버전을 프로젝트 밖(.plextype/reference)에 받아 둔다. 설치가 아니라 비교용 사본이다.
+export async function downloadReferencePackage(root: string, productUuid: string) {
+  const { manifest, files } = await loadVerifiedPackage(root, productUuid);
+  const directory = referencePath(root, manifest.packageId, manifest.version);
+  await fs.rm(directory, { recursive: true, force: true });
+  for (const [name, content] of files) {
+    const target = path.join(directory, name);
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await fs.writeFile(target, content);
+  }
+  await fs.writeFile(path.join(directory, "plextype.package.json"), JSON.stringify(manifest, null, 2) + "\n");
+  const adopted = await readAdopted(root, manifest.packageId);
+  return {
+    packageId: manifest.packageId,
+    version: manifest.version,
+    referencePath: relativeToRoot(root, directory),
+    // 가져온 시점의 사본이 남아 있으면 두 폴더를 비교해 새 버전에서 바뀐 것을 볼 수 있다.
+    basePath: adopted && await hasFile(referencePath(root, manifest.packageId, adopted.version))
+      ? relativeToRoot(root, referencePath(root, manifest.packageId, adopted.version)) : null,
+  };
+}
+
+// 새 버전의 변경을 내 코드에 반영한 뒤, 가져온 확장이 따르는 버전을 올린다. 새 버전 알림과 의존 관계 판단이 이 값을 본다.
+export async function markAdoptedVersion(root: string, packageId: string, version: string) {
+  assertInstallAllowed();
+  const adopted = await readAdopted(root, packageId);
+  if (!adopted) throw new InstallerError("내 확장으로 가져온 패키지가 아닙니다.");
+  if (!VERSION.test(version)) throw new InstallerError("버전은 1.2.0 형식으로 적어주세요.");
+  await writeAdopted(root, { ...adopted, version });
+  return { packageId, version };
 }

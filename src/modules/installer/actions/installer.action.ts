@@ -10,7 +10,12 @@ import {
   connectStore,
   disconnectStore,
   fetchCatalog,
+  adoptStorePackage,
+  discardAdoptedPackage,
+  downloadReferencePackage,
   installStorePackage,
+  listAdoptedPackages,
+  markAdoptedVersion,
   previewStorePackage,
   readConnection,
   readPlatformVersion,
@@ -48,10 +53,11 @@ export async function getInstallerOverviewAdminAction(): Promise<InstallerState>
   if (!(await isAdmin())) return { success: false, message: "관리자 권한이 필요합니다." };
   try {
     const root = process.cwd();
-    const [inventory, connection, platformVersion] = await Promise.all([
+    const [inventory, connection, platformVersion, adopted] = await Promise.all([
       readInstallerInventory(),
       readConnection(root),
       readPlatformVersion(root).catch(() => ""),
+      listAdoptedPackages(root),
     ]);
     let catalog: InstallerCatalogItem[] = [];
     let catalogError: string | null = null;
@@ -68,6 +74,7 @@ export async function getInstallerOverviewAdminAction(): Promise<InstallerState>
         environment: process.env.NODE_ENV === "development" ? "development" : "production",
         platformVersion,
         storeConnected: Boolean(connection),
+        adopted: adopted.map(({ packageId, productUuid, version, adoptedAt }) => ({ packageId, productUuid, version, adoptedAt, path: `src/extensions/${packageId}` })),
         connection: connection ? {
           storeUrl: connection.storeUrl,
           accountName: connection.accountName,
@@ -123,11 +130,11 @@ export async function previewStorePackageAdminAction(productUuid: string): Promi
 // expected는 화면이 미리 본 패키지별 버전이다. 그 사이 Store의 버전이 바뀌었으면 설치하지 않는다.
 export async function installStorePackageAdminAction(
   productUuid: string,
-  options: { versionUuid?: string; expected?: Record<string, string>; applyDatabase?: boolean } = {},
+  options: { versionUuid?: string; expected?: Record<string, string>; applyDatabase?: boolean; overwriteLocalChanges?: boolean } = {},
 ): Promise<InstallerActionResult> {
   return run(async () => {
     const root = process.cwd();
-    const result = await installStorePackage(root, productUuid, { versionUuid: options.versionUuid, expected: options.expected });
+    const result = await installStorePackage(root, productUuid, { versionUuid: options.versionUuid, expected: options.expected, overwriteLocalChanges: options.overwriteLocalChanges });
     const notes = [
       result.previousVersion ? `${result.packageId}을(를) ${result.previousVersion}에서 ${result.version}으로 업데이트했습니다.` : `${result.packageId} ${result.version}을(를) 설치했습니다.`,
       result.alsoInstalled.length ? `함께 설치: ${result.alsoInstalled.map((item) => `${item.packageId} ${item.version}`).join(", ")}.` : "",
@@ -171,5 +178,44 @@ export async function uninstallStorePackageAdminAction(packageId: string): Promi
       notes.push("이 패키지가 만든 테이블과 마이그레이션 적용 이력은 DB에 남아 있습니다. 필요 없으면 테이블을 직접 정리해주세요.");
     }
     return notes.join(" ");
+  });
+}
+
+// 설치한 패키지를 src/extensions로 옮겨 직접 고쳐 쓰는 내 확장으로 만든다.
+export async function adoptStorePackageAdminAction(packageId: string): Promise<InstallerActionResult> {
+  return run(async () => {
+    const result = await adoptStorePackage(process.cwd(), packageId);
+    return [
+      `${result.packageId}을(를) ${result.path}로 가져왔습니다. 이제 직접 고쳐 쓸 수 있고, 새 버전은 알림만 받습니다.`,
+      `가져온 시점의 사본은 ${result.referencePath}에 있습니다.`,
+      result.hadLocalChanges ? "가져오기 전에 이미 고친 파일이 있어, 이 사본은 Store의 원본과 다릅니다." : "",
+    ].filter(Boolean).join(" ");
+  });
+}
+
+// 가져온 확장을 포기하고 Store의 패키지를 다시 설치할 수 있는 상태로 돌린다. 폴더는 백업으로 옮긴다.
+export async function discardAdoptedPackageAdminAction(packageId: string): Promise<InstallerActionResult> {
+  return run(async () => {
+    const result = await discardAdoptedPackage(process.cwd(), packageId);
+    return `${result.packageId} 가져오기를 취소했습니다. 고쳐 쓰던 폴더는 ${result.backupPath}에 보관했습니다. Store 자료에서 다시 설치할 수 있습니다.`;
+  });
+}
+
+// 가져온 패키지의 새 버전을 비교용으로 받아 둔다. 프로젝트의 소스는 바꾸지 않는다.
+export async function downloadReferenceAdminAction(productUuid: string): Promise<InstallerActionResult> {
+  return run(async () => {
+    const result = await downloadReferencePackage(process.cwd(), productUuid);
+    return [
+      `${result.packageId} ${result.version}을(를) ${result.referencePath}에 받았습니다.`,
+      result.basePath ? `바뀐 내용 보기: git diff --no-index ${result.basePath} ${result.referencePath}` : "",
+      "변경을 내 확장에 반영한 뒤 기준 버전을 올려주세요.",
+    ].filter(Boolean).join("\n");
+  });
+}
+
+export async function markAdoptedVersionAdminAction(packageId: string, version: string): Promise<InstallerActionResult> {
+  return run(async () => {
+    const result = await markAdoptedVersion(process.cwd(), packageId, version);
+    return `${result.packageId}의 기준 버전을 ${result.version}으로 올렸습니다.`;
   });
 }

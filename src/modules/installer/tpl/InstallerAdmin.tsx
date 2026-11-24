@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowUpRight, CheckCircle2, ChevronDown, Download, Link2, Monitor, Package, PackageOpen, Play, RefreshCw, Search, ShieldCheck, Trash2, Unlink } from "lucide-react";
+import { AlertCircle, ArrowUpRight, CheckCircle2, ChevronDown, Download, FolderInput, Link2, Monitor, Package, PackageOpen, Play, RefreshCw, Search, ShieldCheck, Trash2, Unlink } from "lucide-react";
 import {
   AdminPage,
   AdminPanel,
@@ -13,7 +13,11 @@ import {
   adminPrimaryButtonClass,
 } from "@/core/components/admin/AdminPageTemplate";
 import {
+  adoptStorePackageAdminAction,
   connectStoreAdminAction,
+  discardAdoptedPackageAdminAction,
+  downloadReferenceAdminAction,
+  markAdoptedVersionAdminAction,
   disconnectStoreAdminAction,
   installStorePackageAdminAction,
   previewStorePackageAdminAction,
@@ -43,8 +47,10 @@ const compareVersions = (a: string, b: string) => {
 // 막는 사유, 함께 설치되는 패키지, DB 변경, 모자란 npm 라이브러리 가운데 하나라도 있으면 설치 전에 보여 준다.
 const needsConfirmation = (preview: InstallerPackagePreview) => (
   preview.blockers.length > 0 || preview.alsoInstalls.length > 0 || preview.hasDatabaseFiles ||
-  preview.npm.missing.length > 0 || preview.npm.conflicts.length > 0
+  preview.npm.missing.length > 0 || preview.npm.conflicts.length > 0 || preview.localChanges.length > 0
 );
+
+const localChangeLabel = { modified: "수정", removed: "삭제", added: "추가" } as const;
 
 const expectedVersions = (preview: InstallerPackagePreview) => Object.fromEntries([
   ...preview.alsoInstalls.map((item) => [item.packageId, item.versionUuid]),
@@ -67,6 +73,15 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
   const packages = (data?.packages || []).filter(item => `${item.packageId} ${item.version}`.toLowerCase().includes(search.trim().toLowerCase()));
   const isDevelopment = data?.environment === "development";
   const canInstall = Boolean(isDevelopment && data?.storeConnected);
+
+  // 설치했거나 가져온 버전보다 새로운 보안 패치가 나온 패키지. 어느 탭에서든 맨 위에 알린다.
+  const securityAlerts = (data?.catalog || []).flatMap(item => {
+    const adopted = data?.adopted.find(entry => entry.packageId === item.packageId);
+    const base = adopted?.version ?? data?.packages.find(entry => entry.packageId === item.packageId)?.version;
+    if (!base) return [];
+    const pending = item.securityVersions.filter(version => compareVersions(version, base) > 0).sort(compareVersions);
+    return pending.length > 0 ? [{ item, base, latest: pending[pending.length - 1], adopted: Boolean(adopted) }] : [];
+  });
 
   // 설치·제거·연결은 서버의 파일을 바꾸므로 끝난 뒤 화면의 목록을 다시 받는다.
   const run = (key: string, work: () => Promise<InstallerActionResult>) => {
@@ -106,7 +121,7 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
     setConfirming(null);
     // 프로젝트에 없는 npm 라이브러리는 설치기가 넣지 않으므로, 설치가 끝난 뒤에도 실행할 명령을 계속 보여 준다.
     setNpmCommand(preview.npm.command);
-    run(`install:${item.productUuid}`, () => installStorePackageAdminAction(item.productUuid, { versionUuid: preview.versionUuid, expected: expectedVersions(preview), applyDatabase }));
+    run(`install:${item.productUuid}`, () => installStorePackageAdminAction(item.productUuid, { versionUuid: preview.versionUuid, expected: expectedVersions(preview), applyDatabase, overwriteLocalChanges: preview.localChanges.length > 0 }));
   };
 
   const installLabel = (item: InstallerCatalogItem) => {
@@ -160,6 +175,22 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
               </div>
             ))}
           </dl>
+
+          {securityAlerts.length > 0 && (
+            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-300">
+              <div className="flex items-center gap-2 font-semibold"><ShieldCheck size={16} className="shrink-0" />보안 패치가 나온 패키지가 있습니다</div>
+              <ul className="mt-1 list-disc space-y-1 pl-5">
+                {securityAlerts.map(alert => (
+                  <li key={alert.item.packageId} className="break-words">
+                    {alert.item.name} ({alert.item.packageId}): 지금 {alert.base}, 보안 패치 {alert.latest}.{" "}
+                    {alert.adopted
+                      ? "내 확장으로 가져온 패키지라 자동으로 받을 수 없습니다. Store 자료에서 새 버전을 받아 두고 바뀐 내용을 직접 반영해주세요."
+                      : "Store 자료에서 업데이트해주세요."}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {result && (
             <div role={result.success ? "status" : "alert"} className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm leading-6 ${result.success ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-300" : "border-red-200 bg-red-50 text-red-600 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-300"}`}>
@@ -224,10 +255,53 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                           >
                             <Trash2 size={14} />{busy === `remove:${item.packageId}` ? "제거 중" : "제거"}
                           </button>
+                          <button
+                            type="button"
+                            className={buttonClass}
+                            disabled={pending}
+                            title="패키지를 src/extensions로 옮겨 직접 고쳐 쓰는 내 확장으로 만듭니다."
+                            onClick={() => {
+                              if (window.confirm(`${item.packageId} 패키지를 내 확장으로 가져올까요?\n\n폴더가 src/extensions/${item.packageId}로 옮겨지고 자유롭게 고칠 수 있게 됩니다. 대신 새 버전을 버튼으로 받을 수 없고, 알림을 보고 직접 반영해야 합니다. 보안 패치도 마찬가지입니다.`)) {
+                                run(`adopt:${item.packageId}`, () => adoptStorePackageAdminAction(item.packageId));
+                              }
+                            }}
+                          >
+                            <FolderInput size={14} />{busy === `adopt:${item.packageId}` ? "가져오는 중" : "내 확장으로 가져오기"}
+                          </button>
                         </div>
                       )}
                     </details>
                   ))}
+                </div>
+              )}
+              {data.adopted.length > 0 && (
+                <div className="border-t border-gray-100 px-5 py-5 dark:border-dark-800">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-dark-100">내 확장으로 가져온 패키지</h3>
+                  <p className={`mt-1 leading-6 ${mutedClass}`}>직접 고쳐 쓰는 확장입니다. 설치기는 이 폴더를 덮어쓰지 않으며, 새 버전은 Store 자료 탭에서 알립니다.</p>
+                  <ul className="mt-3 divide-y divide-gray-100 dark:divide-dark-800">
+                    {data.adopted.map(item => (
+                      <li key={item.packageId} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="break-all text-sm font-semibold text-gray-900 dark:text-dark-100">{item.packageId} <span className="font-mono text-xs font-normal text-gray-500 dark:text-dark-400">{item.version} 기준</span></div>
+                          <div className="mt-1 break-all font-mono text-xs text-gray-400 dark:text-dark-500">{item.path}</div>
+                        </div>
+                        {isDevelopment && (
+                          <button
+                            type="button"
+                            className={`${adminDangerButtonClass} shrink-0 whitespace-nowrap`}
+                            disabled={pending}
+                            onClick={() => {
+                              if (window.confirm(`${item.packageId} 가져오기를 취소할까요?\n\n고쳐 쓰던 폴더(${item.path})를 .plextype/backup으로 옮깁니다. 그 뒤 Store 자료에서 패키지를 다시 설치할 수 있습니다.`)) {
+                                run(`discard:${item.packageId}`, () => discardAdoptedPackageAdminAction(item.packageId));
+                              }
+                            }}
+                          >
+                            <Trash2 size={14} />{busy === `discard:${item.packageId}` ? "취소 중" : "가져오기 취소"}
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </AdminPanel>
@@ -342,6 +416,21 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                       </>
                     )}
 
+                    {preview.localChanges.length > 0 && (
+                      <>
+                        <h4 className="mt-4 text-xs font-semibold text-red-600 dark:text-red-300">직접 고친 파일이 있습니다</h4>
+                        <p className={`mt-1 leading-6 ${mutedClass}`}>업데이트하면 아래 수정이 사라집니다. 이전 폴더는 .plextype/backup에 보관됩니다. 수정을 유지하려면 취소하고 설치된 패키지에서 내 확장으로 가져와주세요.</p>
+                        {preview.localChanges.map(changed => (
+                          <details key={changed.packageId} open className="mt-2 overflow-hidden rounded-md border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+                            <summary className="cursor-pointer px-3 py-2 font-mono text-xs text-gray-700 dark:text-dark-200">{changed.packageId} · {changed.files.length}개</summary>
+                            <ul className="max-h-48 overflow-auto border-t border-gray-100 px-3 py-2 font-mono text-xs leading-6 text-gray-800 dark:border-dark-800 dark:text-dark-200">
+                              {changed.files.map(file => <li key={file.path} className="break-all">{localChangeLabel[file.change]} · {file.path}</li>)}
+                            </ul>
+                          </details>
+                        ))}
+                      </>
+                    )}
+
                     {preview.hasDatabaseFiles && (
                       <>
                         <h4 className={sectionTitle}>DB 변경</h4>
@@ -382,7 +471,7 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                       {!blocked && preview.hasDatabaseFiles && (
                         <>
                           <button type="button" className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`} disabled={pending} onClick={() => confirmInstall(true)}>
-                            <Download size={14} />설치하고 DB에 적용
+                            <Download size={14} />{preview.localChanges.length > 0 ? "덮어쓰고 설치, DB에 적용" : "설치하고 DB에 적용"}
                           </button>
                           <button type="button" className={buttonClass} disabled={pending} onClick={() => confirmInstall(false)} title="파일만 설치합니다. DB에는 나중에 npm run plextype -- migrate 로 적용합니다.">
                             DB 적용 없이 설치
@@ -391,7 +480,7 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                       )}
                       {!blocked && !preview.hasDatabaseFiles && (
                         <button type="button" className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`} disabled={pending} onClick={() => confirmInstall(false)}>
-                          <Download size={14} />설치
+                          <Download size={14} />{preview.localChanges.length > 0 ? "덮어쓰고 업데이트" : "설치"}
                         </button>
                       )}
                       <button type="button" className={buttonClass} disabled={pending} onClick={() => setConfirming(null)}>{blocked ? "닫기" : "취소"}</button>
@@ -402,6 +491,9 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                 <ul className="divide-y divide-gray-100 dark:divide-dark-800">
                   {data.catalog.map(item => {
                     const installed = data.packages.find(entry => entry.packageId === item.packageId);
+                    const adopted = data.adopted.find(entry => entry.packageId === item.packageId);
+                    const newerThanAdopted = adopted ? compareVersions(item.version, adopted.version) > 0 : false;
+                    const security = securityAlerts.some(alert => alert.item.packageId === item.packageId);
                     const compatible = isCompatible(item);
                     return (
                       <li key={item.productUuid} className="flex min-w-0 flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
@@ -410,6 +502,9 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                             <span className="break-words text-sm font-semibold text-gray-900 dark:text-dark-100">{item.name}</span>
                             <span className="break-all font-mono text-xs text-gray-500 dark:text-dark-400">{item.packageId}@{item.version}</span>
                             {installed && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">설치됨 {installed.version}</span>}
+                            {adopted && <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">내 확장으로 가져옴 · {adopted.version} 기준</span>}
+                            {newerThanAdopted && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">새 버전 {item.version}</span>}
+                            {security && <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:bg-red-500/10 dark:text-red-300">보안 패치</span>}
                             {item.requiresDatabaseReview && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">DB 검토 필요</span>}
                           </div>
                           {item.summary && <p className={`mt-1 line-clamp-2 break-words ${mutedClass}`}>{item.summary}</p>}
@@ -417,6 +512,28 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                             {[item.sellerName, item.licenseType, `Plextype ${item.minPlatformVersion} ~ ${item.maxPlatformVersion || "상한 없음"}`, formatSize(item.size)].filter(Boolean).join(" · ")}
                           </p>
                         </div>
+                        {adopted ? (
+                          // 가져온 패키지는 설치·업데이트하지 않는다. 새 버전은 비교용으로 받아 두고 직접 반영한다.
+                          <div className="flex shrink-0 flex-wrap gap-2">
+                            {newerThanAdopted ? (
+                              <>
+                                <button type="button" className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`} disabled={!canInstall || pending} onClick={() => run(`reference:${item.productUuid}`, () => downloadReferenceAdminAction(item.productUuid))} title="프로젝트의 소스는 바꾸지 않고 .plextype/reference에 받습니다.">
+                                  <Download size={14} />{busy === `reference:${item.productUuid}` ? "받는 중" : "새 버전 받아 두기"}
+                                </button>
+                                <button
+                                  type="button"
+                                  className={buttonClass}
+                                  disabled={!isDevelopment || pending}
+                                  onClick={() => { if (window.confirm(`${item.packageId}의 기준 버전을 ${item.version}으로 올릴까요? 새 버전의 변경을 내 확장에 반영한 뒤에 눌러주세요.`)) run(`mark:${item.packageId}`, () => markAdoptedVersionAdminAction(item.packageId, item.version)); }}
+                                >
+                                  {item.version} 반영 완료
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-400 dark:text-dark-500">직접 관리 중</span>
+                            )}
+                          </div>
+                        ) : (
                         <button
                           type="button"
                           className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`}
@@ -426,6 +543,7 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                         >
                           <Download size={14} />{busy === `install:${item.productUuid}` ? "설치 중" : !compatible ? "호환 안 됨" : installLabel(item)}
                         </button>
+                        )}
                       </li>
                     );
                   })}
