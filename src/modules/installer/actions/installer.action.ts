@@ -120,12 +120,17 @@ export async function previewStorePackageAdminAction(productUuid: string): Promi
 
 // applyDatabase가 true면 설치에 이어 패키지의 스키마를 합치고 마이그레이션을 개발 DB에 적용한다.
 // 화면은 적용될 SQL을 보여 주고 확인을 받은 뒤에만 true로 부른다.
-export async function installStorePackageAdminAction(productUuid: string, options: { versionUuid?: string; applyDatabase?: boolean } = {}): Promise<InstallerActionResult> {
+// expected는 화면이 미리 본 패키지별 버전이다. 그 사이 Store의 버전이 바뀌었으면 설치하지 않는다.
+export async function installStorePackageAdminAction(
+  productUuid: string,
+  options: { versionUuid?: string; expected?: Record<string, string>; applyDatabase?: boolean } = {},
+): Promise<InstallerActionResult> {
   return run(async () => {
     const root = process.cwd();
-    const result = await installStorePackage(root, productUuid, { versionUuid: options.versionUuid });
+    const result = await installStorePackage(root, productUuid, { versionUuid: options.versionUuid, expected: options.expected });
     const notes = [
       result.previousVersion ? `${result.packageId}을(를) ${result.previousVersion}에서 ${result.version}으로 업데이트했습니다.` : `${result.packageId} ${result.version}을(를) 설치했습니다.`,
+      result.alsoInstalled.length ? `함께 설치: ${result.alsoInstalled.map((item) => `${item.packageId} ${item.version}`).join(", ")}.` : "",
       result.registered ? "관리자 메뉴와 스킨을 등록했습니다." : "",
     ];
     if (!result.requiresDatabaseReview) return notes.filter(Boolean).join(" ");
@@ -144,7 +149,11 @@ export async function installStorePackageAdminAction(productUuid: string, option
     // 스키마를 합치는 단계에서 막혔다면 DB는 아직 그대로다. 새로 설치한 패키지는 빼서 프로젝트를 설치 전으로 되돌린다.
     // 업데이트였거나 마이그레이션이 일부 적용된 뒤라면 되돌리는 쪽이 더 어긋나므로 그대로 두고 알린다.
     if (database.failedStep === "generate" && !result.previousVersion) {
+      // 이 패키지를 필요로 하는 쪽부터 뺀다: 대상 패키지, 그다음 함께 새로 설치한 패키지를 설치의 역순으로.
       await uninstallStorePackage(root, result.packageId);
+      for (const item of [...result.alsoInstalled].reverse()) {
+        if (!item.previousVersion) await uninstallStorePackage(root, item.packageId).catch(() => {});
+      }
       await syncPackageSchema(root);
       throw new InstallerError(`${describeDatabaseFailure(database).message}\n\n설치를 취소하고 패키지를 뺐습니다.`);
     }

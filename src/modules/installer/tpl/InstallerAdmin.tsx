@@ -40,6 +40,17 @@ const compareVersions = (a: string, b: string) => {
   return 0;
 };
 
+// 막는 사유, 함께 설치되는 패키지, DB 변경, 모자란 npm 라이브러리 가운데 하나라도 있으면 설치 전에 보여 준다.
+const needsConfirmation = (preview: InstallerPackagePreview) => (
+  preview.blockers.length > 0 || preview.alsoInstalls.length > 0 || preview.hasDatabaseFiles ||
+  preview.npm.missing.length > 0 || preview.npm.conflicts.length > 0
+);
+
+const expectedVersions = (preview: InstallerPackagePreview) => Object.fromEntries([
+  ...preview.alsoInstalls.map((item) => [item.packageId, item.versionUuid]),
+  [preview.packageId, preview.versionUuid],
+]);
+
 const formatSize = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 
 export default function InstallerAdmin({ state, view }: { state: InstallerState; view: string }) {
@@ -50,6 +61,7 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
   const [busy, setBusy] = useState<string | null>(null);
   // DB를 바꾸는 패키지를 설치하기 전에, 적용될 내용을 보여 주고 확인을 기다리는 상태.
   const [confirming, setConfirming] = useState<{ item: InstallerCatalogItem; preview: InstallerPackagePreview } | null>(null);
+  const [npmCommand, setNpmCommand] = useState<string | null>(null);
   const active = tabs.find(tab => tab.id === view)?.id || "catalog";
   const data = state.data;
   const packages = (data?.packages || []).filter(item => `${item.packageId} ${item.version}`.toLowerCase().includes(search.trim().toLowerCase()));
@@ -68,17 +80,18 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
     });
   };
 
-  // DB를 바꾸지 않는 패키지는 바로 설치하고, 바꾸는 패키지는 적용될 SQL을 먼저 보여 준다.
+  // 설치 전 점검에서 알릴 것이 없는 패키지는 바로 설치하고, 있으면 내용을 먼저 보여 준다.
   const startInstall = (item: InstallerCatalogItem) => {
     setBusy(`install:${item.productUuid}`);
     setResult(null);
     setConfirming(null);
+    setNpmCommand(null);
     startTransition(async () => {
       try {
         const checked = await previewStorePackageAdminAction(item.productUuid);
         if (!checked.success || !checked.preview) setResult({ success: false, message: checked.message });
-        else if (checked.preview.hasDatabaseFiles) setConfirming({ item, preview: checked.preview });
-        else setResult(await installStorePackageAdminAction(item.productUuid, { versionUuid: checked.preview.versionUuid }));
+        else if (needsConfirmation(checked.preview)) setConfirming({ item, preview: checked.preview });
+        else setResult(await installStorePackageAdminAction(item.productUuid, { versionUuid: checked.preview.versionUuid, expected: expectedVersions(checked.preview) }));
       } catch {
         setResult({ success: false, message: "처리 중 오류가 발생했습니다. 다시 시도해주세요." });
       }
@@ -91,7 +104,9 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
     if (!confirming) return;
     const { item, preview } = confirming;
     setConfirming(null);
-    run(`install:${item.productUuid}`, () => installStorePackageAdminAction(item.productUuid, { versionUuid: preview.versionUuid, applyDatabase }));
+    // 프로젝트에 없는 npm 라이브러리는 설치기가 넣지 않으므로, 설치가 끝난 뒤에도 실행할 명령을 계속 보여 준다.
+    setNpmCommand(preview.npm.command);
+    run(`install:${item.productUuid}`, () => installStorePackageAdminAction(item.productUuid, { versionUuid: preview.versionUuid, expected: expectedVersions(preview), applyDatabase }));
   };
 
   const installLabel = (item: InstallerCatalogItem) => {
@@ -150,6 +165,13 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
             <div role={result.success ? "status" : "alert"} className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm leading-6 ${result.success ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-300" : "border-red-200 bg-red-50 text-red-600 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-300"}`}>
               {result.success ? <CheckCircle2 size={18} className="mt-0.5 shrink-0" /> : <AlertCircle size={18} className="mt-0.5 shrink-0" />}
               <span className="min-w-0 whitespace-pre-wrap break-words">{result.message}</span>
+            </div>
+          )}
+
+          {npmCommand && result?.success && (
+            <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/5 dark:text-amber-200">
+              이 패키지가 쓰는 npm 라이브러리가 프로젝트에 없습니다. 터미널에서 실행해주세요.
+              <pre className="mt-2 overflow-x-auto rounded-md border border-amber-200 bg-white px-3 py-2 text-xs text-gray-800 dark:border-dark-800 dark:bg-dark-950 dark:text-dark-200">{npmCommand}</pre>
             </div>
           )}
 
@@ -286,31 +308,97 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                 </div>
               ) : (
                 <>
-                {confirming && (
-                  <div role="alertdialog" aria-label="DB 변경 확인" className="border-b border-amber-200 bg-amber-50/60 px-5 py-5 dark:border-amber-500/20 dark:bg-amber-500/5">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-dark-100">{confirming.item.name} {confirming.preview.version}은(는) DB를 바꿉니다</h3>
-                    <p className={`mt-1 leading-6 ${mutedClass}`}>
-                      {confirming.preview.migrations.length > 0
-                        ? `설치하면 아래 마이그레이션 ${confirming.preview.migrations.length}개가 개발 DB에 적용됩니다. 내용을 확인해주세요.`
-                        : "새로 적용할 마이그레이션은 없고 스키마 파일만 들어 있습니다. 설치하면 스키마를 합쳐 Prisma 클라이언트를 다시 만듭니다."}
-                    </p>
-                    {confirming.preview.migrations.map(migration => (
-                      <details key={migration.name} open={confirming.preview.migrations.length === 1} className="mt-3 overflow-hidden rounded-md border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
-                        <summary className="cursor-pointer px-3 py-2 font-mono text-xs text-gray-700 dark:text-dark-200">{migration.name}</summary>
-                        <pre className="max-h-72 overflow-auto border-t border-gray-100 px-3 py-3 text-xs leading-5 text-gray-800 dark:border-dark-800 dark:text-dark-200">{migration.sql}{migration.truncated ? "\n-- 이하 생략. 전체 내용은 설치 후 패키지 폴더에서 확인합니다." : ""}</pre>
-                      </details>
-                    ))}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button type="button" className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`} disabled={pending} onClick={() => confirmInstall(true)}>
-                        <Download size={14} />설치하고 DB에 적용
-                      </button>
-                      <button type="button" className={buttonClass} disabled={pending} onClick={() => confirmInstall(false)} title="파일만 설치합니다. DB에는 나중에 npm run plextype -- migrate 로 적용합니다.">
-                        DB 적용 없이 설치
-                      </button>
-                      <button type="button" className={buttonClass} disabled={pending} onClick={() => setConfirming(null)}>취소</button>
+                {confirming && (() => {
+                  const { item, preview } = confirming;
+                  const blocked = preview.blockers.length > 0;
+                  const sectionTitle = "mt-4 text-xs font-semibold text-gray-700 dark:text-dark-200";
+                  return (
+                  <div role="alertdialog" aria-label="설치 전 점검" className={`border-b px-5 py-5 ${blocked ? "border-red-200 bg-red-50/60 dark:border-red-500/20 dark:bg-red-500/5" : "border-amber-200 bg-amber-50/60 dark:border-amber-500/20 dark:bg-amber-500/5"}`}>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-dark-100">{item.name} {preview.version} 설치 전 점검</h3>
+                    <ul className={`mt-2 space-y-1 leading-6 ${mutedClass}`}>
+                      <li>Plextype {data.platformVersion} · 지원 범위 {item.minPlatformVersion} ~ {item.maxPlatformVersion || "상한 없음"}</li>
+                      <li>Node {preview.node.current}{preview.node.required ? ` · ${preview.node.required} 이상 필요` : ""}</li>
+                    </ul>
+
+                    {blocked && (
+                      <>
+                        <h4 className="mt-4 text-xs font-semibold text-red-600 dark:text-red-300">설치할 수 없습니다</h4>
+                        <ul className="mt-1 list-disc space-y-1 pl-5 text-sm leading-6 text-red-600 dark:text-red-300">
+                          {preview.blockers.map(reason => <li key={reason} className="whitespace-pre-wrap break-words">{reason}</li>)}
+                        </ul>
+                      </>
+                    )}
+
+                    {preview.alsoInstalls.length > 0 && (
+                      <>
+                        <h4 className={sectionTitle}>함께 설치되는 패키지</h4>
+                        <ul className={`mt-1 space-y-1 leading-6 ${mutedClass}`}>
+                          {preview.alsoInstalls.map(also => (
+                            <li key={also.packageId} className="break-all font-mono text-xs">
+                              {also.packageId}@{also.version}{also.previousVersion ? ` (지금 ${also.previousVersion}에서 업데이트)` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+
+                    {preview.hasDatabaseFiles && (
+                      <>
+                        <h4 className={sectionTitle}>DB 변경</h4>
+                        <p className={`mt-1 leading-6 ${mutedClass}`}>
+                          {preview.migrations.length > 0
+                            ? `"설치하고 DB에 적용"을 누르면 아래 마이그레이션 ${preview.migrations.length}개가 개발 DB에 적용됩니다.`
+                            : "새로 적용할 마이그레이션은 없고 스키마 파일만 들어 있습니다. 스키마를 합쳐 Prisma 클라이언트를 다시 만듭니다."}
+                        </p>
+                        {preview.migrations.map(migration => (
+                          <details key={`${migration.packageId}/${migration.name}`} open={preview.migrations.length === 1} className="mt-3 overflow-hidden rounded-md border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+                            <summary className="cursor-pointer break-all px-3 py-2 font-mono text-xs text-gray-700 dark:text-dark-200">{migration.packageId} · {migration.name}</summary>
+                            <pre className="max-h-72 overflow-auto border-t border-gray-100 px-3 py-3 text-xs leading-5 text-gray-800 dark:border-dark-800 dark:text-dark-200">{migration.sql}{migration.truncated ? "\n-- 이하 생략. 전체 내용은 설치 후 패키지 폴더에서 확인합니다." : ""}</pre>
+                          </details>
+                        ))}
+                      </>
+                    )}
+
+                    {(preview.npm.missing.length > 0 || preview.npm.conflicts.length > 0) && (
+                      <>
+                        <h4 className={sectionTitle}>npm 라이브러리</h4>
+                        {preview.npm.command && (
+                          <>
+                            <p className={`mt-1 leading-6 ${mutedClass}`}>프로젝트에 없는 라이브러리가 있습니다. 설치기는 넣지 않으니 설치 후 터미널에서 실행해주세요.</p>
+                            <pre className="mt-2 overflow-x-auto rounded-md border border-gray-200 bg-white px-3 py-2 text-xs leading-5 text-gray-800 dark:border-dark-800 dark:bg-dark-950 dark:text-dark-200">{preview.npm.command}</pre>
+                          </>
+                        )}
+                        {preview.npm.conflicts.length > 0 && (
+                          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-amber-700 dark:text-amber-300">
+                            {preview.npm.conflicts.map(conflict => (
+                              <li key={conflict.name} className="break-all">{conflict.name}: 프로젝트에는 {conflict.installed}가 있고 이 패키지는 {conflict.range}를 요구합니다. 설치는 되지만 동작하지 않을 수 있습니다.</li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    )}
+
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {!blocked && preview.hasDatabaseFiles && (
+                        <>
+                          <button type="button" className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`} disabled={pending} onClick={() => confirmInstall(true)}>
+                            <Download size={14} />설치하고 DB에 적용
+                          </button>
+                          <button type="button" className={buttonClass} disabled={pending} onClick={() => confirmInstall(false)} title="파일만 설치합니다. DB에는 나중에 npm run plextype -- migrate 로 적용합니다.">
+                            DB 적용 없이 설치
+                          </button>
+                        </>
+                      )}
+                      {!blocked && !preview.hasDatabaseFiles && (
+                        <button type="button" className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`} disabled={pending} onClick={() => confirmInstall(false)}>
+                          <Download size={14} />설치
+                        </button>
+                      )}
+                      <button type="button" className={buttonClass} disabled={pending} onClick={() => setConfirming(null)}>{blocked ? "닫기" : "취소"}</button>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
                 <ul className="divide-y divide-gray-100 dark:divide-dark-800">
                   {data.catalog.map(item => {
                     const installed = data.packages.find(entry => entry.packageId === item.packageId);

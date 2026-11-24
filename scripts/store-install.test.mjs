@@ -273,3 +273,122 @@ test('applying the database runs the project\'s two npm scripts in order and rep
   t.after(() => { process.env.NODE_ENV = previous; });
   await rejects(database.applyPackageDatabase(root), /개발 환경에서만/);
 });
+
+// 패키지 여러 개와 목록 주소를 가진 가짜 Store. 필요한 패키지를 따라가는 동작을 확인하는 데 쓴다.
+function named(packageId, version, { requires, sources = {} } = {}) {
+  const files = Object.entries({ 'index.ts': `export const id = "${packageId}";\n`, ...sources }).map(([name, text]) => [name, Buffer.from(text)]);
+  const manifest = {
+    schemaVersion: 1, type: 'plextype-extension', productUuid: `product-${packageId}`, packageId, version,
+    minPlatformVersion: '0.1.0', maxPlatformVersion: null, installPath: `src/packages/${packageId}`,
+    files: files.map(([name, content]) => ({ path: name, size: content.length, sha256: digest(content) })),
+    requiresDatabaseReview: false,
+    ...(requires ? { requires: { node: null, packages: [], npm: [], ...requires } } : {}),
+  };
+  const content = zip([...files.map(([name, data]) => [`${packageId}/${name}`, data]), [`${packageId}/plextype.package.json`, Buffer.from(JSON.stringify(manifest))]]);
+  const body = { manifest, sha256: digest(content), size: content.length };
+  return { content, metadata: { versionUuid: `version-${packageId}-${version.replaceAll('.', '')}`, ...body, signature: { algorithm: 'Ed25519', keyId: 'test-key', value: signPayload(body) } } };
+}
+
+async function setupStore(t, packages) {
+  const state = { packages: [...packages] };
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url, 'http://localhost');
+    const json = (value, status = 200) => { res.writeHead(status, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(value)); };
+    if (url.pathname === '/api/store/keys') return json({ keys: [{ keyId: 'test-key', publicKey: publicPem }] });
+    if (url.pathname === '/api/store/connection') return json({ accountName: '테스트', tokenName: '프로젝트' });
+    if (url.pathname === '/api/store/catalog') return json({ products: state.packages.map(({ metadata: { manifest, size, versionUuid } }) => ({
+      productUuid: manifest.productUuid, name: manifest.packageId, latest: { versionUuid, packageId: manifest.packageId, version: manifest.version, minPlatformVersion: manifest.minPlatformVersion, maxPlatformVersion: null, requiresDatabaseReview: false, size },
+    })) });
+    const item = state.packages.find(({ metadata }) => url.pathname === `/api/store/products/${metadata.manifest.productUuid}/download`);
+    if (!item) return json({ error: 'not found' }, 404);
+    if (url.searchParams.get('metadata') === '1') return json(item.metadata);
+    res.writeHead(200, { 'Content-Type': 'application/zip' });
+    res.end(item.content);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'store-deps-'));
+  t.after(async () => { server.close(); await fs.rm(root, { recursive: true, force: true }); });
+  await fs.mkdir(path.join(root, 'src/app'), { recursive: true });
+  await fs.mkdir(path.join(root, 'src/core'), { recursive: true });
+  await fs.writeFile(path.join(root, 'src/core/plextype.json'), JSON.stringify({ version: '0.11.2' }));
+  await lib.connectStore(root, `http://127.0.0.1:${server.address().port}`, TOKEN);
+  return { root, state, exists: file => fs.access(path.join(root, file)).then(() => true, () => false) };
+}
+
+test('required packages are installed first, and a package others need cannot be removed', async t => {
+  const core = named('core', '1.2.0');
+  const chart = named('chart', '2.0.0', { requires: { packages: [{ packageId: 'core', minVersion: '1.0.0' }] } });
+  const app = named('app', '1.0.0', { requires: { packages: [{ packageId: 'chart', minVersion: '2.0.0' }, { packageId: 'core', minVersion: '1.2.0' }] } });
+  const { root, exists } = await setupStore(t, [core, chart, app]);
+
+  const preview = await lib.previewStorePackage(root, 'product-app');
+  assert.deepEqual(preview.blockers, []);
+  assert.deepEqual(preview.alsoInstalls.map(item => `${item.packageId}@${item.version}`), ['core@1.2.0', 'chart@2.0.0']);
+  assert.equal(await exists('src/packages/core'), false);
+
+  const expected = Object.fromEntries([...preview.alsoInstalls, preview].map(item => [item.packageId, item.versionUuid]));
+  await rejects(lib.installStorePackage(root, 'product-app', { expected: { ...expected, core: 'another-version' } }), /버전이 바뀌었습니다/);
+  assert.equal(await exists('src/packages/app'), false);
+
+  const result = await lib.installStorePackage(root, 'product-app', { expected });
+  assert.deepEqual([result.packageId, result.alsoInstalled.map(item => item.packageId)], ['app', ['core', 'chart']]);
+  for (const id of ['core', 'chart', 'app']) assert.equal(await exists(`src/packages/${id}/index.ts`), true);
+  // 이미 충분한 버전이 설치되어 있으면 다시 받지 않는다.
+  assert.deepEqual((await lib.previewStorePackage(root, 'product-app')).alsoInstalls, []);
+
+  await rejects(lib.uninstallStorePackage(root, 'core'), /app, chart 패키지가 core/);
+  await rejects(lib.uninstallStorePackage(root, 'chart'), /app 패키지가 chart/);
+  for (const id of ['app', 'chart', 'core']) await lib.uninstallStorePackage(root, id);
+  assert.equal(await exists('src/packages/core'), false);
+});
+
+test('installation is blocked, with nothing written, when a requirement cannot be met', async t => {
+  const tooOld = named('core', '0.9.0');
+  const cases = [
+    ['a required package the Store does not have', [named('app', '1.0.0', { requires: { packages: [{ packageId: 'ghost', minVersion: '1.0.0' }] } })], /ghost 1\.0\.0 이상을\(를\) Store에서 찾지 못했습니다/],
+    ['a required version newer than the Store offers', [tooOld, named('app', '1.0.0', { requires: { packages: [{ packageId: 'core', minVersion: '1.0.0' }] } })], /Store의 최신 버전은 0\.9\.0/],
+    ['a newer Node than this machine runs', [named('app', '1.0.0', { requires: { node: '999' } })], /Node 999\.0\.0 이상이 필요합니다/],
+  ];
+  for (const [name, packages, pattern] of cases) {
+    await t.test(name, async t => {
+      const { root, exists } = await setupStore(t, packages);
+      const preview = await lib.previewStorePackage(root, 'product-app');
+      assert.equal(preview.blockers.length, 1);
+      assert.match(preview.blockers[0], pattern);
+      await rejects(lib.installStorePackage(root, 'product-app'), pattern);
+      assert.equal(await exists('src/packages/app'), false);
+      assert.equal(await exists('src/packages/core'), false);
+    });
+  }
+});
+
+test('npm libraries are checked against what is installed; missing ones become a command to run, never an install', async t => {
+  const app = named('app', '1.0.0', { requires: { npm: [{ name: '@scope/kit', range: '>=1.0.0' }, { name: 'chart.js', range: '^4.4.0' }, { name: 'dayjs', range: '^1.11.0' }] } });
+  const { root, exists } = await setupStore(t, [app]);
+  const install = async (name, version) => {
+    await fs.mkdir(path.join(root, 'node_modules', name), { recursive: true });
+    await fs.writeFile(path.join(root, 'node_modules', name, 'package.json'), JSON.stringify({ name, version }));
+  };
+  await install('chart.js', '3.9.1');
+  await install('dayjs', '1.11.13');
+  await fs.mkdir(path.join(root, 'src/extensions'), { recursive: true });
+  await fs.writeFile(path.join(root, 'src/extensions/package.json'), '{}');
+
+  const { npm, blockers } = await lib.previewStorePackage(root, 'product-app');
+  assert.deepEqual(blockers, []);
+  assert.deepEqual(npm.missing, [{ name: '@scope/kit', range: '>=1.0.0' }]);
+  assert.deepEqual(npm.conflicts, [{ name: 'chart.js', range: '^4.4.0', installed: '3.9.1' }]);
+  assert.equal(npm.command, 'npm install "@scope/kit@>=1.0.0" -w src/extensions');
+  // 라이브러리가 모자라도 설치는 막지 않는다. 넣는 것은 사람이 한다.
+  await lib.installStorePackage(root, 'product-app');
+  assert.equal(await exists('node_modules/@scope/kit'), false);
+});
+
+test('version ranges follow the four forms the Store accepts', () => {
+  for (const [version, range, expected] of [
+    ['4.4.0', '^4.4.0', true], ['4.9.2', '^4.4.0', true], ['5.0.0', '^4.4.0', false], ['4.3.9', '^4.4.0', false],
+    ['0.2.5', '^0.2.3', true], ['0.3.0', '^0.2.3', false], ['0.0.3', '^0.0.3', true], ['0.0.4', '^0.0.3', false],
+    ['1.2.9', '~1.2.3', true], ['1.3.0', '~1.2.3', false], ['9.0.0', '>=1.2.3', true], ['1.2.2', '>=1.2.3', false],
+    ['1.2.3', '1.2.3', true], ['1.2.4', '1.2.3', false], ['4.5.0-beta.1', '^4.4.0', true], ['4.4.0', 'latest', false],
+  ]) assert.equal(lib.satisfiesRange(version, range), expected, `${version} ${range}`);
+});

@@ -55,6 +55,7 @@ const applyDatabase = async () => {
 
 const afterInstall = (result) => {
   console.log(`${result.previousVersion ? `업데이트했습니다 (${result.previousVersion} → ${result.version})` : `설치했습니다 (${result.version})`}: ${result.installPath}`);
+  if (result.alsoInstalled.length) console.log(`함께 설치했습니다: ${result.alsoInstalled.map((item) => `${item.packageId}@${item.version}`).join(', ')}`);
   if (result.routes.length) console.log(`연결한 라우트 ${result.routes.length}개:\n${result.routes.map((route) => `  ${route}`).join('\n')}`);
   console.log('\n다음 할 일');
   if (result.registered) console.log('  - 패키지의 관리자 메뉴와 스킨을 등록했습니다(src/packages/index.ts).');
@@ -97,19 +98,32 @@ const commands = {
     const product = products.find((item) => item.packageId === name || item.productUuid === name);
     if (!product) throw new lib.InstallerError(`Store에서 "${name}" 자료를 찾지 못했습니다. npm run plextype -- list 로 확인해주세요.`);
     const preview = await lib.previewStorePackage(root, product.productUuid);
+    console.log(`${preview.packageId} ${preview.version} 설치 전 점검`);
+    console.log(`  Node ${preview.node.current}${preview.node.required ? ` (${preview.node.required} 이상 필요)` : ''}`);
+    if (preview.blockers.length) {
+      throw new lib.InstallerError(`설치할 수 없습니다.\n${preview.blockers.map((reason) => `  - ${reason}`).join('\n')}`);
+    }
+    if (preview.alsoInstalls.length) {
+      console.log(`  함께 설치되는 패키지: ${preview.alsoInstalls.map((item) => `${item.packageId}@${item.version}`).join(', ')}`);
+    }
+    for (const conflict of preview.npm.conflicts) {
+      console.log(`  주의: ${conflict.name}은(는) 프로젝트에 ${conflict.installed}가 있고 이 패키지는 ${conflict.range}를 요구합니다.`);
+    }
     let apply = false;
     if (preview.hasDatabaseFiles) {
-      console.log(`${preview.packageId} ${preview.version}은(는) DB를 바꿉니다.`);
+      console.log('  DB를 바꿉니다.');
       for (const migration of preview.migrations) {
-        console.log(`\n--- ${migration.name} ---\n${migration.sql}${migration.truncated ? '\n-- 이하 생략' : ''}`);
+        console.log(`\n--- ${migration.packageId} · ${migration.name} ---\n${migration.sql}${migration.truncated ? '\n-- 이하 생략' : ''}`);
       }
-      if (!preview.migrations.length) console.log('새로 적용할 마이그레이션은 없고 스키마 파일만 들어 있습니다.');
+      if (!preview.migrations.length) console.log('  새로 적용할 마이그레이션은 없고 스키마 파일만 들어 있습니다.');
       apply = await ask('\n설치하고 개발 DB에 적용할까요?');
     }
-    const result = await lib.installStorePackage(root, product.productUuid, { versionUuid: preview.versionUuid });
+    const expected = Object.fromEntries([...preview.alsoInstalls, preview].map((item) => [item.packageId, item.versionUuid]));
+    const result = await lib.installStorePackage(root, product.productUuid, { versionUuid: preview.versionUuid, expected });
     afterInstall(result);
     if (apply) await applyDatabase();
     else if (preview.hasDatabaseFiles) console.log('\nDB에는 적용하지 않았습니다. 준비되면 npm run plextype -- migrate 를 실행해주세요.');
+    if (preview.npm.command) console.log(`\n프로젝트에 없는 npm 라이브러리가 있습니다. 직접 실행해주세요:\n  ${preview.npm.command}`);
   },
   async remove() {
     const name = rest.find((value) => !value.startsWith('--'));

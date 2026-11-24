@@ -53,8 +53,13 @@ export type InstallerPackagePreview = {
   packageId: string;
   version: string;
   previousVersion: string | null;
+  // 설치를 막는 사유. 하나라도 있으면 설치할 수 없다.
+  blockers: string[];
+  node: { required: string | null; current: string };
+  alsoInstalls: { packageId: string; version: string; previousVersion: string | null; versionUuid: string }[];
+  npm: { missing: { name: string; range: string }[]; conflicts: { name: string; range: string; installed: string }[]; command: string | null };
   hasDatabaseFiles: boolean;
-  migrations: { name: string; sql: string; truncated: boolean }[];
+  migrations: { packageId: string; name: string; sql: string; truncated: boolean }[];
 };
 
 export type InstallerPreviewResult = InstallerActionResult & { preview?: InstallerPackagePreview };

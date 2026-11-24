@@ -52,6 +52,14 @@ type PackageManifest = {
   installPath: string;
   files: { path: string; size: number; sha256: string }[];
   requiresDatabaseReview: boolean;
+  requires?: PackageRequirements;
+};
+
+// 패키지가 설치되려면 프로젝트에 있어야 하는 것. 제작자가 plextype.requires.json에 적고 Store가 서명된 정보에 넣는다.
+export type PackageRequirements = {
+  node: string | null;
+  packages: { packageId: string; minVersion: string }[];
+  npm: { name: string; range: string }[];
 };
 
 type PackageMetadata = {
@@ -73,8 +81,10 @@ export type InstallResult = {
   // registry 파일이 있어 관리자 메뉴·스킨 등록 목록에 들어갔는지.
   registered: boolean;
   requiresDatabaseReview: boolean;
-  // 이번 설치로 새로 들어온 마이그레이션 이름. DB에는 아직 적용되지 않았다.
+  // 이번 설치로 새로 들어온 마이그레이션 이름. DB에는 아직 적용되지 않았다. 함께 설치한 패키지의 것도 들어 있다.
   newMigrations: string[];
+  // 이 패키지가 필요로 해서 함께 설치하거나 업데이트한 패키지.
+  alsoInstalled: { packageId: string; version: string; previousVersion: string | null }[];
 };
 
 // 사용자에게 그대로 보여 줘도 되는 실패 사유. 그 밖의 예외는 내부 경로 등이 섞일 수 있어 화면에 내보내지 않는다.
@@ -290,6 +300,29 @@ function isSafeRelativePath(value: string) {
   ));
 }
 
+const NPM_NAME = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
+const NPM_RANGE = /^(\^|~|>=)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+const NODE_VERSION = /^\d+(?:\.\d+){0,2}$/;
+const NO_REQUIREMENTS: PackageRequirements = { node: null, packages: [], npm: [] };
+
+// manifest의 requires를 확인한다. 항목이 없으면 요구 사항이 없는 것이고, 모양이 어긋나면 null.
+function parseRequirements(value: unknown): PackageRequirements | null {
+  if (value === undefined) return NO_REQUIREMENTS;
+  if (!isRecord(value) || !Array.isArray(value.packages) || !Array.isArray(value.npm) || value.packages.length > 20 || value.npm.length > 30) return null;
+  if (value.node !== null && (typeof value.node !== "string" || !NODE_VERSION.test(value.node))) return null;
+  const packages: PackageRequirements["packages"] = [];
+  for (const item of value.packages) {
+    if (!isRecord(item) || typeof item.packageId !== "string" || !PACKAGE_ID.test(item.packageId) || typeof item.minVersion !== "string" || !VERSION.test(item.minVersion)) return null;
+    packages.push({ packageId: item.packageId, minVersion: item.minVersion });
+  }
+  const npm: PackageRequirements["npm"] = [];
+  for (const item of value.npm) {
+    if (!isRecord(item) || typeof item.name !== "string" || !NPM_NAME.test(item.name) || typeof item.range !== "string" || !NPM_RANGE.test(item.range)) return null;
+    npm.push({ name: item.name, range: item.range });
+  }
+  return { node: value.node as string | null, packages, npm };
+}
+
 function parseMetadata(value: unknown, productUuid: string): PackageMetadata {
   const fail = () => new InstallerError("Store가 보낸 패키지 정보가 규격에 맞지 않습니다.");
   if (!isRecord(value) || !isRecord(value.manifest) || !isRecord(value.signature)) throw fail();
@@ -307,6 +340,7 @@ function parseMetadata(value: unknown, productUuid: string): PackageMetadata {
       typeof manifest.minPlatformVersion !== "string" || !VERSION.test(manifest.minPlatformVersion) ||
       (manifest.maxPlatformVersion !== null && (typeof manifest.maxPlatformVersion !== "string" || !VERSION.test(manifest.maxPlatformVersion))) ||
       typeof manifest.requiresDatabaseReview !== "boolean" ||
+      !parseRequirements(manifest.requires) ||
       !Array.isArray(manifest.files) || manifest.files.length === 0 || manifest.files.length > MAX_ENTRIES) throw fail();
   for (const file of manifest.files) {
     if (!isRecord(file) || typeof file.path !== "string" || !isSafeRelativePath(file.path) ||
@@ -466,7 +500,7 @@ async function readInstalled(root: string, packageId: string) {
     const match = isRecord(file) && typeof file.path === "string" ? MIGRATION_FILE.exec(file.path) : null;
     return match ? [match[1]] : [];
   });
-  return { directory, productUuid: manifest.productUuid, version: manifest.version, routes, migrations };
+  return { directory, productUuid: manifest.productUuid, version: manifest.version, routes, migrations, requires: parseRequirements(manifest.requires) ?? NO_REQUIREMENTS };
 }
 
 // 연결 파일이 이 패키지의 것인지 본다: 설치기가 만든 형식이고 이 패키지 폴더의 구현을 가리켜야 한다.
@@ -579,6 +613,123 @@ async function findNewMigrations(target: string, files: Map<string, Buffer>, ins
   return migrations.sort((left, right) => left.name.localeCompare(right.name));
 }
 
+type LoadedPackage = Awaited<ReturnType<typeof loadVerifiedPackage>>;
+
+async function listInstalledPackageIds(root: string) {
+  let entries: Dirent[] = [];
+  try { entries = await fs.readdir(path.join(root, PACKAGES_DIRECTORY), { withFileTypes: true }); }
+  catch { /* 폴더가 없으면 설치된 것도 없다. */ }
+  return entries.filter((entry) => entry.isDirectory() && PACKAGE_ID.test(entry.name)).map((entry) => entry.name).sort();
+}
+
+const parseVersion = (value: string) => value.split(".").map(Number);
+
+// 버전이 범위를 만족하는지. 범위는 Store가 받는 네 가지 모양(1.2.3, ^1.2.3, ~1.2.3, >=1.2.3)뿐이다.
+export function satisfiesRange(version: string, range: string) {
+  const match = NPM_RANGE.exec(range);
+  // 프리릴리스 꼬리표("-beta.1")는 떼고 숫자 부분만 본다.
+  const core = /^(\d+)\.(\d+)\.(\d+)/.exec(version);
+  if (!match || !core) return false;
+  const have = [Number(core[1]), Number(core[2]), Number(core[3])];
+  const want = [Number(match[2]), Number(match[3]), Number(match[4])];
+  const order = compareVersions(have.join("."), want.join("."));
+  if (match[1] === ">=") return order >= 0;
+  if (match[1] === "~") return order >= 0 && have[0] === want[0] && have[1] === want[1];
+  if (match[1] === "^") {
+    // npm과 같은 규칙: 0이 아닌 가장 왼쪽 자리가 같아야 한다.
+    if (want[0] > 0) return order >= 0 && have[0] === want[0];
+    if (want[1] > 0) return order >= 0 && have[0] === 0 && have[1] === want[1];
+    return order === 0;
+  }
+  return order === 0;
+}
+
+const hasFile = (filePath: string) => fs.access(filePath).then(() => true, () => false);
+
+// 필요한 npm 라이브러리가 프로젝트에 있는지 본다. 설치는 하지 않고, 없는 것을 넣는 명령을 만들어 준다.
+// 외부 코드를 받아 실행하는 일이라 설치기가 대신 하지 않고 사람이 실행하게 한다.
+async function checkNpmRequirements(root: string, requirements: PackageRequirements["npm"]) {
+  const missing: { name: string; range: string }[] = [];
+  const conflicts: { name: string; range: string; installed: string }[] = [];
+  // 프로젝트 전용 라이브러리는 src/extensions/package.json(workspace)에 둔다. 없으면 루트에 둔다.
+  const workspace = await hasFile(path.join(root, "src", "extensions", "package.json"));
+  for (const item of requirements) {
+    let installed: string | null = null;
+    for (const base of [path.join(root, "node_modules"), path.join(root, "src", "extensions", "node_modules")]) {
+      const raw = await readText(path.join(base, ...item.name.split("/"), "package.json"));
+      if (raw === null) continue;
+      try {
+        const value = JSON.parse(raw) as unknown;
+        if (isRecord(value) && typeof value.version === "string") { installed = value.version; break; }
+      } catch { /* 읽지 못한 것은 없는 것으로 본다. */ }
+    }
+    if (installed === null) missing.push(item);
+    else if (!satisfiesRange(installed, item.range)) conflicts.push({ ...item, installed });
+  }
+  // 이름과 범위는 정해진 글자만 통과한 값이라 그대로 명령에 넣어도 된다. ^와 >는 셸이 해석하지 않게 따옴표로 감싼다.
+  const command = missing.length > 0
+    ? `npm install ${missing.map((item) => `"${item.name}@${item.range}"`).join(" ")}${workspace ? " -w src/extensions" : ""}`
+    : null;
+  return { missing, conflicts, command };
+}
+
+// 필요한 패키지를 따라가는 깊이 한도. Store가 순환을 거절하지만, 그와 무관하게 여기서도 끝을 둔다.
+const MAX_DEPENDENCY_DEPTH = 10;
+
+// 이 자료를 설치하려면 함께 설치해야 하는 패키지를 찾아 설치 순서대로 늘어놓는다. 아무것도 쓰지 않는다.
+// 설치를 막는 사유(blockers)가 있으면 순서를 만들었더라도 설치하면 안 된다.
+async function planInstall(root: string, productUuid: string, options: { versionUuid?: string } = {}) {
+  const target = await loadVerifiedPackage(root, productUuid, options);
+  const steps: LoadedPackage[] = [];
+  const blockers: string[] = [];
+  const planned = new Map<string, string>([[target.manifest.packageId, target.manifest.version]]);
+  let catalog: CatalogProduct[] | null = null;
+
+  const visit = async (loaded: LoadedPackage, depth: number) => {
+    for (const need of loaded.manifest.requires?.packages ?? []) {
+      const label = `${loaded.manifest.packageId}에 필요한 ${need.packageId} ${need.minVersion} 이상`;
+      const have = planned.get(need.packageId) ?? (await readInstalled(root, need.packageId))?.version;
+      if (have && compareVersions(have, need.minVersion) >= 0) continue;
+      if (planned.has(need.packageId)) { blockers.push(`${label}을(를) 맞출 수 없습니다. 함께 설치될 버전은 ${have}입니다.`); continue; }
+      if (depth >= MAX_DEPENDENCY_DEPTH) { blockers.push(`${label}: 필요한 패키지가 너무 깊이 이어집니다.`); continue; }
+      const connection = await readConnection(root);
+      catalog ??= await fetchCatalog(connection!.storeUrl);
+      const product = catalog.find((item) => item.packageId === need.packageId);
+      if (!product) { blockers.push(`${label}을(를) Store에서 찾지 못했습니다.`); continue; }
+      if (compareVersions(product.version, need.minVersion) < 0) { blockers.push(`${label}이 필요하지만 Store의 최신 버전은 ${product.version}입니다.`); continue; }
+      let child: LoadedPackage;
+      try { child = await loadVerifiedPackage(root, product.productUuid); }
+      catch (error) {
+        if (!(error instanceof InstallerError)) throw error;
+        blockers.push(`${need.packageId}: ${error.message}`);
+        continue;
+      }
+      planned.set(need.packageId, child.manifest.version);
+      await visit(child, depth + 1);
+      steps.push(child);
+    }
+  };
+  await visit(target, 0);
+  steps.push(target);
+
+  const currentNode = process.versions.node;
+  let requiredNode: string | null = null;
+  const npm = new Map<string, { name: string; range: string }>();
+  for (const step of steps) {
+    const requires = step.manifest.requires ?? NO_REQUIREMENTS;
+    if (requires.node) {
+      const padded = [...parseVersion(requires.node), 0, 0].slice(0, 3).join(".");
+      if (!requiredNode || compareVersions(padded, requiredNode) > 0) requiredNode = padded;
+    }
+    // 같은 라이브러리를 여러 패키지가 요구하면 먼저 나온 범위로 점검하고, 맞지 않는 쪽은 충돌로 드러난다.
+    for (const item of requires.npm) if (!npm.has(`${item.name}@${item.range}`)) npm.set(`${item.name}@${item.range}`, item);
+  }
+  if (requiredNode && compareVersions(currentNode.split("-")[0], requiredNode) < 0) {
+    blockers.push(`Node ${requiredNode} 이상이 필요합니다. 현재 버전은 ${currentNode}입니다.`);
+  }
+  return { target, steps, blockers, node: { required: requiredNode, current: currentNode }, npm: await checkNpmRequirements(root, [...npm.values()]) };
+}
+
 export type PackagePreview = {
   productUuid: string;
   // 미리 본 것과 같은 버전을 설치하도록 설치할 때 그대로 넘긴다.
@@ -586,32 +737,85 @@ export type PackagePreview = {
   packageId: string;
   version: string;
   previousVersion: string | null;
-  // prisma 스키마나 SQL 파일이 들어 있는지.
+  // 설치를 막는 사유. 하나라도 있으면 설치할 수 없다.
+  blockers: string[];
+  node: { required: string | null; current: string };
+  // 필요해서 함께 설치하거나 업데이트할 패키지. 설치 순서대로다.
+  alsoInstalls: { packageId: string; version: string; previousVersion: string | null; versionUuid: string }[];
+  // 프로젝트에 없거나 버전이 맞지 않는 npm 라이브러리. 없는 것은 command로 직접 설치한다.
+  npm: { missing: { name: string; range: string }[]; conflicts: { name: string; range: string; installed: string }[]; command: string | null };
+  // 함께 설치되는 것을 포함해 prisma 스키마나 SQL 파일이 들어 있는지.
   hasDatabaseFiles: boolean;
   // 설치하면 DB에 새로 적용될 마이그레이션과 그 SQL.
-  migrations: { name: string; sql: string; truncated: boolean }[];
+  migrations: { packageId: string; name: string; sql: string; truncated: boolean }[];
 };
 
-// 설치하기 전에, 이 패키지가 DB에 무엇을 하는지 보여 주기 위해 검증만 하고 내용을 돌려준다.
+// 설치하기 전에, 무엇이 함께 설치되고 DB에 무엇을 하며 무엇이 모자란지 보여 주기 위해 점검만 한다.
 export async function previewStorePackage(root: string, productUuid: string): Promise<PackagePreview> {
-  const { metadata, manifest, files, installed, target } = await loadVerifiedPackage(root, productUuid);
-  const migrations = await findNewMigrations(target, files, Boolean(installed));
+  const plan = await planInstall(root, productUuid);
+  const migrations: PackagePreview["migrations"] = [];
+  for (const step of plan.steps) {
+    for (const { name, content } of await findNewMigrations(step.target, step.files, Boolean(step.installed))) {
+      const sql = content.toString("utf8");
+      migrations.push({ packageId: step.manifest.packageId, name, sql: sql.slice(0, MAX_PREVIEW_SQL), truncated: sql.length > MAX_PREVIEW_SQL });
+    }
+  }
+  const { target } = plan;
   return {
     productUuid,
-    versionUuid: metadata.versionUuid,
-    packageId: manifest.packageId,
-    version: manifest.version,
-    previousVersion: installed?.version ?? null,
-    hasDatabaseFiles: manifest.requiresDatabaseReview,
-    migrations: migrations.map(({ name, content }) => {
-      const sql = content.toString("utf8");
-      return { name, sql: sql.slice(0, MAX_PREVIEW_SQL), truncated: sql.length > MAX_PREVIEW_SQL };
-    }),
+    versionUuid: target.metadata.versionUuid,
+    packageId: target.manifest.packageId,
+    version: target.manifest.version,
+    previousVersion: target.installed?.version ?? null,
+    blockers: plan.blockers,
+    node: plan.node,
+    alsoInstalls: plan.steps.slice(0, -1).map((step) => ({
+      packageId: step.manifest.packageId,
+      version: step.manifest.version,
+      previousVersion: step.installed?.version ?? null,
+      versionUuid: step.metadata.versionUuid,
+    })),
+    npm: plan.npm,
+    hasDatabaseFiles: plan.steps.some((step) => step.manifest.requiresDatabaseReview),
+    migrations,
   };
 }
 
-export async function installStorePackage(root: string, productUuid: string, options: { versionUuid?: string } = {}): Promise<InstallResult> {
-  const { manifest, files, routes, installed, target } = await loadVerifiedPackage(root, productUuid, options);
+// 자료와, 그 자료가 필요로 하는 패키지를 순서대로 설치한다. 점검에서 막힌 사유가 있으면 아무것도 설치하지 않는다.
+// expected는 미리 본 뒤 Store의 버전이 바뀌지 않았는지 확인하는 데 쓴다: 패키지 ID → 미리 본 버전의 UUID.
+export async function installStorePackage(
+  root: string,
+  productUuid: string,
+  options: { versionUuid?: string; expected?: Record<string, string> } = {},
+): Promise<InstallResult> {
+  const plan = await planInstall(root, productUuid, { versionUuid: options.versionUuid });
+  if (plan.blockers.length > 0) throw new InstallerError(plan.blockers.join("\n"));
+  if (options.expected && plan.steps.some((step) => options.expected![step.manifest.packageId] !== step.metadata.versionUuid)) {
+    throw new InstallerError("확인한 뒤에 Store의 버전이 바뀌었습니다. 다시 설치를 눌러 내용을 확인해주세요.");
+  }
+
+  const results: InstallResult[] = [];
+  try {
+    for (const step of plan.steps) results.push(await writeVerifiedPackage(root, step));
+  } catch (error) {
+    // 중간에 실패하면 이번에 새로 넣은 패키지는 다시 뺀다. 업데이트한 것은 새 버전으로 남는다.
+    for (const done of results.reverse()) {
+      if (!done.previousVersion) await uninstallStorePackage(root, done.packageId).catch(() => {});
+    }
+    throw error;
+  }
+  const result = results[results.length - 1];
+  const others = results.slice(0, -1);
+  return {
+    ...result,
+    requiresDatabaseReview: results.some((item) => item.requiresDatabaseReview),
+    newMigrations: results.flatMap((item) => item.newMigrations),
+    alsoInstalled: others.map(({ packageId, version, previousVersion }) => ({ packageId, version, previousVersion })),
+  };
+}
+
+async function writeVerifiedPackage(root: string, loaded: LoadedPackage): Promise<InstallResult> {
+  const { manifest, files, routes, installed, target } = loaded;
   const newMigrations = (await findNewMigrations(target, files, Boolean(installed))).map((item) => item.name);
   // 손으로 쓴 라우트나 다른 확장의 라우트와 겹치면 아무것도 쓰기 전에 멈춘다.
   const previousAdapters = new Map<string, string | null>();
@@ -684,6 +888,7 @@ export async function installStorePackage(root: string, productUuid: string, opt
     routes: routes.map((entry) => entry.route),
     registered: registered.includes(manifest.packageId),
     newMigrations,
+    alsoInstalled: [],
     requiresDatabaseReview: manifest.requiresDatabaseReview,
   };
 }
@@ -694,6 +899,14 @@ export async function uninstallStorePackage(root: string, packageId: string) {
   if (!PACKAGE_ID.test(packageId)) throw new InstallerError("설치된 패키지를 찾지 못했습니다.");
   const installed = await readInstalled(root, packageId);
   if (!installed) throw new InstallerError("쉬운 설치로 넣은 패키지가 아니어서 제거하지 않습니다.");
+  // 다른 패키지가 이것을 필요로 하면 빼지 않는다. 빼면 그 패키지가 깨진다.
+  const dependents: string[] = [];
+  for (const name of await listInstalledPackageIds(root)) {
+    if (name !== packageId && (await readInstalled(root, name))?.requires.packages.some((item) => item.packageId === packageId)) dependents.push(name);
+  }
+  if (dependents.length > 0) {
+    throw new InstallerError(`${dependents.join(", ")} 패키지가 ${packageId}을(를) 필요로 합니다. 그 패키지를 먼저 제거해주세요.`);
+  }
   const removedRoutes: string[] = [];
   for (const route of installed.routes) {
     const destination = path.join(root, route);

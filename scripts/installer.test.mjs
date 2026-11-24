@@ -73,7 +73,7 @@ test('admin action checks authorization before touching the filesystem and hides
     '../lib/storeInstall': {
       DEFAULT_STORE_URL: 'https://store.example', InstallerError,
       readConnection: async () => null, readPlatformVersion: async () => '0.11.2', fetchCatalog: async () => [],
-      installStorePackage: async () => { installs++; if (installs === 2) throw new InstallerError('먼저 Store에 연결해주세요.'); if (installs === 3) throw Error('/private/secret'); return { packageId: 'demo', version: '0.1.0', previousVersion: null, requiresDatabaseReview: true, registered: true, newMigrations: ['20260101000000_first'] }; },
+      installStorePackage: async () => { installs++; if (installs === 2) throw new InstallerError('먼저 Store에 연결해주세요.'); if (installs === 3) throw Error('/private/secret'); return { packageId: 'demo', version: '0.1.0', previousVersion: null, requiresDatabaseReview: true, registered: true, newMigrations: ['20260101000000_first'], alsoInstalled: [{ packageId: 'core', version: '1.0.0', previousVersion: null }] }; },
       uninstallStorePackage: async () => { uninstalls++; return { packageId: 'demo', version: '0.1.0', routes: [], backupPath: '.plextype/backup/demo', migrations: [] }; },
     },
     '../lib/applyDatabase': {
@@ -99,7 +99,7 @@ test('admin action checks authorization before touching the filesystem and hides
   assert.equal(installs, 0);
   authorized = true;
   // 확인 없이 부르면 DB에는 손대지 않고, 적용할 명령을 알려 준다.
-  assert.match((await actions.installStorePackageAdminAction('product')).message, /demo 0\.1\.0.*등록했습니다.*npm run plextype -- migrate/);
+  assert.match((await actions.installStorePackageAdminAction('product')).message, /demo 0\.1\.0.*함께 설치: core 1\.0\.0.*등록했습니다.*npm run plextype -- migrate/);
   assert.equal(applies, 0);
   assert.match((await actions.installStorePackageAdminAction('product')).message, /먼저 Store에 연결/);
   const hidden = await actions.installStorePackageAdminAction('product');
@@ -113,10 +113,11 @@ test('admin action checks authorization before touching the filesystem and hides
   const reverted = await actions.installStorePackageAdminAction('product', { applyDatabase: true });
   assert.equal(reverted.success, false);
   assert.match(reverted.message, /이름이 겹칩니다[\s\S]*설치를 취소/);
-  assert.equal(uninstalls, 1);
+  // 대상 패키지와, 함께 새로 설치한 패키지를 모두 뺀다.
+  assert.equal(uninstalls, 2);
   database = { applied: false, failedStep: 'migrate', output: 'SQL 오류' };
   assert.match((await actions.installStorePackageAdminAction('product', { applyDatabase: true })).message, /SQL 오류[\s\S]*설치된 상태/);
-  assert.equal(uninstalls, 1);
+  assert.equal(uninstalls, 2);
 });
 
 test('module is registered in core and does not import Store implementation', () => {
