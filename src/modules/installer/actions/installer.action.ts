@@ -11,12 +11,14 @@ import {
   disconnectStore,
   fetchCatalog,
   installStorePackage,
+  previewStorePackage,
   readConnection,
   readPlatformVersion,
   refreshStoreKeys,
   uninstallStorePackage,
 } from "../lib/storeInstall";
-import type { InstallerActionResult, InstallerCatalogItem, InstallerState } from "./_type";
+import { applyPackageDatabase, describeDatabaseFailure, syncPackageSchema } from "../lib/applyDatabase";
+import type { InstallerActionResult, InstallerCatalogItem, InstallerPreviewResult, InstallerState } from "./_type";
 
 const isAdmin = async () => {
   const session = await getUserSessionAction();
@@ -104,20 +106,61 @@ export async function refreshStoreKeysAdminAction(): Promise<InstallerActionResu
   });
 }
 
-export async function installStorePackageAdminAction(productUuid: string): Promise<InstallerActionResult> {
+// 설치하기 전에 이 패키지가 DB에 무엇을 하는지 화면에 보여 주기 위한 조회. 아무것도 바꾸지 않는다.
+export async function previewStorePackageAdminAction(productUuid: string): Promise<InstallerPreviewResult> {
+  if (!(await isAdmin())) return { success: false, message: "관리자 권한이 필요합니다." };
+  try {
+    return { success: true, message: "", preview: await previewStorePackage(process.cwd(), productUuid) };
+  } catch (error) {
+    if (error instanceof InstallerError) return { success: false, message: error.message };
+    console.error("[installer]", error);
+    return { success: false, message: "처리 중 오류가 발생했습니다. 서버 로그를 확인해주세요." };
+  }
+}
+
+// applyDatabase가 true면 설치에 이어 패키지의 스키마를 합치고 마이그레이션을 개발 DB에 적용한다.
+// 화면은 적용될 SQL을 보여 주고 확인을 받은 뒤에만 true로 부른다.
+export async function installStorePackageAdminAction(productUuid: string, options: { versionUuid?: string; applyDatabase?: boolean } = {}): Promise<InstallerActionResult> {
   return run(async () => {
-    const result = await installStorePackage(process.cwd(), productUuid);
+    const root = process.cwd();
+    const result = await installStorePackage(root, productUuid, { versionUuid: options.versionUuid });
     const notes = [
       result.previousVersion ? `${result.packageId}을(를) ${result.previousVersion}에서 ${result.version}으로 업데이트했습니다.` : `${result.packageId} ${result.version}을(를) 설치했습니다.`,
-      result.requiresDatabaseReview ? "DB 변경 파일이 들어 있으니 검토한 뒤 직접 반영해주세요." : "",
+      result.registered ? "관리자 메뉴와 스킨을 등록했습니다." : "",
     ];
-    return notes.filter(Boolean).join(" ");
+    if (!result.requiresDatabaseReview) return notes.filter(Boolean).join(" ");
+    if (!options.applyDatabase) {
+      return [...notes, "DB 변경 파일이 들어 있습니다. 터미널에서 npm run plextype -- migrate 를 실행해 반영해주세요."].filter(Boolean).join(" ");
+    }
+
+    const database = await applyPackageDatabase(root);
+    if (database.applied) {
+      return [
+        ...notes,
+        result.newMigrations.length ? `마이그레이션 ${result.newMigrations.length}개를 DB에 적용했습니다.` : "스키마를 합쳤습니다.",
+        "패키지가 새 Prisma 모델을 쓴다면 개발 서버를 다시 시작해야 동작합니다.",
+      ].filter(Boolean).join(" ");
+    }
+    // 스키마를 합치는 단계에서 막혔다면 DB는 아직 그대로다. 새로 설치한 패키지는 빼서 프로젝트를 설치 전으로 되돌린다.
+    // 업데이트였거나 마이그레이션이 일부 적용된 뒤라면 되돌리는 쪽이 더 어긋나므로 그대로 두고 알린다.
+    if (database.failedStep === "generate" && !result.previousVersion) {
+      await uninstallStorePackage(root, result.packageId);
+      await syncPackageSchema(root);
+      throw new InstallerError(`${describeDatabaseFailure(database).message}\n\n설치를 취소하고 패키지를 뺐습니다.`);
+    }
+    throw new InstallerError(`${describeDatabaseFailure(database).message}\n\n패키지 파일은 설치된 상태입니다. 원인을 고친 뒤 npm run plextype -- migrate 로 다시 적용하거나, 설치된 패키지에서 제거해주세요.`);
   });
 }
 
 export async function uninstallStorePackageAdminAction(packageId: string): Promise<InstallerActionResult> {
   return run(async () => {
-    const result = await uninstallStorePackage(process.cwd(), packageId);
-    return `${result.packageId}을(를) 제거했습니다. 폴더는 ${result.backupPath}에 보관했습니다.`;
+    const root = process.cwd();
+    const result = await uninstallStorePackage(root, packageId);
+    const notes = [`${result.packageId}을(를) 제거했습니다. 폴더는 ${result.backupPath}에 보관했습니다.`];
+    if (result.migrations.length) {
+      await syncPackageSchema(root);
+      notes.push("이 패키지가 만든 테이블과 마이그레이션 적용 이력은 DB에 남아 있습니다. 필요 없으면 테이블을 직접 정리해주세요.");
+    }
+    return notes.join(" ");
   });
 }

@@ -32,6 +32,12 @@ test('schema discovery supports legacy and nested feature folders, without depen
   const sources = findExtensionPrismaSources(fixture);
   assert.equal(sources.length, 3);
   assert.ok(sources.some(source => source.schemaDir.endsWith('posts/issuetracker/prisma/schema')));
+  // 쉬운 설치로 넣은 패키지(src/packages)의 스키마와 라우트도 함께 찾는다.
+  fs.mkdirSync(path.join(fixture, 'src/packages/demo/prisma'), { recursive: true });
+  fs.writeFileSync(path.join(fixture, 'src/packages/demo/page.tsx'), 'export default null;');
+  fs.writeFileSync(path.join(fixture, 'src/packages/demo/routes.json'), JSON.stringify([{ route: 'src/app/demo/page.tsx', implementation: 'src/packages/demo/page.tsx', configs: [] }]));
+  assert.equal(findExtensionPrismaSources(fixture).length, 4);
+  assert.deepEqual(readExtensionRoutes(fixture).map(entry => entry.implementation), ['src/packages/demo/page.tsx']);
 });
 
 test('route mapping refuses destinations outside app and implementations outside their owner', t => {

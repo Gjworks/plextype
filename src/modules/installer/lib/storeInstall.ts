@@ -1,4 +1,4 @@
-// Store에 연결해 확장 패키지를 내려받고, 검증한 뒤 src/extensions에 설치하는 로직.
+// Store에 연결해 확장 패키지를 내려받고, 검증한 뒤 src/packages에 설치하는 로직.
 //
 // 관리자 화면(서버 액션)과 명령 줄(scripts/plextype.mjs)이 함께 쓴다. 명령 줄에서는 Node가 이 파일을 직접 읽으므로
 // - Node 내장 모듈만 import하고(경로 별칭 `@/`와 다른 소스 파일 import 금지),
@@ -8,6 +8,7 @@
 // Store 구현(src/extensions/store)을 참조하지 않고 Store의 HTTP API만 쓴다.
 
 import { createHash, randomBytes, verify } from "node:crypto";
+import type { Dirent } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { inflateRawSync } from "node:zlib";
@@ -69,7 +70,11 @@ export type InstallResult = {
   previousVersion: string | null;
   installPath: string;
   routes: string[];
+  // registry 파일이 있어 관리자 메뉴·스킨 등록 목록에 들어갔는지.
+  registered: boolean;
   requiresDatabaseReview: boolean;
+  // 이번 설치로 새로 들어온 마이그레이션 이름. DB에는 아직 적용되지 않았다.
+  newMigrations: string[];
 };
 
 // 사용자에게 그대로 보여 줘도 되는 실패 사유. 그 밖의 예외는 내부 경로 등이 섞일 수 있어 화면에 내보내지 않는다.
@@ -78,6 +83,8 @@ export class InstallerError extends Error {}
 export const DEFAULT_STORE_URL = "https://gjworks.dev";
 // 연결 정보(토큰 포함)와 임시·백업 폴더를 두는 곳. 저장소에 올리지 않는다(.gitignore).
 export const STATE_DIRECTORY = ".plextype";
+// 설치한 패키지를 두는 곳. 직접 만드는 확장(src/extensions)과 섞이지 않게 따로 두며, 이 안은 설치기만 고친다.
+export const PACKAGES_DIRECTORY = "src/packages";
 const CONNECTION_FILE = "store.json";
 
 // Store의 패키지 생성 제한(src/extensions/store/package.ts)과 같은 값. 서명된 패키지는 이 안에 들어온다.
@@ -295,7 +302,7 @@ function parseMetadata(value: unknown, productUuid: string): PackageMetadata {
       manifest.schemaVersion !== 1 || manifest.type !== "plextype-extension" ||
       manifest.productUuid !== productUuid ||
       typeof manifest.packageId !== "string" || !PACKAGE_ID.test(manifest.packageId) || manifest.packageId.length > 80 ||
-      manifest.installPath !== `src/extensions/${manifest.packageId}` ||
+      manifest.installPath !== `${PACKAGES_DIRECTORY}/${manifest.packageId}` ||
       typeof manifest.version !== "string" || !VERSION.test(manifest.version) ||
       typeof manifest.minPlatformVersion !== "string" || !VERSION.test(manifest.minPlatformVersion) ||
       (manifest.maxPlatformVersion !== null && (typeof manifest.maxPlatformVersion !== "string" || !VERSION.test(manifest.maxPlatformVersion))) ||
@@ -408,13 +415,13 @@ function readPackageRoutes(packageId: string, files: Map<string, Buffer>): Route
     try { entries = JSON.parse(content.toString("utf8")); }
     catch { throw fail(); }
     if (!Array.isArray(entries)) throw fail();
-    const owner = path.posix.join("src/extensions", packageId, path.posix.dirname(name)).replace(/\/\.$/, "");
+    const owner = path.posix.join(PACKAGES_DIRECTORY, packageId, path.posix.dirname(name)).replace(/\/\.$/, "");
     for (const entry of entries) {
       if (!isRecord(entry) || typeof entry.route !== "string" || typeof entry.implementation !== "string" ||
           !entry.route.startsWith("src/app/") || !/\/(page|layout|route|loading|error|not-found|template|default)\.tsx?$/.test(entry.route) ||
           !isSafeRelativePath(entry.route) ||
           !entry.implementation.startsWith(owner + "/") || !isSafeRelativePath(entry.implementation) ||
-          !files.has(entry.implementation.slice(`src/extensions/${packageId}/`.length)) ||
+          !files.has(entry.implementation.slice(`${PACKAGES_DIRECTORY}/${packageId}/`.length)) ||
           !Array.isArray(entry.configs) || !entry.configs.every((config) => typeof config === "string" && ROUTE_CONFIG.test(config)) ||
           (entry.exports !== undefined && (!Array.isArray(entry.exports) || entry.exports.length === 0 || !entry.exports.every((item) => typeof item === "string" && ROUTE_EXPORT.test(item))))) {
         throw fail();
@@ -435,7 +442,7 @@ async function readText(filePath: string) {
 
 // 이미 설치된 패키지 폴더에서 설치 정보와 연결 파일 목록을 읽는다. 쉬운설치로 넣은 폴더가 아니면 null.
 async function readInstalled(root: string, packageId: string) {
-  const directory = path.join(root, "src", "extensions", packageId);
+  const directory = path.join(root, PACKAGES_DIRECTORY, packageId);
   const raw = await readText(path.join(directory, "plextype.package.json"));
   if (raw === null) return null;
   let manifest: unknown;
@@ -455,13 +462,45 @@ async function readInstalled(root: string, packageId: string) {
       }
     } catch { /* 읽지 못한 routes.json의 연결 파일은 건드리지 않는다. */ }
   }
-  return { directory, productUuid: manifest.productUuid, version: manifest.version, routes };
+  const migrations = manifest.files.flatMap((file) => {
+    const match = isRecord(file) && typeof file.path === "string" ? MIGRATION_FILE.exec(file.path) : null;
+    return match ? [match[1]] : [];
+  });
+  return { directory, productUuid: manifest.productUuid, version: manifest.version, routes, migrations };
 }
 
 // 연결 파일이 이 패키지의 것인지 본다: 설치기가 만든 형식이고 이 패키지 폴더의 구현을 가리켜야 한다.
 const isOwnedAdapter = (content: string, packageId: string) => (
-  ADAPTER_HEADERS.some((header) => content.startsWith(header)) && content.includes(`from "@/extensions/${packageId}/`)
+  ADAPTER_HEADERS.some((header) => content.startsWith(header)) && content.includes(`from "@/packages/${packageId}/`)
 );
+
+// 설치된 패키지 가운데 registry.ts(x)를 가진 것을 모아 등록 목록(src/packages/index.ts)을 다시 만든다.
+// 폴더의 지금 상태에서 만들므로, 설치·제거가 끝났든 중간에 되돌렸든 부르고 나면 목록이 폴더와 맞는다.
+export async function writePackageRegistry(root: string) {
+  const directory = path.join(root, PACKAGES_DIRECTORY);
+  const registered: { packageId: string; file: string }[] = [];
+  let entries: Dirent[] = [];
+  try { entries = await fs.readdir(directory, { withFileTypes: true }); }
+  catch { /* 폴더가 아직 없으면 등록할 것도 없다. */ }
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    if (!entry.isDirectory() || !PACKAGE_ID.test(entry.name) || !(await readInstalled(root, entry.name))) continue;
+    for (const file of ["registry.ts", "registry.tsx"]) {
+      const stat = await fs.lstat(path.join(directory, entry.name, file)).catch(() => null);
+      if (stat?.isFile()) { registered.push({ packageId: entry.name, file }); break; }
+    }
+  }
+  const lines = [
+    "// 쉬운 설치가 만드는 파일. 직접 고치지 않는다. 패키지를 설치하거나 제거할 때마다 다시 만든다.",
+    'import type { ExtensionRegistryConfig } from "@/core/registry/define";',
+    ...registered.map((item, index) => `import package${index} from "./${item.packageId}/registry";`),
+    "",
+    `export const installedPackages: ExtensionRegistryConfig[] = [${registered.map((_, index) => `package${index}`).join(", ")}];`,
+    "",
+  ];
+  await fs.mkdir(directory, { recursive: true });
+  await fs.writeFile(path.join(directory, "index.ts"), lines.join("\n"));
+  return registered.map((item) => item.packageId);
+}
 
 async function assertRealDirectory(directory: string, label: string) {
   try {
@@ -471,12 +510,14 @@ async function assertRealDirectory(directory: string, label: string) {
   throw new InstallerError(`${label} 폴더를 찾지 못했습니다. Plextype 프로젝트 루트에서 실행해주세요.`);
 }
 
-export async function installStorePackage(root: string, productUuid: string, options: { versionUuid?: string } = {}): Promise<InstallResult> {
+// 패키지를 내려받아 서명, 무결성, 호환 버전, 설치할 자리를 모두 확인한다. 여기서는 아무것도 쓰지 않는다.
+async function loadVerifiedPackage(root: string, productUuid: string, options: { versionUuid?: string } = {}) {
   assertInstallAllowed();
   if (!UUID.test(productUuid) || (options.versionUuid && !UUID.test(options.versionUuid))) throw new InstallerError("설치할 자료를 찾지 못했습니다.");
   const connection = await readConnection(root);
   if (!connection) throw new InstallerError("먼저 Store에 연결해주세요.");
-  await assertRealDirectory(path.join(root, "src", "extensions"), "src/extensions");
+  await fs.mkdir(path.join(root, PACKAGES_DIRECTORY), { recursive: true });
+  await assertRealDirectory(path.join(root, PACKAGES_DIRECTORY), PACKAGES_DIRECTORY);
   await assertRealDirectory(path.join(root, "src", "app"), "src/app");
 
   const download = `/api/store/products/${encodeURIComponent(productUuid)}/download`;
@@ -492,12 +533,12 @@ export async function installStorePackage(root: string, productUuid: string, opt
     throw new InstallerError(`이 패키지는 Plextype ${manifest.minPlatformVersion} ~ ${manifest.maxPlatformVersion || "최신"}용입니다. 현재 버전은 ${platform}입니다.`);
   }
 
-  const target = path.join(root, "src", "extensions", manifest.packageId);
+  const target = path.join(root, PACKAGES_DIRECTORY, manifest.packageId);
   const installed = await readInstalled(root, manifest.packageId);
   let targetExists = true;
   try { await fs.lstat(target); } catch { targetExists = false; }
   if (targetExists && (!installed || installed.productUuid !== productUuid)) {
-    throw new InstallerError(`src/extensions/${manifest.packageId} 폴더가 이미 있고 이 자료로 설치한 것이 아닙니다. 덮어쓰지 않습니다.`);
+    throw new InstallerError(`${PACKAGES_DIRECTORY}/${manifest.packageId} 폴더가 이미 있고 이 자료로 설치한 것이 아닙니다. 덮어쓰지 않습니다.`);
   }
 
   const response = await storeRequest(connection.storeUrl, `${download}?version=${encodeURIComponent(metadata.versionUuid)}`, connection.token);
@@ -519,6 +560,59 @@ export async function installStorePackage(root: string, productUuid: string, opt
   })) throw new InstallerError("패키지 내용이 서명된 파일 목록과 다릅니다.");
 
   const routes = readPackageRoutes(manifest.packageId, files);
+  return { metadata, manifest, files, routes, installed, target };
+}
+
+const MIGRATION_FILE = /(?:^|\/)prisma\/migrations\/(\d{14}_[A-Za-z0-9_-]+)\/migration\.sql$/;
+// 화면에 보여 줄 SQL 길이. 넘는 부분은 잘라서 보여 주고 잘렸다고 알린다.
+const MAX_PREVIEW_SQL = 20_000;
+
+// 이 패키지를 설치하면 새로 들어오는 마이그레이션. 이미 설치된 버전에 있던 것은 뺀다.
+async function findNewMigrations(target: string, files: Map<string, Buffer>, installed: boolean) {
+  const migrations: { name: string; file: string; content: Buffer }[] = [];
+  for (const [file, content] of files) {
+    const match = MIGRATION_FILE.exec(file);
+    if (!match) continue;
+    if (installed && (await readText(path.join(target, file))) !== null) continue;
+    migrations.push({ name: match[1], file, content });
+  }
+  return migrations.sort((left, right) => left.name.localeCompare(right.name));
+}
+
+export type PackagePreview = {
+  productUuid: string;
+  // 미리 본 것과 같은 버전을 설치하도록 설치할 때 그대로 넘긴다.
+  versionUuid: string;
+  packageId: string;
+  version: string;
+  previousVersion: string | null;
+  // prisma 스키마나 SQL 파일이 들어 있는지.
+  hasDatabaseFiles: boolean;
+  // 설치하면 DB에 새로 적용될 마이그레이션과 그 SQL.
+  migrations: { name: string; sql: string; truncated: boolean }[];
+};
+
+// 설치하기 전에, 이 패키지가 DB에 무엇을 하는지 보여 주기 위해 검증만 하고 내용을 돌려준다.
+export async function previewStorePackage(root: string, productUuid: string): Promise<PackagePreview> {
+  const { metadata, manifest, files, installed, target } = await loadVerifiedPackage(root, productUuid);
+  const migrations = await findNewMigrations(target, files, Boolean(installed));
+  return {
+    productUuid,
+    versionUuid: metadata.versionUuid,
+    packageId: manifest.packageId,
+    version: manifest.version,
+    previousVersion: installed?.version ?? null,
+    hasDatabaseFiles: manifest.requiresDatabaseReview,
+    migrations: migrations.map(({ name, content }) => {
+      const sql = content.toString("utf8");
+      return { name, sql: sql.slice(0, MAX_PREVIEW_SQL), truncated: sql.length > MAX_PREVIEW_SQL };
+    }),
+  };
+}
+
+export async function installStorePackage(root: string, productUuid: string, options: { versionUuid?: string } = {}): Promise<InstallResult> {
+  const { manifest, files, routes, installed, target } = await loadVerifiedPackage(root, productUuid, options);
+  const newMigrations = (await findNewMigrations(target, files, Boolean(installed))).map((item) => item.name);
   // 손으로 쓴 라우트나 다른 확장의 라우트와 겹치면 아무것도 쓰기 전에 멈춘다.
   const previousAdapters = new Map<string, string | null>();
   for (const entry of routes) {
@@ -576,16 +670,20 @@ export async function installStorePackage(root: string, productUuid: string, opt
     if (placed) await fs.rm(target, { recursive: true, force: true }).catch(() => {});
     if (moved) await fs.rename(backup, target).catch(() => {});
     await fs.rm(staging, { recursive: true, force: true }).catch(() => {});
+    await writePackageRegistry(root).catch(() => {});
     if (error instanceof InstallerError) throw error;
     throw new InstallerError("파일을 쓰는 중 오류가 나서 설치 전 상태로 되돌렸습니다. 폴더 권한을 확인해주세요.");
   }
 
+  const registered = await writePackageRegistry(root);
   return {
     packageId: manifest.packageId,
     version: manifest.version,
     previousVersion: installed?.version ?? null,
     installPath: manifest.installPath,
     routes: routes.map((entry) => entry.route),
+    registered: registered.includes(manifest.packageId),
+    newMigrations,
     requiresDatabaseReview: manifest.requiresDatabaseReview,
   };
 }
@@ -608,5 +706,13 @@ export async function uninstallStorePackage(root: string, packageId: string) {
   const backup = statePath(root, "backup", `${packageId}-${Date.now()}-${randomBytes(4).toString("hex")}`);
   await fs.mkdir(path.dirname(backup), { recursive: true });
   await fs.rename(installed.directory, backup);
-  return { packageId, version: installed.version, routes: removedRoutes, backupPath: path.relative(root, backup).split(path.sep).join("/") };
+  await writePackageRegistry(root);
+  return {
+    packageId,
+    version: installed.version,
+    routes: removedRoutes,
+    backupPath: path.relative(root, backup).split(path.sep).join("/"),
+    // 이 패키지가 가져왔던 마이그레이션. 폴더를 빼도 DB의 테이블과 적용 이력은 그대로 남는다.
+    migrations: installed.migrations,
+  };
 }

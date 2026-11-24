@@ -16,10 +16,11 @@ import {
   connectStoreAdminAction,
   disconnectStoreAdminAction,
   installStorePackageAdminAction,
+  previewStorePackageAdminAction,
   refreshStoreKeysAdminAction,
   uninstallStorePackageAdminAction,
 } from "../actions/installer.action";
-import type { InstallerActionResult, InstallerCatalogItem, InstallerState } from "../actions/_type";
+import type { InstallerActionResult, InstallerCatalogItem, InstallerPackagePreview, InstallerState } from "../actions/_type";
 
 const tabs = [
   { id: "catalog", label: "Store 자료", href: "/admin/installer" },
@@ -47,6 +48,8 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
   const [search, setSearch] = useState("");
   const [result, setResult] = useState<InstallerActionResult | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // DB를 바꾸는 패키지를 설치하기 전에, 적용될 내용을 보여 주고 확인을 기다리는 상태.
+  const [confirming, setConfirming] = useState<{ item: InstallerCatalogItem; preview: InstallerPackagePreview } | null>(null);
   const active = tabs.find(tab => tab.id === view)?.id || "catalog";
   const data = state.data;
   const packages = (data?.packages || []).filter(item => `${item.packageId} ${item.version}`.toLowerCase().includes(search.trim().toLowerCase()));
@@ -63,6 +66,32 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
       setBusy(null);
       router.refresh();
     });
+  };
+
+  // DB를 바꾸지 않는 패키지는 바로 설치하고, 바꾸는 패키지는 적용될 SQL을 먼저 보여 준다.
+  const startInstall = (item: InstallerCatalogItem) => {
+    setBusy(`install:${item.productUuid}`);
+    setResult(null);
+    setConfirming(null);
+    startTransition(async () => {
+      try {
+        const checked = await previewStorePackageAdminAction(item.productUuid);
+        if (!checked.success || !checked.preview) setResult({ success: false, message: checked.message });
+        else if (checked.preview.hasDatabaseFiles) setConfirming({ item, preview: checked.preview });
+        else setResult(await installStorePackageAdminAction(item.productUuid, { versionUuid: checked.preview.versionUuid }));
+      } catch {
+        setResult({ success: false, message: "처리 중 오류가 발생했습니다. 다시 시도해주세요." });
+      }
+      setBusy(null);
+      router.refresh();
+    });
+  };
+
+  const confirmInstall = (applyDatabase: boolean) => {
+    if (!confirming) return;
+    const { item, preview } = confirming;
+    setConfirming(null);
+    run(`install:${item.productUuid}`, () => installStorePackageAdminAction(item.productUuid, { versionUuid: preview.versionUuid, applyDatabase }));
   };
 
   const installLabel = (item: InstallerCatalogItem) => {
@@ -120,7 +149,7 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
           {result && (
             <div role={result.success ? "status" : "alert"} className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm leading-6 ${result.success ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-300" : "border-red-200 bg-red-50 text-red-600 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-300"}`}>
               {result.success ? <CheckCircle2 size={18} className="mt-0.5 shrink-0" /> : <AlertCircle size={18} className="mt-0.5 shrink-0" />}
-              <span className="min-w-0 break-words">{result.message}</span>
+              <span className="min-w-0 whitespace-pre-wrap break-words">{result.message}</span>
             </div>
           )}
 
@@ -166,14 +195,13 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                             className={`${adminDangerButtonClass} shrink-0 whitespace-nowrap`}
                             disabled={pending}
                             onClick={() => {
-                              if (window.confirm(`${item.packageId} 패키지를 제거할까요? 폴더는 .plextype/backup으로 옮겨 보관합니다.`)) {
+                              if (window.confirm(`${item.packageId} 패키지를 제거할까요? 폴더는 .plextype/backup으로 옮겨 보관합니다.${item.requiresDatabaseReview ? "\n\n이 패키지가 만든 테이블과 마이그레이션 적용 이력은 DB에 남습니다." : ""}`)) {
                                 run(`remove:${item.packageId}`, () => uninstallStorePackageAdminAction(item.packageId));
                               }
                             }}
                           >
                             <Trash2 size={14} />{busy === `remove:${item.packageId}` ? "제거 중" : "제거"}
                           </button>
-                          <span className="text-xs leading-5 text-gray-400 dark:text-dark-500">src/extensions/registry.tsx에 등록했다면 그 줄은 직접 지워야 합니다.</span>
                         </div>
                       )}
                     </details>
@@ -257,6 +285,32 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                   <h2 className="text-sm font-semibold text-gray-900 dark:text-dark-100">설치할 수 있는 자료가 아직 없습니다.</h2>
                 </div>
               ) : (
+                <>
+                {confirming && (
+                  <div role="alertdialog" aria-label="DB 변경 확인" className="border-b border-amber-200 bg-amber-50/60 px-5 py-5 dark:border-amber-500/20 dark:bg-amber-500/5">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-dark-100">{confirming.item.name} {confirming.preview.version}은(는) DB를 바꿉니다</h3>
+                    <p className={`mt-1 leading-6 ${mutedClass}`}>
+                      {confirming.preview.migrations.length > 0
+                        ? `설치하면 아래 마이그레이션 ${confirming.preview.migrations.length}개가 개발 DB에 적용됩니다. 내용을 확인해주세요.`
+                        : "새로 적용할 마이그레이션은 없고 스키마 파일만 들어 있습니다. 설치하면 스키마를 합쳐 Prisma 클라이언트를 다시 만듭니다."}
+                    </p>
+                    {confirming.preview.migrations.map(migration => (
+                      <details key={migration.name} open={confirming.preview.migrations.length === 1} className="mt-3 overflow-hidden rounded-md border border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+                        <summary className="cursor-pointer px-3 py-2 font-mono text-xs text-gray-700 dark:text-dark-200">{migration.name}</summary>
+                        <pre className="max-h-72 overflow-auto border-t border-gray-100 px-3 py-3 text-xs leading-5 text-gray-800 dark:border-dark-800 dark:text-dark-200">{migration.sql}{migration.truncated ? "\n-- 이하 생략. 전체 내용은 설치 후 패키지 폴더에서 확인합니다." : ""}</pre>
+                      </details>
+                    ))}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button type="button" className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`} disabled={pending} onClick={() => confirmInstall(true)}>
+                        <Download size={14} />설치하고 DB에 적용
+                      </button>
+                      <button type="button" className={buttonClass} disabled={pending} onClick={() => confirmInstall(false)} title="파일만 설치합니다. DB에는 나중에 npm run plextype -- migrate 로 적용합니다.">
+                        DB 적용 없이 설치
+                      </button>
+                      <button type="button" className={buttonClass} disabled={pending} onClick={() => setConfirming(null)}>취소</button>
+                    </div>
+                  </div>
+                )}
                 <ul className="divide-y divide-gray-100 dark:divide-dark-800">
                   {data.catalog.map(item => {
                     const installed = data.packages.find(entry => entry.packageId === item.packageId);
@@ -280,7 +334,7 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                           className={`${adminPrimaryButtonClass} shrink-0 whitespace-nowrap`}
                           disabled={!canInstall || !compatible || pending}
                           title={!isDevelopment ? "개발 환경에서만 설치할 수 있습니다." : !data.storeConnected ? "연결 관리에서 Store에 먼저 연결해주세요." : !compatible ? `현재 Plextype ${data.platformVersion}과 호환되지 않습니다.` : undefined}
-                          onClick={() => run(`install:${item.productUuid}`, () => installStorePackageAdminAction(item.productUuid))}
+                          onClick={() => startInstall(item)}
                         >
                           <Download size={14} />{busy === `install:${item.productUuid}` ? "설치 중" : !compatible ? "호환 안 됨" : installLabel(item)}
                         </button>
@@ -288,11 +342,12 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                     );
                   })}
                 </ul>
+                </>
               )}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-4 dark:border-dark-800">
                 <p className="min-w-0 text-xs leading-6 text-gray-500 dark:text-dark-400">
                   {canInstall
-                    ? "설치하면 src/extensions에 소스가 들어갑니다. 관리자 메뉴나 스킨을 제공하는 패키지는 src/extensions/registry.tsx에 등록한 뒤, 확인하고 커밋해 배포합니다."
+                    ? "설치하면 src/packages에 소스가 들어가고, 패키지의 관리자 메뉴와 스킨은 자동으로 등록됩니다. 확인한 뒤 커밋해 배포합니다."
                     : isDevelopment
                       ? "설치하려면 연결 관리에서 Store에 연결해주세요."
                       : "운영 환경에서는 목록만 봅니다. 개발 환경에서 설치한 뒤 커밋해 배포합니다."}

@@ -9,7 +9,7 @@ export function parseInstalledManifest(value: unknown, directory: string): Insta
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const item = value as Record<string, unknown>;
   if (!packageIdPattern.test(directory) || item.schemaVersion !== 1 || item.type !== "plextype-extension" ||
-      item.packageId !== directory || item.installPath !== `src/extensions/${directory}` ||
+      item.packageId !== directory || item.installPath !== `src/packages/${directory}` ||
       typeof item.version !== "string" || !versionPattern.test(item.version) ||
       typeof item.productUuid !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(item.productUuid) ||
       typeof item.minPlatformVersion !== "string" || !versionPattern.test(item.minPlatformVersion) ||
@@ -20,7 +20,7 @@ export function parseInstalledManifest(value: unknown, directory: string): Insta
     packageId: directory,
     version: item.version,
     productUuid: item.productUuid,
-    installPath: `src/extensions/${directory}`,
+    installPath: `src/packages/${directory}`,
     minPlatformVersion: item.minPlatformVersion,
     maxPlatformVersion: item.maxPlatformVersion as string | null,
     requiresDatabaseReview: item.requiresDatabaseReview,
@@ -31,7 +31,7 @@ export function parseInstalledManifest(value: unknown, directory: string): Insta
 // Inventory is read-only; a manifest is not evidence of signature or file integrity.
 export async function readInstallerInventory(root = process.cwd()): Promise<InstallerInventory> {
   const result: InstallerInventory = { packages: [], warnings: [] };
-  const directory = path.join(root, "src/extensions");
+  const directory = path.join(root, "src/packages");
   try {
     const stat = await fs.lstat(directory);
     if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error("Invalid extension directory");

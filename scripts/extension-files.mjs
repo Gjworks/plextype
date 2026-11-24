@@ -12,10 +12,12 @@ export function walkExtensionDirectories(directory, visit) {
   }
 }
 
+// 라우트와 스키마를 찾는 곳: 직접 만든 확장과, 쉬운 설치로 넣은 패키지.
+export const extensionRoots = rootDir => [path.join(rootDir, 'src', 'extensions'), path.join(rootDir, 'src', 'packages')];
+
 export function findExtensionPrismaSources(rootDir) {
   const sources = [];
-  const extensions = path.join(rootDir, 'src', 'extensions');
-  walkExtensionDirectories(extensions, directory => {
+  for (const extensions of extensionRoots(rootDir)) walkExtensionDirectories(extensions, directory => {
     if (path.basename(directory) !== 'prisma') return;
     sources.push({
       name: 'Extension',
@@ -31,7 +33,7 @@ export function findExtensionPrismaSources(rootDir) {
 export function readExtensionRoutes(rootDir) {
   const routes = [];
   const owners = new Set();
-  walkExtensionDirectories(path.join(rootDir, 'src', 'extensions'), directory => {
+  for (const extensions of extensionRoots(rootDir)) walkExtensionDirectories(extensions, directory => {
     const manifest = path.join(directory, 'routes.json');
     if (!fs.existsSync(manifest)) return;
     for (const entry of JSON.parse(fs.readFileSync(manifest, 'utf8'))) {

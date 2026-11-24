@@ -47,11 +47,13 @@ function zip(entries) {
 const { privateKey, publicKey } = generateKeyPairSync('ed25519');
 const publicPem = publicKey.export({ format: 'pem', type: 'spki' }).toString();
 
+const signPayload = body => sign(null, Buffer.from(canonical(body)), privateKey).toString('base64');
+
 function buildPackage(version, sources, { keyId = 'test-key', min = '0.1.0' } = {}) {
   const files = Object.entries(sources).map(([name, text]) => [name, Buffer.from(text)]);
   const manifest = {
     schemaVersion: 1, type: 'plextype-extension', productUuid: 'product-demo', packageId: 'demo', version,
-    minPlatformVersion: min, maxPlatformVersion: null, installPath: 'src/extensions/demo',
+    minPlatformVersion: min, maxPlatformVersion: null, installPath: 'src/packages/demo',
     files: files.map(([name, content]) => ({ path: name, size: content.length, sha256: digest(content) })),
     requiresDatabaseReview: false,
   };
@@ -63,7 +65,7 @@ function buildPackage(version, sources, { keyId = 'test-key', min = '0.1.0' } = 
   } } };
 }
 
-const route = (name, file) => ({ route: `src/app/(extensions)/demo/${name}page.tsx`, implementation: `src/extensions/demo/routes/${file}`, configs: ['export const dynamic = "force-dynamic";'] });
+const route = (name, file) => ({ route: `src/app/(extensions)/demo/${name}page.tsx`, implementation: `src/packages/demo/routes/${file}`, configs: ['export const dynamic = "force-dynamic";'] });
 const first = buildPackage('0.1.0', {
   'index.ts': 'export const demo = 1;\n',
   'routes/list.tsx': 'export default function List() { return null; }\n',
@@ -95,7 +97,6 @@ async function setup(t, current = first) {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'store-install-'));
   t.after(async () => { server.close(); await fs.rm(root, { recursive: true, force: true }); });
-  await fs.mkdir(path.join(root, 'src/extensions'), { recursive: true });
   await fs.mkdir(path.join(root, 'src/app'), { recursive: true });
   await fs.mkdir(path.join(root, 'src/core'), { recursive: true });
   await fs.writeFile(path.join(root, 'src/core/plextype.json'), JSON.stringify({ version: '0.11.2' }));
@@ -133,12 +134,27 @@ test('installing writes the signed files and the same route adapters the sync sc
   await lib.connectStore(root, storeUrl, TOKEN);
   const result = await lib.installStorePackage(root, 'product-demo');
   assert.deepEqual([result.packageId, result.version, result.previousVersion], ['demo', '0.1.0', null]);
-  assert.equal(await read('src/extensions/demo/index.ts'), 'export const demo = 1;\n');
-  assert.equal(JSON.parse(await read('src/extensions/demo/plextype.package.json')).version, '0.1.0');
+  assert.equal(await read('src/packages/demo/index.ts'), 'export const demo = 1;\n');
+  assert.equal(JSON.parse(await read('src/packages/demo/plextype.package.json')).version, '0.1.0');
   for (const entry of [route('', 'list.tsx'), route('[id]/', 'detail.tsx')]) {
     assert.equal(await read(entry.route), renderExtensionRoute(entry));
   }
   assert.equal(await exists('.plextype/tmp/demo'), false);
+  // 이 패키지에는 registry 파일이 없어 등록 목록에 들어가지 않는다.
+  assert.equal(result.registered, false);
+  assert.match(await read('src/packages/index.ts'), /installedPackages: ExtensionRegistryConfig\[\] = \[\];/);
+});
+
+test('packages with a registry file are listed for registration, and the list follows installs and removals', async t => {
+  const withRegistry = buildPackage('0.3.0', { 'index.ts': 'export {};\n', 'registry.tsx': 'export default { modules: [] };\n' });
+  const { root, storeUrl, read } = await setup(t, withRegistry);
+  await lib.connectStore(root, storeUrl, TOKEN);
+  assert.equal((await lib.installStorePackage(root, 'product-demo')).registered, true);
+  const list = await read('src/packages/index.ts');
+  assert.match(list, /import package0 from "\.\/demo\/registry";/);
+  assert.match(list, /= \[package0\];/);
+  await lib.uninstallStorePackage(root, 'demo');
+  assert.doesNotMatch(await read('src/packages/index.ts'), /demo/);
 });
 
 test('updating replaces the folder, drops routes the new version no longer has, and keeps a backup', async t => {
@@ -148,8 +164,8 @@ test('updating replaces the folder, drops routes the new version no longer has, 
   state.current = second;
   const result = await lib.installStorePackage(root, 'product-demo');
   assert.equal(result.previousVersion, '0.1.0');
-  assert.equal(await read('src/extensions/demo/index.ts'), 'export const demo = 2;\n');
-  assert.equal(await exists('src/extensions/demo/routes/detail.tsx'), false);
+  assert.equal(await read('src/packages/demo/index.ts'), 'export const demo = 2;\n');
+  assert.equal(await exists('src/packages/demo/routes/detail.tsx'), false);
   assert.equal(await exists('src/app/(extensions)/demo/[id]/page.tsx'), false);
   assert.equal(await exists('src/app/(extensions)/demo/page.tsx'), true);
   assert.equal((await fs.readdir(path.join(root, '.plextype/backup'))).length, 1);
@@ -161,7 +177,7 @@ test('nothing is written when the download, signature, platform or destination d
     ['a key the project never pinned', ctx => { ctx.state.current = buildPackage('0.1.0', { 'index.ts': 'x' }, { keyId: 'other-key' }); }, /서명을 확인하지/],
     ['a manifest edited after signing', ctx => { ctx.state.current = { ...first, metadata: { ...first.metadata, manifest: { ...first.metadata.manifest, version: '9.9.9' } } }; }, /서명을 확인하지/],
     ['a newer platform requirement', ctx => { ctx.state.current = buildPackage('0.1.0', { 'index.ts': 'x' }, { min: '1.0.0' }); }, /현재 버전은 0\.11\.2/],
-    ['a hand-written extension folder', async ctx => { await fs.mkdir(path.join(ctx.root, 'src/extensions/demo')); await fs.writeFile(path.join(ctx.root, 'src/extensions/demo/mine.ts'), 'mine'); }, /덮어쓰지 않습니다/],
+    ['a folder the installer did not create', async ctx => { await fs.mkdir(path.join(ctx.root, 'src/packages/demo'), { recursive: true }); await fs.writeFile(path.join(ctx.root, 'src/packages/demo/mine.ts'), 'mine'); }, /덮어쓰지 않습니다/],
     ['a hand-written route', async ctx => { await fs.mkdir(path.join(ctx.root, 'src/app/(extensions)/demo'), { recursive: true }); await fs.writeFile(path.join(ctx.root, 'src/app/(extensions)/demo/page.tsx'), 'export default 1;'); }, /덮어쓰지 않습니다/],
   ];
   for (const [name, arrange, pattern] of cases) {
@@ -170,7 +186,7 @@ test('nothing is written when the download, signature, platform or destination d
       await lib.connectStore(ctx.root, ctx.storeUrl, TOKEN);
       await arrange(ctx);
       await rejects(lib.installStorePackage(ctx.root, 'product-demo'), pattern);
-      assert.equal(await ctx.exists('src/extensions/demo/index.ts'), false);
+      assert.equal(await ctx.exists('src/packages/demo/index.ts'), false);
       assert.equal(await ctx.exists('src/app/(extensions)/demo/[id]/page.tsx'), false);
     });
   }
@@ -179,15 +195,38 @@ test('nothing is written when the download, signature, platform or destination d
 test('removing moves the folder to the backup area and deletes only its own adapters', async t => {
   const { root, storeUrl, exists } = await setup(t);
   await lib.connectStore(root, storeUrl, TOKEN);
-  await fs.mkdir(path.join(root, 'src/extensions/mine'));
+  await fs.mkdir(path.join(root, 'src/packages/mine'), { recursive: true });
   await rejects(lib.uninstallStorePackage(root, 'mine'), /쉬운 설치로 넣은 패키지가 아니어서/);
   await lib.installStorePackage(root, 'product-demo');
   const result = await lib.uninstallStorePackage(root, 'demo');
   assert.equal(result.routes.length, 2);
-  assert.equal(await exists('src/extensions/demo'), false);
+  assert.equal(await exists('src/packages/demo'), false);
   assert.equal(await exists('src/app/(extensions)/demo/page.tsx'), false);
   assert.equal(await exists(`${result.backupPath}/index.ts`), true);
-  assert.equal(await exists('src/extensions/mine'), true);
+  assert.equal(await exists('src/packages/mine'), true);
+});
+
+test('previewing shows the SQL a package would apply without writing anything, and only the migrations that are new', async t => {
+  const sql = name => `CREATE TABLE "${name}" ();\n`;
+  const v1 = buildPackage('0.4.0', { 'index.ts': 'export {};\n', 'prisma/schema.prisma': 'model Demo {\n  id Int @id\n}\n', 'prisma/migrations/20260101000000_first/migration.sql': sql('First') });
+  const v2 = buildPackage('0.5.0', { 'index.ts': 'export {};\n', 'prisma/schema.prisma': 'model Demo {\n  id Int @id\n}\n', 'prisma/migrations/20260101000000_first/migration.sql': sql('First'), 'prisma/migrations/20260201000000_second/migration.sql': sql('Second') });
+  for (const item of [v1, v2]) item.metadata.manifest.requiresDatabaseReview = true;
+  const sign = item => { const { versionUuid, signature, ...body } = item.metadata; item.metadata.signature.value = signPayload(body); };
+  sign(v1); sign(v2);
+  const { root, storeUrl, state, exists } = await setup(t, v1);
+  await lib.connectStore(root, storeUrl, TOKEN);
+
+  const preview = await lib.previewStorePackage(root, 'product-demo');
+  assert.deepEqual([preview.hasDatabaseFiles, preview.previousVersion, preview.migrations.map(item => item.name)], [true, null, ['20260101000000_first']]);
+  assert.equal(preview.migrations[0].sql, sql('First'));
+  assert.equal(await exists('src/packages/demo'), false);
+
+  const installed = await lib.installStorePackage(root, 'product-demo', { versionUuid: preview.versionUuid });
+  assert.deepEqual(installed.newMigrations, ['20260101000000_first']);
+  state.current = v2;
+  assert.deepEqual((await lib.previewStorePackage(root, 'product-demo')).migrations.map(item => item.name), ['20260201000000_second']);
+  assert.deepEqual((await lib.installStorePackage(root, 'product-demo')).newMigrations, ['20260201000000_second']);
+  assert.deepEqual((await lib.uninstallStorePackage(root, 'demo')).migrations, ['20260101000000_first', '20260201000000_second']);
 });
 
 test('archives with escaping or secret paths are refused', () => {
@@ -205,4 +244,32 @@ test('production refuses every change', async t => {
   for (const work of [() => lib.connectStore(root, storeUrl, TOKEN), () => lib.installStorePackage(root, 'product-demo'), () => lib.uninstallStorePackage(root, 'demo'), () => lib.disconnectStore(root)]) {
     await rejects(work(), /개발 환경에서만/);
   }
+});
+
+test('applying the database runs the project\'s two npm scripts in order and reports where it stopped', async t => {
+  const database = await import('../src/modules/installer/lib/applyDatabase.ts');
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'apply-db-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const write = scripts => fs.writeFile(path.join(root, 'package.json'), JSON.stringify({ name: 'fixture', scripts }));
+  const log = `node -e "require('fs').appendFileSync('ran.txt', process.argv[1] + ' ')"`;
+
+  await write({ 'prisma:generate': `${log} generate`, 'migrate:deploy': `${log} migrate` });
+  assert.deepEqual([(await database.applyPackageDatabase(root)).applied, await fs.readFile(path.join(root, 'ran.txt'), 'utf8')], [true, 'generate migrate ']);
+
+  // 스키마를 합치는 단계에서 실패하면 마이그레이션은 시작하지 않는다. 출력에 섞인 접속 정보는 가린다.
+  await fs.rm(path.join(root, 'ran.txt'));
+  await write({ 'prisma:generate': `node -e "console.error('duplicate at postgresql://user:secret@db/app'); process.exit(1)"`, 'migrate:deploy': `${log} migrate` });
+  const stopped = await database.applyPackageDatabase(root);
+  assert.deepEqual([stopped.applied, stopped.failedStep], [false, 'generate']);
+  assert.match(stopped.output, /duplicate/);
+  assert.doesNotMatch(stopped.output, /secret/);
+  await assert.rejects(fs.access(path.join(root, 'ran.txt')));
+
+  await write({ 'prisma:generate': `${log} generate`, 'migrate:deploy': 'node -e "process.exit(2)"' });
+  assert.equal((await database.applyPackageDatabase(root)).failedStep, 'migrate');
+
+  const previous = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'production';
+  t.after(() => { process.env.NODE_ENV = previous; });
+  await rejects(database.applyPackageDatabase(root), /개발 환경에서만/);
 });

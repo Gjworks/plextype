@@ -46,3 +46,15 @@ export type InstallerState = {
 };
 
 export type InstallerActionResult = { success: boolean; message: string };
+
+export type InstallerPackagePreview = {
+  productUuid: string;
+  versionUuid: string;
+  packageId: string;
+  version: string;
+  previousVersion: string | null;
+  hasDatabaseFiles: boolean;
+  migrations: { name: string; sql: string; truncated: boolean }[];
+};
+
+export type InstallerPreviewResult = InstallerActionResult & { preview?: InstallerPackagePreview };

@@ -25,7 +25,7 @@ const template = load('../src/core/components/admin/AdminPageTemplate.tsx', {
 });
 const manifest = {
   schemaVersion: 1, type: 'plextype-extension', packageId: 'demo', version: '0.1.0',
-  productUuid: 'product-test', installPath: 'src/extensions/demo', minPlatformVersion: '0.9.3',
+  productUuid: 'product-test', installPath: 'src/packages/demo', minPlatformVersion: '0.9.3',
   maxPlatformVersion: null, requiresDatabaseReview: true,
 };
 
@@ -38,7 +38,7 @@ test('manifest identity and paths are validated; inventory never implies signatu
 
 test('reads packages only, skips symlinks, reports invalid metadata and leaves files unchanged', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'installer-test-'));
-  const extensions = path.join(root, 'src/extensions');
+  const extensions = path.join(root, 'src/packages');
   try {
     assert.deepEqual(await inventory.readInstallerInventory(root), { packages: [], warnings: [] });
     for (const folder of ['demo', 'ordinary', 'broken', 'linked-file']) await fs.mkdir(path.join(extensions, folder), { recursive: true });
@@ -62,6 +62,9 @@ test('admin action checks authorization before touching the filesystem and hides
   let calls = 0;
   let fail = false;
   let installs = 0;
+  let uninstalls = 0;
+  let applies = 0;
+  let database = { applied: true, failedStep: null, output: '' };
   class InstallerError extends Error {}
   const actions = load('../src/modules/installer/actions/installer.action.ts', {
     '@/modules/user/actions/user.action': { getUserSessionAction: async () => ({ success: true, data: { isAdmin: authorized } }) },
@@ -70,7 +73,13 @@ test('admin action checks authorization before touching the filesystem and hides
     '../lib/storeInstall': {
       DEFAULT_STORE_URL: 'https://store.example', InstallerError,
       readConnection: async () => null, readPlatformVersion: async () => '0.11.2', fetchCatalog: async () => [],
-      installStorePackage: async () => { installs++; if (installs === 2) throw new InstallerError('먼저 Store에 연결해주세요.'); if (installs === 3) throw Error('/private/secret'); return { packageId: 'demo', version: '0.1.0', previousVersion: null, requiresDatabaseReview: true }; },
+      installStorePackage: async () => { installs++; if (installs === 2) throw new InstallerError('먼저 Store에 연결해주세요.'); if (installs === 3) throw Error('/private/secret'); return { packageId: 'demo', version: '0.1.0', previousVersion: null, requiresDatabaseReview: true, registered: true, newMigrations: ['20260101000000_first'] }; },
+      uninstallStorePackage: async () => { uninstalls++; return { packageId: 'demo', version: '0.1.0', routes: [], backupPath: '.plextype/backup/demo', migrations: [] }; },
+    },
+    '../lib/applyDatabase': {
+      applyPackageDatabase: async () => { applies++; return database; },
+      syncPackageSchema: async () => true,
+      describeDatabaseFailure: result => new InstallerError(`실패: ${result.output}`),
     },
   });
   assert.equal((await actions.getInstallerOverviewAdminAction()).success, false);
@@ -89,17 +98,34 @@ test('admin action checks authorization before touching the filesystem and hides
   assert.equal((await actions.installStorePackageAdminAction('product')).success, false);
   assert.equal(installs, 0);
   authorized = true;
-  assert.match((await actions.installStorePackageAdminAction('product')).message, /demo 0\.1\.0.*DB 변경/);
+  // 확인 없이 부르면 DB에는 손대지 않고, 적용할 명령을 알려 준다.
+  assert.match((await actions.installStorePackageAdminAction('product')).message, /demo 0\.1\.0.*등록했습니다.*npm run plextype -- migrate/);
+  assert.equal(applies, 0);
   assert.match((await actions.installStorePackageAdminAction('product')).message, /먼저 Store에 연결/);
   const hidden = await actions.installStorePackageAdminAction('product');
   assert.equal(hidden.success, false);
   assert.doesNotMatch(hidden.message, /secret/);
+
+  // 확인을 받아 부르면 DB에 적용한다. 스키마를 합치다 실패하면 새로 설치한 패키지는 다시 빼고, 마이그레이션 중 실패하면 그대로 둔다.
+  assert.match((await actions.installStorePackageAdminAction('product', { applyDatabase: true })).message, /마이그레이션 1개를 DB에 적용/);
+  assert.equal(applies, 1);
+  database = { applied: false, failedStep: 'generate', output: '이름이 겹칩니다' };
+  const reverted = await actions.installStorePackageAdminAction('product', { applyDatabase: true });
+  assert.equal(reverted.success, false);
+  assert.match(reverted.message, /이름이 겹칩니다[\s\S]*설치를 취소/);
+  assert.equal(uninstalls, 1);
+  database = { applied: false, failedStep: 'migrate', output: 'SQL 오류' };
+  assert.match((await actions.installStorePackageAdminAction('product', { applyDatabase: true })).message, /SQL 오류[\s\S]*설치된 상태/);
+  assert.equal(uninstalls, 1);
 });
 
 test('module is registered in core and does not import Store implementation', () => {
   assert.match(read('../src/core/registry/coreRegistry.tsx'), /installerModule,/);
   assert.match(read('../src/modules/installer/registry.tsx'), /label: "쉬운 설치"/);
   assert.match(read('../src/app/(modules)/admin/installer/page.tsx'), /@\/modules\/installer/);
+  // 명령 실행은 DB 적용을 맡은 lib/applyDatabase.ts 한 곳에만 둔다. 그 파일은 프로젝트의 npm 스크립트만 실행한다.
+  assert.doesNotMatch(read('../src/modules/installer/lib/applyDatabase.ts').replace(/^\/\/.*$/gm, ''), /exec\(|execSync|shell:\s*true/);
+  assert.match(read('../src/modules/installer/lib/applyDatabase.ts'), /spawn\("npm", \["run", "--silent", script\]/);
   for (const file of ['index.tsx', 'registry.tsx', 'actions/installer.action.ts', 'actions/inventory.query.ts', 'tpl/InstallerAdmin.tsx', 'lib/storeInstall.ts']) {
     // import 문만 본다. 설치기는 연결 파일이 가리키는 경로를 문자열로 비교하므로 본문에는 확장 경로가 나올 수 있다.
     assert.doesNotMatch(read(`../src/modules/installer/${file}`), /^\s*(import|export)\b[^;]*from ["']@\/?extensions|child_process/m);
@@ -121,7 +147,7 @@ test('views show what can be done in the current connection and environment', ()
 
   for (const view of ['catalog', 'installed', 'connection']) assert.match(render(disconnected, view), /쉬운 설치/);
   const installed = render(disconnected, 'installed');
-  assert.match(installed, /src\/extensions\/demo/);
+  assert.match(installed, /src\/packages\/demo/);
   assert.match(installed, /서명 미검증/);
   assert.match(installed, /0.1.0/);
 
@@ -147,7 +173,7 @@ test('views show what can be done in the current connection and environment', ()
   assert.ok(!buttons(render(production, 'installed')).some(button => button.text === '제거'));
   const denied = renderToStaticMarkup(React.createElement(Page, { state: { success: false, message: '관리자 권한이 필요합니다.' }, view: 'installed' }));
   assert.match(denied, /관리자 권한/);
-  assert.doesNotMatch(denied, /src\/extensions\/demo/);
+  assert.doesNotMatch(denied, /src\/packages\/demo/);
 });
 
 test('installer owns its tabs and provides constrained content spacing inside the admin shell', () => {
