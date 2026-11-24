@@ -55,7 +55,6 @@ test("both review transitions persist a historical snapshot with the note", asyn
     assert.match(log.sql, /'snapshot'/);
     assert.match(log.sql, /to_jsonb\(p\)/);
   }
-  assert.match(logs[0].sql, /'licenseOptions'/);
   assert.match(logs[1].sql, /to_jsonb\(v\)/);
 });
 
@@ -98,12 +97,10 @@ test("seller publication remains guarded at the database update", async () => {
   assert.match(update.sql, /AND "productId" = \?/);
 });
 
-test("all public catalog and purchase version queries require approval", async () => {
+test("all public catalog and download version queries require approval", async () => {
   const names = [
     "findPublishedStoreProducts", "findPublishedStoreProductByUuid",
-    "findPublishedStoreProductVersions", "findAllStoreOrders", "findStoreOrdersBySeller",
-    "findStoreOrderByUuidForSeller", "findMyStorePurchases",
-    "findMyStorePurchaseByOrderUuid", "findMyStorePurchasesBySeller",
+    "findPublishedStoreProductVersions",
   ];
   for (const name of names) {
     const { query, calls } = harness();

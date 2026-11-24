@@ -18,7 +18,7 @@ test('all extension route adapters match their owning manifests', () => {
   assert.ok(docs.exports.includes('generateStaticParams'));
   const notify = routes.find(entry => entry.route.endsWith('/service-deploy/notify/route.ts'));
   assert.deepEqual(notify.exports, ['POST']);
-  const download = routes.find(entry => entry.route.endsWith('/store/orders/[uuid]/download/route.ts'));
+  const download = routes.find(entry => entry.route.endsWith('/store/products/[uuid]/download/route.ts'));
   assert.ok(download.configs.includes('export const runtime = "nodejs";'));
 });
 

@@ -1,3 +1,4 @@
 // Implementation is owned by Store; route configuration stays statically visible.
 export const runtime = "nodejs";
-export { GET } from "@/extensions/store/api/store/orders/[uuid]/download/route";
+export const dynamic = "force-dynamic";
+export { GET } from "@/extensions/store/api/store/connection/route";

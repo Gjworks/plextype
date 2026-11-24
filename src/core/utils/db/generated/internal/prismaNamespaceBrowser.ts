@@ -72,6 +72,7 @@ export const ModelName = {
   SiteNavigation: 'SiteNavigation',
   NotificationBroadcast: 'NotificationBroadcast',
   NotificationBroadcastRecipient: 'NotificationBroadcastRecipient',
+  ApiToken: 'ApiToken',
   ServiceDeployInstance: 'ServiceDeployInstance',
   ServiceDeployJob: 'ServiceDeployJob'
 } as const
@@ -423,6 +424,21 @@ export const NotificationBroadcastRecipientScalarFieldEnum = {
 } as const
 
 export type NotificationBroadcastRecipientScalarFieldEnum = (typeof NotificationBroadcastRecipientScalarFieldEnum)[keyof typeof NotificationBroadcastRecipientScalarFieldEnum]
+
+
+export const ApiTokenScalarFieldEnum = {
+  id: 'id',
+  tokenId: 'tokenId',
+  secretHash: 'secretHash',
+  userId: 'userId',
+  name: 'name',
+  scopes: 'scopes',
+  createdAt: 'createdAt',
+  lastUsedAt: 'lastUsedAt',
+  revokedAt: 'revokedAt'
+} as const
+
+export type ApiTokenScalarFieldEnum = (typeof ApiTokenScalarFieldEnum)[keyof typeof ApiTokenScalarFieldEnum]
 
 
 export const ServiceDeployInstanceScalarFieldEnum = {

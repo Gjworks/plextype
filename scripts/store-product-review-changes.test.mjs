@@ -15,7 +15,7 @@ test("new products have no fabricated previous approval", () => {
   assert.deepEqual(getProductReviewChanges({ name: "New", publishedData: null }), []);
 });
 test("unchanged values and empty optional fields produce no changes", () => {
-  assert.deepEqual(getProductReviewChanges({ name: "Same", summary: "", price: 0, publishedData: { name: "Same", summary: null, price: 0 } }), []);
+  assert.deepEqual(getProductReviewChanges({ name: "Same", summary: "", publishedData: { name: "Same", summary: null } }), []);
 });
 test("changed and removed fields retain both values, including markup", () => {
   const changes = getProductReviewChanges({ name: "After", description: "<script>text</script>", publishedData: { name: "Before", summary: "Removed" } });
@@ -23,10 +23,9 @@ test("changed and removed fields retain both values, including markup", () => {
   assert.equal(changes[1].after, "");
   assert.equal(changes[2].after, "<script>text</script>");
 });
-test("license comparison ignores row identifiers but detects price changes", () => {
-  const product = { publishedData: { licenseOptions: [{ id: 1, price: 10 }] } };
-  assert.deepEqual(getProductReviewChanges(product, [{ id: 2, price: 10 }]), []);
-  assert.equal(getProductReviewChanges(product, [{ id: 2, price: 20 }])[0].key, "licenseOptions");
+test("license changes are reported as a product field", () => {
+  const changes = getProductReviewChanges({ licenseType: "mit", publishedData: { licenseType: "gpl-v2" } });
+  assert.deepEqual(changes.map(({ key, before, after }) => [key, before, after]), [["licenseType", "gpl-v2", "mit"]]);
 });
 test("seller and server permit review requests only for drafts", () => {
   for (const [path, name] of [

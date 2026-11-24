@@ -147,6 +147,11 @@ export type NotificationBroadcast = Prisma.NotificationBroadcastModel
  */
 export type NotificationBroadcastRecipient = Prisma.NotificationBroadcastRecipientModel
 /**
+ * Model ApiToken
+ * 
+ */
+export type ApiToken = Prisma.ApiTokenModel
+/**
  * Model ServiceDeployInstance
  * 
  */

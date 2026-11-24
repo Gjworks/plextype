@@ -67,3 +67,6 @@ Dockerfile
 AGENTS.md
 **/AGENTS.md
 .opencode/
+
+# 쉬운 설치의 Store 연결 정보(토큰)와 임시·백업 폴더
+/.plextype/

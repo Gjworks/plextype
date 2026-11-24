@@ -34,6 +34,7 @@ model User {
   notifications Notification[]
   pushTokens    PushToken[]
   webPushSubscriptions WebPushSubscription[]
+  apiTokens     ApiToken[]
 
   @@index([email_address], map: "idx_user_email")
   @@index([isAdmin], map: "idx_user_isAdmin")
@@ -399,6 +400,23 @@ model NotificationBroadcastRecipient {
 
   @@unique([broadcastId, userId], map: "uniq_broadcast_recipient")
   @@index([broadcastId, status], map: "idx_broadcast_recipient_status")
+}
+
+// 사람 대신 프로그램이 이 사이트의 API를 부를 때 쓰는 토큰. 원문은 `pxt_<tokenId>_<비밀값>`이고 비밀값은 해시만 저장한다.
+// scopes에 든 권한만 쓸 수 있다. 권한 이름은 그 권한을 확인하는 기능이 정한다(예: Store 다운로드는 "store:download").
+model ApiToken {
+  id         Int       @id @default(autoincrement())
+  tokenId    String    @unique @db.VarChar(32)
+  secretHash String    @db.VarChar(64)
+  userId     Int
+  name       String    @db.VarChar(80)
+  scopes     String[]
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt], map: "idx_api_token_user")
 }
 
 // Extension schema: src/extensions/service/prisma/schema/service-deploy.prisma

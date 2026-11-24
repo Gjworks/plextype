@@ -13,11 +13,10 @@ export const installerModule = defineModule({
       order: 60,
       items: [
         { label: "Store 자료", href: "/admin/installer" },
-        { label: "구매한 자료", href: "/admin/installer/purchases" },
         { label: "설치된 패키지", href: "/admin/installer/installed" },
         { label: "연결 관리", href: "/admin/installer/connection" },
       ],
     },
-    breadcrumbs: { installer: { index: "쉬운 설치", purchases: "구매한 자료", installed: "설치된 패키지", connection: "연결 관리" } },
+    breadcrumbs: { installer: { index: "쉬운 설치", installed: "설치된 패키지", connection: "연결 관리" } },
   },
 });
