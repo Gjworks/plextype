@@ -10,15 +10,20 @@ import { findNewMigrations, syncPrisma } from "./sync-prisma.mjs";
 //   npm run migrate:dev -- --to core --name add_user_memo
 //   npm run migrate:dev -- --to naver-ads --name add_naver_stats
 //   npm run migrate:dev -- --to posts/issuetracker --name add_issue_label
+//   npm run migrate:dev -- --to packages/issue-tracker --name issue_tracker_add_issue
 //
-// --to 뒤의 값은 core 또는 src/extensions 아래 기능 경로다. 나머지 인자는 prisma migrate dev에 그대로 넘긴다.
+// --to 뒤의 값은 core, src/extensions 아래 기능 경로, 또는 packages/<모듈 ID>(src/packages에서 개발 중인 패키지)다.
+// 나머지 인자는 prisma migrate dev에 그대로 넘긴다.
 
 export const resolveTarget = (rootDir, target) => {
   if (target === "core") return path.join(rootDir, "src", "core", "prisma", "migrations");
-  const extensionsDir = path.join(rootDir, "src", "extensions");
-  const featureDir = path.resolve(extensionsDir, target);
-  if (!featureDir.startsWith(extensionsDir + path.sep) || !fs.existsSync(featureDir)) {
-    throw new Error(`--to 대상 기능 폴더가 없습니다: src/extensions/${target}`);
+  const inPackages = target.startsWith("packages/");
+  const baseName = inPackages ? "packages" : "extensions";
+  const baseDir = path.join(rootDir, "src", baseName);
+  const feature = inPackages ? target.slice("packages/".length) : target;
+  const featureDir = path.resolve(baseDir, feature);
+  if (!feature || !featureDir.startsWith(baseDir + path.sep) || !fs.existsSync(featureDir)) {
+    throw new Error(`--to 대상 기능 폴더가 없습니다: src/${baseName}/${feature}`);
   }
   return path.join(featureDir, "prisma", "migrations");
 };

@@ -92,4 +92,9 @@ test("--to accepts core or an existing feature folder only", (t) => {
   assert.equal(resolveTarget(root, "posts/issuetracker"), path.join(root, "src/extensions/posts/issuetracker/prisma/migrations"));
   assert.throws(() => resolveTarget(root, "missing"), /기능 폴더가 없습니다/);
   assert.throws(() => resolveTarget(root, "../core"), /기능 폴더가 없습니다/);
+  // 개발 중인 패키지는 packages/<모듈 ID>로 가리킨다.
+  write(root, "src/packages/issue-tracker/index.ts", "export {};");
+  assert.equal(resolveTarget(root, "packages/issue-tracker"), path.join(root, "src/packages/issue-tracker/prisma/migrations"));
+  assert.throws(() => resolveTarget(root, "packages/missing"), /src\/packages\/missing/);
+  assert.throws(() => resolveTarget(root, "packages/../core"), /기능 폴더가 없습니다/);
 });

@@ -89,6 +89,8 @@ npm run dev
 | `npm run prisma:generate` | `prisma:sync` 후 Prisma Client 생성 |
 | `npm run migrate:dev -- --to <core\|기능 경로> --name <이름>` | 마이그레이션을 만들어 개발 DB에 적용하고 원본 폴더로 옮김 |
 | `npm run extensions:check` / `extensions:sync` | 확장의 `routes.json`과 `src/app` 연결 파일을 검사·동기화 |
+| `npm run plextype -- <명령>` | Store 패키지를 명령 줄에서 설치·업데이트·제거 (`connect`, `list`, `install`, `migrate`, `remove`, `adopt` 등) |
+| `npm run migrate:deploy` | 스키마를 합치고 아직 적용되지 않은 마이그레이션을 개발 DB에 적용 |
 | `npm run db:seed` | seed 실행 |
 | `npm run release` | 버전과 변경 이력을 올리고 태그와 GitHub Release를 만들어 push. 올리는 대상은 "릴리스" 참고 |
 
@@ -104,6 +106,7 @@ src/
 ├── layouts/        기본·관리자·인증 레이아웃
 ├── widgets/        여러 화면이 함께 쓰는 복합 UI
 ├── extensions/     프로젝트 전용 기능. 배포판에는 들어 있지 않다
+├── packages/       쉬운 설치로 Store에서 받은 패키지. 설치기가 관리한다
 └── proxy.ts        요청 출처 검사와 페이지 접근 제어. 코어 proxy에 프로젝트 확장을 연결한다
 prisma/             prisma:sync가 만드는 결과물. 직접 고치지 않는다
 scripts/            스키마·라우트 동기화, 배포판 준비, 테스트
@@ -118,6 +121,7 @@ setup.mjs           최초 설치 스크립트
 - 코어(`src/core`, `src/modules`, `src/layouts`, `src/widgets`)는 배포판으로 나가는 영역입니다. 프로젝트 요구는 먼저 확장으로 해결하고, 코어는 여러 프로젝트에 공통으로 필요한 변경만 넣습니다.
 - 확장은 `src/extensions/<기능>/` 한 폴더에 화면, 액션, API, 스키마를 모읍니다. 라우트는 기능의 `routes.json`에 적고 `npm run extensions:sync`로 `src/app`에 연결합니다.
 - 메뉴·스킨·레이아웃은 `src/extensions/registry.tsx`에서, 코어 이벤트에 붙는 로직은 트리거(`src/core/utils/trigger`)로 등록합니다.
+- Store의 패키지는 관리자의 쉬운 설치나 `npm run plextype`으로 `src/packages`에 설치합니다. 라우트 연결과 메뉴·스킨 등록이 설치와 함께 되며, 직접 고치는 대신 같은 key로 `src/extensions`에 등록하거나 내 확장으로 가져와 씁니다. 설치기는 `src/modules/installer/README.md`, 패키지 규칙은 `src/extensions/store/README.md`에 있습니다.
 
 ### 요청 단계 접근 제어 확장
 
