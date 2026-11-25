@@ -157,8 +157,8 @@ test('packages with a registry file are listed for registration, and the list fo
   assert.doesNotMatch(await read('src/packages/index.ts'), /demo/);
 });
 
-test('packages with a triggers file are listed for the trigger hub, apart from the registry list', async t => {
-  const withTriggers = buildPackage('0.3.0', { 'index.ts': 'export {};\n', 'triggers.ts': 'export default {};\n' });
+test('packages with a triggers or login providers file are listed for the server, apart from the registry list', async t => {
+  const withTriggers = buildPackage('0.3.0', { 'index.ts': 'export {};\n', 'triggers.ts': 'export default {};\n', 'loginProviders.tsx': 'export default () => [];\n' });
   const { root, storeUrl, read } = await setup(t, withTriggers);
   await lib.connectStore(root, storeUrl, TOKEN);
   // registry 파일이 없으므로 관리자 메뉴·스킨 목록에는 들어가지 않는다.
@@ -167,12 +167,17 @@ test('packages with a triggers file are listed for the trigger hub, apart from t
   const list = await read('src/packages/installedTriggers.ts');
   assert.match(list, /import package0 from "\.\/demo\/triggers";/);
   assert.match(list, /installedTriggers: PackageTriggers\[\] = \[package0\];/);
+  const providers = await read('src/packages/installedLoginProviders.ts');
+  assert.match(providers, /import package0 from "\.\/demo\/loginProviders";/);
+  assert.match(providers, /installedLoginProviders: LoginProviderSource\[\] = \[package0\];/);
 
   // 내 확장으로 가져오면 새 위치를 가리키고, 제거하면 목록에서 빠진다.
   await lib.adoptStorePackage(root, 'demo');
   assert.match(await read('src/packages/installedTriggers.ts'), /import package0 from "@\/extensions\/demo\/triggers";/);
+  assert.match(await read('src/packages/installedLoginProviders.ts'), /import package0 from "@\/extensions\/demo\/loginProviders";/);
   await lib.discardAdoptedPackage(root, 'demo');
   assert.match(await read('src/packages/installedTriggers.ts'), /installedTriggers: PackageTriggers\[\] = \[\];/);
+  assert.match(await read('src/packages/installedLoginProviders.ts'), /installedLoginProviders: LoginProviderSource\[\] = \[\];/);
 });
 
 test('updating replaces the folder, drops routes the new version no longer has, and keeps a backup', async t => {

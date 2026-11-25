@@ -98,6 +98,9 @@ npm run plextype -- status | keys | disconnect
 설치기가 `src/packages/installedTriggers.ts`를 다시 만들고, 트리거 허브(`src/core/utils/trigger/triggerHub.ts`)가 그 목록을 읽습니다.
 핸들러는 서버 코드라 화면 쪽에서도 불러오는 `index.ts`와 목록을 나눕니다.
 
+패키지 루트에 `loginProviders.ts` 또는 `loginProviders.tsx`가 있으면, 그 파일이 `export default`로 내보낸 로그인 수단도 연결됩니다.
+설치기가 `src/packages/installedLoginProviders.ts`를 다시 만들고, 로그인·가입 화면(`src/core/utils/auth/loginProviders.ts`)이 그 목록을 읽습니다.
+
 ## 패키지를 고쳐 쓸 때
 
 `src/packages` 안은 업데이트할 때 통째로 바뀌므로 직접 고치는 곳이 아닙니다. 고쳐 쓰는 길은 둘입니다.

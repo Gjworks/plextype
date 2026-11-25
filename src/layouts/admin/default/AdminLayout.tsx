@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChevronDown, LogOut, Menu, Search, Settings, UserRound } from 'lucide-react'
+import { ChevronDown, LogOut, Menu, Puzzle, Search, Settings, UserRound } from 'lucide-react'
 
 import Dropdown from '@/core/components/dropdown/Dropdown'
 import Left from '@/core/components/panel/Left'
@@ -11,6 +11,7 @@ import NotificationBell from '@/core/components/bell/bell'
 import { useUserContext } from '@/core/providers/UserProvider'
 import { clearPwaAppBadge } from '@/core/utils/pwa/appBadge'
 import type { AdminBreadcrumbRegistry, AdminMenuItem } from '@/core/registry/adminRegistry'
+import { EXTENSION_MENU_LABEL, groupAdminMenus } from '@/core/registry/adminMenuGroups'
 
 type AdminLayoutProps = {
   children: React.ReactNode;
@@ -90,6 +91,124 @@ const AdminSideNav = ({
   onNavigate,
   onSignOut,
 }: AdminSideNavProps) => {
+  // 패키지와 프로젝트 확장이 만든 메뉴는 "확장 기능" 메뉴 아래에 모은다(adminMenuGroups.ts).
+  // 지금 보는 화면이 그 안에 있으면 펼쳐 두고, 그 밖에는 접어 둔다. 직접 여닫으면 그 선택을 따른다.
+  const menuGroups = groupAdminMenus(menuConfig)
+  const extensionActive = menuGroups.extensions.some((menu) => getMenuActive(normalizedPathname, menu))
+  const [extensionsOpen, setExtensionsOpen] = useState<boolean | null>(null)
+  const extensionsShown = extensionsOpen ?? extensionActive
+
+  // nested: "확장 기능" 아래에 놓인 메뉴. 다른 메뉴의 하위 항목과 같은 모양(아이콘과 바탕 없음)으로 그려 2차 메뉴로 읽히게 한다.
+  const renderMenu = (menu: AdminMenuItem, nested = false) => {
+    const active = getMenuActive(normalizedPathname, menu)
+    const opened = openMenus[menu.id] ?? active
+    const activeChildHref = menu.items
+      ? getBestAdminPathMatch(normalizedPathname, menu.items.map((item) => item.href))
+      : null
+
+    if (nested) {
+      const rowClass = `rounded-lg px-3 py-2 text-sm transition-colors ${
+        active
+          ? 'font-bold text-gray-950 dark:text-dark-50'
+          : 'text-gray-500 hover:text-gray-950 dark:text-dark-400 dark:hover:text-dark-100'
+      }`
+      if (menu.href) {
+        return <Link key={menu.id} href={menu.href} onClick={onNavigate} className={`block ${rowClass}`}>{menu.label}</Link>
+      }
+      return (
+        <div key={menu.id}>
+          <button
+            type="button"
+            onClick={() => setOpenMenus((prev) => ({ ...prev, [menu.id]: !opened }))}
+            aria-expanded={opened}
+            className={`flex w-full cursor-pointer items-center justify-between gap-2 text-left ${rowClass}`}
+          >
+            <span className="min-w-0 truncate">{menu.label}</span>
+            <ChevronDown size={13} className={`shrink-0 transition-transform ${opened ? 'rotate-180' : ''}`} />
+          </button>
+          {opened && (
+            // 3차 항목은 세로선을 한 번 더 긋지 않고 옅은 바탕으로 묶어, 2차 메뉴의 선과 겹쳐 보이지 않게 한다.
+            <div className="mx-1 mb-1.5 mt-0.5 space-y-0.5 rounded-xl bg-gray-100/80 px-1 py-1.5 dark:bg-dark-900">
+              {menu.items?.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={`block rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
+                    cleanAdminPath(item.href) === activeChildHref
+                      ? 'font-bold text-gray-950 dark:text-dark-50'
+                      : 'text-gray-400 hover:text-gray-950 dark:text-dark-500 dark:hover:text-dark-100'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    if (menu.href) {
+      return (
+        <Link
+          key={menu.id}
+          href={menu.href}
+          onClick={onNavigate}
+          className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors ${
+            active
+              ? 'bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950'
+              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950 dark:text-dark-400 dark:hover:bg-dark-900 dark:hover:text-dark-100'
+          }`}
+        >
+          <span className="flex h-5 w-5 items-center justify-center">{menu.icon}</span>
+          <span>{menu.label}</span>
+        </Link>
+      )
+    }
+
+    return (
+      <div key={menu.id}>
+        <button
+          type="button"
+          onClick={() => setOpenMenus((prev) => ({ ...prev, [menu.id]: !opened }))}
+          className={`flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-colors ${
+            active
+              ? 'bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950'
+              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950 dark:text-dark-400 dark:hover:bg-dark-900 dark:hover:text-dark-100'
+          }`}
+        >
+          <span className="flex h-5 w-5 items-center justify-center">{menu.icon}</span>
+          <span className="min-w-0 flex-1 truncate">{menu.label}</span>
+          <ChevronDown size={15} className={`transition-transform ${opened ? 'rotate-180' : ''}`} />
+        </button>
+
+        {opened && (
+          <div className="ml-8 mt-1 space-y-1 border-l border-gray-200 pl-3 dark:border-dark-800">
+            {menu.items?.map((item) => {
+              const itemActive = cleanAdminPath(item.href) === activeChildHref
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                    itemActive
+                      ? 'font-bold text-gray-950 dark:text-dark-50'
+                      : 'text-gray-500 hover:text-gray-950 dark:text-dark-400 dark:hover:text-dark-100'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-full flex-col">
       <Link href="/" onClick={onNavigate} className="flex h-16 shrink-0 items-center gap-3 border-b border-gray-100 px-5 dark:border-dark-800">
@@ -101,72 +220,29 @@ const AdminSideNav = ({
 
       <nav className="flex-1 overflow-y-auto px-3 py-5">
         <div className="space-y-1">
-          {menuConfig.map((menu) => {
-            const active = getMenuActive(normalizedPathname, menu)
-            const opened = openMenus[menu.id] ?? active
-            const activeChildHref = menu.items
-              ? getBestAdminPathMatch(normalizedPathname, menu.items.map((item) => item.href))
-              : null
-
-            if (menu.href) {
-              return (
-                <Link
-                  key={menu.id}
-                  href={menu.href}
-                  onClick={onNavigate}
-                  className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors ${
-                    active
-                      ? 'bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950'
-                      : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950 dark:text-dark-400 dark:hover:bg-dark-900 dark:hover:text-dark-100'
-                  }`}
-                >
-                  <span className="flex h-5 w-5 items-center justify-center">{menu.icon}</span>
-                  <span>{menu.label}</span>
-                </Link>
-              )
-            }
-
-            return (
-              <div key={menu.id}>
-                <button
-                  type="button"
-                  onClick={() => setOpenMenus((prev) => ({ ...prev, [menu.id]: !opened }))}
-                  className={`flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-colors ${
-                    active
-                      ? 'bg-gray-950 text-white dark:bg-dark-100 dark:text-dark-950'
-                      : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950 dark:text-dark-400 dark:hover:bg-dark-900 dark:hover:text-dark-100'
-                  }`}
-                >
-                  <span className="flex h-5 w-5 items-center justify-center">{menu.icon}</span>
-                  <span className="min-w-0 flex-1 truncate">{menu.label}</span>
-                  <ChevronDown size={15} className={`transition-transform ${opened ? 'rotate-180' : ''}`} />
-                </button>
-
-                {opened && (
-                  <div className="ml-8 mt-1 space-y-1 border-l border-gray-200 pl-3 dark:border-dark-800">
-                    {menu.items?.map((item) => {
-                      const itemActive = cleanAdminPath(item.href) === activeChildHref
-
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={onNavigate}
-                          className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-                            itemActive
-                              ? 'font-bold text-gray-950 dark:text-dark-50'
-                              : 'text-gray-500 hover:text-gray-950 dark:text-dark-400 dark:hover:text-dark-100'
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          {menuGroups.before.map((menu) => renderMenu(menu))}
+          {menuGroups.extensions.length > 0 && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setExtensionsOpen(!extensionsShown)}
+                aria-expanded={extensionsShown}
+                className={`flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-colors hover:bg-gray-100 hover:text-gray-950 dark:hover:bg-dark-900 dark:hover:text-dark-100 ${
+                  extensionActive ? 'text-gray-950 dark:text-dark-100' : 'text-gray-500 dark:text-dark-400'
+                }`}
+              >
+                <span className="flex h-5 w-5 items-center justify-center"><Puzzle size={18} /></span>
+                <span className="min-w-0 flex-1 truncate">{EXTENSION_MENU_LABEL}</span>
+                <ChevronDown size={15} className={`transition-transform ${extensionsShown ? 'rotate-180' : ''}`} />
+              </button>
+              {extensionsShown && (
+                <div className="ml-8 mt-1 space-y-1 border-l border-gray-200 pl-3 dark:border-dark-800">
+                  {menuGroups.extensions.map((menu) => renderMenu(menu, true))}
+                </div>
+              )}
+            </div>
+          )}
+          {menuGroups.after.map((menu) => renderMenu(menu))}
         </div>
       </nav>
 

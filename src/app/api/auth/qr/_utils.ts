@@ -1,13 +1,11 @@
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-import { refresh, refreshVerify, sign, verify, revokeUserSessions } from "@/core/utils/auth/jwtAuth";
-import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
+import { refreshVerify, verify } from "@/core/utils/auth/jwtAuth";
+import { issueLoginSession } from "@/core/utils/auth/loginSession";
 import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 import prisma from "@/core/utils/db/prisma";
 import redisClient from "@/core/utils/redis/redis";
-import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
-import { createLoginNotificationAction } from "@/modules/notification/actions/notification.action";
 
 export const QR_LOGIN_TTL_SECONDS = 150;
 
@@ -85,26 +83,6 @@ export const setQrLoginCookies = async (request: NextRequest, userId: number) =>
   if (!user) return null;
   if (!user.isAdmin && user.status && user.status !== "active") return null;
 
-  const authSettings = await getAuthSettingsRuntimeAction();
-  const tokenParams = {
-    id: user.id,
-    accountId: user.accountId,
-    isAdmin: user.isAdmin,
-    nickName: user.nickName,
-    groups: user.userGroups.map(group => group.groupId),
-  };
-
-  if (!authSettings.allowConcurrentSessions) await revokeUserSessions(user.id);
-  const [accessToken, refreshToken] = await Promise.all([
-    sign(tokenParams, authSettings.accessTokenExpiresIn),
-    refresh(tokenParams, authSettings.refreshTokenExpiresIn),
-  ]);
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { refreshToken: hashRefreshToken(refreshToken) },
-  });
-
   const response = NextResponse.json({
     success: true,
     status: "approved",
@@ -116,51 +94,7 @@ export const setQrLoginCookies = async (request: NextRequest, userId: number) =>
     },
   });
 
-  response.cookies.set({
-    name: "accessToken",
-    value: accessToken,
-    ...getAccessTokenCookieOptions(authSettings.accessTokenExpiresIn),
-  });
-
-  response.cookies.set({
-    name: "refreshToken",
-    value: refreshToken,
-    ...getRefreshTokenCookieOptions(authSettings.refreshTokenExpiresIn),
-  });
-
-  const loginAt = new Date().toISOString();
-  try {
-    if (!authSettings.allowConcurrentSessions) {
-      const existingKeys = await redisClient.keys(`active_user:${user.id}:*`);
-      if (existingKeys.length > 0) await redisClient.del(...existingKeys);
-    }
-
-    await redisClient.set(
-      `active_user:${user.id}:${getClientIp(request)}`,
-      JSON.stringify({ loginAt, source: "qr" }),
-      "EX",
-      300,
-    );
-
-    await redisClient.set(
-      `user:profile:${user.id}`,
-      JSON.stringify({
-        nickName: user.nickName,
-        accountId: user.accountId,
-      }),
-      "EX",
-      86400,
-    );
-  } catch (redisError) {
-    console.error("QR Login Redis Cache Error:", redisError);
-  }
-
-  createLoginNotificationAction({
-    userId: user.id,
-    source: "qr",
-  }).catch((error) => {
-    console.error("QR Login Notification Error:", error);
-  });
+  await issueLoginSession(response, user, { ip: getClientIp(request), source: "qr", notify: "qr" });
 
   return response;
 };

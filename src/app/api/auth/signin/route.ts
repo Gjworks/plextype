@@ -2,13 +2,10 @@ import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { z } from "zod"; // ✅ Zod 추가
 import { verifyPassword } from "@/core/utils/auth/password";
-import { sign, refresh, revokeUserSessions } from "@/core/utils/auth/jwtAuth";
+import { issueLoginSession } from "@/core/utils/auth/loginSession";
 import prisma from "@/core/utils/db/prisma";
 import redisClient from "@/core/utils/redis/redis";
-import { getAccessTokenCookieOptions, getRefreshTokenCookieOptions } from "@/core/utils/auth/authCookies";
-import { hashRefreshToken } from "@/core/utils/auth/refreshToken";
 import { getAuthSettingsRuntimeAction } from "@/modules/user/actions/auth-settings";
-import { createLoginNotificationAction } from "@/modules/notification/actions/notification.action";
 
 
 
@@ -195,36 +192,7 @@ export async function POST(request: Request): Promise<Response> {
 
     await clearLoginFailures(accountId, userIp);
 
-    // ✅ 5. 권한(그룹) 정보 가져오기
-    const userGroups = await prisma.userGroupUser.findMany({
-      where: { userId: userInfo.id },
-      select: { groupId: true },
-    });
-    const groupIds = userGroups.map((g) => g.groupId);
-
-    // ✅ 6. 토큰 발행
-    const tokenParams = {
-      id: userInfo.id,
-      accountId: userInfo.accountId,
-      isAdmin: userInfo.isAdmin,
-      nickName: userInfo.nickName,
-      groups: groupIds,
-    };
-
-    const accessTokenExpiresIn = authSettings.accessTokenExpiresIn;
-    if (!authSettings.allowConcurrentSessions) await revokeUserSessions(userInfo.id);
-    const refreshTokenExpiresIn = isMobileClient ? "365d" : authSettings.refreshTokenExpiresIn;
-    const [accessToken, refreshToken] = await Promise.all([
-      sign(tokenParams, accessTokenExpiresIn),
-      refresh(tokenParams, refreshTokenExpiresIn),
-    ]);
-
-    await prisma.user.update({
-      where: { id: userInfo.id },
-      data: { refreshToken: hashRefreshToken(refreshToken) },
-    });
-
-    // ✅ 7. 쿠키 설정 및 응답
+    // ✅ 5. 응답 준비
     const response = NextResponse.json({
       success: true,
       type: "success",
@@ -239,55 +207,12 @@ export async function POST(request: Request): Promise<Response> {
       },
     });
 
-    response.cookies.set({
-      name: "accessToken",
-      value: accessToken,
-      ...getAccessTokenCookieOptions(accessTokenExpiresIn),
+    // ✅ 6. 세션 발급 (토큰, 쿠키, 접속 정보, 로그인 알림)
+    await issueLoginSession(response, userInfo, {
+      ip: userIp,
+      notify: isMobileClient ? undefined : "web",
+      refreshTokenExpiresIn: isMobileClient ? "365d" : undefined,
     });
-
-    response.cookies.set({
-      name: "refreshToken",
-      value: refreshToken,
-      ...getRefreshTokenCookieOptions(refreshTokenExpiresIn),
-    });
-
-    const loginAt = new Date().toISOString();
-    try {
-      if (!authSettings.allowConcurrentSessions) {
-        const existingKeys = await redisClient.keys(`active_user:${userInfo.id}:*`);
-        if (existingKeys.length > 0) await redisClient.del(...existingKeys);
-      }
-
-      // 3. Redis에 실시간 접속 정보 저장 (미들웨어 검문 통과용)
-      await redisClient.set(
-        `active_user:${userInfo.id}:${userIp}`, 
-        JSON.stringify({ loginAt }),
-        "EX", 
-        300
-      );
-
-      // 4. 기존 유저 프로필 캐시 저장 (있으시면 유지)
-      await redisClient.set(
-        `user:profile:${userInfo.id}`, 
-        JSON.stringify({ 
-          nickName: userInfo.nickName, 
-          accountId: userInfo.accountId 
-        }), 
-        "EX", 
-        86400
-      );
-    } catch (redisError) {
-      console.error("Login Redis Cache Error:", redisError);
-    }
-
-    if (!isMobileClient) {
-      createLoginNotificationAction({
-        userId: userInfo.id,
-        source: "web",
-      }).catch((error) => {
-        console.error("Login Notification Error:", error);
-      });
-    }
 
     return response;
 

@@ -19,6 +19,9 @@ export type UserLayoutComponents = {
   signin?: React.ComponentType<any>;
   register?: React.ComponentType<any>;
   resetPassword?: React.ComponentType<any>;
+  // true면 signin·register 화면이 넘겨받은 loginProviders(다른 로그인 수단의 버튼)를 직접 원하는 자리에 놓는다.
+  // 아니면 코어가 화면 바로 아래에 놓는다. 스킨이 이 속성을 모르더라도 설치한 로그인 수단이 빠지지 않게 하기 위함이다.
+  placesLoginProviders?: boolean;
 };
 export type UserLayoutMap = Record<string, UserLayoutComponents>;
 export type AdminLayoutOption = {

@@ -62,6 +62,10 @@
         "./src/extensions/proxy.ts",
         "./src/core/proxy/defaultProxyExtension.ts"
       ],
+      "@extensions/loginProviders": [
+        "./src/extensions/loginProviders.ts",
+        "./src/core/registry/defaultLoginProviders.ts"
+      ],
       "@extensions/serverIntegrations": [
         "./src/extensions/serverIntegrations.ts",
         "./src/core/registry/defaultServerIntegrations.ts"

@@ -30,6 +30,7 @@ export const createProxy = (extension?: ProxyExtension | null) => async function
   if (
     isStateChangingRequest(request)
     && !isTrustedInternalRequest(request)
+    && !isExternalCallbackRequest(request)
     && !isSameOriginRequest(request)
   ) {
     return NextResponse.json(
@@ -110,6 +111,13 @@ const isStateChangingRequest = (request: NextRequest) => {
 
 const isTrustedInternalRequest = (request: NextRequest) => {
   return request.nextUrl.pathname === "/api/internal/service-deploy/notify";
+};
+
+// 다른 사이트가 인증 결과를 POST로 돌려주는 주소(예: 애플 로그인의 form_post). 보낸 쪽이 우리 사이트일 수 없어 출처 검사에서 뺀다.
+// 이 아래에 두는 라우트는 요청을 믿지 않고 자기 방법(한 번만 쓰는 state 등)으로 직접 확인해야 하며,
+// 로그인 쿠키에 기대어 무언가를 바꾸면 안 된다. 출처 검사가 막아 주던 위조 요청이 여기로는 그대로 들어온다.
+const isExternalCallbackRequest = (request: NextRequest) => {
+  return request.nextUrl.pathname.startsWith("/api/external-callback/");
 };
 
 const isSameOriginRequest = (request: NextRequest) => {

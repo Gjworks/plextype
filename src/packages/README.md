@@ -8,6 +8,8 @@
   코어(`src/core/registry/coreRegistry.tsx`)가 이 목록을 읽어, 패키지의 관리자 메뉴와 스킨을 따로 등록하지 않아도 쓰게 합니다.
 - `installedTriggers.ts`: 설치된 패키지 가운데 `triggers.ts`를 가진 것의 트리거 목록. 설치·제거 때마다 다시 만듭니다.
   트리거 허브(`src/core/utils/trigger/triggerHub.ts`)가 이 목록을 읽어 코어 이벤트 뒤에 패키지의 핸들러를 실행합니다.
+- `installedLoginProviders.ts`: 설치된 패키지 가운데 `loginProviders.ts(x)`를 가진 것의 로그인 수단 목록. 설치·제거 때마다 다시 만듭니다.
+  로그인·가입 화면(`src/core/utils/auth/loginProviders.ts`)이 이 목록을 읽어 버튼을 그립니다.
 
 직접 만드는 기능은 `src/extensions`에 둡니다. 패키지를 고쳐 쓰려면 여기서 고치지 말고 둘 중 하나를 씁니다.
 

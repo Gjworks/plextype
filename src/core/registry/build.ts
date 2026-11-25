@@ -62,13 +62,15 @@ export const buildExtensionRegistry = (
     });
   };
 
-  const appendMenus = (menu?: AdminMenuItem | AdminMenuItem[]) => {
+  // extension: 이 메뉴를 등록한 곳이 코어가 아닌지. 같은 id가 이미 있으면 먼저 등록한 쪽의 값을 따른다.
+  const appendMenus = (menu: AdminMenuItem | AdminMenuItem[] | undefined, extension: boolean) => {
     if (!menu) return;
     for (const item of Array.isArray(menu) ? menu : [menu]) {
       const existing = adminMenus.find((entry) => entry.id === item.id);
       if (!existing) {
         adminMenus.push({
           ...item,
+          extension: item.extension ?? extension,
           items: item.items
             ? item.items.map((child) => ({ ...child }))
             : undefined,
@@ -130,13 +132,16 @@ export const buildExtensionRegistry = (
       signin: item.signin,
       register: item.register,
       resetPassword: item.resetPassword,
+      placesLoginProviders: item.placesLoginProviders,
     };
     userLayoutOptions.set(item.key, toOption(item) as UserLayoutOption);
   };
 
-  registries.forEach((source) => {
+  // 첫 번째 레지스트리가 코어다. 그 뒤에 합쳐지는 것은 프로젝트 확장이다.
+  // 코어 레지스트리에 함께 들어 있는 쉬운 설치 패키지의 메뉴는 coreRegistry.tsx가 미리 표시해 둔다.
+  registries.forEach((source, index) => {
     source.modules?.forEach((module) => {
-      appendMenus(module.admin?.menu);
+      appendMenus(module.admin?.menu, index > 0);
       appendBreadcrumbs(module.admin?.breadcrumbs);
       module.postSkins?.forEach(appendPostSkin);
       module.postLayouts?.forEach(appendPostLayout);

@@ -40,6 +40,27 @@ test('removes only extension adapters, restores core pages and is idempotent', t
   assert.equal(preparePlextype(root).length, 0);
 });
 
+test('removes installed packages with their adapters and resets the package lists', t => {
+  const { root, write } = fixture(t);
+  const header = '// Extension-owned implementation; keep route configuration statically visible.\n';
+  write('src/app/(modules)/auth/social-login/page.tsx', `${header}export { default } from "@/packages/social-login/routes/auth/social-login/page";\n`);
+  write('src/app/(modules)/admin/installer/page.tsx', 'export { default } from "@/modules/installer";');
+  write('src/packages/README.md', '# 설치한 패키지\n');
+  write('src/packages/social-login/registry.tsx', 'export default {};');
+  write('src/packages/index.ts', 'import package0 from "./social-login/registry";\nexport const installedPackages = [package0];\n');
+  write('src/packages/installedTriggers.ts', 'import package0 from "@/extensions/adopted/triggers";\nexport const installedTriggers = [package0];\n');
+  preparePlextype(root);
+  assert.ok(!fs.existsSync(path.join(root, 'src/packages/social-login')));
+  assert.ok(!fs.existsSync(path.join(root, 'src/app/(modules)/auth/social-login/page.tsx')));
+  assert.ok(fs.existsSync(path.join(root, 'src/app/(modules)/admin/installer/page.tsx')));
+  assert.ok(fs.existsSync(path.join(root, 'src/packages/README.md')));
+  for (const [name, exported] of [['index.ts', 'installedPackages'], ['installedTriggers.ts', 'installedTriggers'], ['installedLoginProviders.ts', 'installedLoginProviders']]) {
+    const content = fs.readFileSync(path.join(root, 'src/packages', name), 'utf8');
+    assert.match(content, new RegExp(`export const ${exported}: \\w+\\[\\] = \\[\\];`));
+    assert.doesNotMatch(content, /import package/);
+  }
+});
+
 test('package manifest is left byte-for-byte intact, including version and workspaces', t => {
   const { root, write } = fixture(t);
   write('src/app/page.tsx', 'export default function Page() { return null; }');

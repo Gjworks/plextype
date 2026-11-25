@@ -13,10 +13,10 @@
  * 🟢 You can import this file directly.
  */
 
-import * as Prisma from './internal/prismaNamespaceBrowser'
+import * as Prisma from './internal/prismaNamespaceBrowser.ts'
 export { Prisma }
-export * as $Enums from './enums'
-export * from './enums';
+export * as $Enums from './enums.ts'
+export * from './enums.ts';
 /**
  * Model User
  * 
@@ -137,3 +137,8 @@ export type ServiceDeployInstance = Prisma.ServiceDeployInstanceModel
  * 
  */
 export type ServiceDeployJob = Prisma.ServiceDeployJobModel
+/**
+ * Model SocialLoginAccount
+ * 
+ */
+export type SocialLoginAccount = Prisma.SocialLoginAccountModel

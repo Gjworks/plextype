@@ -18,7 +18,8 @@ const getSafeRedirectPath = (value?: string | null) => {
   return value;
 };
 
-const Signin = () => {
+// loginProviders: 로그인 페이지가 넘기는 다른 로그인 수단의 버튼 묶음(LoginProviderButtons). 등록된 수단이 없으면 비어 있다.
+const Signin = ({ loginProviders }: { loginProviders?: React.ReactNode }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -137,6 +138,8 @@ const Signin = () => {
           )}
         </button>
       </form>
+
+      {loginProviders}
 
       <div className="mt-8 border-t border-[#073b2a]/10 pt-6 text-center text-sm text-[#687c73] dark:border-white/10 dark:text-[#a9b9b1]">
         아직 계정이 없으신가요?{" "}

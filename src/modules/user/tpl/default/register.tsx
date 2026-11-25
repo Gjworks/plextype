@@ -8,7 +8,8 @@ import { ClipboardCheck, LockKeyhole, Mail, UserRound } from "lucide-react";
 import InputField from "@components/form/InputField";
 import Button from "@components/button/Button";
 
-const Register = () => {
+// loginProviders: 가입 페이지가 넘기는 다른 로그인 수단의 버튼 묶음(LoginProviderButtons). 등록된 수단이 없으면 비어 있다.
+const Register = ({ loginProviders }: { loginProviders?: React.ReactNode }) => {
   const [loading, setLoading] = useState(false); // ✅ 로딩 상태 추가
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
@@ -166,6 +167,7 @@ const Register = () => {
           </Button>
         </div>
       </form>
+      {loginProviders}
       <motion.div className="mt-8 text-sm text-gray-500 dark:text-dark-400" variants={variants}>
         이미 계정이 있으신가요?{" "}
         <Link href="/auth/signin" className="text-gray-950 underline underline-offset-4 hover:text-gray-600 dark:text-white dark:hover:text-dark-200">
