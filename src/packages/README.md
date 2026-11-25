@@ -6,6 +6,8 @@
 - `<패키지ID>/`: 설치된 패키지의 소스. `plextype.package.json`에 버전과 파일 목록이 있습니다.
 - `index.ts`: 설치된 패키지 가운데 `registry.ts(x)`를 가진 것의 등록 목록. 설치·제거 때마다 다시 만듭니다.
   코어(`src/core/registry/coreRegistry.tsx`)가 이 목록을 읽어, 패키지의 관리자 메뉴와 스킨을 따로 등록하지 않아도 쓰게 합니다.
+- `installedTriggers.ts`: 설치된 패키지 가운데 `triggers.ts`를 가진 것의 트리거 목록. 설치·제거 때마다 다시 만듭니다.
+  트리거 허브(`src/core/utils/trigger/triggerHub.ts`)가 이 목록을 읽어 코어 이벤트 뒤에 패키지의 핸들러를 실행합니다.
 
 직접 만드는 기능은 `src/extensions`에 둡니다. 패키지를 고쳐 쓰려면 여기서 고치지 말고 둘 중 하나를 씁니다.
 

@@ -2,6 +2,7 @@
 import coreConfig from "@/core/res/config/trigger.json";
 import * as coreHandlers from "./triggerHandler";
 import { triggerConfig, triggerHandlers } from "@extensions/triggerRegistry";
+import { installedTriggers } from "@/packages/installedTriggers";
 
 // 🌟 전역 캐시
 let cachedHandlers: any = null;
@@ -28,7 +29,8 @@ async function initializeRegistry() {
   if (cachedHandlers && cachedConfig) return { handlers: cachedHandlers, config: cachedConfig };
 
   cachedHandlers = { ...coreHandlers, ...triggerHandlers };
-  cachedConfig = mergeConfigs(coreConfig, triggerConfig);
+  // 실행 순서: 코어, 쉬운 설치 패키지(src/packages), 프로젝트 확장(src/extensions).
+  cachedConfig = [...installedTriggers, triggerConfig].reduce(mergeConfigs, coreConfig);
 
   return { handlers: cachedHandlers, config: cachedConfig };
 }
@@ -42,7 +44,8 @@ export async function dispatchTrigger(type: string, context: any) {
   const { result } = context;
 
   for (const config of configs) {
-    const { map, handler: handlerName } = config;
+    // 패키지의 등록은 map을 생략할 수 있고, handler에 이름 대신 함수를 넘긴다(define.ts).
+    const { map = {}, handler: handlerName } = config;
     const mappedData: any = {};
 
     Object.keys(map).forEach((key) => {
@@ -58,12 +61,12 @@ export async function dispatchTrigger(type: string, context: any) {
       }
     });
 
-    const handler = allHandlers[handlerName];
+    const handler = typeof handlerName === "function" ? handlerName : allHandlers[handlerName];
     if (handler) {
       try {
         await handler(mappedData, context);
       } catch (err) {
-        console.error(`[Trigger Error] "${handlerName}" 실행 실패:`, err);
+        console.error(`[Trigger Error] "${typeof handlerName === "function" ? handlerName.name || type : handlerName}" 실행 실패:`, err);
       }
     }
   }

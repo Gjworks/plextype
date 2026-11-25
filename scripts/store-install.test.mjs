@@ -157,6 +157,24 @@ test('packages with a registry file are listed for registration, and the list fo
   assert.doesNotMatch(await read('src/packages/index.ts'), /demo/);
 });
 
+test('packages with a triggers file are listed for the trigger hub, apart from the registry list', async t => {
+  const withTriggers = buildPackage('0.3.0', { 'index.ts': 'export {};\n', 'triggers.ts': 'export default {};\n' });
+  const { root, storeUrl, read } = await setup(t, withTriggers);
+  await lib.connectStore(root, storeUrl, TOKEN);
+  // registry 파일이 없으므로 관리자 메뉴·스킨 목록에는 들어가지 않는다.
+  assert.equal((await lib.installStorePackage(root, 'product-demo')).registered, false);
+  assert.doesNotMatch(await read('src/packages/index.ts'), /demo/);
+  const list = await read('src/packages/installedTriggers.ts');
+  assert.match(list, /import package0 from "\.\/demo\/triggers";/);
+  assert.match(list, /installedTriggers: PackageTriggers\[\] = \[package0\];/);
+
+  // 내 확장으로 가져오면 새 위치를 가리키고, 제거하면 목록에서 빠진다.
+  await lib.adoptStorePackage(root, 'demo');
+  assert.match(await read('src/packages/installedTriggers.ts'), /import package0 from "@\/extensions\/demo\/triggers";/);
+  await lib.discardAdoptedPackage(root, 'demo');
+  assert.match(await read('src/packages/installedTriggers.ts'), /installedTriggers: PackageTriggers\[\] = \[\];/);
+});
+
 test('updating replaces the folder, drops routes the new version no longer has, and keeps a backup', async t => {
   const { root, storeUrl, state, exists, read } = await setup(t);
   await lib.connectStore(root, storeUrl, TOKEN);

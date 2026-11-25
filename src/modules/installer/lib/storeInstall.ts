@@ -513,41 +513,64 @@ const isOwnedAdapter = (content: string, packageId: string) => (
   ADAPTER_HEADERS.some((header) => content.startsWith(header)) && content.includes(`from "@/packages/${packageId}/`)
 );
 
-// 설치된 패키지 가운데 registry.ts(x)를 가진 것을 모아 등록 목록(src/packages/index.ts)을 다시 만든다.
+// 설치된 패키지가 루트에 둔 등록 파일을 모아 src/packages의 목록 두 개를 다시 만든다.
+// - index.ts: registry.ts(x)의 관리자 메뉴·스킨. 코어 레지스트리(coreRegistry.tsx)가 읽는다.
+// - installedTriggers.ts: triggers.ts의 트리거. 트리거 허브(triggerHub.ts)가 읽는다.
+// 트리거 핸들러는 서버 코드라, 화면 쪽에서도 불러오는 index.ts와 섞지 않고 따로 둔다.
 // 폴더의 지금 상태에서 만들므로, 설치·제거가 끝났든 중간에 되돌렸든 부르고 나면 목록이 폴더와 맞는다.
+// registry 파일로 등록된 패키지 ID를 돌려준다.
 export async function writePackageRegistry(root: string) {
   const directory = path.join(root, PACKAGES_DIRECTORY);
-  const registered: { packageId: string; file: string }[] = [];
   let entries: Dirent[] = [];
   try { entries = await fs.readdir(directory, { withFileTypes: true }); }
   catch { /* 폴더가 아직 없으면 등록할 것도 없다. */ }
+  const installed: string[] = [];
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-    if (!entry.isDirectory() || !PACKAGE_ID.test(entry.name) || !(await readInstalled(root, entry.name))) continue;
-    for (const file of ["registry.ts", "registry.tsx"]) {
-      const stat = await fs.lstat(path.join(directory, entry.name, file)).catch(() => null);
-      if (stat?.isFile()) { registered.push({ packageId: entry.name, file }); break; }
-    }
+    if (entry.isDirectory() && PACKAGE_ID.test(entry.name) && (await readInstalled(root, entry.name))) installed.push(entry.name);
   }
-  // 내 확장으로 가져온 패키지도 기록 파일과 registry 파일이 남아 있는 동안은 여기서 등록한다.
-  // 가져온 순간 관리자 메뉴나 스킨이 사라지지 않게 하기 위함이며, 기록 파일을 지우면 설치기는 더 관여하지 않는다.
-  const specifiers = registered.map((item) => `./${item.packageId}/registry`);
-  for (const adopted of await listAdoptedPackages(root)) {
-    for (const file of ["registry.ts", "registry.tsx"]) {
-      const stat = await fs.lstat(path.join(root, EXTENSIONS_DIRECTORY, adopted.packageId, file)).catch(() => null);
-      if (stat?.isFile()) { specifiers.push(`@/extensions/${adopted.packageId}/registry`); break; }
+  const adopted = (await listAdoptedPackages(root)).map((item) => item.packageId);
+  const hasFile = async (folder: string, files: string[]) => {
+    for (const file of files) {
+      if ((await fs.lstat(path.join(folder, file)).catch(() => null))?.isFile()) return true;
     }
-  }
-  const lines = [
+    return false;
+  };
+  const collect = async (name: string, files: string[]) => {
+    const own: string[] = [];
+    for (const packageId of installed) {
+      if (await hasFile(path.join(directory, packageId), files)) own.push(packageId);
+    }
+    // 내 확장으로 가져온 패키지도 기록 파일과 등록 파일이 남아 있는 동안은 여기서 등록한다.
+    // 가져온 순간 관리자 메뉴나 스킨, 트리거가 사라지지 않게 하기 위함이며, 기록 파일을 지우면 설치기는 더 관여하지 않는다.
+    const specifiers = own.map((packageId) => `./${packageId}/${name}`);
+    for (const packageId of adopted) {
+      if (await hasFile(path.join(root, EXTENSIONS_DIRECTORY, packageId), files)) specifiers.push(`@/extensions/${packageId}/${name}`);
+    }
+    return { own, specifiers };
+  };
+  const render = (specifiers: string[], typeImport: string, declaration: string) => [
     "// 쉬운 설치가 만드는 파일. 직접 고치지 않는다. 패키지를 설치·제거하거나 내 확장으로 가져올 때마다 다시 만든다.",
-    'import type { ExtensionRegistryConfig } from "@/core/registry/define";',
+    typeImport,
     ...specifiers.map((specifier, index) => `import package${index} from "${specifier}";`),
     "",
-    `export const installedPackages: ExtensionRegistryConfig[] = [${specifiers.map((_, index) => `package${index}`).join(", ")}];`,
+    `${declaration} = [${specifiers.map((_, index) => `package${index}`).join(", ")}];`,
     "",
-  ];
+  ].join("\n");
+
+  const registries = await collect("registry", ["registry.ts", "registry.tsx"]);
+  const triggers = await collect("triggers", ["triggers.ts"]);
   await fs.mkdir(directory, { recursive: true });
-  await fs.writeFile(path.join(directory, "index.ts"), lines.join("\n"));
-  return registered.map((item) => item.packageId);
+  await fs.writeFile(path.join(directory, "index.ts"), render(
+    registries.specifiers,
+    'import type { ExtensionRegistryConfig } from "@/core/registry/define";',
+    "export const installedPackages: ExtensionRegistryConfig[]",
+  ));
+  await fs.writeFile(path.join(directory, "installedTriggers.ts"), render(
+    triggers.specifiers,
+    'import type { PackageTriggers } from "@/core/utils/trigger/define";',
+    "export const installedTriggers: PackageTriggers[]",
+  ));
+  return registries.own;
 }
 
 async function assertRealDirectory(directory: string, label: string) {
