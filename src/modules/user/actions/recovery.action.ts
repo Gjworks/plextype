@@ -2,6 +2,7 @@
 
 import { allowRecoveryRequest } from "@/core/utils/auth/rateLimit";
 import crypto from "node:crypto";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { hashedPassword } from "@utils/auth/password";
 import { ActionResponse } from "@/core/types/actions";
@@ -10,6 +11,7 @@ import {
   getAuthSettingsRuntimeAction,
   validatePasswordByAuthSettings,
 } from "@/modules/user/actions/auth-settings";
+import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 import * as query from "./recovery.query";
 
 const requestAccountIdSchema = z.object({
@@ -31,6 +33,23 @@ const tokenHash = (token: string) => crypto.createHash("sha256").update(token).d
 
 const normalizeBaseUrl = (url: string) => url.endsWith("/") ? url.slice(0, -1) : url;
 
+// 로그인 API(src/app/api/auth/signin/route.ts)와 같은 방법으로 요청자 IP를 구한다.
+const getClientIp = async () => {
+  const requestHeaders = await headers();
+  const forwarded = requestHeaders.get("x-forwarded-for");
+  const rawIp = forwarded ? forwarded.split(",")[0].trim() : requestHeaders.get("x-real-ip") || "unknown";
+
+  return rawIp.replace(/^::ffff:/, "");
+};
+
+// 메일 제목 머리말에 쓰는 사이트 제목. 줄바꿈은 메일 헤더를 깨뜨리므로 공백으로 바꾼다.
+const getMailSiteTitle = async () => {
+  const settings = await getPublicSiteSettingsAction();
+  const title = settings.data?.projectTitle || settings.data?.appName || "Plextype";
+
+  return title.replace(/[\r\n]+/g, " ").trim();
+};
+
 const isActiveUser = (status?: string | null) => !status || status === "active";
 
 const genericAccountIdMessage = "입력한 이메일과 일치하는 계정이 있으면 계정 ID 안내 메일을 발송했습니다.";
@@ -51,13 +70,13 @@ export const requestAccountIdRecoveryAction = async (formData: FormData): Promis
   }
 
   try {
-    if (!await allowRecoveryRequest(validation.data.email)) return { success: true, type: "success", message: genericAccountIdMessage, data: null };
+    if (!await allowRecoveryRequest(validation.data.email, await getClientIp())) return { success: true, type: "success", message: genericAccountIdMessage, data: null };
     const user = await query.findRecoveryUserByEmail(validation.data.email);
 
     if (user && isActiveUser(user.status)) {
       await sendMail({
         to: user.email_address,
-        subject: "[Plextype] 계정 ID 안내",
+        subject: `[${await getMailSiteTitle()}] 계정 ID 안내`,
         text: [
           `${user.nickName}님, 요청하신 계정 ID 안내입니다.`,
           "",
@@ -93,7 +112,7 @@ export const requestPasswordResetAction = async (formData: FormData): Promise<Ac
   }
 
   try {
-    if (!await allowRecoveryRequest(validation.data.email)) return { success: true, type: "success", message: genericPasswordMessage, data: null };
+    if (!await allowRecoveryRequest(validation.data.email, await getClientIp())) return { success: true, type: "success", message: genericPasswordMessage, data: null };
     const user = await query.findRecoveryUserByAccountAndEmail(validation.data.accountId, validation.data.email);
 
     if (user && isActiveUser(user.status)) {
@@ -106,7 +125,7 @@ export const requestPasswordResetAction = async (formData: FormData): Promise<Ac
       await query.createPasswordResetToken(user.id, tokenHash(rawToken), expiresAt);
       await sendMail({
         to: user.email_address,
-        subject: "[Plextype] 비밀번호 재설정 안내",
+        subject: `[${await getMailSiteTitle()}] 비밀번호 재설정 안내`,
         text: [
           `${user.nickName}님, 비밀번호 재설정 요청을 받았습니다.`,
           "",

@@ -18,9 +18,11 @@ export async function consumeRateLimit(scope: string, subject: string, limit: nu
   if (!Array.isArray(result) || result.length !== 2) throw new Error("Rate limit unavailable");
   return { allowed: Number(result[0]) <= limit, retryAfter: Math.max(1, Number(result[1])) };
 }
-// Untrusted forwarded IP headers are deliberately not used as security identities.
-export async function allowRecoveryRequest(email: string) {
-  const global = await consumeRateLimit("recovery-global", "all", 30, 900);
-  if (!global.allowed) return false;
+// 계정 찾기 요청 제한. 15분 동안 요청자(IP)당 30회, 대상 이메일당 3회까지 허용한다.
+// 요청자 한도는 요청자별로 따로 센다. 모두가 함께 쓰는 한도는 한 사람이 채우면 다른 사용자의 계정 찾기까지 막는다.
+// IP는 전달 헤더에서 오므로 프록시가 덮어쓰지 않는 환경에서는 위조할 수 있다. 한 주소로 나가는 메일 수는 이메일 한도가 막는다.
+export async function allowRecoveryRequest(email: string, clientIp: string) {
+  const requester = await consumeRateLimit("recovery-ip", clientIp, 30, 900);
+  if (!requester.allowed) return false;
   return (await consumeRateLimit("recovery-email", email, 3, 900)).allowed;
 }
