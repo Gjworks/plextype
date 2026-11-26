@@ -11,7 +11,6 @@ import {
   getAuthSettingsRuntimeAction,
   validatePasswordByAuthSettings,
 } from "@/modules/user/actions/auth-settings";
-import { getPublicSiteSettingsAction } from "@/modules/admin/actions/settings.action";
 import * as query from "./recovery.query";
 
 const requestAccountIdSchema = z.object({
@@ -44,8 +43,7 @@ const getClientIp = async () => {
 
 // 메일 제목 머리말에 쓰는 사이트 제목. 줄바꿈은 메일 헤더를 깨뜨리므로 공백으로 바꾼다.
 const getMailSiteTitle = async () => {
-  const settings = await getPublicSiteSettingsAction();
-  const title = settings.data?.projectTitle || settings.data?.appName || "Plextype";
+  const title = await query.findSiteTitle();
 
   return title.replace(/[\r\n]+/g, " ").trim();
 };

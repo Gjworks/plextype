@@ -122,6 +122,19 @@ export const findPublicSiteUrl = async () => {
   return rows[0]?.value || process.env.NEXT_PUBLIC_DEFAULT_URL || "http://localhost:3000";
 };
 
+// 안내 메일 제목 머리말에 쓰는 사이트 제목. 관리자 설정이 없으면 환경 변수, 그것도 없으면 배포판 이름을 쓴다.
+// 관리자 모듈의 설정 액션을 거치지 않고 설정 테이블을 직접 읽는다: 기능 모듈은 관리자 모듈을 import하지 않는다.
+export const findSiteTitle = async () => {
+  const rows = await prisma.$queryRaw<{ value: string | null }[]>`
+    SELECT "value"
+    FROM "AppSetting"
+    WHERE "key" = 'site.projectTitle'
+    LIMIT 1
+  `;
+
+  return rows[0]?.value || process.env.PROJECT_TITLE || "Plextype";
+};
+
 export const deleteExpiredPasswordResetTokens = async () => {
   await ensurePasswordResetTokenTable();
 

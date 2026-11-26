@@ -33,15 +33,17 @@ function setup(status = 'active', allowed = true) {
   });
   const action = load('recovery.action.ts', {
     '@/core/utils/auth/rateLimit': { allowRecoveryRequest: async () => allowed },
+    'next/headers': { headers: async () => ({ get: () => null }) },
     './recovery.query': {
       ...query,
       deleteExpiredPasswordResetTokens: async () => { calls.cleanup++; },
       createPasswordResetToken: async (...args) => { calls.tokens.push(args); },
       findPublicSiteUrl: async () => 'https://example.com',
+      findSiteTitle: async () => '우리 사이트\n',
     },
     '@utils/auth/password': {},
     '@/core/utils/mail/smtp': { sendMail: async mail => { calls.mails.push(mail); } },
-    '@/modules/admin/actions/auth-settings': {},
+    '@/modules/user/actions/auth-settings': {},
   });
   return {
     calls,
@@ -70,6 +72,8 @@ test('only a matching active account receives a reset token and mail; responses 
   assert.equal(matched.calls.tokens[0][0], 7);
   assert.match(matched.calls.tokens[0][1], /^[a-f0-9]{64}$/);
   assert.equal(matched.calls.mails[0].to, 'member@example.com');
+  // 제목 머리말은 사이트 제목이고, 줄바꿈은 메일 헤더를 깨뜨리므로 들어가지 않는다.
+  assert.equal(matched.calls.mails[0].subject, '[우리 사이트] 비밀번호 재설정 안내');
   for (const [accountId, email, status] of [
     ['member', 'other@example.com', 'active'],
     ['other', 'member@example.com', 'active'],

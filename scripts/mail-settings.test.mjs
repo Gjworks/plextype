@@ -34,7 +34,7 @@ test('credentials are encrypted and authenticated; disabled mode never sends', a
   try {
     const helpers = load('core/utils/mail/settings.ts', {
       '@/modules/admin/mail-settings': schema,
-      '@/modules/admin/actions/settings.query': { getSettingsByKeysQuery: async () => [{ key: 'mail.smtp', value: JSON.stringify({ ...schema.defaultMailSettings, mode: 'disabled' }) }] },
+      '@/core/utils/settings/settings.query': { getSettingsByKeysQuery: async () => [{ key: 'mail.smtp', value: JSON.stringify({ ...schema.defaultMailSettings, mode: 'disabled' }) }] },
     });
     const encrypted = helpers.encryptMailPassword('smtp-secret');
     assert.equal(encrypted.includes('smtp-secret'), false);
@@ -56,7 +56,7 @@ test('admin-only actions hide credentials and preserve settings when switching m
   const action = load('modules/admin/actions/mail-settings.action.ts', {
     'next/cache': { revalidatePath() {} },
     '@/modules/user/actions/user.action': { getUserSessionAction: async () => ({ data: { isAdmin: admin } }) },
-    './settings.query': { upsertSettingsQuery: async seeds => { saved = seeds; } },
+    '@/core/utils/settings/settings.query': { upsertSettingsQuery: async seeds => { saved = seeds; } },
     '../mail-settings': schema,
     '@/core/utils/mail/settings': {
       readMailSettings: async () => ({ settings: previous, encryptedPassword: 'ciphertext' }),

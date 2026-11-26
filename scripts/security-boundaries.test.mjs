@@ -490,14 +490,19 @@ test('rate limits use atomic expiring Redis counters and normalize subjects with
       const count = (counts.get(key) || 0) + 1; counts.set(key, count); return [count, seconds];
     } },
   });
-  assert.equal(await api.allowRecoveryRequest(' Member@example.com '), true);
-  assert.equal(await api.allowRecoveryRequest('member@example.com'), true);
-  assert.equal(await api.allowRecoveryRequest('MEMBER@EXAMPLE.COM'), true);
-  assert.equal(await api.allowRecoveryRequest('member@example.com'), false);
+  // 한 이메일로는 요청자가 달라도 3번까지다.
+  assert.equal(await api.allowRecoveryRequest(' Member@example.com ', '203.0.113.1'), true);
+  assert.equal(await api.allowRecoveryRequest('member@example.com', '203.0.113.2'), true);
+  assert.equal(await api.allowRecoveryRequest('MEMBER@EXAMPLE.COM', '203.0.113.3'), true);
+  assert.equal(await api.allowRecoveryRequest('member@example.com', '203.0.113.4'), false);
+  // 요청자 한도는 요청자별로 센다. 한 요청자가 30번을 채워도 다른 요청자는 막히지 않는다.
+  for (let index = 0; index < 30; index++) await api.allowRecoveryRequest(`member${index}@example.com`, '198.51.100.1');
+  assert.equal(await api.allowRecoveryRequest('fresh@example.com', '198.51.100.1'), false);
+  assert.equal(await api.allowRecoveryRequest('fresh@example.com', '198.51.100.2'), true);
   const results = await Promise.all(Array.from({ length: 20 }, () => api.consumeRateLimit('secret', 'same-post', 10, 900)));
   assert.equal(results.filter(r => r.allowed).length, 10);
-  counts.clear(); assert.equal(await api.allowRecoveryRequest('member@example.com'), true);
-  unavailable = true; await assert.rejects(api.allowRecoveryRequest('member@example.com'), /unavailable/);
+  counts.clear(); assert.equal(await api.allowRecoveryRequest('member@example.com', '203.0.113.1'), true);
+  unavailable = true; await assert.rejects(api.allowRecoveryRequest('member@example.com', '203.0.113.1'), /unavailable/);
 });
 
 test('QR throttle runs before session writes and returns Retry-After', async () => {
