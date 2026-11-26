@@ -72,10 +72,7 @@ export const ModelName = {
   SiteNavigation: 'SiteNavigation',
   NotificationBroadcast: 'NotificationBroadcast',
   NotificationBroadcastRecipient: 'NotificationBroadcastRecipient',
-  ApiToken: 'ApiToken',
-  ServiceDeployInstance: 'ServiceDeployInstance',
-  ServiceDeployJob: 'ServiceDeployJob',
-  SocialLoginAccount: 'SocialLoginAccount'
+  ApiToken: 'ApiToken'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -440,79 +437,6 @@ export const ApiTokenScalarFieldEnum = {
 } as const
 
 export type ApiTokenScalarFieldEnum = (typeof ApiTokenScalarFieldEnum)[keyof typeof ApiTokenScalarFieldEnum]
-
-
-export const ServiceDeployInstanceScalarFieldEnum = {
-  id: 'id',
-  uuid: 'uuid',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  installType: 'installType',
-  status: 'status',
-  serviceName: 'serviceName',
-  domain: 'domain',
-  projectPath: 'projectPath',
-  containerName: 'containerName',
-  hostPort: 'hostPort',
-  originRepository: 'originRepository',
-  upstreamRepository: 'upstreamRepository',
-  deployBranch: 'deployBranch',
-  appName: 'appName',
-  appTitle: 'appTitle',
-  adminAccountId: 'adminAccountId',
-  adminEmail: 'adminEmail',
-  adminNickname: 'adminNickname',
-  dbEngine: 'dbEngine',
-  dbHost: 'dbHost',
-  dbPort: 'dbPort',
-  dbName: 'dbName',
-  dbUser: 'dbUser',
-  dbPasswordManaged: 'dbPasswordManaged',
-  dbPasswordSecretKey: 'dbPasswordSecretKey',
-  redisHost: 'redisHost',
-  redisPort: 'redisPort',
-  useWebPush: 'useWebPush',
-  useFcm: 'useFcm',
-  setupSnapshot: 'setupSnapshot',
-  note: 'note',
-  lastError: 'lastError',
-  completedAt: 'completedAt'
-} as const
-
-export type ServiceDeployInstanceScalarFieldEnum = (typeof ServiceDeployInstanceScalarFieldEnum)[keyof typeof ServiceDeployInstanceScalarFieldEnum]
-
-
-export const ServiceDeployJobScalarFieldEnum = {
-  id: 'id',
-  uuid: 'uuid',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  instanceId: 'instanceId',
-  requestedByUserId: 'requestedByUserId',
-  type: 'type',
-  status: 'status',
-  step: 'step',
-  payload: 'payload',
-  logs: 'logs',
-  errorMessage: 'errorMessage',
-  startedAt: 'startedAt',
-  completedAt: 'completedAt'
-} as const
-
-export type ServiceDeployJobScalarFieldEnum = (typeof ServiceDeployJobScalarFieldEnum)[keyof typeof ServiceDeployJobScalarFieldEnum]
-
-
-export const SocialLoginAccountScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  provider: 'provider',
-  providerUserId: 'providerUserId',
-  email: 'email',
-  createdAccount: 'createdAccount',
-  createdAt: 'createdAt'
-} as const
-
-export type SocialLoginAccountScalarFieldEnum = (typeof SocialLoginAccountScalarFieldEnum)[keyof typeof SocialLoginAccountScalarFieldEnum]
 
 
 export const SortOrder = {
