@@ -2,17 +2,17 @@
 // InputField와 같은 톤을 유지한다.
 
 export const fieldBoxClass = ({ disabled, hasError }: { disabled?: boolean; hasError?: boolean }) =>
-  "group flex w-full items-center rounded-md border shadow-md transition-all duration-200 dark:shadow-none " +
+  "group flex w-full items-center rounded-lg border transition-colors duration-200 " +
   (disabled
-    ? "cursor-not-allowed border-gray-200 bg-gray-50 shadow-none opacity-70 dark:border-dark-700 dark:bg-dark-800 "
+    ? "cursor-not-allowed border-gray-200 bg-gray-100 opacity-70 dark:border-white/10 dark:bg-white/[0.03] "
     : hasError
-      ? "border-red-300 bg-white shadow-red-100 hover:border-red-400 focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-100 dark:border-red-500/60 dark:bg-dark-800/80 dark:focus-within:border-red-400/80 dark:focus-within:ring-red-500/15 "
-      : "border-gray-200 bg-white shadow-gray-100 hover:border-gray-300 focus-within:border-gray-300 focus-within:ring-4 focus-within:ring-gray-200/75 dark:border-dark-600 dark:bg-dark-800/80 dark:hover:border-dark-500 dark:focus-within:border-dark-400 dark:focus-within:ring-dark-700/45 ");
+      ? "border-red-400 bg-white hover:border-red-500 focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-500/15 dark:border-red-400/70 dark:bg-white/[0.09] dark:focus-within:border-red-400 dark:focus-within:ring-red-500/20 "
+      : "border-gray-300 bg-white hover:border-gray-400 focus-within:border-gray-950 focus-within:ring-4 focus-within:ring-gray-950/10 dark:border-white/25 dark:bg-white/[0.09] dark:hover:border-white/40 dark:focus-within:border-white/80 dark:focus-within:ring-white/10 ");
 
 export const fieldIconClass = (disabled?: boolean) =>
   disabled
     ? "text-gray-300 dark:text-dark-500"
-    : "text-gray-400 group-focus-within:text-gray-800 dark:text-dark-400 dark:group-focus-within:text-dark-200";
+    : "text-gray-400 group-focus-within:text-gray-950 dark:text-dark-400 dark:group-focus-within:text-white";
 
 export const fieldLabelClass = (disabled?: boolean) =>
   `mb-2 block text-sm font-medium ${disabled ? "text-gray-400 dark:text-dark-500" : "text-black dark:text-dark-200"}`;

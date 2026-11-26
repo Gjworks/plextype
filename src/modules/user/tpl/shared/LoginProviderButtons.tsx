@@ -7,15 +7,10 @@ const FULL_BUTTON_LIMIT = 3;
 // 흰 바탕의 버튼은 화면 바탕과 구분되지 않아 테두리를 준다.
 const needsBorder = (background?: string) => !background || /^#f{3}(f{3})?$/i.test(background);
 
-// 로그인 수단 목록을 버튼으로 그린다. 목록이 비어 있으면 아무것도 그리지 않는다.
-// redirect는 로그인 뒤 돌아갈 사이트 안의 경로로, 각 수단의 주소에 쿼리로 붙인다.
-export const LoginProviderButtonList = ({ providers, redirect }: { providers: LoginProvider[]; redirect?: string }) => {
+// 로그인 수단 목록(getLoginProviders의 결과)을 코어의 기본 모양 버튼으로 그린다. 목록이 비어 있으면 아무것도 그리지 않는다.
+export const LoginProviderButtonList = ({ providers }: { providers: LoginProvider[] }) => {
   if (providers.length === 0) return null;
 
-  const withRedirect = (href: string) => {
-    if (!redirect || !redirect.startsWith("/") || redirect.startsWith("//")) return href;
-    return `${href}${href.includes("?") ? "&" : "?"}redirect=${encodeURIComponent(redirect)}`;
-  };
   const compact = providers.length > FULL_BUTTON_LIMIT;
   const borderClass = (background?: string) => (needsBorder(background) ? "border border-gray-200 dark:border-white/15" : "border border-transparent");
   const baseColors = "bg-white text-gray-700 dark:bg-white/5 dark:text-white/80";
@@ -33,7 +28,7 @@ export const LoginProviderButtonList = ({ providers, redirect }: { providers: Lo
           {providers.map((provider) => (
             <a
               key={provider.key}
-              href={withRedirect(provider.href)}
+              href={provider.href}
               aria-label={provider.label}
               title={provider.label}
               style={provider.brand ? { background: provider.brand.background, color: provider.brand.color } : undefined}
@@ -48,7 +43,7 @@ export const LoginProviderButtonList = ({ providers, redirect }: { providers: Lo
           {providers.map((provider) => (
             <a
               key={provider.key}
-              href={withRedirect(provider.href)}
+              href={provider.href}
               style={provider.brand ? { background: provider.brand.background, color: provider.brand.color } : undefined}
               className={`flex h-12 items-center justify-center gap-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-90 ${borderClass(provider.brand?.background)} ${provider.brand ? "" : baseColors}`}
             >
@@ -63,9 +58,9 @@ export const LoginProviderButtonList = ({ providers, redirect }: { providers: Lo
 };
 
 // 등록된 로그인 수단(defineLoginProviders)을 읽어 버튼으로 그린다.
-// 로그인·가입 페이지가 만들어 회원 스킨의 signin·register에 loginProviders 속성으로 넘긴다.
+// redirect는 로그인 뒤 돌아갈 사이트 안의 경로다.
 const LoginProviderButtons = async ({ redirect }: { redirect?: string }) => (
-  <LoginProviderButtonList providers={await getLoginProviders()} redirect={redirect} />
+  <LoginProviderButtonList providers={await getLoginProviders(redirect)} />
 );
 
 export default LoginProviderButtons;

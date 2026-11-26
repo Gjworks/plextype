@@ -13,6 +13,7 @@
 
 직접 만드는 기능은 `src/extensions`에 둡니다. 패키지를 고쳐 쓰려면 여기서 고치지 말고 둘 중 하나를 씁니다.
 
+- 기능 패키지에 남아 있는 화면만 바꿀 때: 패키지가 README에 밝힌 뷰의 key로 `src/extensions/registry.tsx`의 `views`에 자기 컴포넌트를 등록합니다. 패키지는 그대로 남아 업데이트를 받습니다.
 - 등록된 단위(스킨의 화면, 레이아웃, 메뉴)만 바꿀 때: `src/extensions`에 만들어 같은 key로 등록합니다. 같은 key는 `src/extensions/registry.tsx` 쪽이 이깁니다.
 - 안쪽까지 고칠 때: 쉬운 설치의 `내 확장으로 가져오기`로 패키지를 `src/extensions`로 옮깁니다.
 

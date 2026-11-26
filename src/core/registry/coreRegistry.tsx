@@ -36,4 +36,5 @@ export const coreRegistry = defineExtensionRegistry({
   postLayouts: installedPackages.flatMap((item) => item.postLayouts ?? []),
   adminLayouts: installedPackages.flatMap((item) => item.adminLayouts ?? []),
   userSkins: installedPackages.flatMap((item) => item.userSkins ?? []),
+  views: installedPackages.flatMap((item) => item.views ?? []),
 });

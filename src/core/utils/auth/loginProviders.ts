@@ -4,9 +4,16 @@ import type { LoginProvider } from "@/core/registry/defineLoginProviders";
 import { loginProviders as extensionLoginProviders } from "@extensions/loginProviders";
 import { installedLoginProviders } from "@/packages/installedLoginProviders";
 
+// 로그인 뒤 돌아갈 경로를 수단의 주소에 쿼리로 붙인다. 같은 사이트 안의 경로가 아니면 붙이지 않는다.
+const withRedirect = (href: string, redirect?: string) => {
+  if (!redirect || !redirect.startsWith("/") || redirect.startsWith("//")) return href;
+  return `${href}${href.includes("?") ? "&" : "?"}redirect=${encodeURIComponent(redirect)}`;
+};
+
 // 쉬운 설치 패키지와 프로젝트 확장이 등록한 로그인 수단을 모은다.
 // 한 곳이 실패해도 로그인 화면은 열려야 하므로 그 수단만 빼고 나머지를 돌려준다.
-export async function getLoginProviders(): Promise<LoginProvider[]> {
+// 돌려주는 href는 redirect가 이미 붙은 주소이므로 화면은 그대로 링크에 쓴다.
+export async function getLoginProviders(redirect?: string): Promise<LoginProvider[]> {
   const providers = new Map<string, LoginProvider>();
   for (const source of [...installedLoginProviders, ...extensionLoginProviders]) {
     try {
@@ -20,5 +27,5 @@ export async function getLoginProviders(): Promise<LoginProvider[]> {
       console.error("Login Provider Error:", error);
     }
   }
-  return [...providers.values()];
+  return [...providers.values()].map((provider) => ({ ...provider, href: withRedirect(provider.href, redirect) }));
 }

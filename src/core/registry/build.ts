@@ -8,6 +8,7 @@ import type {
   PostSkinOption,
   UserLayoutMap,
   UserLayoutOption,
+  ViewMap,
 } from "@/core/registry/defaultRegistry";
 import type {
   ExtensionRegistryConfig,
@@ -44,6 +45,8 @@ export const buildExtensionRegistry = (
   const adminLayouts: AdminLayoutMap = {};
   const adminDashboards: AdminDashboardMap = {};
   const userLayouts: UserLayoutMap = {};
+  // 같은 key는 나중에 합쳐지는 쪽(프로젝트 확장)의 것이 남는다.
+  const views: ViewMap = {};
   const adminMenus: AdminMenuItem[] = [];
   const adminBreadcrumbs: AdminBreadcrumbRegistry = {};
   const postSkinOptions = new Map<string, PostSkinOption>();
@@ -133,8 +136,13 @@ export const buildExtensionRegistry = (
       register: item.register,
       resetPassword: item.resetPassword,
       placesLoginProviders: item.placesLoginProviders,
+      pageFrame: item.pageFrame,
     };
     userLayoutOptions.set(item.key, toOption(item) as UserLayoutOption);
+  };
+
+  const appendView = (item: NonNullable<ExtensionRegistryConfig["views"]>[number]) => {
+    views[item.key] = item.component;
   };
 
   // 첫 번째 레지스트리가 코어다. 그 뒤에 합쳐지는 것은 프로젝트 확장이다.
@@ -147,12 +155,14 @@ export const buildExtensionRegistry = (
       module.postLayouts?.forEach(appendPostLayout);
       module.adminLayouts?.forEach(appendAdminLayout);
       module.userSkins?.forEach(appendUserSkin);
+      module.views?.forEach(appendView);
     });
 
     source.postSkins?.forEach(appendPostSkin);
     source.postLayouts?.forEach(appendPostLayout);
     source.adminLayouts?.forEach(appendAdminLayout);
     source.userSkins?.forEach(appendUserSkin);
+    source.views?.forEach(appendView);
   });
 
   return {
@@ -166,6 +176,7 @@ export const buildExtensionRegistry = (
     adminLayouts,
     adminDashboards,
     userLayouts,
+    views,
     adminMenus: adminMenus
       .map((menu) => ({
         ...menu,
