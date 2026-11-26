@@ -27,6 +27,7 @@ npm run plextype -- connect [--store <주소>]    # 토큰은 PLEXTYPE_STORE_TOK
 npm run plextype -- list
 npm run plextype -- install <패키지ID>          # DB 변경이 있으면 SQL을 보여 주고 묻는다 (--yes로 묻지 않음)
 npm run plextype -- migrate                     # 설치한 패키지의 DB 변경을 나중에 적용
+npm run plextype -- core                        # 코어를 Store의 새 배포본으로 올리기 (--yes, --overwrite, --install)
 npm run plextype -- remove <패키지ID>
 npm run plextype -- adopt <패키지ID>            # 내 확장으로 가져오기
 npm run plextype -- reference <패키지ID>        # 가져온 패키지의 새 버전을 비교용으로 받기
@@ -61,7 +62,7 @@ npm run plextype -- status | keys | disconnect
 1. `npm run prisma:generate`: 스키마를 합치고 Prisma 클라이언트를 다시 만듭니다. DB는 건드리지 않습니다.
 2. `npm run migrate:deploy`: 아직 적용되지 않은 마이그레이션을 적용합니다.
 
-설치기에서 명령을 실행하는 곳은 이 파일뿐이며, 프로젝트의 npm 스크립트만 실행하고 패키지에서 온 값을 인자로 넘기지 않습니다.
+설치기에서 명령을 실행하는 곳은 이 파일뿐이며, 프로젝트의 npm 스크립트와 코어 업데이트의 `npm install`만 실행하고 패키지나 배포본에서 온 값을 인자로 넘기지 않습니다.
 
 - 1단계에서 실패하면(예: 마이그레이션 이름이 다른 것과 겹침) DB는 그대로이므로, 새로 설치한 패키지는 다시 빼서 설치 전으로 되돌립니다.
 - 2단계에서 실패하면 일부가 적용됐을 수 있어 되돌리지 않습니다. 원인을 고친 뒤 `npm run plextype -- migrate`로 다시 적용하거나 패키지를 제거합니다.
@@ -127,13 +128,42 @@ npm run plextype -- status | keys | disconnect
 **직접 고친 파일 감지**: `src/packages` 안의 파일을 고친 채로 업데이트하려 하면, 설치 전 점검이 고친·지운·추가한 파일을 보여 주고
 덮어쓸지 묻습니다. 덮어쓰면 이전 폴더는 `.plextype/backup`에 남습니다.
 
+## 코어 업데이트
+
+`lib/coreUpdate.ts`가 Store의 코어 배포본으로 코어 파일을 새 버전으로 올립니다. `git merge upstream/main`을 대신하는 길이며,
+원본 저장소(`.github/workflows/sync-to-plextype.yml`이 있는 곳)에서는 거절합니다. 쓰는 사람을 위한 안내는 `/docs/easy-install`에 있습니다.
+
+배포본은 코어 파일 전체의 ZIP과 서명된 정보(파일별 SHA-256이 든 manifest, ZIP 해시, 크기)입니다. 확장 패키지와 같은 키로 서명되고
+같은 방식으로 검증하며, manifest의 `type`이 `plextype-core`라 패키지의 서명을 코어로 쓸 수 없습니다.
+
+- **넣을 수 없는 경로**: `isExcludedFromCore`가 정합니다(확장, 설치된 패키지, `public`, 합쳐 만드는 Prisma 결과물 등).
+  만드는 쪽(`scripts/publish-core.mjs`), 등록받는 쪽(Store), 받는 쪽(설치기)이 이 규칙 하나를 함께 씁니다.
+- **바꿀 파일 정하기**: 지금 버전의 배포본(기준), 새 버전의 배포본, 프로젝트의 파일을 파일 단위로 견줍니다.
+  프로젝트의 파일이 기준과 같으면 새 버전대로 쓰거나 지우고, 기준과 다르지만 새 버전이 건드리지 않았으면 그대로 두며,
+  양쪽이 다 바꿨으면 충돌로 알립니다. 충돌은 사람이 `keep`(내 파일을 두고 새 버전의 내용을 `.plextype/reference/core-<버전>`에 받음)과
+  `overwrite` 가운데 정합니다.
+- **기준이 없을 때**: 지금 버전의 배포본이 Store에 없으면 내용이 다른 파일이 모두 충돌로 잡히고 `overwrite`만 받습니다.
+  새 버전에서 없어진 파일은 알 수 없어 남습니다.
+- **package.json**: `name`과 `version`을 뺀 내용의 해시(`packageJsonCoreSha256`)로 견주고, 쓸 때 프로젝트의 두 값을 남깁니다.
+- **되돌리기**: 바뀌거나 지워지는 파일을 `.plextype/backup/core-<이전 버전>-…`으로 옮긴 뒤 새 파일을 놓습니다. 지우기를 먼저 해서,
+  파일이 같은 이름의 폴더로 바뀌거나 이름의 대소문자만 바뀐 경우에도 새 파일을 놓을 수 있습니다. 쓰는 도중 실패하면 적용 전으로
+  되돌리고, 되돌리지 못한 파일이 있으면 백업 폴더를 남겨 그 위치를 알립니다.
+- **대소문자**: 대소문자를 구분하지 않는 파일 시스템에서 이름의 대소문자만 다른 파일을 같은 파일로 잘못 보지 않도록, 폴더에 실제로 적힌 이름으로
+  파일이 있는지 판단합니다. 폴더 이름의 대소문자만 바뀐 경우는 다루지 않습니다.
+- **알려진 한계**: 폴더였던 자리가 새 버전에서 파일이 되면 적용을 막습니다. 동시에 두 번 적용하는 것을 막는 잠금은 없습니다.
+- **마무리**: 고른 경우에만 `lib/applyDatabase.ts`의 `finishCoreUpdate`가 `npm install`(라이브러리 버전이 달라질 때),
+  `npm run prisma:generate`, `npm run migrate:deploy`(새 코어 마이그레이션이 있을 때)를 차례로 실행합니다. 한 단계가 실패하면 멈추고
+  남은 명령을 알리며, 파일은 새 버전으로 둡니다. 고르지 않으면 할 일로만 알립니다(`coreUpdateNextSteps`).
+  확장 패키지의 npm 라이브러리는 제3자가 정한 것이라 넣지 않지만, 코어의 `package.json`은 Store가 서명한 공식 배포본의 것이라 실행합니다.
+- **하지 않는 것**: 개발 서버 다시 시작, 빌드 확인, 운영 DB 적용.
+
 ## 프로젝트에 남는 것
 
 - `src/packages/<패키지ID>/`: 설치된 소스. `plextype.package.json`이 설치된 패키지 목록의 근거입니다.
 - `src/packages/index.ts`: 설치기가 다시 만드는 등록 목록.
 - `.plextype/store.json`: Store 주소, 액세스 토큰, 서명 검증 키. 소유자만 읽을 수 있게 저장하며 `.gitignore`에 들어 있습니다.
-- `.plextype/reference/`: 가져온 시점의 사본과, 비교용으로 받은 새 버전.
-- `.plextype/backup/`: 업데이트·제거·가져오기 취소 전의 폴더. 자동으로 지우지 않으므로 필요 없으면 직접 지웁니다.
+- `.plextype/reference/`: 가져온 시점의 사본과, 비교용으로 받은 새 버전. 코어 업데이트에서 그대로 둔 파일의 새 버전 내용(`core-<버전>`)도 여기에 둡니다.
+- `.plextype/backup/`: 업데이트·제거·가져오기 취소 전의 폴더와, 코어 업데이트로 바뀌거나 지워진 파일. 자동으로 지우지 않으므로 필요 없으면 직접 지웁니다.
 
 설치된 패키지 목록의 `서명 미검증`은 설치 이후 파일이 바뀌었는지는 검사하지 않는다는 뜻입니다. 서명과 무결성은 설치하는 순간에만 확인합니다.
 
@@ -141,10 +171,11 @@ npm run plextype -- status | keys | disconnect
 
 - 패키지를 제거할 때 그 패키지의 테이블을 지우는 일
 - 설치된 파일이 이후에 바뀌었는지 검사
+- 코어 배포본의 보안 패치 표시
 
 ## 검증
 
 ```sh
-node --test scripts/installer.test.mjs scripts/store-install.test.mjs
+node --test scripts/installer.test.mjs scripts/store-install.test.mjs scripts/core-update.test.mjs
 npx tsc --noEmit --incremental false
 ```

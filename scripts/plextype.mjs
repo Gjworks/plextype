@@ -11,6 +11,9 @@
 //   npm run plextype -- reference <패키지ID>        가져온 패키지의 새 버전을 비교용으로 받기 (.plextype/reference)
 //   npm run plextype -- mark <패키지ID> <버전>      새 버전을 반영한 뒤 가져온 확장의 기준 버전 올리기
 //   npm run plextype -- discard <패키지ID>          가져오기 취소 (고쳐 쓰던 폴더를 .plextype/backup으로 옮김)
+//   npm run plextype -- core                        Plextype 코어를 Store의 새 배포본으로 올리기 (바뀔 내용을 보여 주고 묻는다.
+//                                                   --yes는 묻지 않고 고친 파일을 둔 채 적용, --yes --overwrite는 묻지 않고 충돌하는 파일을 새 버전으로 덮어씀,
+//                                                   --install은 이어서 npm install과 DB 적용까지 실행)
 //   npm run plextype -- keys                        서명 검증 키 다시 받기
 //   npm run plextype -- disconnect                  연결 해제
 //
@@ -26,6 +29,7 @@ if (major < 22 || (major === 22 && minor < 18)) {
 
 const lib = await import('../src/modules/installer/lib/storeInstall.ts');
 const database = await import('../src/modules/installer/lib/applyDatabase.ts');
+const core = await import('../src/modules/installer/lib/coreUpdate.ts');
 const root = process.cwd();
 const [command, ...rest] = process.argv.slice(2);
 
@@ -190,6 +194,48 @@ const commands = {
   async migrate() {
     await applyDatabase();
   },
+  async core() {
+    await requireConnection();
+    const preview = await core.previewCoreUpdate(root);
+    console.log(`Plextype ${preview.currentVersion} → ${preview.version}`);
+    console.log(`  파일 ${preview.writes.length}개를 쓰고 ${preview.removes.length}개를 지웁니다. 바뀌거나 지워지는 파일은 .plextype/backup에 보관합니다.`);
+    if (preview.blockers.length) {
+      throw new lib.InstallerError(`적용할 수 없습니다.\n${preview.blockers.map((reason) => `  - ${reason}`).join('\n')}`);
+    }
+    if (preview.kept.length) console.log(`  직접 고쳤지만 새 버전에서 바뀌지 않아 그대로 두는 파일 ${preview.kept.length}개`);
+    if (preview.dependencies.length) console.log(`  버전이 달라지는 npm 라이브러리: ${preview.dependencies.join(', ')}`);
+    if (preview.migrations.length) console.log(`  새 코어 마이그레이션: ${preview.migrations.join(', ')}`);
+    let conflicts;
+    if (preview.conflicts.length) {
+      if (preview.hasBaseline) {
+        console.log('  직접 고친 파일이 새 버전과 충돌합니다.');
+        for (const file of preview.conflicts) console.log(`    ${file.kind} ${file.path}`);
+        conflicts = rest.includes('--overwrite') || (!rest.includes('--yes') && await ask('  충돌하는 파일을 새 버전으로 덮어쓸까요? n을 누르면 내 파일을 두고 새 버전의 내용을 .plextype/reference에 받습니다.'))
+          ? 'overwrite' : 'keep';
+      } else {
+        console.log(`  Store에 Plextype ${preview.currentVersion}의 배포본이 없어 직접 고친 파일을 가려낼 수 없습니다. 내용이 다른 파일 ${preview.conflicts.length}개가 모두 새 버전으로 바뀝니다.`);
+        // --yes는 고친 파일을 두겠다는 뜻이라 여기서는 통하지 않는다. 모두 바꾸는 것은 직접 답하거나 --overwrite로 밝혀야 한다.
+        const agreed = rest.includes('--overwrite') || (!rest.includes('--yes') && await ask('  모두 바꾸고 적용할까요?'));
+        if (!agreed) throw new lib.InstallerError('적용하지 않았습니다. 묻지 않고 모두 바꾸려면 --yes --overwrite를 붙입니다.');
+        conflicts = 'overwrite';
+      }
+    }
+    if (!(await ask(`${preview.version}을(를) 적용할까요?`))) throw new lib.InstallerError('적용하지 않았습니다.');
+    const result = await core.applyCoreUpdate(root, { version: preview.version, sha256: preview.sha256, conflicts });
+    console.log(`적용했습니다 (${result.previousVersion} → ${result.version}): 파일 ${result.written}개를 쓰고 ${result.removed}개를 지웠습니다.`);
+    if (result.backupPath) console.log(`바뀌기 전의 파일: ${result.backupPath}`);
+    let finished = false;
+    if (rest.includes('--install')) {
+      console.log('npm install과 DB 적용을 실행합니다. 몇 분 걸릴 수 있습니다...');
+      const finish = await database.finishCoreUpdate(root, result);
+      if (finish.ran.length) console.log(`실행했습니다: ${finish.ran.join(', ')}`);
+      if (!finish.completed) {
+        throw new lib.InstallerError(`${finish.remaining[0]} 실행 중 실패했습니다.\n${finish.output}\n\n코어 파일은 ${result.version}으로 바뀐 상태입니다. 원인을 고친 뒤 이어서 실행해주세요: ${finish.remaining.join(', ')}`);
+      }
+      finished = true;
+    }
+    console.log(`\n다음 할 일\n${core.coreUpdateNextSteps(result, { finished }).map((step) => `  - ${step}`).join('\n')}`);
+  },
   async keys() {
     const connection = await lib.refreshStoreKeys(root);
     console.log(`서명 검증 키 ${connection.keys.length}개를 보관했습니다.`);
@@ -201,7 +247,7 @@ const commands = {
 };
 
 if (!command || !commands[command]) {
-  console.log('사용법: npm run plextype -- <connect|status|list|install|migrate|remove|adopt|reference|mark|discard|keys|disconnect>');
+  console.log('사용법: npm run plextype -- <connect|status|list|install|migrate|core|remove|adopt|reference|mark|discard|keys|disconnect>');
   process.exit(command ? 1 : 0);
 }
 

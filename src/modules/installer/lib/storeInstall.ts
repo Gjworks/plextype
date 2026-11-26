@@ -100,17 +100,17 @@ export const PACKAGES_DIRECTORY = "src/packages";
 const CONNECTION_FILE = "store.json";
 
 // Store의 패키지 생성 제한(src/extensions/store/package.ts)과 같은 값. 서명된 패키지는 이 안에 들어온다.
-const MAX_PACKAGE_BYTES = 50 * 1024 * 1024;
+export const MAX_PACKAGE_BYTES = 50 * 1024 * 1024;
 const MAX_EXPANDED_BYTES = 100 * 1024 * 1024;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
-const MAX_ENTRIES = 2000;
+export const MAX_ENTRIES = 2000;
 const REQUEST_TIMEOUT = 20_000;
 
 const PACKAGE_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
-const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+export const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const UUID = /^[A-Za-z0-9_-]{1,128}$/;
 const TOKEN = /^pxt_[a-f0-9]{16}_[a-f0-9]{48}$/;
-const SHA256 = /^[a-f0-9]{64}$/;
+export const SHA256 = /^[a-f0-9]{64}$/;
 const ROUTE_EXPORT = /^(default|GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|generateMetadata|generateStaticParams)$/;
 // 연결 파일에 그대로 적히는 줄이라, Next.js가 정적으로 읽는 설정 선언 한 줄만 받는다.
 const ROUTE_CONFIG = /^export const (dynamic|dynamicParams|revalidate|fetchCache|runtime|preferredRegion|maxDuration) = ("[A-Za-z0-9_-]+"|\d+|true|false);$/;
@@ -119,8 +119,8 @@ const ADAPTER_HEADERS = [
   "// Implementation is owned by Store; route configuration stays statically visible.",
 ];
 
-const sha256 = (value: Buffer) => createHash("sha256").update(value).digest("hex");
-const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value);
+export const sha256 = (value: Buffer) => createHash("sha256").update(value).digest("hex");
+export const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
 export function assertInstallAllowed() {
   if (process.env.NODE_ENV === "production") {
@@ -151,9 +151,9 @@ export function normalizeStoreUrl(input: string) {
 }
 
 // 자료를 받는 주소가 아닌 연결용 주소(목록, 키, 토큰 확인)가 없다는 것은 그 사이트가 쉬운 설치를 지원하지 않는다는 뜻이다.
-const UNSUPPORTED_STORE = "이 주소의 Store는 쉬운 설치 연결을 지원하지 않습니다. Store 주소를 확인해주세요.";
+export const UNSUPPORTED_STORE = "이 주소의 Store는 쉬운 설치 연결을 지원하지 않습니다. Store 주소를 확인해주세요.";
 
-async function storeRequest(storeUrl: string, pathname: string, token?: string, notFound = "Store에서 자료를 찾지 못했습니다.") {
+export async function storeRequest(storeUrl: string, pathname: string, token?: string, notFound = "Store에서 자료를 찾지 못했습니다.") {
   let response: Response;
   try {
     response = await fetch(storeUrl + pathname, {
@@ -172,13 +172,13 @@ async function storeRequest(storeUrl: string, pathname: string, token?: string, 
   return response;
 }
 
-async function storeJson(storeUrl: string, pathname: string, token?: string, notFound?: string) {
+export async function storeJson(storeUrl: string, pathname: string, token?: string, notFound?: string) {
   const response = await storeRequest(storeUrl, pathname, token, notFound);
   try { return await response.json() as unknown; }
   catch { throw new InstallerError("Store 응답을 읽지 못했습니다. Store 주소가 맞는지 확인해주세요."); }
 }
 
-const statePath = (root: string, ...parts: string[]) => path.join(root, STATE_DIRECTORY, ...parts);
+export const statePath = (root: string, ...parts: string[]) => path.join(root, STATE_DIRECTORY, ...parts);
 
 function parseKeys(value: unknown): StoreKey[] {
   if (!Array.isArray(value)) return [];
@@ -297,7 +297,7 @@ export async function readPlatformVersion(root: string) {
 }
 
 // 패키지 안의 경로 한 조각이 프로젝트 밖으로 나가거나 숨김·비밀 파일을 가리키지 않는지 본다.
-function isSafeRelativePath(value: string) {
+export function isSafeRelativePath(value: string) {
   if (!value || value.length > 240 || /[\\:\x00-\x1f]/.test(value) || value.startsWith("/")) return false;
   return value.split("/").every((part) => (
     part && part !== "." && part !== ".." && !/[. ]$/.test(part) &&
@@ -356,7 +356,7 @@ function parseMetadata(value: unknown, productUuid: string): PackageMetadata {
 }
 
 // Store(src/extensions/store/package.ts)가 서명할 때 쓰는 것과 같은 직렬화. 키 순서와 무관하게 같은 바이트가 나온다.
-const canonical = (value: unknown): string => {
+export const canonical = (value: unknown): string => {
   if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
   if (value !== null && typeof value === "object") {
     const object = value as Record<string, unknown>;
@@ -365,7 +365,10 @@ const canonical = (value: unknown): string => {
   return JSON.stringify(value);
 };
 
-export function verifyPackageSignature(metadata: PackageMetadata, keys: StoreKey[]) {
+// 서명 대상은 manifest, ZIP 해시, 크기다. 확장 패키지와 코어 배포본(lib/coreUpdate.ts)이 같은 방식으로 서명된다.
+export type SignedMetadata = { manifest: unknown; sha256: string; size: number; signature: { algorithm: string; keyId: string; value: string } };
+
+export function verifyPackageSignature(metadata: SignedMetadata, keys: StoreKey[]) {
   if (metadata.signature.algorithm !== "Ed25519") return false;
   const key = keys.find((item) => item.keyId === metadata.signature.keyId);
   if (!key) return false;
@@ -474,7 +477,7 @@ function readPackageRoutes(packageId: string, files: Map<string, Buffer>): Route
   return routes;
 }
 
-async function readText(filePath: string) {
+export async function readText(filePath: string) {
   try { return await fs.readFile(filePath, "utf8"); }
   catch { return null; }
 }
@@ -641,7 +644,7 @@ async function loadVerifiedPackage(root: string, productUuid: string, options: {
   return { metadata, manifest, files, routes, installed, target };
 }
 
-const MIGRATION_FILE = /(?:^|\/)prisma\/migrations\/(\d{14}_[A-Za-z0-9_-]+)\/migration\.sql$/;
+export const MIGRATION_FILE = /(?:^|\/)prisma\/migrations\/(\d{14}_[A-Za-z0-9_-]+)\/migration\.sql$/;
 // 화면에 보여 줄 SQL 길이. 넘는 부분은 잘라서 보여 주고 잘렸다고 알린다.
 const MAX_PREVIEW_SQL = 20_000;
 

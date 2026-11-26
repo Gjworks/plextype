@@ -34,6 +34,16 @@ export type InstallerCatalogItem = {
 // Store에서 받은 뒤 src/extensions로 옮겨 직접 고쳐 쓰는 패키지.
 export type InstallerAdoptedPackage = { packageId: string; productUuid: string; version: string; path: string; adoptedAt: string };
 
+// Store의 코어 배포본으로 코어를 올릴 수 있는지.
+export type InstallerCoreStatus = {
+  // 코어의 원본 저장소인지. 원본은 배포본을 만드는 쪽이라 받지 않는다.
+  source: boolean;
+  // Store에 있는 가장 새 코어 버전. 배포본이 없거나 목록을 받지 못했으면 null.
+  latestVersion: string | null;
+  updateAvailable: boolean;
+  error: string | null;
+};
+
 export type InstallerState = {
   success: boolean;
   message: string;
@@ -48,6 +58,7 @@ export type InstallerState = {
     catalog: InstallerCatalogItem[];
     // 목록을 받지 못한 이유. 연결과 무관하게 설치된 패키지 화면은 보여 준다.
     catalogError: string | null;
+    core: InstallerCoreStatus;
   };
 };
 
@@ -70,3 +81,23 @@ export type InstallerPackagePreview = {
 };
 
 export type InstallerPreviewResult = InstallerActionResult & { preview?: InstallerPackagePreview };
+
+export type InstallerCoreConflictKind = "modified" | "deleted" | "removed" | "occupied";
+
+export type InstallerCorePreview = {
+  currentVersion: string;
+  version: string;
+  sha256: string;
+  size: number;
+  hasBaseline: boolean;
+  // 적용을 막는 사유. 하나라도 있으면 적용할 수 없다.
+  blockers: string[];
+  writes: { path: string; change: "added" | "changed" }[];
+  removes: string[];
+  conflicts: { path: string; kind: InstallerCoreConflictKind }[];
+  kept: string[];
+  dependencies: string[];
+  migrations: string[];
+};
+
+export type InstallerCorePreviewResult = InstallerActionResult & { preview?: InstallerCorePreview };

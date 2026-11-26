@@ -22,8 +22,10 @@ import {
   refreshStoreKeys,
   uninstallStorePackage,
 } from "../lib/storeInstall";
-import { applyPackageDatabase, describeDatabaseFailure, syncPackageSchema } from "../lib/applyDatabase";
-import type { InstallerActionResult, InstallerCatalogItem, InstallerPreviewResult, InstallerState } from "./_type";
+import { applyPackageDatabase, describeDatabaseFailure, finishCoreUpdate, syncPackageSchema } from "../lib/applyDatabase";
+import { applyCoreUpdate, coreUpdateNextSteps, fetchCoreReleases, isCoreSource, previewCoreUpdate } from "../lib/coreUpdate";
+import { compareVersions } from "../lib/storeInstall";
+import type { InstallerActionResult, InstallerCatalogItem, InstallerCorePreviewResult, InstallerCoreStatus, InstallerPreviewResult, InstallerState } from "./_type";
 
 const isAdmin = async () => {
   const session = await getUserSessionAction();
@@ -66,6 +68,15 @@ export async function getInstallerOverviewAdminAction(): Promise<InstallerState>
     } catch (error) {
       catalogError = error instanceof InstallerError ? error.message : "Store 자료 목록을 받지 못했습니다.";
     }
+    const core: InstallerCoreStatus = { source: await isCoreSource(root), latestVersion: null, updateAvailable: false, error: null };
+    if (!core.source) {
+      try {
+        core.latestVersion = (await fetchCoreReleases(connection?.storeUrl || DEFAULT_STORE_URL))[0]?.version ?? null;
+        core.updateAvailable = Boolean(core.latestVersion && platformVersion && compareVersions(core.latestVersion, platformVersion) > 0);
+      } catch (error) {
+        core.error = error instanceof InstallerError ? error.message : "코어 배포본 목록을 받지 못했습니다.";
+      }
+    }
     return {
       success: true,
       message: "패키지 정보를 확인했습니다.",
@@ -85,6 +96,7 @@ export async function getInstallerOverviewAdminAction(): Promise<InstallerState>
         defaultStoreUrl: DEFAULT_STORE_URL,
         catalog,
         catalogError,
+        core,
       },
     };
   } catch {
@@ -217,5 +229,44 @@ export async function markAdoptedVersionAdminAction(packageId: string, version: 
   return run(async () => {
     const result = await markAdoptedVersion(process.cwd(), packageId, version);
     return `${result.packageId}의 기준 버전을 ${result.version}으로 올렸습니다.`;
+  });
+}
+
+// 코어를 올리기 전에 바뀔 파일과 충돌을 화면에 보여 주기 위한 조회. 아무것도 바꾸지 않는다.
+export async function previewCoreUpdateAdminAction(): Promise<InstallerCorePreviewResult> {
+  if (!(await isAdmin())) return { success: false, message: "관리자 권한이 필요합니다." };
+  try {
+    return { success: true, message: "", preview: await previewCoreUpdate(process.cwd()) };
+  } catch (error) {
+    if (error instanceof InstallerError) return { success: false, message: error.message };
+    console.error("[installer]", error);
+    return { success: false, message: "처리 중 오류가 발생했습니다. 서버 로그를 확인해주세요." };
+  }
+}
+
+// 미리 본 코어 배포본을 적용한다. conflicts는 직접 고친 파일이 새 버전과 충돌할 때 둘지("keep") 덮어쓸지("overwrite")다.
+// finish가 true면 이어서 npm install, Prisma 클라이언트 생성, 새 코어 마이그레이션의 개발 DB 적용까지 실행한다.
+// 화면은 그렇게 하겠다고 고른 경우에만 true로 부른다. 고르지 않으면 할 일로만 알린다.
+export async function applyCoreUpdateAdminAction(
+  options: { version: string; sha256: string; conflicts?: "keep" | "overwrite"; finish?: boolean },
+): Promise<InstallerActionResult> {
+  return run(async () => {
+    const root = process.cwd();
+    const result = await applyCoreUpdate(root, { version: options.version, sha256: options.sha256, conflicts: options.conflicts });
+    const summary = [
+      `Plextype을 ${result.previousVersion}에서 ${result.version}으로 올렸습니다. 파일 ${result.written}개를 쓰고 ${result.removed}개를 지웠습니다.`,
+      result.backupPath ? `바뀌기 전의 파일은 ${result.backupPath}에 보관했습니다.` : "",
+    ].filter(Boolean).join(" ");
+    const nextSteps = (finished: boolean) => `다음 할 일\n${coreUpdateNextSteps(result, { finished }).map((step) => `- ${step}`).join("\n")}`;
+    if (!options.finish) return `${summary}\n\n${nextSteps(false)}`;
+
+    const finish = await finishCoreUpdate(root, result);
+    if (finish.completed) return `${summary} 이어서 실행했습니다: ${finish.ran.join(", ")}.\n\n${nextSteps(true)}`;
+    // 파일은 이미 새 버전이다. 되돌리지 않고, 멈춘 자리와 이어서 실행할 명령을 알린다.
+    throw new InstallerError([
+      `${summary} 그 뒤 ${finish.remaining[0]} 실행 중 실패했습니다.`,
+      finish.output,
+      `코어 파일은 ${result.version}으로 바뀐 상태입니다. 원인을 고친 뒤 터미널에서 이어서 실행해주세요: ${finish.remaining.join(", ")}`,
+    ].filter(Boolean).join("\n\n"));
   });
 }

@@ -25,10 +25,12 @@ import {
   uninstallStorePackageAdminAction,
 } from "../actions/installer.action";
 import type { InstallerActionResult, InstallerCatalogItem, InstallerPackagePreview, InstallerState } from "../actions/_type";
+import InstallerCorePanel from "./InstallerCorePanel";
 
 const tabs = [
   { id: "catalog", label: "Store 자료", href: "/admin/installer" },
   { id: "installed", label: "설치된 패키지", href: "/admin/installer/installed" },
+  { id: "core", label: "코어 업데이트", href: "/admin/installer/core" },
   { id: "connection", label: "연결 관리", href: "/admin/installer/connection" },
 ];
 
@@ -305,6 +307,17 @@ export default function InstallerAdmin({ state, view }: { state: InstallerState;
                 </div>
               )}
             </AdminPanel>
+          ) : active === "core" ? (
+            <InstallerCorePanel
+              core={data.core}
+              platformVersion={data.platformVersion}
+              storeUrl={data.connection?.storeUrl || data.defaultStoreUrl}
+              isDevelopment={isDevelopment}
+              storeConnected={data.storeConnected}
+              pending={pending}
+              busy={busy}
+              run={run}
+            />
           ) : active === "connection" ? (
             <AdminPanel title="Store 연결 상태">
               <dl className="divide-y divide-gray-100 text-sm dark:divide-dark-800">

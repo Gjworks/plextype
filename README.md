@@ -217,10 +217,16 @@ src/extensions/<기능>/prisma/          확장
 1. `src/extensions`, `src/app/(extensions)`, `src/app/(pages)`, `.github`, `AGENTS.md` 등 전용 파일을 이력에서 걸러냅니다.
 2. `scripts/prepare-plextype.mjs`가 확장에 연결된 라우트 파일을 지우고 코어 기본 화면을 채웁니다.
 3. 걸러낸 상태로 설치와 빌드가 되는지 검사한 뒤 `Gjworks/plextype`에 반영합니다.
+4. 같은 파일로 코어 배포본을 만들어 Store에 올립니다(`scripts/publish-core.mjs`). 쉬운 설치의 코어 업데이트가 받는 파일이며, Actions secret `STORE_CORE_PUBLISH_TOKEN`이 없으면 건너뜁니다.
 
 `prepare-plextype.mjs`는 `src/extensions`가 남아 있으면 중단하므로 원본 체크아웃에서는 실행되지 않습니다.
 
 ## 코어 업데이트 받기
+
+방법은 둘이고, 프로젝트마다 하나로 정합니다.
+
+- **쉬운 설치**: 관리자의 쉬운 설치 > 코어 업데이트 탭이나 `npm run plextype -- core`로 Store의 코어 배포본을 받습니다. git의 `upstream`이 필요 없습니다. 동작은 `src/modules/installer/README.md`의 "코어 업데이트"에 있습니다.
+- **git 병합**: 아래처럼 배포판 저장소를 병합합니다.
 
 배포판에서 시작한 프로젝트는 자기 저장소를 `origin`, 배포판을 `upstream`으로 두고 코어 변경을 병합합니다.
 
@@ -233,7 +239,7 @@ npm install
 npm run prisma:generate
 ```
 
-`tagOpt --no-tags`는 Plextype의 릴리스 태그가 프로젝트 태그와 섞이지 않게 합니다. 받은 코어의 버전은 `src/core/plextype.json`에서 확인합니다. 이 설정 전에 받아 둔 Plextype 태그(`v0.5.0` 이후)가 남아 있으면 앱 버전이 같은 번호에 도달할 때 태그 생성이 실패하므로, 받아 둔 태그를 지우거나 앱 버전을 `1.0.0`부터 시작합니다.
+`tagOpt --no-tags`는 Plextype의 릴리스 태그가 프로젝트 태그와 섞이지 않게 합니다. 받은 코어의 버전은 `src/core/plextype.json`에서 확인합니다. 이 설정 전에 받아 둔 Plextype 태그(`v0.5.0` 이후)가 남아 있으면 앱 버전이 같은 번호에 도달할 때 태그 생성이 실패하므로, 받아 둔 태그를 `git tag -d <태그>`로 지웁니다. 앱 버전을 높은 번호에서 시작하는 것으로는 피할 수 없습니다: Plextype의 버전도 계속 올라갑니다.
 
 병합 뒤 새 마이그레이션이 있으면 개발 DB에는 `npm run migrate:dev`, 운영 DB에는 배포 과정의 `prisma migrate deploy`로 적용합니다. 코어 파일을 직접 고친 프로젝트는 이 병합에서 충돌이 나므로 변경은 확장에 둡니다.
 
