@@ -127,18 +127,3 @@ export type NotificationBroadcastRecipient = Prisma.NotificationBroadcastRecipie
  * 
  */
 export type ApiToken = Prisma.ApiTokenModel
-/**
- * Model ServiceDeployInstance
- * 
- */
-export type ServiceDeployInstance = Prisma.ServiceDeployInstanceModel
-/**
- * Model ServiceDeployJob
- * 
- */
-export type ServiceDeployJob = Prisma.ServiceDeployJobModel
-/**
- * Model SocialLoginAccount
- * 
- */
-export type SocialLoginAccount = Prisma.SocialLoginAccountModel
