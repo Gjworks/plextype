@@ -14,6 +14,7 @@
 //   npm run plextype -- core                        Plextype 코어를 Store의 새 배포본으로 올리기 (바뀔 내용을 보여 주고 묻는다.
 //                                                   --yes는 묻지 않고 고친 파일을 둔 채 적용, --yes --overwrite는 묻지 않고 충돌하는 파일을 새 버전으로 덮어씀,
 //                                                   --install은 이어서 npm install과 DB 적용까지 실행)
+//   npm run plextype -- agents                      프로젝트 루트의 AGENTS.md를 만들거나, 그 안의 Plextype 규칙 구역을 지금 코어의 내용으로 갱신
 //   npm run plextype -- keys                        서명 검증 키 다시 받기
 //   npm run plextype -- disconnect                  연결 해제
 //
@@ -30,6 +31,7 @@ if (major < 22 || (major === 22 && minor < 18)) {
 const lib = await import('../src/modules/installer/lib/storeInstall.ts');
 const database = await import('../src/modules/installer/lib/applyDatabase.ts');
 const core = await import('../src/modules/installer/lib/coreUpdate.ts');
+const agents = await import('../src/modules/installer/lib/agentsFile.ts');
 const root = process.cwd();
 const [command, ...rest] = process.argv.slice(2);
 
@@ -205,6 +207,8 @@ const commands = {
     if (preview.kept.length) console.log(`  직접 고쳤지만 새 버전에서 바뀌지 않아 그대로 두는 파일 ${preview.kept.length}개`);
     if (preview.dependencies.length) console.log(`  버전이 달라지는 npm 라이브러리: ${preview.dependencies.join(', ')}`);
     if (preview.migrations.length) console.log(`  새 코어 마이그레이션: ${preview.migrations.join(', ')}`);
+    if (preview.agents === 'created') console.log('  AGENTS.md가 없어 새로 만듭니다.');
+    if (preview.agents === 'updated') console.log('  AGENTS.md의 Plextype 규칙 구역을 새 버전의 내용으로 바꿉니다.');
     let conflicts;
     if (preview.conflicts.length) {
       if (preview.hasBaseline) {
@@ -224,6 +228,7 @@ const commands = {
     const result = await core.applyCoreUpdate(root, { version: preview.version, sha256: preview.sha256, conflicts });
     console.log(`적용했습니다 (${result.previousVersion} → ${result.version}): 파일 ${result.written}개를 쓰고 ${result.removed}개를 지웠습니다.`);
     if (result.backupPath) console.log(`바뀌기 전의 파일: ${result.backupPath}`);
+    if (result.agents && result.agents.status !== 'manual' && agents.describeAgentsFile(result.agents)) console.log(agents.describeAgentsFile(result.agents));
     let finished = false;
     if (rest.includes('--install')) {
       console.log('npm install과 DB 적용을 실행합니다. 몇 분 걸릴 수 있습니다...');
@@ -236,6 +241,12 @@ const commands = {
     }
     console.log(`\n다음 할 일\n${core.coreUpdateNextSteps(result, { finished }).map((step) => `  - ${step}`).join('\n')}`);
   },
+  async agents() {
+    const rules = await agents.readAgentsRules(root);
+    if (rules === null) throw new lib.InstallerError(`이 코어에는 공통 규칙 파일(${agents.AGENTS_RULES_FILE})이 없습니다. 코어를 먼저 올려주세요.`);
+    const result = await agents.syncAgentsFile(root, rules, { reference: 'agents', backup: '.plextype/backup/agents' });
+    console.log(agents.describeAgentsFile(result) || 'AGENTS.md의 Plextype 규칙 구역이 이미 최신입니다.');
+  },
   async keys() {
     const connection = await lib.refreshStoreKeys(root);
     console.log(`서명 검증 키 ${connection.keys.length}개를 보관했습니다.`);
@@ -247,7 +258,7 @@ const commands = {
 };
 
 if (!command || !commands[command]) {
-  console.log('사용법: npm run plextype -- <connect|status|list|install|migrate|core|remove|adopt|reference|mark|discard|keys|disconnect>');
+  console.log('사용법: npm run plextype -- <connect|status|list|install|migrate|core|agents|remove|adopt|reference|mark|discard|keys|disconnect>');
   process.exit(command ? 1 : 0);
 }
 

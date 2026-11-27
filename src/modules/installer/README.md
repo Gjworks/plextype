@@ -28,6 +28,7 @@ npm run plextype -- list
 npm run plextype -- install <패키지ID>          # DB 변경이 있으면 SQL을 보여 주고 묻는다 (--yes로 묻지 않음)
 npm run plextype -- migrate                     # 설치한 패키지의 DB 변경을 나중에 적용
 npm run plextype -- core                        # 코어를 Store의 새 배포본으로 올리기 (--yes, --overwrite, --install)
+npm run plextype -- agents                      # AGENTS.md를 만들거나 그 안의 Plextype 규칙 구역 갱신
 npm run plextype -- remove <패키지ID>
 npm run plextype -- adopt <패키지ID>            # 내 확장으로 가져오기
 npm run plextype -- reference <패키지ID>        # 가져온 패키지의 새 버전을 비교용으로 받기
@@ -156,6 +157,19 @@ npm run plextype -- status | keys | disconnect
   남은 명령을 알리며, 파일은 새 버전으로 둡니다. 고르지 않으면 할 일로만 알립니다(`coreUpdateNextSteps`).
   확장 패키지의 npm 라이브러리는 제3자가 정한 것이라 넣지 않지만, 코어의 `package.json`은 Store가 서명한 공식 배포본의 것이라 실행합니다.
 - **하지 않는 것**: 개발 서버 다시 시작, 빌드 확인, 운영 DB 적용.
+
+### AGENTS.md
+
+`lib/agentsFile.ts`가 프로젝트 루트의 `AGENTS.md`에 Plextype의 공통 규칙을 넣고 최신으로 유지합니다. 코어 업데이트를 적용할 때와
+`npm run plextype -- agents`에서 부릅니다.
+
+- **원본**: 코어 파일 `src/core/agents/plextype-rules.md` 하나입니다. 문서 사이트의 예시도 이 파일에서 만들어집니다(`src/extensions/docs/markdown.tsx`의 `{{AGENTS.md}}`).
+  규칙을 고칠 때는 이 파일만 고칩니다.
+- **바꾸는 범위**: `<!-- plextype:rules:begin -->`과 `<!-- plextype:rules:end -->` 사이뿐입니다. `AGENTS.md`는 프로젝트의 파일이라
+  코어 업데이트의 파일 견주기에 넣지 않고, 표시 밖의 내용(첫 줄의 언어 규칙 포함)은 건드리지 않습니다.
+- **파일이 없으면** 언어 규칙, 구역, 프로젝트 규칙을 쓸 자리로 된 파일을 만듭니다.
+- **표시가 없거나 짝이 맞지 않으면** 어디까지가 공통 규칙인지 알 수 없어 그대로 두고, 최신 내용의 파일을 `.plextype/reference/…/AGENTS.md`에 받아 둔 뒤 위치를 알립니다.
+- 구역을 바꾸기 전의 파일은 `.plextype/backup`에 남깁니다.
 
 ## 프로젝트에 남는 것
 

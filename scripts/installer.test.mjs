@@ -85,9 +85,10 @@ test('admin action checks authorization before touching the filesystem and hides
       isCoreSource: async () => source,
       fetchCoreReleases: async () => [{ version: '0.12.0', size: 1, releasedAt: '' }],
       previewCoreUpdate: async () => { throw new InstallerError('먼저 Store에 연결해주세요.'); },
-      applyCoreUpdate: async () => { coreApplies++; if (coreApplies === 2) throw Error('/private/secret'); return { version: '0.12.0', previousVersion: '0.11.2', written: 3, removed: 1, backupPath: '.plextype/backup/core', keptConflicts: [], referencePath: null, dependencies: ['next'], migrations: [] }; },
+      applyCoreUpdate: async () => { coreApplies++; if (coreApplies === 2) throw Error('/private/secret'); return { version: '0.12.0', previousVersion: '0.11.2', written: 3, removed: 1, backupPath: '.plextype/backup/core', keptConflicts: [], referencePath: null, dependencies: ['next'], migrations: [], agents: { status: 'created', referencePath: null } }; },
       coreUpdateNextSteps: (result, { finished = false } = {}) => (finished ? ['서버 재시작'] : ['npm install']),
     },
+    '../lib/agentsFile': { describeAgentsFile: result => (result.status === 'created' ? 'AGENTS.md를 만들었습니다.' : '') },
     '../lib/applyDatabase': {
       applyPackageDatabase: async () => { applies++; return database; },
       finishCoreUpdate: async () => { finishes++; return finish; },
@@ -145,7 +146,7 @@ test('admin action checks authorization before touching the filesystem and hides
   assert.equal(coreApplies, 0);
   authorized = true;
   assert.match((await actions.previewCoreUpdateAdminAction()).message, /먼저 Store에 연결/);
-  assert.match((await actions.applyCoreUpdateAdminAction(options)).message, /0\.11\.2에서 0\.12\.0으로[\s\S]*\.plextype\/backup\/core[\s\S]*다음 할 일\n- npm install/);
+  assert.match((await actions.applyCoreUpdateAdminAction(options)).message, /0\.11\.2에서 0\.12\.0으로[\s\S]*\.plextype\/backup\/core[\s\S]*AGENTS\.md를 만들었습니다\.[\s\S]*다음 할 일\n- npm install/);
   assert.doesNotMatch((await actions.applyCoreUpdateAdminAction(options)).message, /secret/);
   // npm install과 DB 적용은 고른 경우에만 실행한다. 실패하면 파일이 새 버전으로 남았다는 것과 이어서 실행할 명령을 알린다.
   assert.equal(finishes, 0);
@@ -170,7 +171,7 @@ test('module is registered in core and does not import Store implementation', ()
   assert.deepEqual(commands.match(/spawn\([^)]*\)/g), ['spawn("npm", args, { cwd: root, env: process.env, stdio: ["ignore", "pipe", "pipe"] })']);
   assert.deepEqual(commands.match(/\bnpm\(root, [^)]*\)/g), ['npm(root, ["run", "--silent", script], STEP_TIMEOUT)', 'npm(root, INSTALL_ARGS, INSTALL_TIMEOUT)']);
   assert.match(commands, /const INSTALL_ARGS = \["install", "--no-audit", "--no-fund"\];/);
-  for (const file of ['index.tsx', 'registry.tsx', 'actions/installer.action.ts', 'actions/inventory.query.ts', 'tpl/InstallerAdmin.tsx', 'tpl/InstallerCorePanel.tsx', 'lib/storeInstall.ts', 'lib/coreUpdate.ts']) {
+  for (const file of ['index.tsx', 'registry.tsx', 'actions/installer.action.ts', 'actions/inventory.query.ts', 'tpl/InstallerAdmin.tsx', 'tpl/InstallerCorePanel.tsx', 'lib/storeInstall.ts', 'lib/coreUpdate.ts', 'lib/agentsFile.ts']) {
     // import 문만 본다. 설치기는 연결 파일이 가리키는 경로를 문자열로 비교하므로 본문에는 확장 경로가 나올 수 있다.
     assert.doesNotMatch(read(`../src/modules/installer/${file}`), /^\s*(import|export)\b[^;]*from ["']@\/?extensions|child_process/m);
   }

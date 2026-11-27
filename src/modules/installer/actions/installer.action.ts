@@ -24,6 +24,7 @@ import {
 } from "../lib/storeInstall";
 import { applyPackageDatabase, describeDatabaseFailure, finishCoreUpdate, syncPackageSchema } from "../lib/applyDatabase";
 import { applyCoreUpdate, coreUpdateNextSteps, fetchCoreReleases, isCoreSource, previewCoreUpdate } from "../lib/coreUpdate";
+import { describeAgentsFile } from "../lib/agentsFile";
 import { compareVersions } from "../lib/storeInstall";
 import type { InstallerActionResult, InstallerCatalogItem, InstallerCorePreviewResult, InstallerCoreStatus, InstallerPreviewResult, InstallerState } from "./_type";
 
@@ -256,6 +257,8 @@ export async function applyCoreUpdateAdminAction(
     const summary = [
       `Plextype을 ${result.previousVersion}에서 ${result.version}으로 올렸습니다. 파일 ${result.written}개를 쓰고 ${result.removed}개를 지웠습니다.`,
       result.backupPath ? `바뀌기 전의 파일은 ${result.backupPath}에 보관했습니다.` : "",
+      // 표시가 없어 그대로 둔 경우는 사람이 할 일이라 다음 할 일에서 알린다.
+      result.agents && result.agents.status !== "manual" ? describeAgentsFile(result.agents) : "",
     ].filter(Boolean).join(" ");
     const nextSteps = (finished: boolean) => `다음 할 일\n${coreUpdateNextSteps(result, { finished }).map((step) => `- ${step}`).join("\n")}`;
     if (!options.finish) return `${summary}\n\n${nextSteps(false)}`;

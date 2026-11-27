@@ -40,6 +40,8 @@ import {
   verifyPackageSignature,
 } from "./storeInstall.ts";
 import type { SignedMetadata } from "./storeInstall.ts";
+import { AGENTS_RULES_FILE, describeAgentsFile, previewAgentsFile, syncAgentsFile } from "./agentsFile.ts";
+import type { AgentsFileResult, AgentsFileStatus } from "./agentsFile.ts";
 
 export type CoreManifest = {
   schemaVersion: 1;
@@ -180,6 +182,8 @@ export type CoreUpdatePreview = {
   dependencies: string[];
   // 새로 들어오는 코어 마이그레이션. DB에는 적용하지 않는다.
   migrations: string[];
+  // 적용하면 프로젝트 루트의 AGENTS.md가 어떻게 되는지(lib/agentsFile.ts). 공통 규칙 파일이 없는 배포본이면 null.
+  agents: AgentsFileStatus | null;
 };
 
 export type CoreUpdateResult = {
@@ -193,6 +197,8 @@ export type CoreUpdateResult = {
   referencePath: string | null;
   dependencies: string[];
   migrations: string[];
+  // AGENTS.md에 한 일. 공통 규칙 파일이 없는 배포본이면 null.
+  agents: AgentsFileResult | null;
 };
 
 type Conflict = { path: string; kind: CoreConflictKind; content: Buffer | null };
@@ -372,6 +378,8 @@ async function planCoreUpdate(root: string, requestedVersion?: string) {
     currentVersion, metadata, hasBaseline: Boolean(baseline), blockers, writes, removes, conflicts, kept,
     dependencies: changedDependencies(localPackageJson, contents.get(PACKAGE_JSON)!),
     migrations: migrations.sort(),
+    // AGENTS.md의 구역은 새 버전의 공통 규칙으로 채운다. 그 파일을 직접 고쳐 남기더라도 규칙은 배포본의 것을 쓴다.
+    agentsRules: contents.get(AGENTS_RULES_FILE)?.toString("utf8") ?? null,
   };
 }
 
@@ -390,6 +398,7 @@ export async function previewCoreUpdate(root: string, version?: string): Promise
     kept: plan.kept,
     dependencies: plan.dependencies,
     migrations: plan.migrations,
+    agents: plan.agentsRules === null ? null : await previewAgentsFile(root, plan.agentsRules),
   };
 }
 
@@ -489,6 +498,11 @@ export async function applyCoreUpdate(
   } catch {
     referenced = [];
   }
+  // AGENTS.md도 코어 파일과 같은 처지다: 쓰지 못해도 적용을 실패로 돌리지 않는다.
+  const agents = plan.agentsRules === null ? null : await syncAgentsFile(root, plan.agentsRules, {
+    reference: `core-${version}`,
+    backup: relativeToRoot(root, backup),
+  }).catch(() => null);
   // 그대로 둔 파일의 변경은 프로젝트에 들어오지 않았다. 그 파일에서 비롯된 npm install과 마이그레이션은 할 일에서 뺀다.
   const kept = new Set(keptConflicts.map((item) => item.path));
   const migrations = plan.migrations.filter((name) => !keptConflicts.some((item) => MIGRATION_FILE.exec(item.path)?.[1] === name));
@@ -498,17 +512,18 @@ export async function applyCoreUpdate(
     written: operations.filter((item) => item.content !== null).length,
     removed: operations.filter((item) => item.content === null).length,
     keptConflicts: keptConflicts.map((item) => item.path),
-    backupPath: backedUp.length > 0 ? relativeToRoot(root, backup) : null,
+    backupPath: backedUp.length > 0 || agents?.status === "updated" ? relativeToRoot(root, backup) : null,
     referencePath: referenced.length > 0 ? relativeToRoot(root, reference) : null,
     dependencies: kept.has(PACKAGE_JSON) ? [] : plan.dependencies,
     migrations,
+    agents,
   };
 }
 
 // 적용한 뒤 사람이 할 일. npm install과 DB 적용은 고른 경우에만 설치기가 실행하며(lib/applyDatabase.ts의 finishCoreUpdate),
 // 실행을 마쳤으면 finished로 알려 그 명령들을 목록에서 뺀다.
 export function coreUpdateNextSteps(
-  result: Pick<CoreUpdateResult, "version" | "dependencies" | "migrations" | "keptConflicts" | "referencePath">,
+  result: Pick<CoreUpdateResult, "version" | "dependencies" | "migrations" | "keptConflicts" | "referencePath" | "agents">,
   { finished = false } = {},
 ) {
   const commands = finished ? [] : [
@@ -518,6 +533,7 @@ export function coreUpdateNextSteps(
   ];
   return [
     result.keptConflicts.length > 0 ? `그대로 둔 파일 ${result.keptConflicts.length}개에 새 버전의 변경을 직접 반영합니다. 새 버전의 내용은 ${result.referencePath ?? `${STATE_DIRECTORY}/reference`}에 있습니다.` : "",
+    result.agents?.status === "manual" ? describeAgentsFile(result.agents) : "",
     ...commands,
     "개발 서버를 다시 시작하고 npm run build로 확인합니다.",
     `확인한 뒤 "chore(core): Plextype ${result.version}" 메시지로 커밋합니다.`,

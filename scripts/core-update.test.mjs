@@ -280,6 +280,47 @@ test('work that belongs to files I kept is not listed as something to run', asyn
   assert.ok(!core.coreUpdateNextSteps(result).includes('npm install'));
 });
 
+test('AGENTS.md is created when missing, refreshed inside its markers, and left alone without them', async t => {
+  const agents = await import('../src/modules/installer/lib/agentsFile.ts');
+  const base = coreFiles('0.11.2', {}, { [agents.AGENTS_RULES_FILE]: '# 규칙\n\n- 옛 규칙\n' });
+  const next = coreFiles('0.12.0', {}, { [agents.AGENTS_RULES_FILE]: '# 규칙\n\n- 새 규칙\n' });
+  const apply = async local => {
+    const project = await setup(t, { base, next, local });
+    const preview = await core.previewCoreUpdate(project.root);
+    return { ...project, preview, result: await core.applyCoreUpdate(project.root, { version: preview.version, sha256: preview.sha256 }) };
+  };
+
+  // 없으면 만든다. 첫 줄은 언어 규칙이고, 공통 규칙은 표시 사이에 들어간다.
+  const created = await apply({});
+  assert.equal(created.preview.agents, 'created');
+  assert.deepEqual(created.result.agents, { status: 'created', referencePath: null });
+  const file = await created.read('AGENTS.md');
+  assert.match(file, /^Think and work in English\. Reply in Korean\.\n\n<!-- plextype:rules:begin -->\n[\s\S]*- 새 규칙\n\n<!-- plextype:rules:end -->\n[\s\S]*## 이 프로젝트의 규칙/);
+  assert.equal(file, agents.renderAgentsFile('# 규칙\n\n- 새 규칙\n'));
+
+  // 표시가 있으면 그 사이만 바꾸고, 표시 밖에 쓴 내용과 바꾼 첫 줄은 그대로 둔다. 바꾸기 전의 파일은 백업에 남는다.
+  const mine = agents.renderAgentsFile('# 규칙\n\n- 옛 규칙\n').replace('Reply in Korean.', 'Reply in English.') + '- 배포는 금요일에 하지 않는다.\n';
+  const updated = await apply({ 'AGENTS.md': mine });
+  assert.equal(updated.preview.agents, 'updated');
+  assert.equal(await updated.read('AGENTS.md'), mine.replace('- 옛 규칙', '- 새 규칙'));
+  assert.equal(await updated.read(`${updated.result.backupPath}/AGENTS.md`), mine);
+  // 이미 최신이면 손대지 않는다.
+  assert.deepEqual(agents.planAgentsFile(await updated.read('AGENTS.md'), '# 규칙\n\n- 새 규칙\n'), { status: 'unchanged', content: null });
+
+  // 표시가 없는 파일(문서에서 복사해 만든 것)은 그대로 두고, 최신 내용을 따로 받아 둔 곳을 할 일로 알린다.
+  const manual = await apply({ 'AGENTS.md': '# 내가 복사해 둔 규칙\n' });
+  assert.equal(manual.preview.agents, 'manual');
+  assert.equal(await manual.read('AGENTS.md'), '# 내가 복사해 둔 규칙\n');
+  assert.deepEqual(manual.result.agents, { status: 'manual', referencePath: '.plextype/reference/core-0.12.0/AGENTS.md' });
+  assert.equal(await manual.read('.plextype/reference/core-0.12.0/AGENTS.md'), agents.renderAgentsFile('# 규칙\n\n- 새 규칙\n'));
+  assert.ok(core.coreUpdateNextSteps(manual.result).some(step => step.includes('.plextype/reference/core-0.12.0/AGENTS.md')));
+
+  // 표시의 짝이 맞지 않으면 어디까지가 구역인지 알 수 없으므로 고치지 않는다.
+  for (const broken of ['<!-- plextype:rules:end -->\n<!-- plextype:rules:begin -->', '<!-- plextype:rules:begin -->\n규칙', `${file}\n${file}`]) {
+    assert.equal(agents.planAgentsFile(broken, '규칙').status, 'manual');
+  }
+});
+
 test('a release that fails verification changes nothing', async t => {
   const { root, state, read } = await setup(t);
   const release = state.releases.get('0.12.0');

@@ -98,6 +98,8 @@ export type InstallerCorePreview = {
   kept: string[];
   dependencies: string[];
   migrations: string[];
+  // 적용하면 프로젝트 루트의 AGENTS.md가 어떻게 되는지. 공통 규칙 파일이 없는 배포본이면 null.
+  agents: "created" | "updated" | "unchanged" | "manual" | "skipped" | null;
 };
 
 export type InstallerCorePreviewResult = InstallerActionResult & { preview?: InstallerCorePreview };

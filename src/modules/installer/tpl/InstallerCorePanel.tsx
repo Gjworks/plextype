@@ -19,6 +19,14 @@ const conflictLabel: Record<InstallerCoreConflictKind, string> = {
   occupied: "같은 자리에 다른 내용의 파일이 있음",
 };
 
+const agentsLabel = {
+  created: "AGENTS.md가 없어 새로 만듭니다. 코딩 에이전트가 읽는 규칙 파일이고, 프로젝트의 규칙은 표시 밖에 씁니다.",
+  updated: "AGENTS.md의 Plextype 규칙 구역을 새 버전의 내용으로 바꿉니다. 표시 밖에 쓴 프로젝트의 규칙은 그대로입니다.",
+  unchanged: "",
+  manual: "AGENTS.md에 Plextype 규칙 구역의 표시가 없어 그대로 둡니다. 최신 내용은 .plextype/reference에 받아 두니, 표시와 그 사이 내용을 옮겨 넣으면 다음부터 자동으로 갱신됩니다.",
+  skipped: "AGENTS.md 자리에 폴더나 링크가 있어 건드리지 않습니다.",
+} as const;
+
 const formatSize = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 
 function FileList({ title, files, open = false }: { title: string; files: string[]; open?: boolean }) {
@@ -164,6 +172,13 @@ export default function InstallerCorePanel({ core, platformVersion, storeUrl, is
               <h4 className={sectionTitle}>DB 변경</h4>
               <p className={`mt-1 leading-6 ${mutedClass}`}>코어 마이그레이션 {preview.migrations.length}개가 새로 들어옵니다. 적용한 뒤 개발 DB에 반영해야 합니다.</p>
               <ul className="mt-1 font-mono text-xs leading-6 text-gray-800 dark:text-dark-200">{preview.migrations.map(name => <li key={name} className="break-all">{name}</li>)}</ul>
+            </>
+          )}
+
+          {preview.agents && agentsLabel[preview.agents] && (
+            <>
+              <h4 className={sectionTitle}>AGENTS.md</h4>
+              <p className={`mt-1 leading-6 ${mutedClass}`}>{agentsLabel[preview.agents]}</p>
             </>
           )}
 
