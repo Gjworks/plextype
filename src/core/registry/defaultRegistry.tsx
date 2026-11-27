@@ -5,6 +5,7 @@ import DefaultLayout from "@/layouts/default/Layout";
 import HomePage from "@/core/registry/defaultHomePage";
 import { buildExtensionRegistry } from "@/core/registry/build";
 import { coreRegistry } from "@/core/registry/coreRegistry";
+import type { SocialLoginMessageViewProps, SocialLoginUserLinksViewProps } from "@/modules/user/actions/social.type";
 
 export type PostSkinMap = Record<string, React.ComponentType<any>>;
 export type PostLayoutMap = Record<string, React.ComponentType<any>>;
@@ -23,8 +24,13 @@ export type UserLayoutComponents = {
   // 버튼 모양까지 바꾸려면 함께 넘어오는 loginProviderList(LoginProvider[])로 직접 그린다.
   // 아니면 코어가 화면 바로 아래에 놓는다. 스킨이 이 속성을 모르더라도 설치한 로그인 수단이 빠지지 않게 하기 위함이다.
   placesLoginProviders?: boolean;
-  // 마이페이지의 틀(메뉴, 제목 자리). 쉬운 설치 패키지의 회원 화면이 getUserPageFrame으로 받아 자기 내용을 감싼다.
-  // 없으면 패키지 화면은 틀 없이 그려진다. 받는 속성은 UserPageFrameProps다.
+  // 소셜 계정 연결·해제 화면(/user/social-login). 등록하면 메뉴와 제목까지 이 컴포넌트가 직접 그린다.
+  // 생략하면 기본 화면이 이 스킨의 pageFrame 안에 그려진다.
+  socialLoginLinks?: React.ComponentType<SocialLoginUserLinksViewProps>;
+  // 소셜 로그인이 중간에 끝났을 때의 안내 화면(/auth/social-login). authLayout 안에 그려진다. 생략하면 기본 화면을 쓴다.
+  socialLoginMessage?: React.ComponentType<SocialLoginMessageViewProps>;
+  // 마이페이지의 틀(메뉴, 제목 자리). 스킨이 그리지 않는 회원 화면(소셜 로그인 연결의 기본 화면, 쉬운 설치 패키지의 화면)이 getUserPageFrame으로 받아 자기 내용을 감싼다.
+  // 없으면 그 화면은 틀 없이 그려진다. 받는 속성은 UserPageFrameProps다.
   pageFrame?: React.ComponentType<UserPageFrameProps>;
 };
 export type UserPageFrameProps = {

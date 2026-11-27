@@ -54,9 +54,9 @@ test('removes installed packages with their adapters and resets the package list
   assert.ok(!fs.existsSync(path.join(root, 'src/app/(modules)/auth/social-login/page.tsx')));
   assert.ok(fs.existsSync(path.join(root, 'src/app/(modules)/admin/installer/page.tsx')));
   assert.ok(fs.existsSync(path.join(root, 'src/packages/README.md')));
-  for (const [name, exported] of [['index.ts', 'installedPackages'], ['installedTriggers.ts', 'installedTriggers'], ['installedLoginProviders.ts', 'installedLoginProviders']]) {
+  for (const [name, exported] of [['index.ts', 'installedPackages'], ['installedTriggers.ts', 'installedTriggers'], ['installedLoginProviders.ts', 'installedLoginProviders'], ['installedSocialProviders.ts', 'installedSocialProviders']]) {
     const content = fs.readFileSync(path.join(root, 'src/packages', name), 'utf8');
-    assert.match(content, new RegExp(`export const ${exported}: \\w+\\[\\] = \\[\\];`));
+    assert.match(content, new RegExp(`export const ${exported}: \\w+(\\[\\])+ = \\[\\];`));
     assert.doesNotMatch(content, /import package/);
   }
 });

@@ -3,6 +3,7 @@ import { Users, Settings } from "lucide-react";
 import { defineModule, defineUserSkin } from "@/core/registry/define";
 import AuthLayout from "@/layouts/auth/Layout";
 import UserDelete from "@/modules/user/tpl/default/delete";
+import UserPageFrame from "@/modules/user/tpl/default/pageFrame";
 import UserPreferences from "@/modules/user/tpl/default/preferences";
 import UserRegister from "@/modules/user/tpl/default/register";
 import UserResetPassword from "@/modules/user/tpl/default/resetPassword";
@@ -13,7 +14,7 @@ import UserUpdate from "@/modules/user/tpl/default/update";
 export const userModule = defineModule({
   key: "user",
   label: "회원",
-  description: "회원 관리 메뉴와 기본 사용자 마이페이지 스킨을 제공합니다.",
+  description: "회원 관리 메뉴, 소셜 로그인, 기본 사용자 마이페이지 스킨을 제공합니다.",
   admin: {
     menu: [
       {
@@ -28,6 +29,7 @@ export const userModule = defineModule({
           { label: "로그인 잠금", href: "/admin/user/login-locks" },
           { label: "회원 추가", href: "/admin/user/create" },
           { label: "회원 그룹 관리", href: "/admin/user/groupList" },
+          { label: "소셜 로그인", href: "/admin/user/social-login" },
         ],
       },
       {
@@ -49,6 +51,7 @@ export const userModule = defineModule({
         "login-locks": "LOGIN LOCKS",
         update: "UPDATE",
         active: "ACTIVE",
+        "social-login": "SOCIAL LOGIN",
       },
       settings: { auth: "AUTH" },
     },
@@ -66,6 +69,7 @@ export const userModule = defineModule({
       signin: UserSignin,
       register: UserRegister,
       resetPassword: UserResetPassword,
+      pageFrame: UserPageFrame,
     }),
   ],
 });

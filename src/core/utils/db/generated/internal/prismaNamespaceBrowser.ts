@@ -73,9 +73,9 @@ export const ModelName = {
   NotificationBroadcast: 'NotificationBroadcast',
   NotificationBroadcastRecipient: 'NotificationBroadcastRecipient',
   ApiToken: 'ApiToken',
+  SocialLoginAccount: 'SocialLoginAccount',
   ServiceDeployInstance: 'ServiceDeployInstance',
-  ServiceDeployJob: 'ServiceDeployJob',
-  SocialLoginAccount: 'SocialLoginAccount'
+  ServiceDeployJob: 'ServiceDeployJob'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -442,6 +442,19 @@ export const ApiTokenScalarFieldEnum = {
 export type ApiTokenScalarFieldEnum = (typeof ApiTokenScalarFieldEnum)[keyof typeof ApiTokenScalarFieldEnum]
 
 
+export const SocialLoginAccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  providerUserId: 'providerUserId',
+  email: 'email',
+  createdAccount: 'createdAccount',
+  createdAt: 'createdAt'
+} as const
+
+export type SocialLoginAccountScalarFieldEnum = (typeof SocialLoginAccountScalarFieldEnum)[keyof typeof SocialLoginAccountScalarFieldEnum]
+
+
 export const ServiceDeployInstanceScalarFieldEnum = {
   id: 'id',
   uuid: 'uuid',
@@ -500,19 +513,6 @@ export const ServiceDeployJobScalarFieldEnum = {
 } as const
 
 export type ServiceDeployJobScalarFieldEnum = (typeof ServiceDeployJobScalarFieldEnum)[keyof typeof ServiceDeployJobScalarFieldEnum]
-
-
-export const SocialLoginAccountScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  provider: 'provider',
-  providerUserId: 'providerUserId',
-  email: 'email',
-  createdAccount: 'createdAccount',
-  createdAt: 'createdAt'
-} as const
-
-export type SocialLoginAccountScalarFieldEnum = (typeof SocialLoginAccountScalarFieldEnum)[keyof typeof SocialLoginAccountScalarFieldEnum]
 
 
 export const SortOrder = {

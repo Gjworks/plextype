@@ -66,6 +66,10 @@
         "./src/extensions/loginProviders.ts",
         "./src/core/registry/defaultLoginProviders.ts"
       ],
+      "@extensions/socialProviders": [
+        "./src/extensions/socialProviders.ts",
+        "./src/core/registry/defaultSocialProviders.ts"
+      ],
       "@extensions/serverIntegrations": [
         "./src/extensions/serverIntegrations.ts",
         "./src/core/registry/defaultServerIntegrations.ts"

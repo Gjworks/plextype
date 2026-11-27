@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { Bell, Settings2, ShieldX, UserRound, WalletCards } from "lucide-react";
+import { Bell, Link2, Settings2, ShieldX, UserRound, WalletCards } from "lucide-react";
 
 const navIconMap: Record<string, React.ReactNode> = {
   "/user": <WalletCards size={15} />,
   "/user/notifications": <Bell size={15} />,
   "/user/userUpdate": <UserRound size={15} />,
   "/user/preferences": <Settings2 size={15} />,
+  "/user/social-login": <Link2 size={15} />,
   "/user/userDelete": <ShieldX size={15} />,
 };
 

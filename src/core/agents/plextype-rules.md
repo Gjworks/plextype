@@ -122,9 +122,10 @@
 - 게시판 스킨은 `definePostSkin()`으로 등록한다.
 - 게시판 레이아웃은 `definePostLayout()`으로 등록한다.
 - 관리자 레이아웃은 `defineAdminLayout()`으로 등록한다.
-- 사용자 레이아웃/스킨은 `defineUserSkin()`으로 등록한다. 패키지가 내놓는 로그인 수단 버튼을 직접 그리려면 `placesLoginProviders`를, 패키지의 회원 화면을 마이페이지 틀 안에 넣으려면 `pageFrame`을 함께 등록한다.
+- 사용자 레이아웃/스킨은 `defineUserSkin()`으로 등록한다. 소셜 로그인과 패키지가 내놓는 로그인 수단 버튼을 직접 그리려면 `placesLoginProviders`를, 소셜 로그인의 연결 화면과 안내 화면을 직접 그리려면 `socialLoginLinks`·`socialLoginMessage`를, 패키지의 회원 화면을 마이페이지 틀 안에 넣으려면 `pageFrame`을 함께 등록한다.
 - 설치한 패키지가 그리는 화면 하나를 바꿀 때는 그 패키지의 README에 적힌 key로 `defineView()`를 `views`에 등록한다.
-- 패키지는 회원 메뉴에 항목을 넣지 못한다. 패키지의 회원 화면으로 가는 링크는 회원 스킨의 메뉴에 직접 넣는다.
+- 소셜 로그인 제공자를 더할 때는 코어를 고치지 않고 `src/extensions/socialProviders.ts`에 정의를 등록한다(`src/modules/user/social/README.md`).
+- 패키지는 회원 메뉴에 항목을 넣지 못한다. 패키지의 회원 화면과 소셜 로그인 연결 화면(`/user/social-login`)으로 가는 링크는 회원 스킨의 메뉴에 직접 넣는다.
 - `src/extensions/registry.tsx`는 각 모듈/스킨 registry를 import해서 조립만 한다.
 - 다른 프로젝트로 넘길 모듈이나 스킨은 컴포넌트, action/query, prisma 조각, registry를 같은 폴더 단위로 유지한다.
 - 폴더 추가나 `extensions:sync`만으로 registry가 자동 등록되지는 않는다. 공통 registry에서 명시적으로 연결한다.

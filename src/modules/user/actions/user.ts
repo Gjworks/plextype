@@ -1,5 +1,6 @@
 // src/app/(extentions)/users/_actions/user.ts
 import { withoutCredentials } from "@/core/utils/auth/safeUser";
+import { deleteLinksByUserId } from "@/modules/user/actions/social.query";
 import { hashedPassword } from "@utils/auth/password";
 import { revokeUserSessions } from "@utils/auth/jwtAuth";
 import { verify } from "@utils/auth/jwtAuth";
@@ -170,6 +171,8 @@ export const removeUser = async (userId: number) => {
   if (!user) throw new Error("삭제할 유저를 찾을 수 없습니다.");
 
   await query.deleteUser(userId);
+  // 소셜 로그인 연결은 회원 테이블과 관계를 맺지 않아 함께 지워지지 않는다. 남기면 같은 소셜 계정으로 다시 가입할 때 없는 회원을 가리킨다.
+  await deleteLinksByUserId(userId);
 
   // 🎯 트리거 수동 발송
   await dispatchTrigger("user.removed", user);

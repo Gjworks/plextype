@@ -136,6 +136,8 @@ export const buildExtensionRegistry = (
       register: item.register,
       resetPassword: item.resetPassword,
       placesLoginProviders: item.placesLoginProviders,
+      socialLoginLinks: item.socialLoginLinks,
+      socialLoginMessage: item.socialLoginMessage,
       pageFrame: item.pageFrame,
     };
     userLayoutOptions.set(item.key, toOption(item) as UserLayoutOption);

@@ -516,11 +516,12 @@ const isOwnedAdapter = (content: string, packageId: string) => (
   ADAPTER_HEADERS.some((header) => content.startsWith(header)) && content.includes(`from "@/packages/${packageId}/`)
 );
 
-// 설치된 패키지가 루트에 둔 등록 파일을 모아 src/packages의 목록 두 개를 다시 만든다.
+// 설치된 패키지가 루트에 둔 등록 파일을 모아 src/packages의 목록 파일들을 다시 만든다.
 // - index.ts: registry.ts(x)의 관리자 메뉴·스킨. 코어 레지스트리(coreRegistry.tsx)가 읽는다.
 // - installedTriggers.ts: triggers.ts의 트리거. 트리거 허브(triggerHub.ts)가 읽는다.
 // - installedLoginProviders.ts: loginProviders.ts(x)의 로그인 수단. 로그인 화면(core/utils/auth/loginProviders.ts)이 읽는다.
-// 트리거와 로그인 수단은 서버 코드라, 화면 쪽에서도 불러오는 index.ts와 섞지 않고 따로 둔다.
+// - installedSocialProviders.ts: socialProviders.ts의 소셜 로그인 제공자. 소셜 로그인(modules/user/social/registry.ts)이 읽는다.
+// 트리거와 로그인 수단, 제공자는 서버 코드라, 화면 쪽에서도 불러오는 index.ts와 섞지 않고 따로 둔다.
 // 폴더의 지금 상태에서 만들므로, 설치·제거가 끝났든 중간에 되돌렸든 부르고 나면 목록이 폴더와 맞는다.
 // registry 파일로 등록된 패키지 ID를 돌려준다.
 export async function writePackageRegistry(root: string) {
@@ -564,6 +565,7 @@ export async function writePackageRegistry(root: string) {
   const registries = await collect("registry", ["registry.ts", "registry.tsx"]);
   const triggers = await collect("triggers", ["triggers.ts"]);
   const loginProviders = await collect("loginProviders", ["loginProviders.ts", "loginProviders.tsx"]);
+  const socialProviders = await collect("socialProviders", ["socialProviders.ts"]);
   await fs.mkdir(directory, { recursive: true });
   await fs.writeFile(path.join(directory, "index.ts"), render(
     registries.specifiers,
@@ -579,6 +581,11 @@ export async function writePackageRegistry(root: string) {
     loginProviders.specifiers,
     'import type { LoginProviderSource } from "@/core/registry/defineLoginProviders";',
     "export const installedLoginProviders: LoginProviderSource[]",
+  ));
+  await fs.writeFile(path.join(directory, "installedSocialProviders.ts"), render(
+    socialProviders.specifiers,
+    'import type { ProviderDefinition } from "@/modules/user/social/providers";',
+    "export const installedSocialProviders: ProviderDefinition[][]",
   ));
   return registries.own;
 }

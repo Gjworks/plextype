@@ -1,6 +1,6 @@
 import type React from "react";
 
-import type { UserPageFrameProps } from "@/core/registry/defaultRegistry";
+import type { UserLayoutComponents, UserPageFrameProps } from "@/core/registry/defaultRegistry";
 import { getSettingsByKeysQuery } from "@/core/utils/settings/settings.query";
 import { userLayouts } from "@extensions";
 
@@ -18,8 +18,13 @@ async function readUserLayout() {
   }
 }
 
+// 지금 적용된 회원 스킨. 등록되지 않은 key가 설정에 남아 있으면 null이다.
+export async function getUserSkin(): Promise<UserLayoutComponents | null> {
+  return userLayouts[await readUserLayout()] ?? null;
+}
+
 // 지금 적용된 회원 스킨이 등록한 마이페이지 틀(pageFrame)을 돌려준다. 스킨이 틀을 등록하지 않았으면 null이다.
-// 쉬운 설치 패키지의 회원 화면(/user/<패키지>)이 서버에서 불러, 틀이 있으면 내용을 감싸 다른 회원 화면과 같은 메뉴 안에 놓는다.
+// 스킨이 그리지 않는 회원 화면(소셜 로그인 연결의 기본 화면, 쉬운 설치 패키지의 /user/<패키지>)이 서버에서 불러, 틀이 있으면 내용을 감싸 다른 회원 화면과 같은 메뉴 안에 놓는다.
 export async function getUserPageFrame(): Promise<React.ComponentType<UserPageFrameProps> | null> {
-  return userLayouts[await readUserLayout()]?.pageFrame ?? null;
+  return (await getUserSkin())?.pageFrame ?? null;
 }

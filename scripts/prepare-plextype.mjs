@@ -8,12 +8,13 @@ const fallbacks = {
 };
 
 // 배포본의 src/packages 목록 파일. 쉬운 설치(src/modules/installer/lib/storeInstall.ts의 writePackageRegistry)가
-// 설치된 패키지가 없을 때 만드는 내용과 같다. 코어가 이 세 파일을 직접 가져다 쓰므로 패키지를 지워도 파일은 있어야 한다.
+// 설치된 패키지가 없을 때 만드는 내용과 같다. 코어가 이 파일들을 직접 가져다 쓰므로 패키지를 지워도 파일은 있어야 한다.
 const GENERATED_NOTE = '// 쉬운 설치가 만드는 파일. 직접 고치지 않는다. 패키지를 설치·제거하거나 내 확장으로 가져올 때마다 다시 만든다.';
 const emptyPackageLists = {
   'index.ts': ['import type { ExtensionRegistryConfig } from "@/core/registry/define";', 'export const installedPackages: ExtensionRegistryConfig[]'],
   'installedTriggers.ts': ['import type { PackageTriggers } from "@/core/utils/trigger/define";', 'export const installedTriggers: PackageTriggers[]'],
   'installedLoginProviders.ts': ['import type { LoginProviderSource } from "@/core/registry/defineLoginProviders";', 'export const installedLoginProviders: LoginProviderSource[]'],
+  'installedSocialProviders.ts': ['import type { ProviderDefinition } from "@/modules/user/social/providers";', 'export const installedSocialProviders: ProviderDefinition[][]'],
 };
 
 // 원본 프로젝트가 설치했거나 직접 개발하는 패키지는 배포본에 넣지 않는다. 받는 쪽이 쉬운 설치로 직접 넣는다.

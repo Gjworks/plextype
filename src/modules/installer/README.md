@@ -103,6 +103,9 @@ npm run plextype -- status | keys | disconnect
 패키지 루트에 `loginProviders.ts` 또는 `loginProviders.tsx`가 있으면, 그 파일이 `export default`로 내보낸 로그인 수단도 연결됩니다.
 설치기가 `src/packages/installedLoginProviders.ts`를 다시 만들고, 로그인·가입 화면(`src/core/utils/auth/loginProviders.ts`)이 그 목록을 읽습니다.
 
+패키지 루트에 `socialProviders.ts`가 있으면, 그 파일이 `export default`로 내보낸 소셜 로그인 제공자도 연결됩니다.
+설치기가 `src/packages/installedSocialProviders.ts`를 다시 만들고, 소셜 로그인(`src/modules/user/social/registry.ts`)이 그 목록을 읽습니다.
+
 ## 패키지를 고쳐 쓸 때
 
 `src/packages` 안은 업데이트할 때 통째로 바뀌므로 직접 고치는 곳이 아닙니다. 고쳐 쓰는 길은 둘입니다.

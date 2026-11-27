@@ -36,7 +36,7 @@ export type UserSkinRegistration = RegistryOption & UserLayoutComponents;
 // 패키지는 데이터를 준비해 resolveView(@/core/registry/resolveView)로 뷰를 고르고, 등록된 것이 없으면 자기 기본 뷰를 쓴다.
 // 화면만 바꾸려고 패키지를 src/extensions로 옮기면 패키지의 업데이트를 받지 못하므로 이 등록을 쓴다.
 export type ViewRegistration = {
-  // 패키지가 정한 이름. "<모듈 ID>.<화면 이름>" 형식이다(예: "social-login.userLinks").
+  // 패키지가 정한 이름. "<모듈 ID>.<화면 이름>" 형식이다(예: "issue-tracker.myIssues").
   key: string;
   // 그 패키지의 문서가 밝힌 속성을 받는 컴포넌트.
   component: React.ComponentType<any>;

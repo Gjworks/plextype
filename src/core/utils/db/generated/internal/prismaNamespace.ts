@@ -406,9 +406,9 @@ export const ModelName = {
   NotificationBroadcast: 'NotificationBroadcast',
   NotificationBroadcastRecipient: 'NotificationBroadcastRecipient',
   ApiToken: 'ApiToken',
+  SocialLoginAccount: 'SocialLoginAccount',
   ServiceDeployInstance: 'ServiceDeployInstance',
-  ServiceDeployJob: 'ServiceDeployJob',
-  SocialLoginAccount: 'SocialLoginAccount'
+  ServiceDeployJob: 'ServiceDeployJob'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -424,7 +424,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "profile" | "userPreference" | "userGroup" | "userGroupUser" | "document" | "category" | "modules" | "fieldGroup" | "permission" | "comment" | "documentViewLog" | "attachment" | "notification" | "pushToken" | "webPushSubscription" | "appSetting" | "siteNavigationGroup" | "siteNavigation" | "notificationBroadcast" | "notificationBroadcastRecipient" | "apiToken" | "serviceDeployInstance" | "serviceDeployJob" | "socialLoginAccount"
+    modelProps: "user" | "profile" | "userPreference" | "userGroup" | "userGroupUser" | "document" | "category" | "modules" | "fieldGroup" | "permission" | "comment" | "documentViewLog" | "attachment" | "notification" | "pushToken" | "webPushSubscription" | "appSetting" | "siteNavigationGroup" | "siteNavigation" | "notificationBroadcast" | "notificationBroadcastRecipient" | "apiToken" | "socialLoginAccount" | "serviceDeployInstance" | "serviceDeployJob"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2056,6 +2056,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SocialLoginAccount: {
+      payload: Prisma.$SocialLoginAccountPayload<ExtArgs>
+      fields: Prisma.SocialLoginAccountFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SocialLoginAccountFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SocialLoginAccountFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
+        }
+        findFirst: {
+          args: Prisma.SocialLoginAccountFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SocialLoginAccountFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
+        }
+        findMany: {
+          args: Prisma.SocialLoginAccountFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>[]
+        }
+        create: {
+          args: Prisma.SocialLoginAccountCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
+        }
+        createMany: {
+          args: Prisma.SocialLoginAccountCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SocialLoginAccountCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>[]
+        }
+        delete: {
+          args: Prisma.SocialLoginAccountDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
+        }
+        update: {
+          args: Prisma.SocialLoginAccountUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
+        }
+        deleteMany: {
+          args: Prisma.SocialLoginAccountDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SocialLoginAccountUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SocialLoginAccountUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>[]
+        }
+        upsert: {
+          args: Prisma.SocialLoginAccountUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
+        }
+        aggregate: {
+          args: Prisma.SocialLoginAccountAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSocialLoginAccount>
+        }
+        groupBy: {
+          args: Prisma.SocialLoginAccountGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SocialLoginAccountGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SocialLoginAccountCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SocialLoginAccountCountAggregateOutputType> | number
+        }
+      }
+    }
     ServiceDeployInstance: {
       payload: Prisma.$ServiceDeployInstancePayload<ExtArgs>
       fields: Prisma.ServiceDeployInstanceFieldRefs
@@ -2201,80 +2275,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ServiceDeployJobCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ServiceDeployJobCountAggregateOutputType> | number
-        }
-      }
-    }
-    SocialLoginAccount: {
-      payload: Prisma.$SocialLoginAccountPayload<ExtArgs>
-      fields: Prisma.SocialLoginAccountFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.SocialLoginAccountFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.SocialLoginAccountFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
-        }
-        findFirst: {
-          args: Prisma.SocialLoginAccountFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.SocialLoginAccountFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
-        }
-        findMany: {
-          args: Prisma.SocialLoginAccountFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>[]
-        }
-        create: {
-          args: Prisma.SocialLoginAccountCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
-        }
-        createMany: {
-          args: Prisma.SocialLoginAccountCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.SocialLoginAccountCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>[]
-        }
-        delete: {
-          args: Prisma.SocialLoginAccountDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
-        }
-        update: {
-          args: Prisma.SocialLoginAccountUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
-        }
-        deleteMany: {
-          args: Prisma.SocialLoginAccountDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.SocialLoginAccountUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.SocialLoginAccountUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>[]
-        }
-        upsert: {
-          args: Prisma.SocialLoginAccountUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialLoginAccountPayload>
-        }
-        aggregate: {
-          args: Prisma.SocialLoginAccountAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateSocialLoginAccount>
-        }
-        groupBy: {
-          args: Prisma.SocialLoginAccountGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.SocialLoginAccountGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.SocialLoginAccountCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.SocialLoginAccountCountAggregateOutputType> | number
         }
       }
     }
@@ -2665,6 +2665,19 @@ export const ApiTokenScalarFieldEnum = {
 export type ApiTokenScalarFieldEnum = (typeof ApiTokenScalarFieldEnum)[keyof typeof ApiTokenScalarFieldEnum]
 
 
+export const SocialLoginAccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  providerUserId: 'providerUserId',
+  email: 'email',
+  createdAccount: 'createdAccount',
+  createdAt: 'createdAt'
+} as const
+
+export type SocialLoginAccountScalarFieldEnum = (typeof SocialLoginAccountScalarFieldEnum)[keyof typeof SocialLoginAccountScalarFieldEnum]
+
+
 export const ServiceDeployInstanceScalarFieldEnum = {
   id: 'id',
   uuid: 'uuid',
@@ -2723,19 +2736,6 @@ export const ServiceDeployJobScalarFieldEnum = {
 } as const
 
 export type ServiceDeployJobScalarFieldEnum = (typeof ServiceDeployJobScalarFieldEnum)[keyof typeof ServiceDeployJobScalarFieldEnum]
-
-
-export const SocialLoginAccountScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  provider: 'provider',
-  providerUserId: 'providerUserId',
-  email: 'email',
-  createdAccount: 'createdAccount',
-  createdAt: 'createdAt'
-} as const
-
-export type SocialLoginAccountScalarFieldEnum = (typeof SocialLoginAccountScalarFieldEnum)[keyof typeof SocialLoginAccountScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3028,9 +3028,9 @@ export type GlobalOmitConfig = {
   notificationBroadcast?: Prisma.NotificationBroadcastOmit
   notificationBroadcastRecipient?: Prisma.NotificationBroadcastRecipientOmit
   apiToken?: Prisma.ApiTokenOmit
+  socialLoginAccount?: Prisma.SocialLoginAccountOmit
   serviceDeployInstance?: Prisma.ServiceDeployInstanceOmit
   serviceDeployJob?: Prisma.ServiceDeployJobOmit
-  socialLoginAccount?: Prisma.SocialLoginAccountOmit
 }
 
 /* Types for Logging */
