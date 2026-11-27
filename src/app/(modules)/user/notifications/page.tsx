@@ -1,2 +1,1 @@
-// Extension-owned implementation; keep route configuration statically visible.
-export { default } from "@/extensions/service/routes/user/notifications/page";
+export { default } from "@/modules/notification/tpl/UserNotificationsPage";
