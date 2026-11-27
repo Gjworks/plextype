@@ -70,6 +70,10 @@
         "./src/extensions/socialProviders.ts",
         "./src/core/registry/defaultSocialProviders.ts"
       ],
+      "@packages/installedSocialProviders": [
+        "./src/packages/installedSocialProviders.ts",
+        "./src/core/registry/defaultSocialProviders.ts"
+      ],
       "@extensions/serverIntegrations": [
         "./src/extensions/serverIntegrations.ts",
         "./src/core/registry/defaultServerIntegrations.ts"

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { socialProviders as extensionProviders } from "@extensions/socialProviders";
-import { installedSocialProviders } from "@/packages/installedSocialProviders";
+import { installedSocialProviders } from "@packages/installedSocialProviders";
 
 import { BUILT_IN_PROVIDERS, mergeProviders } from "./providers";
 
