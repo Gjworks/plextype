@@ -132,13 +132,3 @@ export type ApiToken = Prisma.ApiTokenModel
  * 
  */
 export type SocialLoginAccount = Prisma.SocialLoginAccountModel
-/**
- * Model ServiceDeployInstance
- * 
- */
-export type ServiceDeployInstance = Prisma.ServiceDeployInstanceModel
-/**
- * Model ServiceDeployJob
- * 
- */
-export type ServiceDeployJob = Prisma.ServiceDeployJobModel
